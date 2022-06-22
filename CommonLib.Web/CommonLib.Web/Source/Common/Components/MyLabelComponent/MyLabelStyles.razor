@@ -1,0 +1,50 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
+
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-label {
+        color: white;
+        background: black;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        position: relative;
+        width: 100%;
+        padding: @HalfGutter.Px() 0;
+    }
+
+    .my-label-description {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        vertical-align: middle;
+        line-height: @((FontSize * 1.5).Px());
+        @Font
+        @NoOverflowSingleLine
+    }
+
+    @@media (min-width: 768px) {
+        .my-label.my-right > .my-label-description {
+            margin-left: auto;
+        }
+
+        .my-label.my-center > .my-label-description {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .my-label {
+            padding: 0;
+        }
+    }
+
+
+    </style>

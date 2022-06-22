@@ -1,0 +1,55 @@
+﻿@using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Extensions
+
+@using static Web.Source.Common.Components.StylesConfig
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    @foreach (var (device, breakpoint) in Devices)
+    {
+        if (device != "xs")
+        {
+            @($"@media (min-width: {breakpoint.Px()}) {{")
+        }
+
+        foreach (var spacingType in new[] { "m", "p" })
+        {
+            foreach (var sideType in new[] { "", "x", "y", "l", "r", "t", "b" })
+            {
+                foreach (var spacingSize in
+                    Enumerable.Range(0, 11).Select(s => (s * 5).Px())
+                        .Concat(Enumerable.Range(1, 3).Select(s => (s * 25).ToStringInvariant()))
+                        .Append("auto"))
+                {
+                    var spacing = spacingType == "p" ? "padding" : "margin";
+                    var side = sideType switch
+                    {
+                        "x" => new[] { "left", "right" },
+                        "y" => new[] { "top", "bottom" },
+                        "l" => new[] { "left" },
+                        "r" => new[] { "right" },
+                        "t" => new[] { "top" },
+                        "b" => new[] { "bottom" },
+                        _ => new[] { "" }
+                    };
+
+                    <text>
+                        @($".my-{spacingType}{sideType}{(device == "xs" ? "" : $"-{device}")}-{spacingSize} {{")
+                        @($"{spacing}{(side[0] == "" ? "" : $"-{side[0]}")}: {(spacingSize.EndsWithDigit() && spacingSize.ToInt() > 0 ? $"{spacingSize}%" : spacingSize)};")
+                        @(side.Length > 1 ? $"{spacing}{(side[1] == "" ? "" : $"-{side[1]}")}: {(spacingSize.EndsWithDigit() && spacingSize.ToInt() > 0  ? $"{spacingSize}%" : spacingSize)};" : "")
+                        @($"}}")
+                    </text>
+
+                }
+            }
+        }
+
+        if (device != "xs")
+        {
+            @($"}}")
+        }
+    }
+
+</style>

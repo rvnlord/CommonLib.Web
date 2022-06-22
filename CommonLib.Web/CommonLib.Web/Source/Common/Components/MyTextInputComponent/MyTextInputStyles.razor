@@ -1,0 +1,20 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    input.my-text-input {
+
+    }
+
+    input.my-text-input.my-valid {
+        background: @($"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000);")
+    }
+
+    input.my-text-input.my-invalid {
+        background: @($"linear-gradient(to bottom, {FailureBackgroundColor}, #000000);")
+    }
+
+</style>

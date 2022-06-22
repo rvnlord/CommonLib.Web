@@ -1,0 +1,101 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyTitlebarComponent
+
+@using CommonLib.Source.Common.Converters
+@using CommonLib.Web.Server.Source.Common.Utils
+@using CommonLib.Web.Source.Common.Utils
+@using static CommonLib.Web.Source.Common.Components.StylesConfig
+
+<style>
+
+    .my-titlebar {
+        background: @BackgroundColor;
+        z-index: 1;
+        position: relative;
+        padding: 0;
+        color: white;
+        display: flex;
+        align-items: center;
+        z-index: 11;
+        transition-property: background;
+        transition-duration: 0.5s;
+    }
+
+    .my-titlebar-drag-handler {
+        display: flex;
+        align-items: center;
+        flex: 1 0 0;
+    }
+
+    /*.my-titlebar:active:hover {
+        background: darkgreen;
+    }*/
+
+    .my-titlebar:hover, .my-titlebar.hover {
+        background: #000040;
+    }
+
+    .my-titlebar-icon {
+        margin: @MyTitlebarGutter.Px();
+        height: @iconSize.Px();
+        width: @iconSize.Px();
+        flex: 0 0 @iconSize.Px();
+        background: url("@WebServerUtils.GetRelativeVirtualPath("~/Icons/Icon.png")");
+        background-position: center center;
+        background-size: @iconSize.Px() @iconSize.Px();
+    }
+
+    .my-titlebar-title {
+        margin: 0;
+        flex: 1 0 0;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        display: flex;
+        @("-webkit-app-region: drag;")
+    }
+
+    .my-titlebar-title p {
+        /*-webkit-app-region: drag;*/
+        margin: 0;
+        flex: 0 0 0;
+    }
+
+    @foreach (var btn in buttons)
+    {
+        <text>
+        .my-titlebar-@btn {
+            height: @((iconSize + 2 * MyTitlebarGutter).Px());
+            width: @((iconSize + 2 * MyTitlebarGutter).Px());
+            min-height: @((iconSize + 2 * MyTitlebarGutter).Px());
+            min-width: @((iconSize + 2 * MyTitlebarGutter).Px());
+            align-items: center;
+            justify-content: center;
+            display: flex;
+            @("-webkit-app-region: no-drag;")
+        }
+
+        .my-titlebar-@(btn) > svg {
+            height: @iconSize.Px() !important;
+            width: @iconSize.Px() !important;
+            flex: 0 0 @iconSize.Px() !important;
+        }
+
+        .my-titlebar-@(btn):hover > svg > path {
+            fill: black !important;
+        }
+
+        .my-titlebar-@(btn):hover {
+            background: @(btn == "btn-close" ? "rgb(255, 47, 47)" : "darkgreen");
+            cursor: pointer;
+        }
+        </text>
+    }
+
+</style>
+
+@code {
+    const int iconSize = 25;
+    const double MyTitlebarGutter = 5;
+    const double MyTitlebarHalfGutter = MyTitlebarGutter / 2;
+    private readonly string[] buttons = { "btn-tray", "btn-minimize", "btn-maximize", "btn-close" };
+}

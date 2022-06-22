@@ -1,0 +1,271 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-prompt,
+    .my-page-content > .my-container.css-transition > .my-prompt,
+    .my-page-content > .my-container > .my-prompt {
+        margin: 0;
+        display: block;
+        justify-content: center;
+        position: absolute;
+        z-index: 9;
+        width: calc(min(@MaxPageWidth.Px(), 100%) * 0.3 - 20px);
+        right: calc(10px + (100% - min(@MaxPageWidth.Px(), 100%)) / 2);
+        top: 57px;
+    }
+
+    .my-prompt.glued,
+    .my-page-content > .my-container.css-transition > .my-prompt.glued,
+    .my-page-content > .my-container > .my-prompt.glued {
+        position: fixed;
+    }
+
+    @@media (max-width: 1198.98px) {
+        .my-prompt,
+        .my-page-content > .my-container.css-transition > .my-prompt,
+        .my-page-content > .my-container > .my-prompt  {
+            width: calc(min(@MaxPageWidth.Px(), 100%) * 0.5 - 20px);
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-prompt,
+        .my-page-content > .my-container.css-transition > .my-prompt,
+        .my-page-content > .my-container > .my-prompt  {
+            width: calc(min(@MaxPageWidth.Px(), 100%) * 1 - 20px);
+        }
+    }
+
+        .my-prompt.d-none {
+            margin: 0;
+        }
+
+    .my-prompt > .my-container {
+        margin-top: 14px;
+    }
+
+    .my-prompt > .notifications-actions-container {
+        position: absolute;
+        color: gray;
+        z-index: 1;
+        display: flex;
+        margin-left: auto;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        top: 0;
+        font-size: 16px;
+        line-height: 24px;
+        height: 24px;
+        width: 230px;
+        background: linear-gradient(150deg, rgba(255, 0, 0, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        clip-path: polygon(0 0, 100% 0, 210px 100%, 20px 100%);
+        align-items: center;
+        justify-content: center;
+        transition: 0.5s;
+        font-weight: 500;
+        top: -10px;
+    }
+
+    .my-prompt > .notifications-actions-container > div {
+        transition: 0.5s;
+    }
+
+    .my-prompt > .notifications-actions-container > div:hover {
+        color: white;
+    }
+
+    .my-prompt > .notifications-actions-container.disabled {
+        color: #404040 !important;
+    }
+
+    .my-prompt > .notifications-actions-container > .notifications-counter-container {
+        background: linear-gradient(310deg, rgba(0, 0, 140, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        width: 60px;
+        margin-right: auto;
+        clip-path: polygon(0 0, 40px 0, 100% 100%, 20px 100%);
+        align-items: center;
+        justify-content: center;
+        display: flex;
+    }
+
+    .my-prompt > .notifications-actions-container > .notifications-counter-container > .notifications-counter {
+        color: white;
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-description-container {
+        margin-right: auto;
+        align-items: center;
+        justify-content: center;
+        display: flex;
+        left: 40px;
+        position: absolute;
+        clip-path: polygon(0 0, 100% 0, 60px 100%, 20px 100%);
+        width: 80px;
+        display: flex;
+        color: gray !important;
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-description-container > .clear-description {
+        
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-visible-container {
+        background: linear-gradient(150deg, rgba(255, 40, 40, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        margin-right: auto;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 90px;
+        left: 100px;
+        clip-path: polygon(20px 0, 100% 0, 70px 100%, 0 100%);
+        display: flex;
+        cursor: pointer;
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-visible-container > .clear-visible {
+        
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-all-container {
+        background: linear-gradient(150deg, rgba(255, 40, 40, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        margin-right: auto;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 60px;
+        left: 170px;
+        clip-path: polygon(20px 0, 100% 0, 40px 100%, 0 100%);
+        display: flex;
+        cursor: pointer;
+    }
+
+    .my-prompt > .notifications-actions-container > .clear-all-container > .clear-all {
+        
+    }
+
+    .my-prompt .my-notification {
+        display: flex;
+        align-items: center;
+        padding: 20px 10px;
+    }
+
+    .my-prompt .my-notification > .date-container {
+        position: absolute;
+        z-index: 0;
+        display: flex;
+        left: 20px;
+        top: 0;
+        font-size: 13px;
+        line-height: 18px;
+        height: 18px;
+        width: 180px;
+        background: linear-gradient(150deg, rgba(32, 32, 32, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        clip-path: polygon(20px 0, 100% 0, 160px 100%, 0 100%);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .my-prompt .my-notification > .new-badge-container {
+        position: absolute;
+        z-index: 0;
+        display: flex;
+        left: 190px;
+        top: 0;
+        font-size: 13px;
+        line-height: 18px;
+        height: 18px;
+        width: 70px;
+        background: linear-gradient(150deg, rgba(32, 32, 140, 0.95) 0, rgba(8, 8, 8, 0.95) 90%);
+        clip-path: polygon(20px 0, 100% 0, 50px 100%, 0 100%);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .my-prompt .my-notification > .decoration {
+        position: absolute;
+        display: flex;
+        left: 0;
+        top: 0;
+        width: 80px;
+        height: 80px;
+        max-width: 80px;
+        max-height: 80px;
+        overflow: hidden;
+    }
+
+    .my-prompt .my-notification > .decoration > .my-icon {
+        position: absolute;
+        transform: rotateZ(135deg);
+        width: 40px;
+        height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+        left: -10px;
+        top: -10px;
+    }
+
+    .my-prompt .my-notification > .my-icon {
+        z-index: 1;
+    }
+
+    .my-prompt .my-notification > .my-btn.my-close {
+        margin-top: -10px;
+        align-self: start;
+    }
+
+    .my-prompt .my-notification.primary {
+        color: white;
+        background: linear-gradient(150deg, rgba(0, 0, 128, 0.95) 0, rgba(8, 8, 32, 0.95) 90%);
+        box-shadow: 0 0 0 1px rgb(0, 0, 255), 0 0 6px 2px rgb(0, 0, 255);
+    }
+    
+    .my-prompt .my-notification.success {
+        color: white;
+        background: linear-gradient(150deg, rgba(0, 128, 0, 0.95) 0, rgba(8, 34, 8, 0.95) 90%);
+        box-shadow: 0 0 0 1px rgb(0, 170, 0), 0 0 6px 2px rgb(0, 255, 0);
+    }
+
+    .my-prompt .my-notification.error {
+        color: white;
+        background: linear-gradient(150deg, rgba(255, 0, 0, 0.95) 0, rgba(128, 8, 8, 0.95) 99%);
+        box-shadow: 0 0 0 1px rgb(255, 36, 36), 0 0 6px 2px rgb(255, 72, 72);
+    }
+
+    .my-prompt .my-notification.warning {
+        color: white;
+        background: linear-gradient(150deg, rgba(170, 170, 0, 0.95) 0, rgba(85, 85, 8, 0.95) 90%);
+        box-shadow: 0 0 0 1px rgb(180, 180, 0), 0 0 6px 2px rgb(170, 170, 0);
+    }
+
+    .my-prompt .my-notification.info {
+        color: white;
+        background: linear-gradient(150deg, rgba(2, 124, 128, 0.95) 0, rgba(8, 31, 32, 0.95) 90%);
+        box-shadow: 0 0 0 1px rgb(4, 170, 160), 0 0 6px 2px rgb(2, 124, 128);
+    }
+
+    .my-prompt .my-notification.loading {
+        color: white;
+        background: linear-gradient(150deg, rgba(50, 50, 50, 0.95) 0, rgba(20, 20, 20, 0.95) 90%);
+        box-shadow: 0 0 0 1px rgb(60, 60, 60), 0 0 6px 2px rgb(50, 50, 50);
+    }
+
+    .my-notification .my-close {
+        margin-left: 10px;
+    }
+
+    .my-notification-message {
+        font-weight: 600;
+        align-self: center;
+        flex: 1 0;
+        overflow: hidden;
+        padding: 0 10px;
+    }
+
+</style>
+

@@ -1,0 +1,64 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
+
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-validation-message {
+        color: white;
+        background: black;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+        position: relative;
+        width: 100%;
+        height: @InputHeight.Px();
+        @Font
+    }
+
+    .my-validation-message-right-icon-and-description-container {
+        margin-left: auto;
+    }
+
+    .my-validation-message-center-icon-and-description-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .my-validation-message-description {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        color: @FailureColor;
+        @NoOverflowSingleLine
+        @Font
+    }
+
+    .my-validation-message-icon {
+        max-width: @LineHeightRem;
+        max-height: @LineHeightRem;
+        flex: 0 0 @LineHeightRem;
+        margin: 0 @HalfGutter.Px() 0 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .my-validation-message-right-icon {
+        margin: 0 0 0 @HalfGutter.Px();
+    }
+
+    .my-validation-message-icon-and-description-container {
+        display: flex;
+        align-items: center;
+    }
+
+</style>
+
+@code {
+
+}

@@ -1,0 +1,44 @@
+﻿@using CommonLib.Source.Common.Extensions
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Components.MyIconComponent
+
+@namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
+@inherits MyValidationMessageBase<TProperty>
+@typeparam TProperty
+
+<div @ref="@_jsValidationMessage" class="my-validation-message">
+    <div class="@_alignContainerClass">
+        @if (Align.In(HorizontalAlignment.Left, HorizontalAlignment.Center))
+        {
+            if (Status == ValidationMessageStatus.Validating)
+            {
+                <MyImage Path="~/images/inline-loader.gif" style="@_strImageCss"></MyImage>
+            }
+            else if (_iconType != null)
+            {
+                <MyIcon IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
+            }
+
+            if (_validationMessage != null)
+            {
+                <div class="@_alignDescriptionClass">@_validationMessage</div>
+            }
+        }
+        else
+        {
+            if (_validationMessage != null)
+            {
+                <div class="@_alignDescriptionClass">@_validationMessage</div>
+            }
+
+            if (Status == ValidationMessageStatus.Validating)
+            {
+                <MyImage Path="~/images/inline-loader.gif" style="@_strImageCss"></MyImage>
+            }
+            else if (_iconType != null)
+            {
+                <MyIcon IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
+            }
+        }
+    </div>
+</div>

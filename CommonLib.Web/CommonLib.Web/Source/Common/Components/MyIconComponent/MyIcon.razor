@@ -1,0 +1,14 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyIconComponent
+
+@using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Extensions
+@inherits MyIconBase
+
+@if (IconType != null)
+{
+    <div class="@_renderClasses" @onclick="@PrintAndClickCallbackAsync" style="@_renderStyle" @attributes="@_renderAttributes">
+        <svg xmlns="@_svgXmlns" viewBox="@_svgViewBox" style="@_renderSvgStyle">
+            <path d="@_dPath" style="fill: @(_disabled ? "#404040" : Color switch { null => "white", "none" => "", _ => Color })"></path>
+        </svg>
+    </div>
+}

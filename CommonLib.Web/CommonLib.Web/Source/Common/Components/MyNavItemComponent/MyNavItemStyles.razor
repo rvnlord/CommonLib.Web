@@ -1,0 +1,55 @@
+﻿@using static Web.Source.Common.Components.StylesConfig
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-nav-item {
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-nav-item {
+            width: 100%
+        }
+    }
+
+    .my-nav-search-container {
+        width: 500px;
+        height: @((NavBarFontSize * 1.5 + Gutter * 3).Px());
+        position: absolute;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        left: @((NavBarFontSize * 1.5 + Gutter * 3).Px());
+        display: none;
+        padding: 0 @Gutter.Px();
+        box-sizing: border-box;
+    }
+
+    .my-nav-item.my-search {
+        z-index: 10;
+    }
+
+    .my-nav-search-container > .my-input-group {
+        width: 400px;
+    }
+
+    .my-nav-search-container > .my-input-group > .my-text-input {
+        width: 400px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-nav-search-container > .my-input-group {
+            width: 100%;
+        }
+
+        .my-nav-search-container > .my-input-group > .my-text-input {
+            width: 100%;
+        }
+    }
+
+</style>

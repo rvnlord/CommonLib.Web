@@ -1,0 +1,130 @@
+﻿@using static Web.Source.Common.Components.StylesConfig
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    input[type='checkbox'], .input-group input[type="checkbox"] {
+        width: @((FontSize * 1.5).Px());
+        height: @((FontSize * 1.5).Px());
+        z-index: 10;
+    }
+
+    .input-group-sm input[type="checkbox"],
+    .input-group-sm .my-checkmark {
+        width: @((FontSize * 1).Px());
+        height: @((FontSize * 1).Px());
+    }
+
+    .input-group-lg input[type="checkbox"],
+    .input-group-lg .my-checkmark {
+        width: @((FontSize * 1.75).Px());
+        height: @((FontSize * 1.75).Px());
+    }
+
+    .my-checkbox-container {
+        display: flex;
+        align-items: center;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Hide the browser's default checkbox */
+    .my-checkbox-container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    /* Create a custom checkbox */
+    .my-checkmark {
+        top: 0;
+        left: 0;
+        width: @((FontSize * 1.5).Px());
+        height: @((FontSize * 1.5).Px());
+        background: linear-gradient(to bottom, #303030, #000000);
+        border: 1px solid #404040;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input[type='checkbox']:hover:not([disabled]) + .my-checkmark,
+    .input-group-text input[type="checkbox"]:hover:not([disabled]) + .my-checkmark {
+        box-shadow: 0 0 6px 2px blue;
+    }
+
+    /* On mouse-over, add a grey background color */
+    .my-checkbox-container:hover input:not([disabled]) ~ .my-checkmark {
+        background: linear-gradient(to bottom, darkgreen, #000000);
+    }
+
+    /* When the checkbox is checked, add a background */
+    .my-checkbox-container input:checked ~ .my-checkmark {
+        background: linear-gradient(to bottom, yellowgreen, #000000);
+    }
+
+    /* Create the checkmark/indicator (hidden when not checked) */
+    .my-checkmark:after {
+        content: "";
+        display: none;
+    }
+
+    /* Show the checkmark when checked */
+    .my-checkbox-container input:checked ~ .my-checkmark:after {
+        display: block;
+        flex: 0 0 auto;
+        width: @((FontSize * 0.625).Px());
+        height: @FontSize.Px();
+        border: solid white;
+        border-width: 0 4px 4px 0;
+        box-sizing: border-box;
+        -webkit-transform: rotate(45deg) translate(-1px, -1px);
+        -ms-transform: rotate(45deg) translate(-1px, -1px);
+        transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .input-group-lg input:checked ~ .my-checkmark:after {
+        width: @((FontSize * 0.729166667).Px());
+        height: @((FontSize * 1.166666667).Px());
+    }
+
+    .input-group-sm input:checked ~ .my-checkmark:after {
+        width: @((FontSize * 0.416666667).Px());
+        height: @((FontSize * 0.66666667).Px());
+        border-width: 0 2px 2px 0;
+    }
+
+    .my-checkbox-label {
+        margin: 0 0 0 @Gutter.Px();
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .my-checkbox-container input:not([disabled]) ~ .my-checkmark:hover,
+    .my-checkbox-container input:not([disabled]) ~ .my-checkbox-label:hover,
+    .my-checkbox-container input:not([disabled]):hover {
+        cursor: pointer
+    }
+
+    .my-checkmark:disabled, .my-checkbox-label:disabled, .my-checkbox-container input:hover {
+        cursor: default;
+    }
+
+    input[type='checkbox'][disabled] ~ .my-checkmark {
+        border-color: #303030;
+        background: linear-gradient(to bottom, #101010, #000000);
+    }
+
+    input[type='checkbox'][disabled] ~ .my-checkbox-label {
+        color: #404040;
+    }
+</style>

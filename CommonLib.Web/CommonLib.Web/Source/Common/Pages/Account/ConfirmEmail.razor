@@ -1,0 +1,78 @@
+﻿@page "/account/confirmemail/"
+
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Components.MyInputComponent
+@using CommonLib.Web.Source.Common.Converters
+@inherits ConfirmEmailBase
+
+<div class="my-col-sm-auto my-col-12" style="background: #101010;">
+    <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="@FormConfirmEmail_ValidSubmitAsync" class="my-container">
+        <MyFluentValidator @ref="_validator" />
+        <div class="my-row">
+            <div class="my-col-12">
+                <h3>Confirm Email</h3>
+                <hr class="my-mt-10px" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => _confirmUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput State="InputState.Disabled" For="@(() => _confirmUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => _confirmUserVM.UserName)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => _confirmUserVM.Email)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput For="@(() => _confirmUserVM.Email)" SyncPaddingGroup="confirm-email-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => _confirmUserVM.Email)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => _confirmUserVM.ConfirmationCode)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput For="@(() => _confirmUserVM.ConfirmationCode)" SyncPaddingGroup="confirm-email-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.Key)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => _confirmUserVM.ConfirmationCode)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyButton Value="@("Confirm Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.CheckCircle)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnConfirmEmailState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-confirm-email" @ref="_btnConfirmEmail" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="@($"~/Account/ResendEmailConfirmation?{GetNavQueryStrings()}")" Icon="IconType.From(LightIconType.EnvelopeOpen)" IconPlacement="NavLinkIconPlacement.Right">Resend Confirmation Email</MyNavLink>
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="~/Account/Register" Icon="IconType.From(LightIconType.UserPlus)" IconPlacement="NavLinkIconPlacement.Right">I am not registered yet</MyNavLink>
+            </div>
+        </div>
+    </MyEditForm>
+</div>

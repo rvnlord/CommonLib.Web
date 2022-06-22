@@ -1,0 +1,90 @@
+﻿@page "/error"
+
+@using CommonLib.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Extensions
+@using CommonLib.Source.Common.Extensions.Collections
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
+
+@namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
+@inherits MyPromptBase
+
+@{
+    var now = ExtendedTime.UtcNow;
+
+    var nrd = _notificationDataToRenderQueue[_id].DequeueOrNull() ?? _previouslyPostProcessedNotificationsRenderingData[_id];
+    var notificationsToRender = nrd?.NotificationsToRender ?? Array.Empty<Notification>();
+    if (nrd != null && (_notificationDataToPostProcessQueue[_id].Count == 0 || !_notificationDataToPostProcessQueue[_id].Last().Equals(nrd)))
+        _notificationDataToPostProcessQueue[_id].Enqueue(nrd);
+
+    Logger.For<MyPrompt>().Info("Rendering...\n" +
+                                $"          `To Render`: [{notificationsToRender.Select(n => n.Type).JoinAsString(", ")}]");
+}
+
+<div @ref="@_jsPrompt" my-guid="@_guid" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
+    @if (notificationsToRender.Any())
+    {
+        <div class="notifications-actions-container">
+            <div class="notifications-counter-container">
+                <div class="notifications-counter">@nrd.AllNotificationsAfterCurrentChanges.Length</div>
+            </div>
+            <div class="clear-description-container">
+                <div class="clear-description">Clear:</div>
+            </div>
+            <div class="clear-visible-container" @onclick="DivClearVisible_ClickAsync">
+                <div class="clear-visible">Visible</div>
+            </div>
+            <div class="clear-all-container" @onclick="DivClearAll_ClickAsync">
+                <div class="clear-all">All</div>
+            </div>
+        </div>
+
+        <div class="my-container my-container-no-gutter">
+
+            @foreach (var notification in notificationsToRender)
+            {
+                <div class="my-row my-d-none" style="opacity: 0; height: auto;">
+                    <div class="my-col-12">
+                        <div my-guid="@notification.Guid" class="@notification.RenderCssClasses">
+
+                            <div class="decoration">
+                                <MyIcon IconType="IconType.From(LightIconType.GripLines)" SizeMode="IconSizeMode.Cover"></MyIcon>
+                            </div>
+
+                            <div class="date-container">
+                                <div class="date">@notification.TimeStamp.ToLocal().ToTimeDateString()</div>
+                            </div>
+
+                            @if (notification.TimeStamp >= now - notification.NewFor)
+                            {
+                                <div class="new-badge-container">
+                                    <div class="new-badge">NEW</div>
+                                </div>
+                            }
+
+                            @if (notification.Type == NotificationType.Loading)
+                            {
+                                <MyImage Path="~/images/content-loader.gif" class="my-line-sized" style="padding-top: 0"></MyImage>
+                            }
+                            else
+                            {
+                                <MyIcon IconType="notification.Icon" SizeMode="IconSizeMode.Cover"></MyIcon>
+                            }
+
+                            <div class="my-notification-message">
+                                @notification.Message
+                            </div>
+
+                            <MyButton OnClick="@(async e => await BtnCloseNotification_ClickAsync(e, notification))" Styling="ButtonStyling.Clear" Sizing="ButtonSizing.Quadratic" class="my-close my-font-sized">
+                                <MyIcon Color="none" IconType="IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.Cover"></MyIcon>
+                            </MyButton>
+
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+

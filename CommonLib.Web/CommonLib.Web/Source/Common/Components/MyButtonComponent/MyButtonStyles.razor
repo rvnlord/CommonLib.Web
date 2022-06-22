@@ -1,0 +1,493 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    button:enabled {
+        cursor: pointer;
+    }
+
+    .my-btn {
+        background: linear-gradient(to bottom, #303030, #000000);
+        color: white;
+        display: block;
+        position: relative;
+        box-sizing: border-box;
+        padding: @HalfGutter.Px();
+        line-height: @((FontSize * 1.5).Px());
+        height: @InputHeight.Px(); /* box-sizing will be ignored if height is not set explicitly */
+        max-height: @InputHeight.Px();
+        @Font
+        transition: all .15s ease-in-out;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none;
+        box-shadow: 0 0 0 0 #FFFFFF, inset 0 0 0 1px #404040;
+        border-radius: 0;
+    }
+
+    .my-btn:hover:enabled, .my-btn:active:enabled {
+        color: inherit;
+    }
+
+        .my-btn[disabled] {
+            background: linear-gradient(to bottom, #101010, #000000);
+            box-shadow: inset 0 0 0 1px #303030;
+            color: #404040;
+            outline: 0 none;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+            .my-btn[disabled] svg > path {
+                fill: #404040;
+            }
+
+    .my-btn.my-loading {
+        min-width: @((FontSize * 1.5 + Gutter).Px());
+        min-height: @((FontSize * 1.5 + Gutter).Px());
+    }
+
+    .my-btn.my-loading > * {
+        opacity: 0;
+    }
+
+    .my-btn.my-loading > .my-btn-loader {
+        width: @((FontSize * 1.5).Px());
+        height: @((FontSize * 1.5).Px());
+        flex: 0 0 @((FontSize * 1.5).Px());
+        position: absolute;
+        opacity: 1;
+    }
+
+    .my-btn > .my-btn-description {
+        padding-left: @((FontSize / 4).Px());
+        padding-right: @((FontSize / 4).Px());
+        height: @((FontSize * 1.5).Px());
+    }
+
+    .my-btn > .my-icon {
+        margin: @((FontSize / 4).Px());
+        width: auto;
+        height: @FontSize.Px();
+        max-width: none;
+        max-height: @FontSize.Px();
+        flex: 0 0 auto;
+    }
+
+    .my-btn.my-btn-clear.my-quadratic > .my-icon {
+        margin: 0;
+        width: @InputHeight.Px();
+        height: @InputHeight.Px();
+        min-width: @InputHeight.Px();
+        min-height: @InputHeight.Px();
+        flex: 0 0 auto;
+    }
+
+        .my-btn.my-btn-clear.my-quadratic.my-font-sized.my-line-sized-height {
+            padding: 0;
+            width: @FontSize.Px();
+            height: @LineHeight.Px();
+        }
+
+        .my-btn.my-btn-clear.my-quadratic.my-font-sized {
+            padding: 0;
+            width: @FontSize.Px();
+            height: @FontSize.Px();
+        }
+
+        .my-btn.my-btn-clear.my-quadratic.my-font-sized.my-input-sized-height {
+            padding: 0;
+            width: @FontSize.Px();
+            height: @InputHeight.Px();
+        }
+
+        .my-btn.my-btn-clear.my-quadratic.my-font-sized > .my-icon {
+            margin: 0;
+            width: @FontSize.Px();
+            height: @FontSize.Px();
+            min-width: @FontSize.Px();
+            min-height: @FontSize.Px();
+            flex: 0 0 auto;
+        }
+
+    .my-btn > .my-icon > svg {
+        height: 100%;
+        width: auto;
+    }
+
+    .my-btn.my-quadratic {
+        width: @InputHeight.Px();
+    }
+
+    .my-btn > .my-icon.my-quadratic {
+        width: @FontSize.Px();
+    }
+
+        .my-btn.my-auto {
+            width: auto;
+        }
+
+    .my-btn.my-fill-and-double-height {
+        height: @((InputHeight * 2 + Gutter).Px());
+        max-height: @((InputHeight * 2 + Gutter).Px());
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-direction: column;
+    }
+
+        .my-btn.my-fill-and-double-height > .my-icon {
+            margin: @((FontSize / 4).Px());
+            width: auto;
+            height: @((InputHeight + HalfGutter).Px());
+            max-width: none;
+            max-height: @((InputHeight + HalfGutter).Px());
+            flex: 0 0 auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+    .my-btn-clear {
+        background: transparent;
+        box-shadow: none;
+        color: #646464;
+    }
+
+        .my-btn-clear > .my-icon > svg > path {
+            fill: #646464;
+            transition: 0.5s;
+        }
+
+    .my-btn-clear:hover:enabled {
+        background: transparent;
+        box-shadow: none;
+        color: white;
+    }
+    
+        .my-btn-clear:hover:enabled > .my-icon > svg > path {
+            fill: white;
+        }
+
+    .my-btn-clear:disabled,
+    .my-btn-clear:disabled:focus,
+    .my-btn-clear:disabled:active,
+    .my-btn-clear:disabled:hover,
+    .my-btn-clear[readonly],
+    .my-btn-clear[readonly]:focus,
+    .my-btn-clear[readonly]:active,
+    .my-btn-clear[readonly]:hover,
+    .my-btn-clear.disabled,
+    .my-btn-clear.disabled:focus,
+    .my-btn-clear.disabled:active,
+    .my-btn-clear.disabled:hover,
+    .my-btn-clear.readonly,
+    .my-btn-clear.readonly:focus,
+    .my-btn-clear.readonly:active,
+    .my-btn-clear.readonly:hover {
+        color: #404040;
+        background: transparent;
+        box-shadow: none;
+        cursor: default;
+    }
+
+    .my-btn-clear[disabled] > .my-icon > svg > path {
+        fill: #404040;
+    }
+
+    .my-btn-primary {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+        .my-btn-primary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
+        .my-btn-primary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
+        .my-btn-primary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
+            box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+        }
+
+        .my-btn-primary:disabled,
+        .my-btn-primary:disabled:focus,
+        .my-btn-primary:disabled:active,
+        .my-btn-primary:disabled:hover,
+        .my-btn-primary[readonly],
+        .my-btn-primary[readonly]:focus,
+        .my-btn-primary[readonly]:active,
+        .my-btn-primary[readonly]:hover,
+        .my-btn-primary.disabled,
+        .my-btn-primary.disabled:focus,
+        .my-btn-primary.disabled:active,
+        .my-btn-primary.disabled:hover,
+        .my-btn-primary.readonly,
+        .my-btn-primary.readonly:focus,
+        .my-btn-primary.readonly:active,
+        .my-btn-primary.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(0, 0, 64), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(0, 0, 255), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-secondary {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(64, 64, 64), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(0, 0, 255), inset 0 0 0 1px rgb(96, 96, 96);
+    }
+
+        .my-btn-secondary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
+        .my-btn-secondary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
+        .my-btn-secondary:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(64, 64, 64), #000000);
+            box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(96, 96, 96);
+        }
+
+        .my-btn-secondary:disabled,
+        .my-btn-secondary:disabled:focus,
+        .my-btn-secondary:disabled:active,
+        .my-btn-secondary:disabled:hover,
+        .my-btn-secondary[readonly],
+        .my-btn-secondary[readonly]:focus,
+        .my-btn-secondary[readonly]:active,
+        .my-btn-secondary[readonly]:hover,
+        .my-btn-secondary.disabled,
+        .my-btn-secondary.disabled:focus,
+        .my-btn-secondary.disabled:active,
+        .my-btn-secondary.disabled:hover,
+        .my-btn-secondary.readonly,
+        .my-btn-secondary.readonly:focus,
+        .my-btn-secondary.readonly:active,
+        .my-btn-secondary.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(32, 32, 32), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(0, 0, 255), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-light {
+        color: rgb(0, 0, 0);
+        background: linear-gradient(to bottom, rgb(255, 255, 255), rgb(128, 128, 128));
+        box-shadow: 0 0 0 0 rgb(128, 128, 128), inset 0 0 0 1px rgb(0, 0, 0);
+    }
+
+        .my-btn-light:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
+        .my-btn-light:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
+        .my-btn-light:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
+            color: rgb(0, 0, 0);
+            background: linear-gradient(to top, rgb(255, 255, 255), rgb(128, 128, 128));
+            box-shadow: 0 0 6px 2px rgb(128, 128, 128), inset 0 0 0 1px rgb(0, 0, 0);
+        }
+
+        .my-btn-light:disabled,
+        .my-btn-light:disabled:focus,
+        .my-btn-light:disabled:active,
+        .my-btn-light:disabled:hover,
+        .my-btn-light[readonly],
+        .my-btn-light[readonly]:focus,
+        .my-btn-light[readonly]:active,
+        .my-btn-light[readonly]:hover,
+        .my-btn-light.disabled,
+        .my-btn-light.disabled:focus,
+        .my-btn-light.disabled:active,
+        .my-btn-light.disabled:hover,
+        .my-btn-light.readonly,
+        .my-btn-light.readonly:focus,
+        .my-btn-light.readonly:active,
+        .my-btn-light.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(128, 128, 128), rgb(64, 64, 64));
+            box-shadow: 0 0 0 0 rgb(128, 128, 128), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-info {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(2, 124, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(4, 248, 255), inset 0 0 0 1px rgb(4, 248, 255);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .my-btn-info:not(:disabled):not(.disabled):focus,
+        .my-btn-info:not(:disabled):not(.disabled):active,
+        .my-btn-info:not(:disabled):not(.disabled):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(2, 124, 128), #000000);
+            box-shadow: 0 0 6px 2px rgb(4, 248, 255), inset 0 0 0 1px rgb(4, 248, 255);
+        }
+
+        .my-btn-info:disabled,
+        .my-btn-info:disabled:focus,
+        .my-btn-info:disabled:active,
+        .my-btn-info:disabled:hover,
+        .my-btn-info[readonly],
+        .my-btn-info[readonly]:focus,
+        .my-btn-info[readonly]:active,
+        .my-btn-info[readonly]:hover,
+        .my-btn-info.disabled,
+        .my-btn-info.disabled:focus,
+        .my-btn-info.disabled:active,
+        .my-btn-info.disabled:hover,
+        .my-btn-info.readonly,
+        .my-btn-info.readonly:focus,
+        .my-btn-info.readonly:active,
+        .my-btn-info.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(1, 62, 64), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(4, 248, 255), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-danger {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(128, 53, 69), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(255, 106, 138), inset 0 0 0 1px rgb(255, 106, 138);
+    }
+
+        .my-btn-danger:not(:disabled):not(.disabled):focus,
+        .my-btn-danger:not(:disabled):not(.disabled):active,
+        .my-btn-danger:not(:disabled):not(.disabled):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to bottom, rgb(128, 53, 69), rgb(0, 0, 0));
+            box-shadow: 0 0 6px 2px rgb(255, 106, 138), inset 0 0 0 1px rgb(255, 106, 138);
+        }
+
+        .my-btn-danger:disabled,
+        .my-btn-danger:disabled:focus,
+        .my-btn-danger:disabled:active,
+        .my-btn-danger:disabled:hover,
+        .my-btn-danger[readonly],
+        .my-btn-danger[readonly]:focus,
+        .my-btn-danger[readonly]:active,
+        .my-btn-danger[readonly]:hover,
+        .my-btn-danger.disabled,
+        .my-btn-danger.disabled:focus,
+        .my-btn-danger.disabled:active,
+        .my-btn-danger.disabled:hover,
+        .my-btn-danger.readonly,
+        .my-btn-danger.readonly:focus,
+        .my-btn-danger.readonly:active,
+        .my-btn-danger.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(64, 27, 35), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(255, 106, 138), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-success {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(0, 128, 0), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(0, 255, 0), inset 0 0 0 1px rgb(0, 255, 0);
+    }
+
+        .my-btn-success:not(:disabled):not(.disabled):focus,
+        .my-btn-success:not(:disabled):not(.disabled):active,
+        .my-btn-success:not(:disabled):not(.disabled):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(0, 128, 0), rgb(0, 0, 0));
+            box-shadow: 0 0 6px 2px rgb(0, 255, 0), inset 0 0 0 1px rgb(0, 255, 0);
+        }
+
+        .my-btn-success:disabled,
+        .my-btn-success:disabled:focus,
+        .my-btn-success:disabled:active,
+        .my-btn-success:disabled:hover,
+        .my-btn-success[readonly],
+        .my-btn-success[readonly]:focus,
+        .my-btn-success[readonly]:active,
+        .my-btn-success[readonly]:hover,
+        .my-btn-success.disabled,
+        .my-btn-success.disabled:focus,
+        .my-btn-success.disabled:active,
+        .my-btn-success.disabled:hover,
+        .my-btn-success.readonly,
+        .my-btn-success.readonly:focus,
+        .my-btn-success.readonly:active,
+        .my-btn-success.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to bottom, rgb(0, 64, 0), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(0, 255, 0), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-warning {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(0, 128, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(0, 255, 255), inset 0 0 0 1px rgb(0, 255, 255);
+    }
+
+        .my-btn-warning:not(:disabled):not(.disabled):focus,
+        .my-btn-warning:not(:disabled):not(.disabled):active,
+        .my-btn-warning:not(:disabled):not(.disabled):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(128, 128, 0), rgb(0, 0, 0));
+            box-shadow: 0 0 6px 2px rgb(255, 255, 0), inset 0 0 0 1px rgb(255, 255, 0);
+        }
+
+        .my-btn-warning:disabled,
+        .my-btn-warning:disabled:focus,
+        .my-btn-warning:disabled:active,
+        .my-btn-warning:disabled:hover,
+        .my-btn-warning[readonly],
+        .my-btn-warning[readonly]:focus,
+        .my-btn-warning[readonly]:active,
+        .my-btn-warning[readonly]:hover,
+        .my-btn-warning.disabled,
+        .my-btn-warning.disabled:focus,
+        .my-btn-warning.disabled:active,
+        .my-btn-warning.disabled:hover,
+        .my-btn-warning.readonly,
+        .my-btn-warning.readonly:focus,
+        .my-btn-warning.readonly:active,
+        .my-btn-warning.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to top, rgb(64, 64, 0), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(255, 255, 0), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+    .my-btn-input {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(48, 48, 48), rgb(0, 0, 0));
+        box-shadow: 0 0 0 0 rgb(96, 96, 96), inset 0 0 0 1px rgb(64, 64, 64);
+    }
+
+        .my-btn-input:not(:disabled):not(.disabled):focus,
+        .my-btn-input:not(:disabled):not(.disabled):active,
+        .my-btn-input:not(:disabled):not(.disabled):hover {
+            color: rgb(255, 255, 255);
+            background: linear-gradient(to top, rgb(48, 48, 48), rgb(0, 0, 0));
+            box-shadow: 0 0 6px 2px rgb(96, 96, 96), inset 0 0 0 1px rgb(96, 96, 96);
+        }
+
+        .my-btn-input:disabled,
+        .my-btn-input:disabled:focus,
+        .my-btn-input:disabled:active,
+        .my-btn-input:disabled:hover,
+        .my-btn-input[readonly],
+        .my-btn-input[readonly]:focus,
+        .my-btn-input[readonly]:active,
+        .my-btn-input[readonly]:hover,
+        .my-btn-input.disabled,
+        .my-btn-input.disabled:focus,
+        .my-btn-input.disabled:active,
+        .my-btn-input.disabled:hover,
+        .my-btn-input.readonly,
+        .my-btn-input.readonly:focus,
+        .my-btn-input.readonly:active,
+        .my-btn-input.readonly:hover {
+            color: rgb(64, 64, 64);
+            background: linear-gradient(to top, rgb(24, 24, 24), rgb(0, 0, 0));
+            box-shadow: 0 0 0 0 rgb(96, 96, 96), inset 0 0 0 1px rgb(48, 48, 48);
+            cursor: default;
+        }
+
+</style>

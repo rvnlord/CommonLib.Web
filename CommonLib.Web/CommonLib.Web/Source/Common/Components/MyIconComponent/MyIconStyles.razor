@@ -1,0 +1,30 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.MyIconComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: @((FontSize * 1.5).Px());
+        height: @((FontSize * 1.5).Px());
+        max-width: @((FontSize * 1.5).Px());
+        max-height: @((FontSize * 1.5).Px());
+        flex: 0 0 @((FontSize * 1.5).Px());
+        overflow: hidden;
+    }
+
+    .my-icon.my-inline {
+        width: 100%;
+        height: @FontSize.Px();
+        max-width: @FontSize.Px();
+        max-height: 100%;
+        flex: 0 0 100%;
+    }
+
+</style>

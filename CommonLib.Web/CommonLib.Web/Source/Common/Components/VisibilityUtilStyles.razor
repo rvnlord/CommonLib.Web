@@ -1,0 +1,35 @@
+﻿@using static Web.Source.Common.Components.StylesConfig
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    @foreach (var (device, breakpoint) in Devices)
+    {
+        if (device != "xs")
+        {
+            @($"@media (min-width: {breakpoint.Px()}) {{")
+        }
+
+        <text>
+            @($".my-d{(device == "xs" ? "" : $"-{device}")}-none {{")
+            @("display: none !important")
+            @($"}}")
+
+            @($".my-d{(device == "xs" ? "" : $"-{device}")}-block {{")
+            @("display: block !important")
+            @($"}}")
+
+            @($".my-d{(device == "xs" ? "" : $"-{device}")}-flex {{")
+            @("display: flex !important")
+            @($"}}")
+        </text>
+
+        if (device != "xs")
+        {
+            @($"}}")
+        }
+    }
+
+</style>

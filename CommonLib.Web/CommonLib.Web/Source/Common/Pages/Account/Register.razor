@@ -1,0 +1,88 @@
+﻿@page "/account/register/"
+@using CommonLib.Source.Common.Extensions
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.ViewModels.Account
+@using System.Linq
+@using CommonLib.Web.Source.Common.Pages.Account
+@inherits RegisterBase
+
+<div class="my-col-sm-auto my-col-12" style="background: #101010;">
+    <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="@FormRegister_ValidSubmitAsync" class="my-container">
+        @*EditContext="CurrentEditContext"*@
+        <MyFluentValidator @ref="_validator" />
+        <div class="my-row">
+            <div class="my-col-12">
+                <h3>Register</h3>
+                <hr class="my-mt-10px" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => RegisterUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput For="@(() => RegisterUserVM.UserName)" Icon="" SyncPaddingGroup="register-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => RegisterUserVM.UserName)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => RegisterUserVM.Email)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput For="@(() => RegisterUserVM.Email)" SyncPaddingGroup="register-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => RegisterUserVM.Email)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => RegisterUserVM.Password)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyPasswordInput For="@(() => RegisterUserVM.Password)" SyncPaddingGroup="register-panel" />
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => RegisterUserVM.Password)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => RegisterUserVM.ConfirmPassword)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyPasswordInput For="@(() => RegisterUserVM.ConfirmPassword)" SyncPaddingGroup="register-panel" />
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => RegisterUserVM.ConfirmPassword)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyButton Value="@("Register".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnRegisterState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-register" @ref="_btnRegister" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="@($"~/Account/ResendEmailConfirmation?{GetNavQueryStrings()}")" Icon="IconType.From(LightIconType.EnvelopeOpen)" IconPlacement="NavLinkIconPlacement.Right">Resend Confirmation Email</MyNavLink>
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="@($"~/Account/ConfirmEmail?{GetNavQueryStrings()}")" Icon="IconType.From(LightIconType.KeySkeleton)" IconPlacement="NavLinkIconPlacement.Right">I already have Confirmation Code</MyNavLink>
+            </div>
+        </div>
+    </MyEditForm>
+</div>

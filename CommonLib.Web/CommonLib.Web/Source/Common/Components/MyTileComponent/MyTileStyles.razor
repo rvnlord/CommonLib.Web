@@ -1,0 +1,54 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyTileComponent
+
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-menu-tile {
+        height: 50px;
+        background: #000040;
+        margin: 0 0 @Gutter.Px() 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .my-menu-tile:last-child {
+        margin: 0 0 0 0;
+    }
+
+    .my-menu-tile-content {
+        flex: 0 0 calc(100% - @MenuGutter.Px());
+        display: flex;
+    }
+
+    .my-menu-tile-icon {
+        min-height: 25px;
+        min-width: 25px;
+        height: 25px;
+        width: 25px;
+        margin: 0 @MenuGutter.Px() 0 @MenuGutter.Px();
+        flex: 0 0 25px;
+        background: darkred;
+    }
+
+    .my-menu-tile-icon svg {
+        height: 100%;
+        width: 100%;
+    }
+
+    .my-menu-tile-text {
+        height: 25px;
+        color: white;
+        overflow: hidden;
+        background: darkred;
+    }
+
+    #div-my-main-menu-col {
+        background: tomato;
+        overflow: hidden;
+    }
+
+</style>

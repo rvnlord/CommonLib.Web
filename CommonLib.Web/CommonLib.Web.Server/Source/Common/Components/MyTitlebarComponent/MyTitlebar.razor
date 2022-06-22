@@ -1,0 +1,76 @@
+﻿@namespace CommonLib.Web.Server.Source.Common.Components.MyTitlebarComponent
+
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Server.Source.Common.Utils
+@using CommonLib.Web.Source.Common.Utils
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using ElectronNET.API
+@using ElectronNET.API.Entities
+@using CommonLib.Web.Source.Common.Components.MyIconComponent
+
+<div class="my-titlebar"> @*@onmousemove="@(async e => await DragWindowAsync(e))" @onmousedown="@(() => _isBeingDragged = true)" @onmouseup="@(() => _isBeingDragged = false)">*@
+    <div class="my-titlebar-icon"></div>
+    <div class="my-titlebar-title"><p>@AppTitle</p></div>
+    <MyIcon IconType="@IconType.From(LightIconType.CompressAlt)" class="my-titlebar-btn-tray" OnClick="@MinimizeWindowToTrayAsync" SizeMode="IconSizeMode.Contain" />
+    <MyIcon IconType="@IconType.From(LightIconType.Minus)" class="my-titlebar-btn-minimize" OnClick="@MinimizeWindowAsync" SizeMode="IconSizeMode.Contain" />
+    <MyIcon IconType="@IconType.From(LightIconType.RectangleLandscape)" class="my-titlebar-btn-maximize" OnClick="@MaximizeWindowAsync" SizeMode="IconSizeMode.Contain" />
+    <MyIcon IconType="@IconType.From(LightIconType.Times)" class="my-titlebar-btn-close" OnClick="@CloseWindowAsync" SizeMode="IconSizeMode.Contain" />
+</div>
+
+@code {
+    [Parameter]
+    public string AppTitle { get; set; } = default!;
+
+    public static async Task<BrowserWindow> GetWindowOrNullAsync() => await ElectronUtils.GetWindowOrNullAsync();
+
+    private async Task MinimizeWindowToTrayAsync()
+    {
+        var wnd = await ElectronUtils.GetWindowOrNullAsync().ConfigureAwait(false);
+        //if (wnd == null)
+        //    return;
+
+        wnd.Hide();
+
+        var iconPath = $@"{WebServerUtils.GetAbsolutePhysicalContentPath()}\Content\Icons\Icon.ico";
+
+        Electron.Tray.Show(iconPath, Array.Empty<MenuItem>());
+        Electron.Tray.DisplayBalloon(new DisplayBalloonOptions
+        {
+            Icon = iconPath,
+            Title = AppTitle,
+            Content = "is hidden here"
+        });
+
+        Electron.Tray.OnClick += TrayOnClick;
+    }
+
+    private static async void TrayOnClick(TrayClickEventArgs e, Rectangle r)
+    {
+        var wnd = await ElectronUtils.GetWindowOrNullAsync().ConfigureAwait(false);
+        wnd.Show();
+        Electron.Tray.OnClick -= TrayOnClick;
+        Electron.Tray.Destroy();
+    }
+
+    private static async Task MinimizeWindowAsync()
+    {
+        (await ElectronUtils.GetWindowOrNullAsync())?.Minimize();
+    }
+
+    private static async Task MaximizeWindowAsync()
+    {
+        var wnd = await GetWindowOrNullAsync();
+        //if (wnd == null)
+        //    return;
+        if (await wnd.IsMaximizedAsync())
+            wnd.Unmaximize();
+        else
+            wnd.Maximize();
+    }
+
+    private static async Task CloseWindowAsync()
+    {
+        SeleniumDriverManager.CloseAllDrivers();
+        (await ElectronUtils.GetWindowOrNullAsync())?.Close();
+    }
+}

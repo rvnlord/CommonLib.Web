@@ -1,0 +1,23 @@
+﻿@using static Web.Source.Common.Components.StylesConfig
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-nav-menu {
+        /*background: linear-gradient(150deg, rgba(30, 30, 30, 0.95) 0, rgba(0, 0, 0, 0.95) 70%);*/
+        background: linear-gradient(150deg, rgba(80, 80, 80, 0.95) 0, rgba(5, 5, 5, 0.95) 20%); 
+        box-shadow: none;
+        color: white;
+        border: 1px solid #404040;
+        position: absolute;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        z-index: 10;
+        top: calc(1.5rem + 10px);
+        display: none;
+    }
+
+</style>

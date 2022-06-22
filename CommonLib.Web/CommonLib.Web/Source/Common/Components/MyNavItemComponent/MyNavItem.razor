@@ -1,0 +1,55 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
+
+@using CommonLib.Source.Common.Extensions
+@using CommonLib.Source.Common.Extensions.Collections
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+
+@inherits MyNavItemBase
+
+<div class="@_renderClasses">
+    <CascadingValue Value="Type">
+        <CascadingValue Value="Icon">
+            @if (Type == NavItemType.Link)
+            {
+                <MyNavLink To="@To" MatchEmptyRoute="MatchEmptyRoute">@ChildContent</MyNavLink>
+            }
+            else if (Type.In(NavItemType.DropDown, NavItemType.DropUp, NavItemType.DropLeft, NavItemType.DropRight))
+            {
+                @ChildContent
+            }
+            else if (Type == NavItemType.Brand)
+            {
+                @ChildContent
+            }
+            else if (Type == NavItemType.Toggler)
+            {
+                <MyNavLink To="null" MatchEmptyRoute="false"></MyNavLink>
+            }
+            else if (Type == NavItemType.Search)
+            {
+                <MyNavLink To="null" MatchEmptyRoute="false"></MyNavLink>
+                <MyIcon Color="none" IconType="IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.Cover" class="my-nav-link-icon my-close my-d-none"></MyIcon>
+                <div class="my-nav-search-container">
+                    <MyTextInput Model="Search" For="(() => Search.SearchTerm)">
+                        <MyInputGroupPrepend>
+                            <MyIcon IconType="IconType.From(LightIconType.Search)"></MyIcon>
+                        </MyInputGroupPrepend>
+                        <MyInputGroupAppend>
+                            <MyButton class="btm-my-search">
+                                <MyIcon IconType="IconType.From(LightIconType.ShareAll)"></MyIcon>
+                            </MyButton>
+                        </MyInputGroupAppend>
+                    </MyTextInput>
+                </div>
+            }
+            else if (Type == NavItemType.Login)
+            {
+                <MyNavLink To="null" MatchEmptyRoute="false">Sign In</MyNavLink>
+            }
+            else if (Type == NavItemType.Home)
+            {
+                <MyNavLink To="~/Home/Index" MatchEmptyRoute="true">Home</MyNavLink>
+            }
+        </CascadingValue>
+    </CascadingValue>
+</div>

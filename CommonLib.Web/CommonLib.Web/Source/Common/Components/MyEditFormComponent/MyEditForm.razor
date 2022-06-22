@@ -1,0 +1,13 @@
+﻿@using CommonLib.Web.Source.Models
+@using CommonLib.Web.Source.Common.Components.MyEditContextComponent
+
+@namespace CommonLib.Web.Source.Common.Components.MyEditFormComponent
+@inherits MyEditFormBase
+
+<form class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" onsubmit="@_handleSubmitDelegate">
+    <CascadingValue Value="_fixedEditContext">
+    <CascadingValue Value="_fixedEditContextBp">
+        @ChildContent
+    </CascadingValue> 
+    </CascadingValue>
+</form>

@@ -1,0 +1,34 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-navbar {
+        background: linear-gradient(to bottom, #202020, black);
+        box-shadow: 0 0 6px 2px black;
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: left;
+        position: absolute;
+        overflow: hidden; /* It has to have overflow visible for all other devices other than sm to prevent trunacating brand image, but I have to set it after render to preserve navbar loading styles */
+        z-index: 10;
+        height: 57px;
+        width: calc(100% - 20px);
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-navbar {
+            overflow: hidden !important; /* It has to have overflow hidden for sm to prevent showing navitems if navbar is closed */
+            width: 100%;
+        }
+    }
+
+    /*@@media (min-width: 768px) {*/
+    .my-navbar.my-sticky.glued {
+        position: fixed;
+        top: 0;
+    }
+    /*}*/
+
+</style>

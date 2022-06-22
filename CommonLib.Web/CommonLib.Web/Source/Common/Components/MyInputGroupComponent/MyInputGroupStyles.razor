@@ -1,0 +1,59 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.MyInputGroupComponent
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-input-group {
+        position: relative;
+    }
+
+    .my-input-group > .my-input-group-prepend {
+        display: flex;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .my-input-group > .my-input-group-append {
+        display: flex;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .my-input-group > .my-input-group-prepend > .my-btn:not(:first-child),
+    .my-input-group > .my-input-group-append > .my-btn:not(:first-child) {
+        margin-left: -1px;
+    }
+
+    .my-input-group > .my-input-group-prepend > .my-icon:not(:first-child),
+    .my-input-group > .my-input-group-append > .my-icon:not(:first-child) {
+        margin-left: @((FontSize / 4 + HalfGutter - 1).Px());
+    }
+
+        .my-input-group > .my-input-group-prepend > .my-icon,
+        .my-input-group > .my-input-group-append > .my-icon {
+            width: auto;
+            height: @FontSize.Px();
+            max-width: none;
+            max-height: @FontSize.Px();
+            flex: 0 0 auto;
+            margin: @((FontSize / 4 + HalfGutter).Px());
+        }
+
+            .my-input-group > .my-input-group-prepend > .my-icon > svg,
+            .my-input-group > .my-input-group-append > .my-icon > svg {
+                height: 100% !important;
+                width: auto !important;
+            }
+
+    .my-input-group > .my-input-group-prepend >.my-btn,
+    .my-input-group > .my-input-group-append >.my-btn {
+        height: 100% !important;
+        width: auto;
+    }
+
+</style>

@@ -1,0 +1,9 @@
+﻿@using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Extensions.Collections
+
+@namespace CommonLib.Web.Source.Common.Components.MyModalComponent
+@inherits MyModalFooterBase
+
+<div class="@_classes.JoinAsString(" ")" style="@_style.CssDictionaryToString()">
+    @ChildContent
+</div>

@@ -1,0 +1,116 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
+
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-dropdown:not(.my-nav-item) {
+        background: linear-gradient(to bottom, #303030, #000000);
+        box-shadow: none;
+        color: white;
+        display: block;
+        @Font
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .my-dropdown-valid:not(.my-nav-item) {
+        background: @($"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000);")
+    }
+
+    .my-dropdown-invalid:not(.my-nav-item) {
+        background: @($"linear-gradient(to bottom, {FailureBackgroundColor}, #000000);")
+    }
+
+    .my-dropdown-value-and-icon-container {
+        display: flex;
+        box-shadow: 0 0 0 0 blue, inset 0 0 0 1px #404040;
+        box-sizing: border-box;
+        padding: @HalfGutter.Px() 0 @HalfGutter.Px() @((HalfGutter + FontSize / 4).Px());
+        height: @InputHeight.Px();
+        justify-content: center;
+        align-items: center;
+        transition: all .15s ease-in-out;
+    }
+
+        .my-dropdown-value-and-icon-container:focus {
+            box-shadow: 0 0 6px 2px blue, inset 0 0 0 1px #404040;
+            color: white;
+        }
+
+    .my-dropdown-value {
+        box-sizing: border-box;
+        flex: 0 1 auto;
+        line-height: @LineHeightRem;
+        height: @LineHeightRem;
+        width: 100%;
+        @NoOverflowSingleLine
+    }
+
+    .my-dropdown-icon, .my-dropdown-open-icon {
+        @*max-width: @LineHeightRem;
+        max-height: @LineHeightRem;
+        flex: 0 0 @LineHeightRem;
+        margin: 0 0 0 @HalfGutter.Px();
+        padding: 0;*@
+        width: auto;
+        height: @FontSize.Px();
+        max-width: none;
+        max-height: @FontSize.Px();
+        flex: 0 0 auto;
+        margin: @((FontSize / 4 + HalfGutter).Px());
+    }
+
+    .my-dropdown:hover {
+        cursor: pointer;
+    }
+
+    .my-dropdown option {
+        background: #303030;
+        box-shadow: none;
+        color: white;
+        border: 1px solid #404040;
+    }
+
+    .my-dropdown-options-container {
+        background: linear-gradient(to bottom, #303030, black);
+        box-shadow: none;
+        color: white;
+        border: 1px solid #404040;
+        position: absolute;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        z-index: 10;
+        top: @InputHeight.Px();
+        width: 100%;
+        display: none;
+    }
+
+    .my-dropdown-option {
+        display: block;
+        padding: @HalfGutter.Px();
+        font-size: 1rem;
+        font-weight: 400;
+        white-space: nowrap;
+        line-height: @LineHeightRem;
+        text-align: left;
+        box-sizing: border-box;
+        @NoOverflowSingleLine
+    }
+
+        .my-dropdown-option:hover, .my-dropdown-option:focus, .my-dropdown-option:active {
+            background: linear-gradient(to bottom, #000088, #000000);
+            box-shadow: 0 0 6px 2px blue;
+            cursor: pointer;
+        }
+
+</style>
+
+@code {
+
+}

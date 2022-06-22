@@ -1,0 +1,23 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyTileComponent
+
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+
+<div class="my-menu-tile" @onclick="@OnClick">
+    <div class="my-menu-tile-content">
+        <MyIcon IconType="@Icon" Class="my-menu-tile-icon" Color="@IconColor" />
+        <div class="my-menu-tile-text">
+            @Text
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IconType Icon { get; set; }
+    [Parameter]
+    public string IconColor { get; set; }
+    [Parameter]
+    public string Text { get; set; }
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+}

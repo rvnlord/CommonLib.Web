@@ -1,0 +1,43 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyNavBrandComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-nav-item.my-brand {
+        position: absolute;
+    }
+
+    .my-nav-brand {
+        float: left;
+        width: 250px;
+        height: 100%;
+        z-index: 4;
+        position: absolute;
+    }
+
+    .my-nav-brand-main-image {
+        width: 100%;
+        position: absolute;
+    }
+
+    .my-nav-brand-alt-image {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-nav-item.my-brand {
+            margin-left: auto;
+            margin-right: auto;
+            width: auto;
+            position: relative;
+        }
+
+        .my-nav-brand {
+            position: relative;
+        }
+    }
+</style>

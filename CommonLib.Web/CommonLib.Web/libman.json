@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "defaultDestination": "wwwroot/libs/libman",
+  "libraries": [
+    {
+      "library": "jquery@3.6.0",
+      "destination": "wwwroot/libs/libman/jquery"
+    },
+    {
+      "provider": "unpkg",
+      "library": "@types/jquery@3.5.6",
+      "destination": "wwwroot/libs/libman/@types/jquery"
+    },
+    {
+      "library": "jqueryui@1.12.1",
+      "destination": "wwwroot/libs/libman/jquery-ui"
+    },
+    {
+      "library": "overlayscrollbars@1.10.2",
+      "destination": "wwwroot/libs/libman/overlay-scrollbars"
+    },
+    {
+      "library": "animejs@3.1.0",
+      "destination": "wwwroot/libs/libman/animejs"
+    },
+    {
+      "provider": "unpkg",
+      "library": "@types/animejs@3.1.0",
+      "destination": "wwwroot/libs/libman/@types/animejs"
+    },
+    {
+      "provider": "unpkg",
+      "library": "lightweight-charts@1.2.1",
+      "destination": "wwwroot/libs/libman/lightweight-charts"
+    },
+    {
+      "provider": "unpkg",
+      "library": "merge-images@2.0.0",
+      "destination": "wwwroot/libs/libman/merge-images"
+    },
+    {
+      "provider": "unpkg",
+      "library": "cookies-js@1.2.3",
+      "destination": "wwwroot/libs/libman/cookies-js"
+    }
+  ]
+}

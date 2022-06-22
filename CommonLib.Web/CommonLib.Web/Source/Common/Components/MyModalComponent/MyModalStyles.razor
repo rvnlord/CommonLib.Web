@@ -1,0 +1,87 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyModalComponent
+
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-modal-background {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.5);
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+    }
+
+    .my-modal {
+        background: linear-gradient(135deg, rgba(32, 32, 32, 0.9), rgba(0, 0, 0, 0.9));
+        box-shadow: 0 0 6px 2px #646464, inset 0 0 0 1px #646464;
+        width: 600px;
+        position: relative;
+    }
+
+    .my-modal-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        position: absolute;
+        right: 0;
+        z-index: 2;
+    }
+
+    .my-modal-header {
+        font-weight: 400;
+        font-size: @((FontSize * 1.5).Px());
+        line-height: @((FontSize * 2.25).Px());
+        vertical-align: middle;
+        text-align: left;
+        box-shadow: inset 0 -1px 0 0 #646464; /* border-bottom */
+        padding: @Gutter.Px();
+    }
+
+    .my-modal-body {
+
+    }
+
+    .my-modal-footer {
+        box-shadow: inset 0 1px 0 0 #646464; /* border-top */
+    }
+
+    .my-modal .my-label {
+        background: transparent;
+    }
+
+    .my-login-modal {
+        width: 768px;
+    }
+
+    .my-login-modal-right-panel-title-container {
+        margin-bottom: 0;
+        box-shadow: inset 0 -1px 0 0 #646464;
+    }
+
+    @@media (min-width: 768px) {
+        .my-login-modal-left-panel-container {
+            margin-right: 0;
+            box-shadow: inset -1px 0 0 #646464;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .my-modal {
+            width: calc(100% - @((Gutter * 2).Px()));
+        }
+
+        .my-login-modal-right-panel-title-container {
+            margin-bottom: 0;
+            margin-top: 0;
+            box-shadow: inset 0 -1px 0 0 #646464, inset 0 1px 0 0 #646464;
+        }
+    }
+
+</style>

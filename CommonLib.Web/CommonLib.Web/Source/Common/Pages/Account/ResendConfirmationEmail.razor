@@ -1,0 +1,63 @@
+﻿@page "/account/resendemailconfirmation/"
+
+@using CommonLib.Web.Source.Common.Components.MyInputComponent
+@using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@inherits ResendConfirmationEmailBase
+
+<div class="my-col-sm-auto my-col-12" style="background: #101010;">
+    <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="@FormResendConfirmationEmail_ValidSubmitAsync" class="my-container">
+        <MyFluentValidator @ref="_validator" />
+        <div class="my-row">
+            <div class="my-col-12">
+                <h3>Resend Email Confirmation</h3>
+                <hr class="my-mt-10px" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => _resendConfirmationEmailUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput State="InputState.Disabled" For="@(() => _resendConfirmationEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => _resendConfirmationEmailUserVM.UserName)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                <MyLabel For="@(() => _resendConfirmationEmailUserVM.Email)" Align="@HorizontalAlignment.Right" />
+            </div>
+            <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                <MyTextInput For="@(() => _resendConfirmationEmailUserVM.Email)" SyncPaddingGroup="confirm-email-panel">
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyTextInput>
+            </div>
+            <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                <MyValidationMessage For="@(() => _resendConfirmationEmailUserVM.Email)" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyButton Value="@("Resend Confirmation Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.EnvelopeOpen)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnResendConfirmationEmailState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-resend-confirmation-email" @ref="_btnResendConfirmationEmail" />
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="@($"~/Account/ConfirmEmail?{GetNavQueryStrings()}")" Icon="IconType.From(LightIconType.KeySkeleton)" IconPlacement="NavLinkIconPlacement.Right">I already have Confirmation Code</MyNavLink>
+            </div>
+        </div>
+        <div class="my-row">
+            <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                <MyNavLink To="@($"~/Account/Register")" Icon="IconType.From(LightIconType.UserPlus)" IconPlacement="NavLinkIconPlacement.Right">I am not registered yet</MyNavLink>
+            </div>
+        </div>
+    </MyEditForm>
+</div>
