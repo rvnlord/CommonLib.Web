@@ -2,6 +2,9 @@
 
 This is an ASP.NET (MVC, Razor Pages, Blazor) multi-purpose library containing custom components, authorization system, as well as various extension, utility and converter methods. It constantly evolves to include new functionality required by my other projects. 
    
+#### Dependencies:
+* [CommonLib](https://github.com/rvnlord/CommonLib)
+
 ### Examples:
 
 ![1](/Images/2022-06-22_213906.png?raw=true)
