@@ -21,7 +21,6 @@ namespace CommonLib.Web.Source.Services.Account
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var authenticationResponse = await _accountClient.GetAuthenticatedUserAsync();
-            await Task.Delay(10);
             if (authenticationResponse.IsError)
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 

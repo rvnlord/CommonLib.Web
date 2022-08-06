@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
@@ -45,8 +43,16 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
             await Task.CompletedTask;
         }
 
-        protected override async Task OnInitializedAsync() => await Task.CompletedTask;
-        protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
+        protected override async Task OnAfterRenderAsync(bool _)
+        {
+            if (Type == NavItemType.Login)
+            {
+                var prevAuthUser = AuthenticatedUser;
+                AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
+                if (!AuthenticatedUser.Equals(prevAuthUser))
+                    await StateHasChangedAsync();
+            }
+        }
     }
 
     public enum NavItemType

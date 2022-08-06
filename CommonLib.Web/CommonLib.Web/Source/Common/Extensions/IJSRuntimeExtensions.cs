@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Common.Extensions
@@ -8,7 +10,8 @@ namespace CommonLib.Web.Source.Common.Extensions
     {
         public static async Task<IJSObjectReference> ImportModuleAndRetryIfCancelledAsync(this IJSRuntime jsRuntime, string modulePath)
         {
-            while (true)
+            var i = 1;
+            while (i <= 10)
             {
                 try
                 {
@@ -17,8 +20,19 @@ namespace CommonLib.Web.Source.Common.Extensions
 
                     return await jsRuntime.InvokeAsync<IJSObjectReference>("import", modulePath).AsTask();
                 }
-                catch (TaskCanceledException) { }
-            } 
+                catch (TaskCanceledException ex)
+                {
+                    if (i >= 10)
+                    {
+                        Logger.For(typeof(IJSRuntimeExtensions)).Error("Unable to import module: " + ex.Message);
+                        throw;
+                    }
+
+                    i++;
+                }
+            }
+            
+            throw new NotSupportedException("Module not importeed, error not thrown - it shouldn't happen");
         }
     }
 }

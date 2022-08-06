@@ -44,7 +44,14 @@
             }
             else if (Type == NavItemType.Login)
             {
-                <MyNavLink To="null" MatchEmptyRoute="false">Sign In</MyNavLink>
+                if (IsAuthenticated())
+                {
+                    <MyNavLink To="null" MatchEmptyRoute="false">@AuthenticatedUser.UserName</MyNavLink>
+                }
+                else 
+                {
+                    <MyNavLink To="null" MatchEmptyRoute="false">Sign In</MyNavLink>
+                }
             }
             else if (Type == NavItemType.Home)
             {
