@@ -82,6 +82,7 @@
   <ItemGroup>
     <Folder Include="Source\Common\CustomAttributes\Validation\" />
     <Folder Include="Source\Common\Views\" />
+    <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\libs\libman\%40types\jquery\" />
     <Folder Include="wwwroot\libs\libman\cookies-js\" />
   </ItemGroup>

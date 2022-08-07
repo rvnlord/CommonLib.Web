@@ -16,6 +16,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string Ticket { get; set; }
         public bool HasPassword { get; set; }
         public bool RememberMe { get; set; }
+        public Guid SessionId { get; set; } // TODO: anon id to differentiate between users in Singleton Cache Service, it needs to be done even if user is not authenticated
 
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsInvariant(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsInvariant(claim));
