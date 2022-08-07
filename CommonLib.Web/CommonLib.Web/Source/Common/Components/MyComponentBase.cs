@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Blazored.SessionStorage;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
@@ -115,6 +116,9 @@ namespace CommonLib.Web.Source.Common.Components
         [Inject]
         public IComponentsCacheService ComponentsCache { get; set; }
 
+        [Inject]
+        public ISessionStorageService SessionStorage { get; set; }
+        
         protected MyComponentBase()
         {
             _renderFragment = builder =>
@@ -160,8 +164,8 @@ namespace CommonLib.Web.Source.Common.Components
                     ComponentsCache.Components[_guid] = this;
                 }
 
-                RebuildComponentsCacheOnCrash();
-                
+                RebuildComponentsCacheOnCrash(); // if `Layout` changed, usually on crash
+
                 SetAllParametersToDefaults();
                 
                 OnInitialized();
@@ -217,6 +221,7 @@ namespace CommonLib.Web.Source.Common.Components
                 {
                     _firstRenderAfterInit = false;
                     await PromptModuleAsync; // this makes prompt js available within any component
+                    await SetSessionIdAsync();
                     await OnAfterFirstRenderAsync();
                 }
                 
@@ -580,6 +585,14 @@ namespace CommonLib.Web.Source.Common.Components
                 componentWithWrongLayout.Dispose();
                 ComponentsCache.Components.Remove(componentWithWrongLayout._guid);
             }
+        }
+
+        private async Task SetSessionIdAsync()
+        {
+            if (!_isLayout)
+                return;
+
+            await SessionStorage.GetOrCreateSessionIdAsync();
         }
 
         public List<TComponent> ComponentsByClass<TComponent>(string cssClass) where TComponent : MyComponentBase
