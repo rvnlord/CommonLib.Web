@@ -148,7 +148,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
             await StateHasChangedAsync();
             await PromptMessageAsync(NotificationType.Success, loginResult.Message);
-            await ComponentByClass<MyModalBase>("my-login-modal").HideModalAsync();
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
             UserAuthStateProvider.StateChanged();
         }

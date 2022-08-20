@@ -27,6 +27,12 @@ namespace CommonLib.Web.Source.Common.Extensions.Collections
             return services;
         }
 
+        public static IServiceCollection AddRequestScopedCache(this IServiceCollection services)
+        {
+            services.AddScoped<IRequestScopedCacheService, RequestScopedCacheService>();
+            return services;
+        }
+
         public static T GetService<T>(this IServiceCollection services)
         {
             return (T) (object) services.Single(s => s.ServiceType is T).ServiceType;

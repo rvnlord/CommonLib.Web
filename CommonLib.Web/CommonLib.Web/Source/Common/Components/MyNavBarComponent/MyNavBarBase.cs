@@ -139,7 +139,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         protected async Task BtnSignUp_ClickAsync()
         {
             //await (await ModalModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Modal_HideAsync", LoginModalGuid);
-            await ComponentByClass<MyModalBase>("my-login-modal").HideModalAsync();
+            (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/Register");
             NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");

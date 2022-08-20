@@ -220,7 +220,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
         public bool WasValidated<TProperty>(Expression<Func<TProperty>> accessor) => MessageStore.WasValidated(accessor);
 
-        protected override void Dispose(bool disposing)
+        protected override async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed) 
                 return;
@@ -232,14 +232,14 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             Validator = null;
             ChildValidators = null;
 
-            base.Dispose(disposing);
+            await base.DisposeAsync(disposing);
 
             IsDisposed = true;
         }
 
         ~MyFluentValidator() 
         {
-            Dispose(false);
+            _ = DisposeAsync(false);
         }
     }
 }

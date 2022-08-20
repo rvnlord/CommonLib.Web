@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Blazored.SessionStorage;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Components.MyNavItemComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
@@ -126,11 +127,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         }
 
         [JSInvokable] // to fix no navigation on clicking some `a` tags while using `@onclick="NavLink_ClickAsync"`
-        public static async Task NavLink_ClickAsync(Guid guid) // MouseEventArgs e
+        public static async Task NavLink_ClickAsync(Guid guid, Guid sessionId) // MouseEventArgs e
         {
             //var (cache, cacheScope) = WebUtils.GetScopedService<IComponentsCacheService>();
             var cache = WebUtils.GetService<IComponentsCacheService>();
-            var navLink = cache.Components.Values.OfType<MyNavLinkBase>().Single(nl => nl._guid == guid);
+            var navLink = cache.SessionCache[sessionId].Components.Values.OfType<MyNavLinkBase>().Single(nl => nl._guid == guid);
             navLink.NavigationManager.NavigateTo(navLink._absoluteVirtualLink);
 
             //await cacheScope.DisposeScopeAsync();

@@ -96,7 +96,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 var iconType = iconEnum.GetType();
                 var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
                 var iconSetDirName = iconType.Name.BeforeFirst("IconType");
-                var iconPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $@"Icons/{iconSetDirName}/{iconName}.svg");
+                var iconPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $@"_content/{GetType().Assembly.FullName.Before(",")}/icons/{iconSetDirName}/{iconName}.svg");
 
                 try
                 {

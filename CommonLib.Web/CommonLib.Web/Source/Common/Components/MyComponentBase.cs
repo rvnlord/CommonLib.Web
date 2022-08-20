@@ -20,17 +20,19 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 using Truncon.Collections;
-using Microsoft.AspNetCore.Internal;
+//using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Http;
 
 namespace CommonLib.Web.Source.Common.Components
 {
-    public abstract class MyComponentBase : IDisposable, IComponent, IHandleEvent, IHandleAfterRender // LayoutComponentBase
+    public abstract class MyComponentBase : IAsyncDisposable, IComponent, IHandleEvent, IHandleAfterRender // LayoutComponentBase
     {
         private readonly RenderFragment _renderFragment;
         private RenderHandle _renderHandle;
@@ -50,6 +52,7 @@ namespace CommonLib.Web.Source.Common.Components
         private MyComponentBase _layout;
         private DateTime _creationTime;
         private MyPromptBase _prompt;
+        private Guid _sessionId;
 
         protected Guid _guid { get; set; }
         protected string _id { get; set; }
@@ -69,8 +72,18 @@ namespace CommonLib.Web.Source.Common.Components
         public bool IsRendered => !_firstRenderAfterInit;
         public bool IsDisposed { get; set; }
         public bool FirstParamSetup => _firstParamSetup;
-        public MyPromptBase Prompt => _prompt ??= ComponentsCache.Components.Values.OfType<MyPromptBase>().Single();
-        
+
+        public Guid SessionId
+        {
+            get
+            {
+                if (_sessionId == Guid.Empty && _layout is not null && _layout.SessionId != Guid.Empty)
+                    _sessionId = _layout.SessionId;
+                return _sessionId;
+            }
+            set =>  _sessionId = value;
+        }
+
         [Parameter]
         public RenderFragment Body { get; set; }
 
@@ -118,7 +131,16 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Inject]
         public ISessionStorageService SessionStorage { get; set; }
-        
+
+        [Inject]
+        public IHttpContextAccessor HttpContextAccessor { get; set; }
+
+        //[Inject]
+        //public ProtectedSessionStorage SessionStorage { get; set; }
+
+        [Inject]
+        public IRequestScopedCacheService RequestScopedCache { get; set; }
+
         protected MyComponentBase()
         {
             _renderFragment = builder =>
@@ -128,6 +150,8 @@ namespace CommonLib.Web.Source.Common.Components
                 //OnStateChangedAsync += MyComponentBase_StateChangedAsync;
             };
         }
+        
+        public async Task<MyPromptBase> GetPromptAsync() => _prompt ??= ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<MyPromptBase>().Single();
         
         protected virtual void BuildRenderTree(RenderTreeBuilder builder) { } // code within this class should *not* invoke BuildRenderTree directly, use `_renderFragment` instead
 
@@ -158,14 +182,25 @@ namespace CommonLib.Web.Source.Common.Components
         {
             if (!_isInitialized)
             {
+                _isLayout = GetType().Name.ContainsInvariant("Layout");
+
                 if (_guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
                 {
                     _guid = Guid.NewGuid();
-                    ComponentsCache.Components[_guid] = this;
+                    var componentsSessionCache = await GetComponentsSessionCacheAsync(true);
+                    componentsSessionCache.Components[_guid] = this;
                 }
 
-                RebuildComponentsCacheOnCrash(); // if `Layout` changed, usually on crash
-
+                if (_isLayout)
+                {
+                    // TODO:
+                    var session = HttpContextAccessor.HttpContext.Session.GetString("SessionIdTEST");
+                    if (session == null)
+                        HttpContextAccessor.HttpContext.Session.SetString("SessionIdTEST", Guid.NewGuid().ToString());
+                }
+                
+                await RebuildComponentsCacheOnCrashAsync(); // if `Layout` changed, usually on crash
+                
                 SetAllParametersToDefaults();
                 
                 OnInitialized();
@@ -217,16 +252,24 @@ namespace CommonLib.Web.Source.Common.Components
                     return;
                 }
 
-                if (_firstRenderAfterInit)
+                var isFirstRenderAfterInit = _firstRenderAfterInit;
+                if (isFirstRenderAfterInit)
                 {
                     _firstRenderAfterInit = false;
                     await PromptModuleAsync; // this makes prompt js available within any component
                     await SetSessionIdAsync();
                     await OnAfterFirstRenderAsync();
+
+                    if (_isLayout)
+                    {
+                        var prompts = (await GetComponentsSessionCacheAsync()).Components.Values.OfType<MyPromptBase>().ToArray();
+                        foreach (var prompt in prompts)
+                            await prompt.StateHasChangedAsync();
+                    }
                 }
                 
-                OnAfterRender(_firstRenderAfterInit);
-                await OnAfterRenderAsync(_firstRenderAfterInit);
+                OnAfterRender(isFirstRenderAfterInit);
+                await OnAfterRenderAsync(isFirstRenderAfterInit);
             }
             catch (TaskCanceledException)
             {
@@ -541,7 +584,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected async Task PromptMessageAsync(NotificationType status, string message) // don't refresh if called on initialized
         {
-            await Prompt.ShowNotificationAsync(status, message);
+            await (await GetPromptAsync()).AddNotificationAsync(status, message);
 
             //var prompts = ComponentsCache.Components.Values.OfType<MyPromptBase>().ToList();
             //foreach (var prompt in prompts)
@@ -556,34 +599,37 @@ namespace CommonLib.Web.Source.Common.Components
             //}
         }
 
-        private void RebuildComponentsCacheOnCrash()
+        private async Task RebuildComponentsCacheOnCrashAsync()
         {
-            _isLayout = GetType().Name.ContainsInvariant("Layout");
             _creationTime = DateTime.UtcNow;
 
-            if (_isLayout) 
+            if (_isLayout) // for non-layout component, the 2nd one will return anyway because `layouts.Length <= 1` will be true
                 return;
+            
+            // cache needs layout to set temp sessionid but layuot is component so we need cache to retrieve it, pointless shit...
+            var componentsSessionCache = await GetComponentsSessionCacheAsync(true);
+            var layouts = componentsSessionCache.Components.Values.Where(c => c._isLayout).ToArray();
 
-            _layout = this;
-            var layouts = ComponentsCache.Components.Values.Where(c => c._isLayout).ToArray();
-
-            if (layouts.Length <= 1) 
+            if (layouts.Length <= 1)
+            {
+                _layout = layouts.SingleOrDefault();
                 return;
+            }
             
             var correctLayout = layouts.MaxBy(l => l._creationTime);
             var incorrectLayouts = layouts.Except(correctLayout).ToArray();
 
             foreach (var incorrectLayout in incorrectLayouts)
             {
-                incorrectLayout.Dispose();
-                ComponentsCache.Components.Remove(incorrectLayout._guid);
+                await incorrectLayout.DisposeAsync();
+                componentsSessionCache.Components.Remove(incorrectLayout._guid);
             }
                     
-            var componentsWithWrongLayout = ComponentsCache.Components.Values.Where(c => !c._isLayout && !c._layout.Equals(correctLayout)).ToArray();
+            var componentsWithWrongLayout = componentsSessionCache.Components.Values.Where(c => !c._isLayout && !c._layout.Equals(correctLayout)).ToArray();
             foreach (var componentWithWrongLayout in componentsWithWrongLayout)
             {
-                componentWithWrongLayout.Dispose();
-                ComponentsCache.Components.Remove(componentWithWrongLayout._guid);
+                await componentWithWrongLayout.DisposeAsync();
+                componentsSessionCache.Components.Remove(componentWithWrongLayout._guid);
             }
         }
 
@@ -591,26 +637,60 @@ namespace CommonLib.Web.Source.Common.Components
         {
             if (!_isLayout)
                 return;
+            
+            SessionId = await SessionStorage.GetOrCreateSessionIdAsync();
 
-            await SessionStorage.GetOrCreateSessionIdAsync();
+            if (RequestScopedCache.TemporarySessionId != Guid.Empty)
+            {
+                // components should always be reecreeated from scratch
+                if (ComponentsCache.SessionCache.VorN(SessionId) == null)
+                    ComponentsCache.SessionCache[SessionId] = new ComponentsCacheService.SessionData();
+                ComponentsCache.SessionCache[SessionId].Components = ComponentsCache.SessionCache[RequestScopedCache.TemporarySessionId].Components;
+                // notifications should be restored if session already exists so essentially nothing needs to be done since we are restoring old sessionId and pointing to its resources
+                ComponentsCache.SessionCache.Remove(RequestScopedCache.TemporarySessionId);
+            }
         }
 
-        public List<TComponent> ComponentsByClass<TComponent>(string cssClass) where TComponent : MyComponentBase
+        public async Task<Guid> GetSessionIdAsync()
         {
-            return ComponentsCache.Components.Values.OfType<TComponent>().Where(c => cssClass.In(c._classes)).ToList();
+            if (SessionId == Guid.Empty) 
+                SessionId = await SessionStorage.GetSessionIdAsync();
+            
+            return SessionId;
         }
 
-        public TComponent ComponentByClass<TComponent>(string cssClass) where TComponent : MyComponentBase
+        public async Task<Guid> GetTemporarySessionIdAsync() // for use when JsInterop is not available i.e.: `OnInitialized`, `OnParametersSet` 
         {
-            return ComponentsByClass<TComponent>(cssClass).Single();
+            if (RequestScopedCache.TemporarySessionId == Guid.Empty)
+                RequestScopedCache.TemporarySessionId = Guid.NewGuid();
+
+            return await Task.FromResult(RequestScopedCache.TemporarySessionId);
         }
 
-        public TComponent ComponentById<TComponent>(string id) where TComponent : MyComponentBase
+        public async Task<ComponentsCacheService.SessionData> GetComponentsSessionCacheAsync(bool useTemporarySessionId = false)
         {
-            return ComponentsCache.Components.Values.OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
+            var sessionId = useTemporarySessionId ? await GetTemporarySessionIdAsync() : await GetSessionIdAsync();
+            if (ComponentsCache.SessionCache.VorN(sessionId) == null)
+                ComponentsCache.SessionCache[sessionId] = new ComponentsCacheService.SessionData();
+            return ComponentsCache.SessionCache[sessionId];
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async Task<List<TComponent>> ComponentsByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
+        {
+            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Where(c => cssClass.In(c._classes)).ToList();
+        }
+
+        public async Task<TComponent> ComponentByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
+        {
+            return (await ComponentsByClassAsync<TComponent>(cssClass)).Single();
+        }
+
+        public async Task<TComponent> ComponentByIdAsync<TComponent>(string id) where TComponent : MyComponentBase
+        {
+            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
+        }
+
+        protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)
                 return;
@@ -618,7 +698,10 @@ namespace CommonLib.Web.Source.Common.Components
             if (disposing)
             {
                 IsDisposed = true;
-                ComponentsCache.Components.RemoveAll(c => c.Value.Equals(this));
+                if (RequestScopedCache.TemporarySessionId != Guid.Empty && ComponentsCache.SessionCache.VorN(RequestScopedCache.TemporarySessionId) != null)
+                    ComponentsCache.SessionCache[RequestScopedCache.TemporarySessionId].Components.RemoveAll(c => c.Value.Equals(this));
+                if (SessionId != Guid.Empty && ComponentsCache.SessionCache.VorN(SessionId) != null)
+                    ComponentsCache.SessionCache[SessionId].Components.RemoveAll(c => c.Value.Equals(this));
                 //if (_moduleAsync != null)
                 //{
                 //    var module = await _moduleAsync;
@@ -648,13 +731,13 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            Dispose(true);
+            await DisposeAsync(true);
             GC.SuppressFinalize(this);
         }
 
-        ~MyComponentBase() => Dispose(false);
+        ~MyComponentBase() => _ = DisposeAsync(false);
 
         public override string ToString() => $"[{_guid}] {_renderClasses}";
 

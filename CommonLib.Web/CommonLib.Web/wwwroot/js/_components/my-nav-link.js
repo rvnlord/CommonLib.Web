@@ -2,7 +2,7 @@
     static NavLinkDotNetRefs = {};
 
     static async navigateAsync(guid) {
-        await DotNet.invokeMethodAsync("CommonLib.Web", "NavLink_ClickAsync", guid);
+        await DotNet.invokeMethodAsync("CommonLib.Web", "NavLink_ClickAsync", guid, sessionStorage.getItem("SessionId"));
         //await NavLinkUtils.NavLinkDotNetRefs[guid].invokeMethodAsync("NavLink_ClickAsync", "MyNavLinkBase");
     }
 

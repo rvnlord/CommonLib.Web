@@ -9,8 +9,13 @@ namespace CommonLib.Web.Source.Services
 {
     public class ComponentsCacheService : IComponentsCacheService
     {
-        public Dictionary<Guid, MyComponentBase> Components { get; set; } = new();
-        public NotificationsCache NotificationsData { get; set; } = new();
+        public Dictionary<Guid, SessionData> SessionCache { get; set; } = new(); // per session, so anon user
+
+        public class SessionData
+        {
+            public Dictionary<Guid, MyComponentBase> Components { get; set; } = new();
+            public NotificationsCache NotificationsData { get; set; } = new();
+        }
 
         public class NotificationsCache
         {
@@ -34,8 +39,7 @@ namespace CommonLib.Web.Source.Services
             public Notification[] TotalRemovedNotifications { get; set; }
             public Notification[] NewNotificationsToRemove { get; set; }
             public Notification[] NewNotificationsToAdd { get; set; }
-
-
+            
             public override bool Equals(object obj)
             {
                 if (obj is not NotificationRenderingData that)

@@ -6,24 +6,18 @@
 @using CommonLib.Source.Common.Extensions.Collections
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Services
 
 @namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
 @inherits MyPromptBase
 
 @{
-    var now = ExtendedTime.UtcNow;
 
-    var nrd = _notificationDataToRenderQueue[_id].DequeueOrNull() ?? _previouslyPostProcessedNotificationsRenderingData[_id];
-    var notificationsToRender = nrd?.NotificationsToRender ?? Array.Empty<Notification>();
-    if (nrd != null && (_notificationDataToPostProcessQueue[_id].Count == 0 || !_notificationDataToPostProcessQueue[_id].Last().Equals(nrd)))
-        _notificationDataToPostProcessQueue[_id].Enqueue(nrd);
-
-    Logger.For<MyPrompt>().Info("Rendering...\n" +
-                                $"          `To Render`: [{notificationsToRender.Select(n => n.Type).JoinAsString(", ")}]");
 }
 
-<div @ref="@_jsPrompt" my-guid="@_guid" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
-    @if (notificationsToRender.Any())
+<div id="@_id" rendered="false"></div>
+@*<div my-guid="@_guid" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
+   @if (notificationsToRender.Any())
     {
         <div class="notifications-actions-container">
             <div class="notifications-counter-container">
@@ -86,5 +80,4 @@
             }
         </div>
     }
-</div>
-
+</div>*@

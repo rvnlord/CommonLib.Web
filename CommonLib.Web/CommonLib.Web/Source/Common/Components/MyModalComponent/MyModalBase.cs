@@ -7,8 +7,9 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 {
     public class MyModalBase : MyComponentBase
     {
-        protected ElementReference _jsModal { get; set; }
         protected MyButtonBase _btnCloseModal { get; set; }
+
+        public ElementReference JsModal { get; set; }
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask;
 
@@ -26,7 +27,7 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
         
         protected override async Task OnAfterFirstRenderAsync() 
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_AfterFirstRender", _jsModal).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_AfterFirstRender", JsModal).ConfigureAwait(false);
         }
 
         protected override async Task OnAfterRenderAsync(bool _) 
@@ -36,12 +37,12 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 
         public async Task ShowModalAsync() 
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", _jsModal).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", JsModal).ConfigureAwait(false);
         }
 
         public async Task HideModalAsync() 
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_HideAsync", _jsModal).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_HideAsync", JsModal).ConfigureAwait(false);
         }
     }
 }

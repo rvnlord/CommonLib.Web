@@ -90,7 +90,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var confirmedUser = emailConfirmationResponse.Result;
             _confirmUserVM.UserName = confirmedUser.UserName;
             //NavigationManager.NavigateTo($"/Account/Login/?returnUrl={_confirmUserVM.ReturnUrl?.UTF8ToBase58()}");
-            await ComponentByClass<MyModalBase>("my-login-modal").ShowModalAsync();
+            await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
             await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_confirmUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
             _btnConfirmEmailState = ButtonState.Disabled;
             await StateHasChangedAsync();

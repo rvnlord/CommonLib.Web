@@ -89,9 +89,9 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
             Text = Value;
         }
 
-        protected override void Dispose(bool disposing)
+        protected override async Task DisposeAsync(bool disposing)
         {
-            base.Dispose(disposing);
+            await base.DisposeAsync(disposing);
 
             if (!disposing)
                 return;

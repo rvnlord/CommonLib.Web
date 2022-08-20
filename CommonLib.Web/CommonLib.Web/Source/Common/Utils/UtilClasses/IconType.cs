@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 
 namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
@@ -41,6 +43,8 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         public static IconType From(SolidIconType solidIcon) => new IconType(solidIcon);
         public static IconType From(BrandsIconType brandsIcon) => new IconType(brandsIcon);
         public static IconType From(DuotoneIconType duotoneIcon) => new IconType(duotoneIcon);
+
+        public string GetIconSetName => new object[] { RegularIcon, LightIcon, SolidIcon, BrandsIcon, DuotoneIcon }.SingleOrDefault(i => i is not null)?.GetType().Name.BeforeOrNull("IconType");
 
         public override string ToString()
         {

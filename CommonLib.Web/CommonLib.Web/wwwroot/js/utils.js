@@ -58,7 +58,61 @@
     static getRandomInt = (min, max) => {
         min = Math.ceil(min);
         max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+        return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
     }
+
+    static getIconAsync = async (iconSet, iconName) => {
+        const icon = await $.ajax({
+            url: `${this.origin()}/_content/CommonLib.Web/icons/${iconSet}/${iconName}.svg`,
+            dataType: "html",
+            type: "GET"
+        });
+        return icon;
+    }
+
+    static $getIconAsync = async (iconSet, iconName) => {
+        return await $(this.getIconAsync(iconSet, iconName));
+    }
+
+    static toTimeDateString(date) {
+        if (date instanceof Date === false && utils.isNumber(date)) {
+            date = new Date(date);
+        }
+
+        const day = date.getDate();
+        const month = 1 + date.getMonth();
+        const minutes = date.getMinutes();
+        const seconds = date.getSeconds();
+
+        return date.getHours() + ":" + 
+            (minutes < 10 ? "0" + minutes : minutes) + ":" + 
+            (seconds < 10 ? "0" + seconds : seconds) + " " + 
+            (day < 10 ? "0" + day : day) + "-" + 
+            (month < 10 ? "0" + month : month) + "-" + 
+            date.getFullYear();
+    }
+
+    static toDateTimeString(date) {
+        if (date instanceof Date === false && utils.isNumber(date)) {
+            date = new Date(date);
+        }
+
+        const day = date.getDate();
+        const month = 1 + date.getMonth();
+        const minutes = date.getMinutes();
+        const seconds = date.getSeconds();
+
+        return (day < 10 ? "0" + day : day) + "-" + 
+            (month < 10 ? "0" + month : month) + "-" + 
+            date.getFullYear() + " " + 
+            date.getHours() + ":" + 
+            (minutes < 10 ? "0" + minutes : minutes) + ":" + 
+            (seconds < 10 ? "0" + seconds : seconds);
+    }
+
+    static isNumber(o) {
+        return !isNaN(o) && isFinite(o);
+    }
+
 
 }

@@ -29,6 +29,21 @@ Object.defineProperty(Object.prototype, "kvps", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "toTimeDateString", {
+    value: function () {
+        const month = 1 + this.getMonth();
+        const day = this.getDate();
+        return day < 10 ? 0 + day : day + "-" + 
+            month < 10 ? 0 + month : month + "-" + 
+            this.getFullYear() + " " + 
+            this.getHours() + ":" + 
+            this.getMinutes() + ":" + 
+            this.getSeconds();
+    },
+    writable: true,
+    configurable: true
+});
+
 
 // #endregion
 
@@ -36,7 +51,7 @@ Object.defineProperty(Object.prototype, "kvps", {
 
 Object.defineProperty(Number.prototype, "isNumber", {
     value: function () {
-        return !isNaN(this) && isFinite(this);
+        return utils.isNumber(this);
     },
     writable: true,
     configurable: true
@@ -331,6 +346,30 @@ Object.defineProperty(String.prototype, "skipLastWhile", {
         }
 
         return i === 0 ? this : this.slice(0, -i);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "toInt", {
+    value: function () {
+        return parseInt(this);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "toFloat", {
+    value: function () {
+        return parseFloat(this);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "toBool", {
+    value: function () {
+        return ["true", "false", true, false].contains(this) && JSON.parse(this) || null;
     },
     writable: true,
     configurable: true
@@ -725,7 +764,7 @@ jQuery.fn.extend({
         });
     },
     classes: function() {
-        return this.attr("class").split(" ");
+        return (this.attr("class") || "").split(" ").filter(c => !c.isNullOrWhiteSpace());
     },
     visible: function() {
         if (this.length === 0) {
@@ -814,6 +853,9 @@ jQuery.fn.extend({
         const width = $(this).find("span:first").width();
         $(this).html(html_org);
         return width;
+    },
+    id: function() {
+        return this.attr("id");
     },
     guid: function() {
         return this.attr("my-guid");

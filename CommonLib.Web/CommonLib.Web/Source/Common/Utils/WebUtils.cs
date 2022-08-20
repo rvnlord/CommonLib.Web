@@ -72,7 +72,7 @@ namespace CommonLib.Web.Source.Common.Utils
             if (lifestyle == null)
                 throw new NullReferenceException($"\"{serviceType.Name}\" has no Lifestyle defined");
             if (!lifestyle.Name.In("Scoped", "Async Scoped", "Transient"))
-                throw new ArgumentException($"{serviceType} Service is \"{lifestyle.Name}\" instead of \"Scoper\" or \"Transient\"");
+                throw new ArgumentException($"{serviceType} Service is \"{lifestyle.Name}\" instead of \"Scope\" or \"Transient\"");
             var scope = AsyncScopedLifestyle.BeginScope(ServiceProvider);
             return (ServiceProvider.GetInstance(serviceType), scope);
         }
