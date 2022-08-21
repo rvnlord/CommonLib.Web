@@ -296,12 +296,12 @@ export class Prompt {
         this.saveToSessionCache();
 
         let arrNotificationsAlreadyShown = this._notifications.filter(n => n._isShown).except(arrNotificationsToShow).orderByDescending(n => n._timeStamp);
-        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this.__max);
+        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this._max);
         arrNotificationsAlreadyShown = arrNotificationsAlreadyShown.except(arrNotificationsToHide);
 
         const arrHiddenNotifications = this._notifications.filter(n => !n._isShown);
         if (arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length < this.__max && arrHiddenNotifications.any()) {
-            const toRestoreCount = this.__max - arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length;
+            const toRestoreCount = this._max - arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length;
             arrNotificationsToShow = arrNotificationsToShow.concat(arrHiddenNotifications.take(toRestoreCount)).orderByDescending(n => n._timeStamp);
         }
 
@@ -316,9 +316,9 @@ export class Prompt {
             await Prompt._syncAnimationBatch.releaseAsync();
             return;
         }
-
+        // TODO: start testing here
+        this._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
         for (let notification of arrNotificationsToAnimate) {
-            prompt._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
             Prompt._rowHeights[notification._guid] = notification._$notification.closest(".my-row").removeCss("height").hiddenDimensions().height.px();
         }
 
@@ -481,7 +481,14 @@ export class Prompt {
             return null;
         }
         const sessionPrompt = sessionPrompts[promptId];
-        return new Prompt(sessionPrompt.guid, sessionPrompt.id, sessionPrompt.newFor, sessionPrompt.removeAfter, sessionPrompt.max, sessionPrompt.renderClasses, sessionPrompt.renderStyle, sessionPrompt.renderAttributes, sessionPrompt.notifications);
+        const prompt = new Prompt(sessionPrompt.guid, sessionPrompt.id, sessionPrompt.newFor, sessionPrompt.removeAfter, sessionPrompt.max, sessionPrompt.renderClasses, sessionPrompt.renderStyle, sessionPrompt.renderAttributes, sessionPrompt.notifications);
+        const $prompt = $(`div#${promptId}`);
+
+        if ($prompt.length === 1) {
+            prompt._$prompt = $prompt;
+        }
+
+        return prompt;
     }
 }
 
