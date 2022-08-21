@@ -21,9 +21,14 @@ export class Notification {
         this._message = message || null;
         this._timeStamp = timeStamp || Date.now();
         this._isShown = isShown || false;
-        this._newFor = newFor || null;
+        this._newFor = newFor || 5;
         this._removeAfter = removeAfter || 0;
         this._iconSet = iconSet || "light";
+        this._isRemoved = false;
+    }
+
+    static createWithTypeAndMessage(type, message) {
+        return new Notification(type, null, message, null, null, null, null, null, null);
     }
 
     getIconFromType() {

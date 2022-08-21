@@ -62,6 +62,8 @@ namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
 
             if (Max.HasChanged())
                 _max = Max.ParameterValue ?? 0;
+
+            await Task.CompletedTask;
         }
 
         protected override async Task OnAfterFirstRenderAsync()

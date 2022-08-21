@@ -38,28 +38,14 @@ export class Prompt {
     }
 
     static async showTestNotificationsAsync() {
-        await DotNet.invokeMethodAsync("CommonLib.Web", "ShowTestNotificationsAsync", sessionStorage.getItem("SessionId"));
-    }
+        const promptMain = this.getFromSessionCacheById("promptMain");
 
-    static performInitialCleanup($arrAllNotifications) {
-        const $prompt = $arrAllNotifications.first().closest(".my-prompt");
-        const $clearAll = $prompt.children(".notifications-actions-container");
-        const $arrNotificationRows = $prompt.find(".my-notification").closest(".my-row").$toArray();
-
-        //const anims = animeUtils.getRunningAnimations([ $prompt, $clearAll, ...$arrNotificationRows ]);
-
-        animeUtils.finishAnimations(this._promptAnims);
-        if (!this._promptAnims.all(a => a.completed)) {
-            throw new Error();
-        }
-        this._promptAnims.clear();
-
-        const allNotificationsGuids = $arrAllNotifications.map($n => $n.guid());
-        const storedNotificationsGuids = this._rowHeights.kvps().map(kvp => kvp.key);
-        const notificationsToCleanGuids = storedNotificationsGuids.except(allNotificationsGuids);
-        for (let $notificationToCleanGuid of notificationsToCleanGuids) {
-            delete this._rowHeights[$notificationToCleanGuid];
-        }
+        await promptMain.addNotificationWithTypeAndMessage("success", "Test Success Message");
+        await promptMain.addNotificationWithTypeAndMessage("warning", "Test Warning Message");
+        await promptMain.addNotificationWithTypeAndMessage("error", "Test Error Message");
+        await promptMain.addNotificationWithTypeAndMessage("primary", "Test Primary Message");
+        await promptMain.addNotificationWithTypeAndMessage("info", "Test Long Info Message - asdg sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt hdf sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h");
+        await promptMain.addNotificationWithTypeAndMessage("loading", "Test Loading Message");
     }
 
     static setAlreadyShownAnimationRow($notification) {
@@ -69,14 +55,17 @@ export class Prompt {
         $renderedNotificationRow.removeCss("opacity");
     }
 
-    static animateShowNotificationRow($notification) {
+    animateShowNotificationRow(notification) {
+        const $notification = notification._$notification;
         const $notificationRow = $notification.closest(".my-row").first();
+
+        animeUtils.finishRunningAnimations($notification);
 
         $notificationRow.removeClass("my-d-none");
         $notificationRow.removeCss("height");
         $notificationRow.css("opacity", "0");
-        const originalHeight = this._rowHeights[$notification.guid()];
-        this._rowHeights[$notification.guid()] = originalHeight;
+        const originalHeight = Prompt._rowHeights[$notification.guid()];
+        Prompt._rowHeights[$notification.guid()] = originalHeight;
 
         const anim = anime({
             targets: $notificationRow[0],
@@ -100,11 +89,14 @@ export class Prompt {
         return anim;
     }
 
-    static animateHideNotificationRow($notification) {
+    animateHideNotificationRow(notification, removeNotification = false) {
+        const $notification = notification._$notification;
         const $notificationRow = $notification.closest(".my-row").first();
 
+        animeUtils.finishRunningAnimations($notification);
+
         $notification.find(".my-close").disableControl(); // for blazor sake because it reuses the existing parts of the HTML
-        const originalheight = this._rowHeights[$notification.guid()];
+        const originalheight = Prompt._rowHeights[$notification.guid()];
         $notificationRow.removeClass("my-d-none");
         $notificationRow.css("height", originalheight);
         $notificationRow.css("opacity", "1");
@@ -127,13 +119,21 @@ export class Prompt {
                 $notificationRow.removeCss("height");
                 $notificationRow.removeCss("opacity");
                 $notification.find(".my-close").enableControl();
+
+                if (removeNotification) {
+                    $notification.remove();
+                }
             }
         });
         this._promptAnims.push(anim);
         return anim;
     }
 
-    static animateShowPrompt($prompt) {
+    animateShowPrompt(prompt) {
+        const $prompt = prompt._$prompt;
+
+        animeUtils.finishRunningAnimations($prompt);
+
         $prompt.css("margin-top", "0px"); // revert from blazor value if re-rendered
         $prompt.css("margin-bottom", "0px");
 
@@ -157,7 +157,11 @@ export class Prompt {
         return anim;
     }
 
-    static animateHidePrompt($prompt) {
+    animateHidePrompt(prompt) {
+        const $prompt = prompt._$prompt;
+
+        animeUtils.finishRunningAnimations($prompt);
+
         $prompt.css("margin-top", "10px");
         $prompt.css("margin-bottom", "10px");
 
@@ -181,56 +185,72 @@ export class Prompt {
         return anim;
     }
 
-    static animateShowClearAll($clearAll) {
-        $clearAll.css("opacity", "0");
-        $clearAll.removeClass("my-d-none");
+    animateShowActionsNotificationsContainer(prompt) {
+        const $actionsNotificationsContainer = prompt._$prompt.find(".actions-notifications-container");
+
+        animeUtils.finishRunningAnimations($actionsNotificationsContainer);
+
+        $actionsNotificationsContainer.css("opacity", "0");
+        $actionsNotificationsContainer.removeClass("my-d-none");
 
         const anim = anime({
-            targets: $clearAll[0],
+            targets: $actionsNotificationsContainer[0],
             opacity: [0, 1],
             duration: 500,
             easing: "easeOutCirc",
             autoplay: false,
             begin: function () {
-                $clearAll.css("opacity", "0");
-                $clearAll.removeClass("my-d-none");
+                $actionsNotificationsContainer.css("opacity", "0");
+                $actionsNotificationsContainer.removeClass("my-d-none");
             },
             complete: function () {
-                $clearAll.css("opacity", "1");
-                $clearAll.enableControl();
+                $actionsNotificationsContainer.css("opacity", "1");
+                $actionsNotificationsContainer.enableControl();
             }
         });
         this._promptAnims.push(anim);
         return anim;
     }
 
-    static animateHideClearAll($clearAll) {
-        $clearAll.css("opacity", "1");
-        $clearAll.removeClass("my-d-none");
+    animateHideActionsNotificationsContainer(prompt) {
+        const $actionsNotificationsContainer = prompt._$prompt.find(".actions-notifications-container");
+
+        animeUtils.finishRunningAnimations($actionsNotificationsContainer);
+
+        $actionsNotificationsContainer.css("opacity", "1");
+        $actionsNotificationsContainer.removeClass("my-d-none");
 
         const anim = anime({
-            targets: $clearAll[0],
+            targets: $actionsNotificationsContainer[0],
             opacity: [1, 0],
             duration: 500,
             easing: "easeOutCirc",
             autoplay: false,
             begin: function () {
-                $clearAll.css("opacity", "1");
-                $clearAll.removeClass("my-d-none");
+                $actionsNotificationsContainer.css("opacity", "1");
+                $actionsNotificationsContainer.removeClass("my-d-none");
             },
             complete: function () {
-                $clearAll.css("opacity", "0");
-                $clearAll.addClass("my-d-none");
+                $actionsNotificationsContainer.css("opacity", "0");
+                $actionsNotificationsContainer.addClass("my-d-none");
             }
         });
         this._promptAnims.push(anim);
         return anim;
     }
 
-    static animatePromptHeight($prompt, $arrNotificationsToShow, $arrNotificationsAlreadyShown, $arrNotificationsToRemove) {
-        const toShowHeight = $arrNotificationsToShow.sum($n => parseFloat(this._rowHeights[$n.guid()]));
-        const alreadyShownHeight = $arrNotificationsAlreadyShown.sum($n => parseFloat(this._rowHeights[$n.guid()]));
-        const toRemoveHeight = $arrNotificationsToRemove.sum($n => parseFloat(this._rowHeights[$n.guid()]));
+    animatePromptHeight(prompt, arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide) {
+        const $prompt = prompt._$prompt;
+        const $arrNotificationsToShow = arrNotificationsToShow.map(n => n._$notification);
+        const $arrNotificationsAlreadyShown = arrNotificationsAlreadyShown.map(n => n._$notification);
+        const $arrNotificationsToRemove = arrNotificationsToRemove.map(n => n._$notification);
+        const $arrNotificationsToHide = arrNotificationsToHide.map(n => n._$notification);
+
+        animeUtils.finishRunningAnimations($prompt);
+
+        const toShowHeight = $arrNotificationsToShow.sum($n => parseFloat(Prompt._rowHeights[$n.guid()]));
+        const alreadyShownHeight = $arrNotificationsAlreadyShown.sum($n => parseFloat(Prompt._rowHeights[$n.guid()]));
+        const toRemoveHeight = $arrNotificationsToRemove.concat($arrNotificationsToHide).sum($n => parseFloat(Prompt._rowHeights[$n.guid()]));
 
         const currentHeight = Math.max(0, -10 + alreadyShownHeight + toRemoveHeight);
         const expectedheight = Math.max(0, -10 + alreadyShownHeight + toShowHeight);
@@ -253,50 +273,75 @@ export class Prompt {
         return anim;
     }
 
-    static async showNotificationsAsync($notificationsToShow, $notificationsAlreadyShown, $notificationsToRemove) {
+    async showRemoveNotificationsAsync(notificationsToShow, notificationsToRemove) { //, $notificationsAlreadyShown 
         await Prompt._syncAnimationBatch.waitAsync(); // each animation batch has to be prepared and started then force finished before a new batch can run, thats the secret of not fucking up the animations
 
         const anims = [];
-        const $arrNotificationsToShow = $notificationsToShow.$toArray();
-        const $arrNotificationsAlreadyShown = $notificationsAlreadyShown.$toArray();
-        const $arrNotificationsToRemove = $notificationsToRemove.$toArray();
-        const $arrAllNotifications = $arrNotificationsToShow.concat($arrNotificationsAlreadyShown).concat($arrNotificationsToRemove);
+        let arrNotificationsToShow = notificationsToShow.filter(n => !n._isShown).orderByDescending(n => n._timeStamp);
+        const arrNotificationsToRemove = notificationsToRemove.filter(n => !n._isRemoved);
+        let i = 0;
 
-        if ($arrAllNotifications.length === 0) {
+        for (let notificationToShow of arrNotificationsToShow) {
+            notificationToShow._isShown = i++ < this._max;
+            this._notifications.push(notificationToShow);
+            await notificationToShow.renderAsync(this._id);
+        }
+        arrNotificationsToShow = arrNotificationsToShow.filter(n => n._isShown);
+
+        for (let notificationToRemove of arrNotificationsToRemove) {
+            notificationToRemove._isShown = false;
+            notificationToRemove._isRemoved = true;
+            this._notifications.remove(notificationToRemove);
+        }
+        this.saveToSessionCache();
+
+        let arrNotificationsAlreadyShown = this._notifications.filter(n => n._isShown).except(arrNotificationsToShow).orderByDescending(n => n._timeStamp);
+        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this.__max);
+        arrNotificationsAlreadyShown = arrNotificationsAlreadyShown.except(arrNotificationsToHide);
+
+        const arrHiddenNotifications = this._notifications.filter(n => !n._isShown);
+        if (arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length < this.__max && arrHiddenNotifications.any()) {
+            const toRestoreCount = this.__max - arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length;
+            arrNotificationsToShow = arrNotificationsToShow.concat(arrHiddenNotifications.take(toRestoreCount)).orderByDescending(n => n._timeStamp);
+        }
+
+        const arrNotificationsToAnimate = arrNotificationsToShow.concat(arrNotificationsToRemove).concat(arrNotificationsToHide);
+
+        console.log(`notifications to show: [ ${arrNotificationsToShow.map(n => n._type).joinAsString(", ")} ]`);
+        console.log(`notifications already shown: [ ${arrNotificationsAlreadyShown.map(n => n._type).joinAsString(", ")} ]`);
+        console.log(`notifications to remove: [ ${notificationsToRemove.map(n => n._type).joinAsString(", ")} ]`);
+        console.log(`notifications to hide: [ ${arrNotificationsToHide.map(n => n._type).joinAsString(", ")} ]`);
+
+        if (arrNotificationsToAnimate.length === 0) {
             await Prompt._syncAnimationBatch.releaseAsync();
             return;
         }
 
-        const $prompt = $arrAllNotifications.first().closest(".my-prompt");
-        const $clearAll = $prompt.children(".notifications-actions-container");
-
-        this.performInitialCleanup($arrAllNotifications);
-
-        for (let $notification of $arrAllNotifications) {
-            $prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
-            this._rowHeights[$notification.guid()] = $notification.closest(".my-row").removeCss("height").hiddenDimensions().height.px();
+        for (let notification of arrNotificationsToAnimate) {
+            prompt._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
+            Prompt._rowHeights[notification._guid] = notification._$notification.closest(".my-row").removeCss("height").hiddenDimensions().height.px();
         }
 
-        for (let $notificationToRemove of $arrNotificationsToRemove) {
-            anims.push(this.animateHideNotificationRow($notificationToRemove));
+        for (let notificationToHide of arrNotificationsToHide) {
+            anims.push(this.animateHideNotificationRow(notificationToHide, false));
         }
 
-        for (let $notificationAlreadyShown of $arrNotificationsAlreadyShown) {
-            this.setAlreadyShownAnimationRow($notificationAlreadyShown);
+        for (let notificationToRemove of arrNotificationsToRemove) {
+            anims.push(this.animateHideNotificationRow(notificationToRemove, true));
         }
 
-        for (let notificationToShow of $arrNotificationsToShow) {
+        for (let notificationToShow of arrNotificationsToShow) {
             anims.push(this.animateShowNotificationRow(notificationToShow));
         }
 
-        anims.push(this.animatePromptHeight($prompt, $arrNotificationsToShow, $arrNotificationsAlreadyShown, $arrNotificationsToRemove));
+        anims.push(this.animatePromptHeight(prompt, arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide));
 
-        if ($arrNotificationsToShow.any() && !$arrNotificationsAlreadyShown.any()) {
-            anims.push(this.animateShowPrompt($prompt));
-            anims.push(this.animateShowClearAll($clearAll));
-        } else if ($arrNotificationsToRemove.any() && !$arrNotificationsToShow.any() && !$arrNotificationsAlreadyShown.any()) {
-            anims.push(this.animateHidePrompt($prompt));
-            anims.push(this.animateHideClearAll($clearAll));
+        if (arrNotificationsToShow.any() && !arrNotificationsAlreadyShown.any()) {
+            anims.push(this.animateShowPrompt(prompt));
+            anims.push(this.animateShowActionsNotificationsContainer(prompt));
+        } else if (arrNotificationsToRemove.any() && !arrNotificationsToShow.any() && !arrNotificationsAlreadyShown.any()) {
+            anims.push(this.animateHidePrompt(prompt));
+            anims.push(this.animateHideActionsNotificationsContainer(prompt));
         }
 
         if (anims.any()) {
@@ -419,10 +464,15 @@ export class Prompt {
 
     async addNotificationAsync(notificationType, iconSet, iconType, message) {
         const notification = new Notification(notificationType, iconType, message, this._newFor, this._removeAfter, null, iconSet, null, false);
-        this._notifications.push(notification);
-        this.saveToSessionCache();
-        await notification.renderAsync(this._id);
-        await Prompt.showNotificationsAsync(notification._$notification, $(), $()); // test for now TODO: notification.$notification
+        await this.showRemoveNotificationsAsync([ notification ], []);
+    }
+
+    async addNotificationWithTypeAndMessage(notificationType, message) {
+        return this.addNotificationAsync(notificationType, null, null, message);
+    }
+
+    async removeNotificationAsync(notification) {
+        await this.showRemoveNotificationsAsync([], [ notification ]);
     }
 
     static getFromSessionCacheById(promptId) {
@@ -455,8 +505,8 @@ export class PromptUtils {
     }
 
     static async addNotificationAsync(promptId, notificationType, iconSet, iconType, message) {
-        const prompt = await Prompt.getFromSessionCacheById(promptId); // queue and order rendering by call
-        await prompt.addNotificationAsync(notificationType, iconSet, iconType, message); // TODO: animations
+        const prompt = await Prompt.getFromSessionCacheById(promptId); // queue and order rendering by call?
+        await prompt.addNotificationAsync(notificationType, iconSet, iconType, message);
     }
 }
 
@@ -469,14 +519,6 @@ export async function blazor_Prompt_AfterFirstRenderAsync(guid, promptId, newFor
     prompt.ensureCorrectStyles(promptId);
 }
 
-//export async function blazor_Prompt_SetNotificationsDisplayIfDataDidntChangeAsync(prompt, shownNotificationsGuids) {
-//    const $prompt = $(prompt);
-
-//    const $notificationRows = $prompt.find(".my-notification").filter(shownNotificationsGuids.map(guid => guid.guidToSelector()).joinAsString(", ")).closest(".my-row");
-//    $notificationRows.removeClass("my-d-none");
-//    $notificationRows.removeCss("opacity");
-//}
-
 $(document).ready(async function () {
     $(document).on("click", ".my-brand", async function (e) {
         if (e.which !== 1) {
@@ -486,7 +528,13 @@ $(document).ready(async function () {
         await Prompt.showTestNotificationsAsync();
     });
 
-    // TESTS
-    let $icon = await utils.$getIconAsync("light", "acorn");
-    var t = $icon;
+    $(document).on("click", ".my-notification > .my-close", async function (e) {
+        if (e.which !== 1) {
+            return;
+        }
+
+        const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
+        const notification = prompt._notifications.first(n => n.$notification.equals($(this).closest(".my-notification")));
+        await prompt.removeNotificationAsync(notification);
+    });
 });

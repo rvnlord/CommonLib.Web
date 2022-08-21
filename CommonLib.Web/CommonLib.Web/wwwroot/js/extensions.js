@@ -678,6 +678,22 @@ Object.defineProperty(Array.prototype, "sequenceEqual", {
     configurable: true
 });
 
+Object.defineProperty(Array.prototype, "orderby", {
+    value: function (...selectors) {
+        return utils.orderByProps(this, false, ...selectors);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Array.prototype, "orderByDescending", {
+    value: function (...selectors) {
+        return utils.orderByProps(this, true, ...selectors);
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region JqueryExtensions
@@ -926,6 +942,9 @@ jQuery.fn.extend({
             arrAttrs[attr.name] = attr.value;
         }
         return arrAttrs;
+    },
+    equals: function(that) {
+        return this[0] === that[0];
     }
 });
 

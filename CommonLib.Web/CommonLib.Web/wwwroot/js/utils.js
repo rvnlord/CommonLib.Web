@@ -114,5 +114,35 @@
         return !isNaN(o) && isFinite(o);
     }
 
+    static identityFunction(x) {
+        return x;
+    }
 
+    static order = (array, descending, func = this.identityFunction) => {
+        return array.sort((a, b) => {
+            const first = func(a);
+            const second = func(b);
+            let result = 0;
+            if (first < second) {
+                result = descending ? 1 : -1;
+            }
+            if (first > second) {
+                result = descending ? -1 : 1;
+            }
+            return result;
+        });
+    }
+
+    static orderByProps(array, descending, ...selectors) {
+        let newArray = [...array];
+        if (selectors.length === 0) {
+            newArray = this.order(newArray, descending);
+        } else {
+            selectors.reverse();
+            selectors.forEach((selector) => {
+                newArray = this.order(newArray, descending, selector);
+            });
+        }
+        return newArray;
+    }
 }
