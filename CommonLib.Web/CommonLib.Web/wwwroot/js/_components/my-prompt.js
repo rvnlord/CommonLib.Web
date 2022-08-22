@@ -85,7 +85,7 @@ export class Prompt {
                 $notificationRow.css("opacity", "1");
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
@@ -125,12 +125,12 @@ export class Prompt {
                 }
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
-    animateShowPrompt(prompt) {
-        const $prompt = prompt._$prompt;
+    animateShowPrompt() {
+        const $prompt = this._$prompt;
 
         animeUtils.finishRunningAnimations($prompt);
 
@@ -153,12 +153,12 @@ export class Prompt {
                 $prompt.css("margin-bottom", "10px");
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
-    animateHidePrompt(prompt) {
-        const $prompt = prompt._$prompt;
+    animateHidePrompt() {
+        const $prompt = this._$prompt;
 
         animeUtils.finishRunningAnimations($prompt);
 
@@ -181,12 +181,12 @@ export class Prompt {
                 $prompt.css("margin-bottom", "0px");
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
-    animateShowActionsNotificationsContainer(prompt) {
-        const $actionsNotificationsContainer = prompt._$prompt.find(".actions-notifications-container");
+    animateShowActionsNotificationsContainer() {
+        const $actionsNotificationsContainer = this._$prompt.find(".notifications-actions-container");
 
         animeUtils.finishRunningAnimations($actionsNotificationsContainer);
 
@@ -208,12 +208,12 @@ export class Prompt {
                 $actionsNotificationsContainer.enableControl();
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
-    animateHideActionsNotificationsContainer(prompt) {
-        const $actionsNotificationsContainer = prompt._$prompt.find(".actions-notifications-container");
+    animateHideActionsNotificationsContainer() {
+        const $actionsNotificationsContainer = this._$prompt.find(".actions-notifications-container");
 
         animeUtils.finishRunningAnimations($actionsNotificationsContainer);
 
@@ -235,12 +235,12 @@ export class Prompt {
                 $actionsNotificationsContainer.addClass("my-d-none");
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
-    animatePromptHeight(prompt, arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide) {
-        const $prompt = prompt._$prompt;
+    animatePromptHeight(arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide) {
+        const $prompt = this._$prompt;
         const $arrNotificationsToShow = arrNotificationsToShow.map(n => n._$notification);
         const $arrNotificationsAlreadyShown = arrNotificationsAlreadyShown.map(n => n._$notification);
         const $arrNotificationsToRemove = arrNotificationsToRemove.map(n => n._$notification);
@@ -269,7 +269,7 @@ export class Prompt {
                 $prompt.removeCss("height");
             }
         });
-        this._promptAnims.push(anim);
+        Prompt._promptAnims.push(anim);
         return anim;
     }
 
@@ -316,7 +316,7 @@ export class Prompt {
             await Prompt._syncAnimationBatch.releaseAsync();
             return;
         }
-        // TODO: start testing here
+        // TODO: start testing here 
         this._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
         for (let notification of arrNotificationsToAnimate) {
             Prompt._rowHeights[notification._guid] = notification._$notification.closest(".my-row").removeCss("height").hiddenDimensions().height.px();
@@ -334,14 +334,14 @@ export class Prompt {
             anims.push(this.animateShowNotificationRow(notificationToShow));
         }
 
-        anims.push(this.animatePromptHeight(prompt, arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide));
+        anims.push(this.animatePromptHeight(arrNotificationsToShow, arrNotificationsAlreadyShown, arrNotificationsToRemove, arrNotificationsToHide));
 
         if (arrNotificationsToShow.any() && !arrNotificationsAlreadyShown.any()) {
-            anims.push(this.animateShowPrompt(prompt));
-            anims.push(this.animateShowActionsNotificationsContainer(prompt));
+            anims.push(this.animateShowPrompt());
+            anims.push(this.animateShowActionsNotificationsContainer());
         } else if (arrNotificationsToRemove.any() && !arrNotificationsToShow.any() && !arrNotificationsAlreadyShown.any()) {
-            anims.push(this.animateHidePrompt(prompt));
-            anims.push(this.animateHideActionsNotificationsContainer(prompt));
+            anims.push(this.animateHidePrompt());
+            anims.push(this.animateHideActionsNotificationsContainer());
         }
 
         if (anims.any()) {
@@ -486,9 +486,15 @@ export class Prompt {
 
         if ($prompt.length === 1) {
             prompt._$prompt = $prompt;
+            for (let notification of prompt._notifications) {
+                const $notification = $prompt.find(notification._guid.guidToSelector());
+                if ($notification.length === 1) {
+                    notification._$notification = $notification;
+                }
+            }
         }
 
-        return prompt;
+        return prompt; 
     }
 }
 
