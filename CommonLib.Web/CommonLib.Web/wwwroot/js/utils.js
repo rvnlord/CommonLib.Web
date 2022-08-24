@@ -142,6 +142,18 @@
         return newArray;
     }
 
+    static orderByPropsWithChangingOrder(array, ...selectorsWithOrder) {
+        let newArray = [...array];
+        if (selectorsWithOrder.length === 0) {
+            newArray = this.order(newArray, false);
+        } else {
+            selectorsWithOrder.reverse();
+            selectorsWithOrder.forEach((selectorWithOrder) => {
+                newArray = this.order(newArray, selectorWithOrder.descending, selectorWithOrder.selector);
+            });
+        }
+        return newArray;
+    }
 
     static deepCopy(obj) {
         if (Array.isArray(obj)) {
@@ -149,5 +161,19 @@
         } else {
             return JSON.parse(JSON.stringify(obj));
         }
+    }
+
+    static groupBy(arr, keySelector = (x, i) => i, elementSelector = (x) => x, resultSelector = (key, items) => ({ key, items: items.toArray() })) {
+        let keys = utils.deepCopy(arr).map((...params) => ({
+            key: keySelector(...params),
+            element: elementSelector(...params)
+        }));
+        const result = [];
+        while (keys.length !== 0) {
+            const toRemove = keys.filter((item) => item.key.equals(keys[0].key));
+            result.push(resultSelector(keys[0].key, toRemove.map(x => x.element)));
+            keys = keys.filter((el) => toRemove.indexOf(el) < 0);
+        }
+        return result;
     }
 }

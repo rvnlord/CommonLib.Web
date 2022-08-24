@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "defaultProvider": "cdnjs",
+  "defaultProvider": "unpkg",
   "defaultDestination": "wwwroot/libs/libman",
   "libraries": [
     {
@@ -11,10 +11,6 @@
       "provider": "unpkg",
       "library": "@types/jquery@3.5.6",
       "destination": "wwwroot/libs/libman/@types/jquery"
-    },
-    {
-      "library": "jqueryui@1.12.1",
-      "destination": "wwwroot/libs/libman/jquery-ui"
     },
     {
       "library": "overlayscrollbars@1.10.2",
@@ -43,6 +39,11 @@
       "provider": "unpkg",
       "library": "cookies-js@1.2.3",
       "destination": "wwwroot/libs/libman/cookies-js"
+    },
+    {
+      "provider": "unpkg",
+      "library": "underscore@1.13.4",
+      "destination": "wwwroot/libs/libman/underscore"
     }
   ]
 }

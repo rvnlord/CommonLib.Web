@@ -34,18 +34,28 @@ export class Prompt {
         this._renderClasses = renderClasses || null;
         this._renderStyle = renderStyle || null;
         this._renderAttributes = renderAttributes || null;
-        this._notifications = notifications ? notifications.map(n => n instanceof Notification ? n : new Notification(n.type, n.icon, n.message, n.newFor, n.removeAfter, n.guid, n.iconSet, n.timeStamp, n.isShown)) : [];
+        this._notifications = notifications ? notifications.map(n => n instanceof Notification ? n : new Notification(n.type, n.icon, n.message, n.newFor, n.removeAfter, n.guid, n.iconSet, n.timeStamp, n.isShown, n.isRemoved)) : [];
     }
 
     static async showTestNotificationsAsync() {
         const promptMain = this.getFromSessionCacheById("promptMain");
 
-        await promptMain.addNotificationWithTypeAndMessage("success", "Test Success Message");
-        await promptMain.addNotificationWithTypeAndMessage("warning", "Test Warning Message");
-        await promptMain.addNotificationWithTypeAndMessage("error", "Test Error Message");
-        await promptMain.addNotificationWithTypeAndMessage("primary", "Test Primary Message");
-        await promptMain.addNotificationWithTypeAndMessage("info", "Test Long Info Message - asdg sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt hdf sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h");
-        await promptMain.addNotificationWithTypeAndMessage("loading", "Test Loading Message");
+        //await promptMain.addNotificationWithTypeAndMessage("success", "Test Success Message");
+        //await promptMain.addNotificationWithTypeAndMessage("warning", "Test Warning Message");
+        //await promptMain.addNotificationWithTypeAndMessage("error", "Test Error Message");
+        //await promptMain.addNotificationWithTypeAndMessage("primary", "Test Primary Message");
+        //await promptMain.addNotificationWithTypeAndMessage("info", "Test Long Info Message - asdg sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt hdf sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h");
+        //await promptMain.addNotificationWithTypeAndMessage("loading", "Test Loading Message");
+
+        const ts = Date.now();
+        await promptMain.showRemoveNotificationsAsync([ 
+            new Notification("success", null, "Test Success Message", this._newFor, this._removeAfter, null, null, ts, false),
+            new Notification("warning", null, "Test Warning Messag", this._newFor, this._removeAfter, null, null, ts, false),
+            new Notification("error", null, "Test Error Message", this._newFor, this._removeAfter, null, null, ts, false),
+            new Notification("primary", null, "Test Primary Message", this._newFor, this._removeAfter, null, null, ts, false),
+            new Notification("info", null, "Test Long Info Message - asdg sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt hdf sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h sdfg sr srht sth sfth rdsth srth srt hsrth rsth rset hsrt h", this._newFor, this._removeAfter, null, null, ts, false),
+            new Notification("loading", null, "Test Loading Message", this._newFor, this._removeAfter, null, null, ts, false)
+        ], []);
     }
 
     static setAlreadyShownAnimationRow($notification) {
@@ -121,7 +131,7 @@ export class Prompt {
                 $notification.find(".my-close").enableControl();
 
                 if (removeNotification) {
-                    $notification.remove();
+                    $notificationRow.remove();
                 }
             }
         });
@@ -273,24 +283,48 @@ export class Prompt {
         return anim;
     }
 
+    static sortNotifications(notifications) {
+        return notifications.orderByWithDirection({
+            selector: n => n._timeStamp, 
+            descending: true
+        }, {
+            selector: n =>  n._$notification.closest(".my-row").prevAll(".my-row").length, 
+            descending: false
+        });
+    }
+
     async showRemoveNotificationsAsync(notificationsToShow, notificationsToRemove) { //, $notificationsAlreadyShown 
         await Prompt._syncAnimationBatch.waitAsync(); // each animation batch has to be prepared and started then force finished before a new batch can run, thats the secret of not fucking up the animations
 
-        // TODO: order same timestamps as they appear in GUI
-        // orderByManyDesceending(timestamp, orderOfAppearance) - using groupBy
-        // sort by leest important key then by most important key it should act as thenBy, use underscore.js to simplify?
+        // TODO:
+        // newFor
+        // removeAfter
 
         const anims = [];
-        let arrNotificationsToShow = notificationsToShow.filter(n => !n._isShown).orderByDescending(n => n._timeStamp);
-        const arrNotificationsToRemove = notificationsToRemove.filter(n => !n._isRemoved);
+        let arrNotificationsToShow = notificationsToShow.filter(n => !n._isShown).orderByDescending(n => n._timeStamp); // not yet shown, sorting by ts is enough and by rendering order is not needed since they are not rendered yet
+        let arrNotificationsToRemove = notificationsToRemove.filter(n => !n._isRemoved);
         let i = 0;
+
+        for (let notificationToShow of arrNotificationsToShow) {
+            await notificationToShow.renderAsync(this._id);
+        }
+
+        arrNotificationsToShow = Prompt.sortNotifications(arrNotificationsToShow); // sort them including rendered order
 
         for (let notificationToShow of arrNotificationsToShow) {
             notificationToShow._isShown = i++ < this._max;
             this._notifications.push(notificationToShow);
-            await notificationToShow.renderAsync(this._id);
         }
+
         arrNotificationsToShow = arrNotificationsToShow.filter(n => n._isShown);
+
+        const alreadyHiddenNotificationsToRemove = arrNotificationsToRemove.filter(n => !n._isShown);
+        for (let alreadyHiddenNotificationToRemove of alreadyHiddenNotificationsToRemove) { // special case, don't animate notifications to remove that are already hidden
+            alreadyHiddenNotificationToRemove._isRemoved = true;
+            this._notifications.remove(alreadyHiddenNotificationToRemove);
+            arrNotificationsToRemove.remove(alreadyHiddenNotificationToRemove);
+            alreadyHiddenNotificationToRemove._$notification.closest(".my-row").remove();
+        }
 
         for (let notificationToRemove of arrNotificationsToRemove) {
             notificationToRemove._isShown = false;
@@ -298,8 +332,8 @@ export class Prompt {
             this._notifications.remove(notificationToRemove);
         }
         
-        let arrNotificationsAlreadyShown = this._notifications.filter(n => n._isShown).except(arrNotificationsToShow).orderByDescending(n => n._timeStamp);
-        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this._max).orderByDescending(n => n._timeStamp);
+        let arrNotificationsAlreadyShown = Prompt.sortNotifications(this._notifications.filter(n => n._isShown).except(arrNotificationsToShow));
+        const arrNotificationsToHide = Prompt.sortNotifications(arrNotificationsToShow.concat(arrNotificationsAlreadyShown)).skip(this._max);
         for (let notificationToHide of arrNotificationsToHide) {
             notificationToHide._isShown = false;
         }
@@ -309,8 +343,8 @@ export class Prompt {
         const arrHiddenNotifications = this._notifications.filter(n => !n._isShown);
         if (arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length < this._max && arrHiddenNotifications.any()) {
             const toRestoreCount = this._max - arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length;
-            const hiddenNotificationsToRestore = arrHiddenNotifications.take(toRestoreCount);
-            arrNotificationsToShow = arrNotificationsToShow.concat(hiddenNotificationsToRestore).orderByDescending(n => n._timeStamp);
+            const hiddenNotificationsToRestore = Prompt.sortNotifications(arrHiddenNotifications).take(toRestoreCount);
+            arrNotificationsToShow = Prompt.sortNotifications(arrNotificationsToShow.concat(hiddenNotificationsToRestore));
             for (let hiddenNotificationToRestore of hiddenNotificationsToRestore) {
                 hiddenNotificationToRestore._isShown = true;
             }
@@ -441,10 +475,10 @@ export class Prompt {
                 <div class="clear-description-container">
                     <div class="clear-description">Clear:</div>
                 </div>
-                <div class="clear-visible-container" @onclick="DivClearVisible_ClickAsync">
+                <div class="clear-visible-container">
                     <div class="clear-visible">Visible</div>
                 </div>
-                <div class="clear-all-container" @onclick="DivClearAll_ClickAsync">
+                <div class="clear-all-container">
                     <div class="clear-all">All</div>
                 </div>
             </div>
@@ -496,6 +530,10 @@ export class Prompt {
 
     async removeNotificationAsync(notification) {
         await this.showRemoveNotificationsAsync([], [ notification ]);
+    }
+
+    async removeNotificationsAsync(notifications) {
+        await this.showRemoveNotificationsAsync([], notifications);
     }
 
     static getFromSessionCacheById(promptId) {
@@ -572,5 +610,32 @@ $(document).ready(async function () {
         const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
         const notification = prompt._notifications.first(n => n._$notification.equals($(this).closest(".my-notification")));
         await prompt.removeNotificationAsync(notification);
+    });
+
+    $(document).on("click", ".clear-visible-container", async function(e) {
+        if (e.which !== 1) {
+            return;
+        }
+
+        const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
+        const notifications = prompt._notifications.filter(n => n._isShown);
+        await prompt.removeNotificationsAsync(notifications);
+    });
+
+    $(document).on("click", ".clear-all-container", async function(e) {
+        if (e.which !== 1) {
+            return;
+        }
+
+        const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
+        await prompt.removeNotificationsAsync(prompt._notifications);
+
+        //const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
+        //const invisibleNotificationsToRemove = prompt._notifications.filter(n => !n._isShown);
+        //prompt._notifications.removeAll(n => n.in(invisibleNotificationsToRemove));
+        //prompt.saveToSessionCache();
+
+        //const visibleNotificationsToRemove = prompt._notifications.filter(n => n._isShown);
+        //await prompt.removeNotificationsAsync(visibleNotificationsToRemove);
     });
 });

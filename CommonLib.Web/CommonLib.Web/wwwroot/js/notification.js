@@ -14,7 +14,7 @@ export class Notification {
     _iconSet;
     _$notification;
 
-    constructor(type, icon, message, newFor, removeAfter, guid, iconSet, timeStamp, isShown) {
+    constructor(type, icon, message, newFor, removeAfter, guid, iconSet, timeStamp, isShown, isRemoved) {
         this._guid = guid || utils.guid();
         this._type = type.toLowerCase() || null;
         this._icon = icon || this.getIconFromType();
@@ -27,7 +27,7 @@ export class Notification {
         this._newFor = newFor || 5;
         this._removeAfter = removeAfter || 0;
         this._iconSet = iconSet || "light";
-        this._isRemoved = false;
+        this._isRemoved = isRemoved || false;
     }
 
     static createWithTypeAndMessage(type, message) {
@@ -156,7 +156,8 @@ export class Notification {
             isShown: this._isShown,
             newFor: this._newFor,
             removeAfter: this._removeAfter,
-            iconSet: this._iconSet
+            iconSet: this._iconSet,
+            sRemoved: this._isRemoved
         };
     }
 }
