@@ -213,7 +213,7 @@ export class Prompt {
     }
 
     animateHideActionsNotificationsContainer() {
-        const $actionsNotificationsContainer = this._$prompt.find(".actions-notifications-container");
+        const $actionsNotificationsContainer = this._$prompt.find(".notifications-actions-container");
 
         animeUtils.finishRunningAnimations($actionsNotificationsContainer);
 
@@ -276,6 +276,10 @@ export class Prompt {
     async showRemoveNotificationsAsync(notificationsToShow, notificationsToRemove) { //, $notificationsAlreadyShown 
         await Prompt._syncAnimationBatch.waitAsync(); // each animation batch has to be prepared and started then force finished before a new batch can run, thats the secret of not fucking up the animations
 
+        // TODO: order same timestamps as they appear in GUI
+        // orderByManyDesceending(timestamp, orderOfAppearance) - using groupBy
+        // sort by leest important key then by most important key it should act as thenBy, use underscore.js to simplify?
+
         const anims = [];
         let arrNotificationsToShow = notificationsToShow.filter(n => !n._isShown).orderByDescending(n => n._timeStamp);
         const arrNotificationsToRemove = notificationsToRemove.filter(n => !n._isRemoved);
@@ -293,20 +297,31 @@ export class Prompt {
             notificationToRemove._isRemoved = true;
             this._notifications.remove(notificationToRemove);
         }
-        this.saveToSessionCache();
-
+        
         let arrNotificationsAlreadyShown = this._notifications.filter(n => n._isShown).except(arrNotificationsToShow).orderByDescending(n => n._timeStamp);
-        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this._max);
+        const arrNotificationsToHide = arrNotificationsToShow.concat(arrNotificationsAlreadyShown).skip(this._max).orderByDescending(n => n._timeStamp);
+        for (let notificationToHide of arrNotificationsToHide) {
+            notificationToHide._isShown = false;
+        }
+
         arrNotificationsAlreadyShown = arrNotificationsAlreadyShown.except(arrNotificationsToHide);
 
         const arrHiddenNotifications = this._notifications.filter(n => !n._isShown);
-        if (arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length < this.__max && arrHiddenNotifications.any()) {
+        if (arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length < this._max && arrHiddenNotifications.any()) {
             const toRestoreCount = this._max - arrNotificationsToShow.concat(arrNotificationsAlreadyShown).length;
-            arrNotificationsToShow = arrNotificationsToShow.concat(arrHiddenNotifications.take(toRestoreCount)).orderByDescending(n => n._timeStamp);
+            const hiddenNotificationsToRestore = arrHiddenNotifications.take(toRestoreCount);
+            arrNotificationsToShow = arrNotificationsToShow.concat(hiddenNotificationsToRestore).orderByDescending(n => n._timeStamp);
+            for (let hiddenNotificationToRestore of hiddenNotificationsToRestore) {
+                hiddenNotificationToRestore._isShown = true;
+            }
         }
+
+        await this.renderNotificationsCount();
+        this.saveToSessionCache();
 
         const arrNotificationsToAnimate = arrNotificationsToShow.concat(arrNotificationsToRemove).concat(arrNotificationsToHide);
 
+        console.log(`showRemoveNotificationsAsync(notificationsToShow, notificationsToRemove)`);
         console.log(`notifications to show: [ ${arrNotificationsToShow.map(n => n._type).joinAsString(", ")} ]`);
         console.log(`notifications already shown: [ ${arrNotificationsAlreadyShown.map(n => n._type).joinAsString(", ")} ]`);
         console.log(`notifications to remove: [ ${notificationsToRemove.map(n => n._type).joinAsString(", ")} ]`);
@@ -316,8 +331,8 @@ export class Prompt {
             await Prompt._syncAnimationBatch.releaseAsync();
             return;
         }
-        // TODO: start testing here 
-        this._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the naimation to get proper heights now
+
+        this._$prompt.removeCss("height"); // this has to be reset now despite that it is being reset just before the animation to get proper heights here
         for (let notification of arrNotificationsToAnimate) {
             Prompt._rowHeights[notification._guid] = notification._$notification.closest(".my-row").removeCss("height").hiddenDimensions().height.px();
         }
@@ -388,6 +403,12 @@ export class Prompt {
         sessionStorage.setItem("NotificationsCache", sessionPrompts.jsonSerialize());
     }
 
+    async renderNotificationsCount() {
+        const notificationsCount = this._notifications.length;
+        const $prompt = $(`div#${this._id}`);
+        $prompt.find(".notifications-counter").text(notificationsCount);
+    }
+
     async renderAsync() {
         const $existingPrompt = $(`div#${this._id}`);
         let $prompt = $existingPrompt;
@@ -455,6 +476,8 @@ export class Prompt {
             $notificationRow.removeClass("my-d-none");
             $notificationRow.css("opacity", "1");
         }
+
+        await this.renderNotificationsCount();
     }
 
     async addAsync() {
@@ -547,7 +570,7 @@ $(document).ready(async function () {
         }
 
         const prompt = await Prompt.getFromSessionCacheById($(this).closest(".my-prompt").id());
-        const notification = prompt._notifications.first(n => n.$notification.equals($(this).closest(".my-notification")));
+        const notification = prompt._notifications.first(n => n._$notification.equals($(this).closest(".my-notification")));
         await prompt.removeNotificationAsync(notification);
     });
 });

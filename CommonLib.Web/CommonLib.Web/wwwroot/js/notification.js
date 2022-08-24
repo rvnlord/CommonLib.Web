@@ -19,6 +19,9 @@ export class Notification {
         this._type = type.toLowerCase() || null;
         this._icon = icon || this.getIconFromType();
         this._message = message || null;
+
+        console.log(`this._timeStamp = ${timeStamp} || ${Date.now()}`);
+
         this._timeStamp = timeStamp || Date.now();
         this._isShown = isShown || false;
         this._newFor = newFor || 5;
@@ -116,19 +119,21 @@ export class Notification {
         const $pathDecoration = $svgDecoration.find("path");
         $pathDecoration.css("fill", "white");
 
-        const $svgMyIcon = $notificationRow.find(".my-notification > .my-icon").find("svg");
-        const vbDims = $svgMyIcon.attr("viewBox").split(" ");
-        const [,, vbWidth, vbHeight] = vbDims;
-        if (vbWidth < vbHeight) {
-            $svgMyIcon.css("width", "100%");
-            $svgMyIcon.css("height", "auto");
-        } else {
-            $svgMyIcon.css("width", "auto");
-            $svgMyIcon.css("height", "100%");
-        }
+        if (this._type !== "loading") {
+            const $svgMyIcon = $notificationRow.find(".my-notification > .my-icon").find("svg");
+            const vbDims = $svgMyIcon.attr("viewBox").split(" ");
+            const [,, vbWidth, vbHeight] = vbDims;
+            if (vbWidth < vbHeight) {
+                $svgMyIcon.css("width", "100%");
+                $svgMyIcon.css("height", "auto");
+            } else {
+                $svgMyIcon.css("width", "auto");
+                $svgMyIcon.css("height", "100%");
+            }
 
-        const $pathMyIcon = $svgMyIcon.find("path");
-        $pathMyIcon.css("fill", "white");
+            const $pathMyIcon = $svgMyIcon.find("path");
+            $pathMyIcon.css("fill", "white");
+        }
 
         const $svgMyBtnClose = $notificationRow.find(".my-btn.my-close").find("svg");
         $svgMyBtnClose.css("width", "100%");
@@ -137,9 +142,6 @@ export class Notification {
         const $prompt = $(`div#${promptId}`);
         const $notificationsContainer = $prompt.find(".notifications-container");
         $notificationsContainer.prepend($notificationRow);
-
-        const notificationsCount = $notificationsContainer.find(".my-notification").length;
-        $prompt.find(".notifications-counter").text(notificationsCount);
 
         this._$notification = $notificationRow.find(".my-notification");
     }
@@ -150,7 +152,7 @@ export class Notification {
             type: this._type,
             icon: this._icon,
             message: this._message,
-            timeeStamp: this._timeStamp,
+            timeStamp: this._timeStamp,
             isShown: this._isShown,
             newFor: this._newFor,
             removeAfter: this._removeAfter,

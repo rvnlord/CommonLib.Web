@@ -114,11 +114,7 @@
         return !isNaN(o) && isFinite(o);
     }
 
-    static identityFunction(x) {
-        return x;
-    }
-
-    static order = (array, descending, func = this.identityFunction) => {
+    static order = (array, descending, func = (x) => x) => {
         return array.sort((a, b) => {
             const first = func(a);
             const second = func(b);
@@ -144,5 +140,14 @@
             });
         }
         return newArray;
+    }
+
+
+    static deepCopy(obj) {
+        if (Array.isArray(obj)) {
+            return [...obj];
+        } else {
+            return JSON.parse(JSON.stringify(obj));
+        }
     }
 }
