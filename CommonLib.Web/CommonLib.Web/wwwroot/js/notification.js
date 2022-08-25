@@ -13,8 +13,11 @@ export class Notification {
     _removeAfter;
     _iconSet;
     _$notification;
+    _isRemoved;
+    _removalTimeoutId;
+    _newTimeoutId;
 
-    constructor(type, icon, message, newFor, removeAfter, guid, iconSet, timeStamp, isShown, isRemoved) {
+    constructor(type, icon, message, newFor, removeAfter, guid, iconSet, timeStamp, isShown, isRemoved, removalTimeoutId, newTimeoutId) {
         this._guid = guid || utils.guid();
         this._type = type.toLowerCase() || null;
         this._icon = icon || this.getIconFromType();
@@ -28,6 +31,9 @@ export class Notification {
         this._removeAfter = removeAfter || 0;
         this._iconSet = iconSet || "light";
         this._isRemoved = isRemoved || false;
+
+        this._removalTimeoutId = removalTimeoutId || null;
+        this._newTimeoutId = newTimeoutId || null;
     }
 
     static createWithTypeAndMessage(type, message) {
@@ -157,7 +163,9 @@ export class Notification {
             newFor: this._newFor,
             removeAfter: this._removeAfter,
             iconSet: this._iconSet,
-            sRemoved: this._isRemoved
+            sRemoved: this._isRemoved,
+            removalTimeoutId: this._removalTimeoutId,
+            newTimeoutId: this._newTimeoutId
         };
     }
 }

@@ -32,14 +32,15 @@ Object.defineProperty(Object.prototype, "kvps", {
 
 Object.defineProperty(Object.prototype, "toTimeDateString", {
     value: function () {
-        const month = 1 + this.getMonth();
-        const day = this.getDate();
-        return day < 10 ? 0 + day : day + "-" + 
-            month < 10 ? 0 + month : month + "-" + 
-            this.getFullYear() + " " + 
-            this.getHours() + ":" + 
-            this.getMinutes() + ":" + 
-            this.getSeconds();
+        return utils.toTimeDateString(this);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Object.prototype, "toDateTimeString", {
+    value: function () {
+        return utils.toDateTimeString(this);
     },
     writable: true,
     configurable: true
@@ -61,6 +62,18 @@ Object.defineProperty(Object.prototype, "in", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "mapTo", {
+    value: function (mapToObject) {
+        for (const k of Object.keys(mapToObject)) {
+            if (k in this) {
+                mapToObject[k] = this[k];
+            }
+        }
+        return mapToObject;
+    },
+    writable: true,
+    configurable: true
+});
 
 // #endregion
 
@@ -486,14 +499,15 @@ Object.defineProperty(Array.prototype, "min", {
 });
 
 Object.defineProperty(Array.prototype, "singleOrNull", {
-    value: function () {
-        if (!Array.isArray(this))
+    value: function (selector = x => x) {
+        const arr = this.filter(selector);
+        if (!Array.isArray(arr))
             throw new Error("Not an array");
-        if (this.length > 1)
+        if (arr.length > 1)
             throw new Error("Array should contain only one element");
-        if (this.length < 1)
+        if (arr.length < 1)
             return null;
-        return this[0];
+        return arr[0] ? arr[0] : null;
     },
     writable: true,
     configurable: true
