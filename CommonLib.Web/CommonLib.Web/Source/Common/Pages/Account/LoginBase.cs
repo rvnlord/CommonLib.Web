@@ -53,9 +53,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnInitializedAsync()
         {
+            var inheritedReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?");
+            var currentUrl = NavigationManager.Uri;
+
             _loginUserVM ??= new LoginUserVM
             {
-                ReturnUrl = $"{NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?")}?keepPrompt=true", // methods executed on load events (initialised, afterrender, parametersset) can't raise `AuthenticationStateChanged` Event because it would cause an infinite loop when the Control State changes
+                ReturnUrl = inheritedReturnUrl ?? currentUrl // methods executed on load events (initialised, afterrender, parametersset) can't raise `AuthenticationStateChanged` Event because it would cause an infinite loop when the Control State changes
             };
             _editContext ??= new MyEditContext(_loginUserVM);
             _btnExternalLogins ??= new OrderedDictionary<string, MyButtonBase>();
@@ -92,6 +95,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
                 if (queryUser != null && !IsAuthenticated())
                 {
+                    await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync();
+                    queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
+
                     _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Loading;
                     await StateHasChangedAsync();
 
@@ -102,13 +108,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await SetControlStatesAsync(ButtonState.Enabled);
                 return;
             }
-
-            // TODO: instead update the NavBar?
-            //var keepPrompt = NavigationManager.GetQueryString<bool?>("keepPrompt") ?? false;
-            //if (queryUser == null && !keepPrompt) // if we have just logged in with an external provider then we want to leave the provider message visible, otherwise we let the user know he is logged in
-            //    await PromptMessageAsync(NotificationType.Success, $"You are logged in as \"{AuthenticatedUser.UserName}\"");
-
-            await SetControlStatesAsync(ButtonState.Enabled);
+            else
+            {
+                _btnDismiss.State.ParameterValue = ButtonState.Enabled;
+                BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
+                await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
+                await StateHasChangedAsync();
+            }
         }
 
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
@@ -126,8 +132,15 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
-            NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
+            _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
+            _btnLogin.State.ParameterValue = ButtonState.Disabled;
+            _btnDismiss.State.ParameterValue = ButtonState.Enabled;
+            BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
+            await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
+            await StateHasChangedAsync();
             await PromptMessageAsync(NotificationType.Success, externalLoginResult.Message);
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
             UserAuthStateProvider.StateChanged();
         }
 
@@ -165,6 +178,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 ["returnUrl"] = _loginUserVM.ReturnUrl.UTF8ToBase58(),
                 ["rememberMe"] = _loginUserVM.RememberMe.ToString().ToLowerInvariant()
             };
+            
             NavigationManager.NavigateTo($"{url}?{qs.ToQueryString()}", true);
         }
 

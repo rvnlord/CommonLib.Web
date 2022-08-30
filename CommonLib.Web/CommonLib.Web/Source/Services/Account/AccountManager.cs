@@ -316,12 +316,12 @@ namespace CommonLib.Web.Source.Services.Account
             var scheme = schemes.SingleOrDefault(s => s.Name.EqualsIgnoreCase(userToExternalLogin.ExternalProvider));
             var frontEndBaseurl = ConfigUtils.FrontendBaseUrl;
             if (scheme == null)
-                throw new ArgumentNullException(null, $"{frontEndBaseurl}Account/Login?remoteStatus=Error&remoteMessage={"Provider not Found".UTF8ToBase64SafeUrl()}");
+                throw new ArgumentNullException(null, $"{frontEndBaseurl}Account/Login?remoteStatus=Error&remoteMessage={"Provider not Found".UTF8ToBase58()}");
 
             var reqScheme = _http.HttpContext.Request.Scheme; // we need API url here which is different than the Web App one
             var host = _http.HttpContext.Request.Host;
             var pathbase = _http.HttpContext.Request.PathBase;
-            var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?returnUrl={userToExternalLogin.ReturnUrl.HtmlEncode()}&user={userToExternalLogin.JsonSerialize().UTF8ToBase64SafeUrl()}";
+            var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?returnUrl={userToExternalLogin.ReturnUrl}&user={userToExternalLogin.JsonSerialize().UTF8ToBase58()}";
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(userToExternalLogin.ExternalProvider, redirectUrl);
 
             return (properties, scheme.Name);
@@ -329,25 +329,24 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError)
         {
-            var userToExternalLogin = _http.HttpContext.Request.Query["user"].ToString().Base64SafeUrlToUTF8().JsonDeserialize().To<LoginUserVM>();
-            var loggedInUrl = returnUrl.BeforeFirstOrWhole("?");
-            var frontEndBaseurl = ConfigUtils.FrontendBaseUrl;
-            var url = $"{frontEndBaseurl}Account/Login";
-            var qs = loggedInUrl.QueryStringToDictionary();
+            var userToExternalLogin = _http.HttpContext.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>();
+            var decodedReturnUrl = returnUrl.Base58ToUTF8();
+            var url = decodedReturnUrl.BeforeFirstOrWhole("?");
+            var qs = decodedReturnUrl.QueryStringToDictionary();
             qs["remoteStatus"] = "Error";
 
             try
             {
                 if (remoteError != null)
                 {
-                    qs["remoteMessage"] = remoteError.UTF8ToBase64SafeUrl();
+                    qs["remoteMessage"] = remoteError.UTF8ToBase58();
                     return $"{url}?{qs.ToQueryString()}";
                 }
 
                 var externalLoginInfo = await _signInManager.GetExternalLoginInfoAsync();
                 if (externalLoginInfo == null)
                 {
-                    qs["remoteMessage"] = "Error loading external login information".UTF8ToBase64SafeUrl();
+                    qs["remoteMessage"] = "Error loading external login information".UTF8ToBase58();
                     return $"{url}?{qs.ToQueryString()}";
                 }
 
@@ -355,13 +354,13 @@ namespace CommonLib.Web.Source.Services.Account
                 userToExternalLogin.UserName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name) ?? userToExternalLogin.Email.BeforeFirst("@");
                 userToExternalLogin.ExternalProvider = externalLoginInfo.LoginProvider;
                 userToExternalLogin.ExternalProviderKey = externalLoginInfo.ProviderKey;
-                qs["user"] = userToExternalLogin.JsonSerialize().UTF8ToBase64SafeUrl();
+                qs["user"] = userToExternalLogin.JsonSerialize().UTF8ToBase58();
                 qs.Remove("remoteStatus");
                 return $"{url}?{qs.ToQueryString()}";
             }
             catch (Exception ex)
             {
-                qs["remoteMessage"] = $"Retrieving Provider Key Failed - {ex.Message}".UTF8ToBase64SafeUrl();
+                qs["remoteMessage"] = $"Retrieving Provider Key Failed - {ex.Message}".UTF8ToBase58();
                 return $"{url}?{qs.ToQueryString()}";
             }
         }
