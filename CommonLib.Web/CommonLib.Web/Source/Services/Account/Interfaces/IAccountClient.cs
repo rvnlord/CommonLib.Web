@@ -19,5 +19,6 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<LoginUserVM>> LoginAsync(LoginUserVM userToLogin);
         Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin);
         Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync();
+        Task<ApiResponse<AuthenticateUserVM>> LogoutAsync();
     }
 }

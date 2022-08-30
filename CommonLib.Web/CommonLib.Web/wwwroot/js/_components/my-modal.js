@@ -1,9 +1,10 @@
-﻿/// <reference path="../../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
 /// <reference path="../../libs/custom/@types/animejs/index.d.ts" />
 
 import "../extensions.js";
 import animeUtils from "../anime-utils.js";
 import { NavBarUtils } from "../navbar-utils.js";
+import _ from "../../libs/libman/underscore/underscore-esm.js";
 
 class ModalUtils {
     static moveModalToBodyAndHide($modal) {
@@ -82,36 +83,60 @@ class ModalUtils {
         const $modals = $(".my-modal");
         $modals.removeCss("left"); // remove css set by draggable to center modal if user moved it and then resized the window
         $modals.removeCss("top");
-        //ModalUtils.resetAndHideModals($modalBgs); // modals should specifically be kept open (for instance when modal is showing login in progress it shouldn't be hidden if user resizes the windoww)
     }
 
-    static async hideModalAsync($modalToHide) {
+    static async hideModalAsync($modalToHide, animate = true, waitForAnimationsToFinish = true) {
         $modalToHide.removeClass("shown");
         const $modalBgToHide = $modalToHide.parent().closest(".my-modal-background");
         animeUtils.finishRunningAnimations([ $modalBgToHide, $modalToHide ]);
-        const anims = ModalUtils.createHideModalAnims($modalBgToHide);
-        await animeUtils.runAndAwaitAnimationsAsync(anims);
+       
+        if (animate) {
+            const anims = ModalUtils.createHideModalAnims($modalBgToHide);
+            if (waitForAnimationsToFinish) {
+                await animeUtils.runAndAwaitAnimationsAsync(anims);
+            } else {
+                animeUtils.runAnimations(anims);
+            }
+        } else {
+            $modalBgToHide.css("opacity", "0");
+            $(".my-body, #app").removeCss("filter");
+            $modalBgToHide.removeClass("my-d-flex").addClass("my-d-none");
+            $modalToHide.css("transform", "scale(0.5, 0.5)");
+        }
     }
 
-    static async showModalAsync($modalToShow) {
-        const $modalBg = $modalToShow.parents(".my-modal-background").first();
+    static async showModalAsync($modal, animate = true) {
+        const $modalBg = $modal.parents(".my-modal-background").first();
         const showModal = !$modalBg.is(".shown");
-       
-        const anims = [];
 
-        $modalToShow.toggleClass("shown");
-        animeUtils.finishRunningAnimations([ $modalBg, $modalToShow ]);
-        if (showModal) {
-            anims.push(...ModalUtils.createShowModalAnims($modalBg));
-        } else {
-            anims.push(...ModalUtils.createHideModalAnims($modalBg));
-        }
+        $modal.toggleClass("shown");
+        animeUtils.finishRunningAnimations([ $modalBg, $modal ]);
 
         $("#promptMain").prependTo("body");
         $("#promptMain").css("z-index", "101");
         $("#promptMain").css("top", "0");
 
-        await animeUtils.runAndAwaitAnimationsAsync(anims);
+        if (animate) {
+            const anims = [];
+            if (showModal) {
+                anims.push(...ModalUtils.createShowModalAnims($modalBg));
+            } else {
+                anims.push(...ModalUtils.createHideModalAnims($modalBg));
+            }
+            await animeUtils.runAndAwaitAnimationsAsync(anims);
+        } else {
+            if (showModal) {
+                $modalBg.css("opacity", "1");
+                $(".my-body, #app").css("filter", "blur(8px)");
+                $modalBg.removeClass("my-d-none").addClass("my-d-flex");
+                $modal.css("transform", "scale(1, 1)");
+            } else {
+                $modalBg.css("opacity", "0");
+                $(".my-body, #app").removeCss("filter");
+                $modalBg.removeClass("my-d-flex").addClass("my-d-none");
+                $modal.css("transform", "scale(0.5, 0.5)");
+            }
+        }
     }
 
 }
@@ -120,18 +145,13 @@ export function blazor_Modal_AfterFirstRender(modal) {
     ModalUtils.moveModalToBodyAndHide($(modal));
 }
 
-export function blazor_Modal_AfterRender() {
-    $("#promptMain").appendTo($(".my-navbar").first().parent());
-    $("#promptMain").css("z-index", "9");
+export async function blazor_Modal_HideAsync(modal, animate = true) {
+    await ModalUtils.hideModalAsync($(modal), animate);
     NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
 }
 
-export async function blazor_Modal_HideAsync(modal) {
-    await ModalUtils.hideModalAsync($(modal));
-}
-
-export async function blazor_Modal_ShowAsync(modal) {
-    await ModalUtils.showModalAsync($(modal));
+export async function blazor_Modal_ShowAsync(modal, animate = true) {
+    await ModalUtils.showModalAsync($(modal), animate);
 }
 
 $(document).ready(function() {
@@ -143,14 +163,11 @@ $(document).ready(function() {
             return;
         }
 
-        $("#promptMain").appendTo($(".my-navbar").first().parent());
-        $("#promptMain").css("z-index", "9");
-        NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
-
         await ModalUtils.hideModalAsync($modalToHide);
+        NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
     });
 
-    $(document).on("click", ".my-modal-background", function(e) {
+    $(document).on("click", ".my-modal-background", async function(e) {
         const $modalBgToHide = $(this);
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
         const $btnClose = $modalToHide.find(".my-close"); // it will find all (`dismiss` and `x`)
@@ -164,18 +181,11 @@ $(document).ready(function() {
             return;
         }
 
-        $("#promptMain").appendTo($(".my-navbar").first().parent());
-        $("#promptMain").css("z-index", "9");
+        await ModalUtils.hideModalAsync($modalToHide, true, false);
         NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
-
-        $modalToHide.removeClass("shown");
-
-        animeUtils.finishRunningAnimations([ $modalBgToHide, $modalToHide ]);
-        const anims = ModalUtils.createHideModalAnims($modalBgToHide);
-        animeUtils.runAnimations(anims);
     });
 
-    $(document).on("click", "body", function(e) {
+    $(document).on("click", "body", async function(e) {
         const $modalBgsToHide = $(".my-modal.shown").$toArray().map($m => $m.parents(".my-modal-background"));
         const isAnyModalShown = $modalBgsToHide.length > 0;
         
@@ -184,16 +194,12 @@ $(document).ready(function() {
             return;
         }
 
-        $("#promptMain").appendTo($(".my-navbar").first().parent());
-        $("#promptMain").css("z-index", "9");
         NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
 
         for (let $modalBgToHide of $modalBgsToHide) {
             const $modalToHide = $modalBgToHide.children(".my-modal").first();
-            $modalToHide.removeClass("shown");
-            animeUtils.finishRunningAnimations([ $modalBgToHide, $modalToHide ]);
-            const anims = ModalUtils.createHideModalAnims($modalBgToHide);
-            animeUtils.runAnimations(anims);
+            await ModalUtils.hideModalAsync($modalToHide, true, false);
+            NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
         }
     });
 

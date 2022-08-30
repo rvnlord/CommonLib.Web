@@ -103,7 +103,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<LoginUserVM>> LoginAsync(LoginUserVM userToLogin)
         {
-            var loginResponse = await _httpClient.PostJTokenAsync<ApiResponse<LoginUserVM>>("api/account/login", userToLogin);
+            var loginResponse = await HttpClient.PostJTokenAsync<ApiResponse<LoginUserVM>>("api/account/login", userToLogin);
             if (loginResponse.IsError)
                 return loginResponse;
 
@@ -148,5 +148,18 @@ namespace CommonLib.Web.Source.Services.Account
             return await HttpClient.PostJTokenAsync<ApiResponse<IList<AuthenticationScheme>>>("api/account/getexternalauthenticationschemes"); // or IApiResponse .ToGeneric(jt => jt.To<IList<AuthenticationScheme>>());
         }
 
+        public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync()
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var logoutResponse = await HttpClient.PostJTokenAsync<ApiResponse<AuthenticateUserVM>>("api/account/logout", authUser);
+
+            if (logoutResponse.IsError)
+                return logoutResponse;
+
+            await _jsRuntime.InvokeVoidAsync("Cookies.expire", "Ticket");
+            await _localStorage.RemoveItemAsync("Ticket");
+
+            return logoutResponse;
+        }
     }
 }

@@ -127,4 +127,10 @@
     input[type='checkbox'][disabled] ~ .my-checkbox-label {
         color: #404040;
     }
+
+    .my-checkbox-container input[type='checkbox'][disabled]:checked ~ .my-checkmark:after {
+        border: solid #404040;
+        border-width: 0 4px 4px 0;
+    }
+
 </style>

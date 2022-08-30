@@ -30,19 +30,14 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
             await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_AfterFirstRender", JsModal).ConfigureAwait(false);
         }
 
-        protected override async Task OnAfterRenderAsync(bool _) 
+        public async Task ShowModalAsync(bool animate = true) 
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_AfterRender").ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", JsModal, animate).ConfigureAwait(false);
         }
 
-        public async Task ShowModalAsync() 
+        public async Task HideModalAsync(bool animate = true) 
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", JsModal).ConfigureAwait(false);
-        }
-
-        public async Task HideModalAsync() 
-        {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_HideAsync", JsModal).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Modal_HideAsync", JsModal, animate).ConfigureAwait(false);
         }
     }
 }

@@ -93,7 +93,7 @@ namespace CommonLib.Web.Source.Controllers
         //[HttpPost("edit")] // POST: api/account/edit
         //public async Task<JToken> EditAsync(JToken JAuthUserAndEditUser) => (ModelState.IsValid ? await _accountManager.EditAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()) : _defaultInvalidResponse).ToJToken();
 
-        //[HttpPost("logout")] // POST: api/account/logout
-        //public async Task<JToken> LogoutAsync(JToken JAuthUser) => (ModelState.IsValid ? await _accountManager.LogoutAsync(JAuthUser.To<AuthenticateUserVM>()) : _defaultInvalidResponse).ToJToken();
+        [HttpPost("logout")] // POST: api/account/logout
+        public async Task<JToken> LogoutAsync(JToken JAuthUser) => await EnsureResponseAsync(async () => await _accountManager.LogoutAsync(JAuthUser.To<AuthenticateUserVM>()));
     }
 }

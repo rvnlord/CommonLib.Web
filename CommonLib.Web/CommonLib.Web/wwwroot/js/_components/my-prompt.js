@@ -308,7 +308,7 @@ export class Prompt {
     }
 
     setNewForTimeout(notification) {
-        if (notification._removeAfter && notification._removeAfter > 0) {
+        if (notification._newFor && notification._newFor > 0) {
             setTimeout(async () => {
                 notification._$notification.find(".new-badge-container").remove();
             }, notification._newFor * 1000);
@@ -546,8 +546,14 @@ export class Prompt {
         for (let notification of this._notifications) {
             await notification.renderAsync(this._id);
             const $notificationRow = notification._$notification.closest(".my-row");
-            $notificationRow.removeClass("my-d-none");
-            $notificationRow.css("opacity", "1");
+
+            if (notification._isShown === true) {
+                $notificationRow.removeClass("my-d-none");
+                $notificationRow.css("opacity", "1");
+                this.setRemovalTimeout(notification);
+            }
+
+            this.setNewForTimeout(notification);
         }
 
         await this.renderNotificationsCount();

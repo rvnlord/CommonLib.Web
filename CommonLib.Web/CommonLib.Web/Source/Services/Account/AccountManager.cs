@@ -406,14 +406,26 @@ namespace CommonLib.Web.Source.Services.Account
 
             await _signInManager.SignInAsync(user, userToExternalLogin.RememberMe);
             await _userManager.ResetAccessFailedCountAsync(user);
+
+            _mapper.Map(user, userToExternalLogin);
             userToExternalLogin.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, userToExternalLogin.RememberMe);
-            return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with an External Provider as: \"{_mapper.Map(user, userToExternalLogin).UserName}\"", null, userToExternalLogin);
+            
+            return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToExternalLogin.ExternalProvider}\" as: \"{userToExternalLogin.UserName}\"", null, userToExternalLogin);
         }
 
         public async Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync()
         {
             var externalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             return new ApiResponse<IList<AuthenticationScheme>>(StatusCodeType.Status200OK, "External Authentication Schemes Returned", null, externalLogins);
+        }
+
+        public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync(AuthenticateUserVM userToLogout)
+        {
+            if (userToLogout == null || !userToLogout.IsAuthenticated)
+                return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized so you can't log out", null);
+
+            await _signInManager.SignOutAsync();
+            return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status200OK, $"You (\"{userToLogout.UserName}\") have been successfully logged out", null, userToLogout);
         }
     }
 }
