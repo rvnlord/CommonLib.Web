@@ -18,6 +18,7 @@ using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
@@ -29,6 +30,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 {
     public class LoginBase : MyComponentBase
     {
+        private Task<IJSObjectReference> _modalModuleAsync;
+
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
         protected MyButtonBase _btnLogin;
@@ -41,8 +44,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyTextInputBase _txtUserName;
         protected MyPasswordInputBase _txtPassword;
         protected LoginUserVM _loginUserVM;
-        private Task<IJSObjectReference> _modalModuleAsync;
-
+        protected BlazorParameter<ButtonState?> _btnLogoutState;
+       
         public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
 
         [CascadingParameter]
@@ -71,6 +74,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnParametersSetAsync()
         {
+            if (IsFirstParamSetup())
+                _btnLogoutState = ButtonState.Disabled;
+
             await Task.CompletedTask;
         }
 
@@ -80,7 +86,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
-
+            
             await StateHasChangedAsync(); // to re-render External Login Buttons and get their references using @ref in .razor file
             await SetControlStatesAsync(ButtonState.Disabled); // disable External Login Buttons
             
@@ -99,7 +105,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 
                 if (queryUser != null)
                 {
-                    await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", true).ConfigureAwait(false);
+                    await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false);
                     //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
                     queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                     queryUser.ExternalLogins = _loginUserVM.ExternalLogins.ToList();
@@ -138,22 +144,22 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await SetControlStatesAsync(ButtonState.Enabled);
                 return;
             }
+            
+            await PromptMessageAsync(NotificationType.Success, externalLoginResult.Message);
+            NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
+            UserAuthStateProvider.StateChanged();
 
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            
+            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result; // so IsAuthenticated returns corect value
+            await StateHasChangedAsync(); // for Auth change to true so Render can swap Login btn for Logout, btnLogout is disabled on render to prevent it being momentarily available
+            
+            _btnLogout.State.ParameterValue = ButtonState.Enabled; // using `_btnLogout.State.ParameterValue = ButtonState.Enabled;` if value is set on render would mean that after render it would always revert to "hard coded" disabled value so I have to use variable
             _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
-            _btnLogin.State.ParameterValue = ButtonState.Disabled;
             _btnDismiss.State.ParameterValue = ButtonState.Enabled;
             BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
             await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true);
-
-            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result; // so IsAuthenticated returns corect value
-            await StateHasChangedAsync(); // for Auth change to true so Render will swap Login btn for Logout
-            _btnLogout.State.ParameterValue = ButtonState.Enabled;
-            await _btnLogout.NotifyParametersChangedAsync().StateHasChangedAsync(true);
-
-            await PromptMessageAsync(NotificationType.Success, externalLoginResult.Message);
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
-            UserAuthStateProvider.StateChanged();
+            await StateHasChangedAsync(true);
         }
 
         protected async Task FormLogin_ValidSubmitAsync()
@@ -167,20 +173,21 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
+            await PromptMessageAsync(NotificationType.Success, loginResult.Message);
+            NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
+            UserAuthStateProvider.StateChanged();
+
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            
+            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
+            await StateHasChangedAsync();
+
+            _btnLogout.State.ParameterValue = ButtonState.Enabled;
             _btnLogin.State.ParameterValue = ButtonState.Disabled;
             _btnDismiss.State.ParameterValue = ButtonState.Enabled;
             BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
-            await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
-
-            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result; // so IsAuthenticated returns corect value
-            await StateHasChangedAsync(); // for Auth change to true so Render will swap Login btn for Logout
-            _btnLogout.State.ParameterValue = ButtonState.Enabled;
-            await _btnLogout.NotifyParametersChangedAsync().StateHasChangedAsync(true);
-            
-            await PromptMessageAsync(NotificationType.Success, loginResult.Message);
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
-            UserAuthStateProvider.StateChanged();
+            await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true);
+            await StateHasChangedAsync(true);
         }
 
         protected async Task BtnExternalLogin_ClickAsync(MouseEventArgs e, string provider)
@@ -233,13 +240,15 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
-            AuthenticatedUser = null;
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            await SetControlStatesAsync(ButtonState.Enabled);
-            await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
-            await StateHasChangedAsync();
             await PromptMessageAsync(NotificationType.Success, logoutResult.Message);
             UserAuthStateProvider.StateChanged();
+
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            
+            AuthenticatedUser = null;
+            _loginUserVM.UserName = null;
+            _loginUserVM.Password = null;
+            await SetControlStatesAsync(ButtonState.Enabled);
         }
     }
 }

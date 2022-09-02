@@ -57,7 +57,7 @@
                                     }
                                     else 
                                     {
-                                        <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
+                                        <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
                                     }
                                 </div>
                                 <div class="my-col-md-4 my-col-12">

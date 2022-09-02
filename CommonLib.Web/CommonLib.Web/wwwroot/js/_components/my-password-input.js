@@ -9,14 +9,23 @@ class PasswordInputUtils {
     static PasswordInputsValues = {};
 }
 
-export function blazor_PasswordInput_AfterRender(value, guid, passwordInputDotNetRef) {
+export function blazor_PasswordInput_AfterFirstRender(value, guid, passwordInputDotNetRef) {
     PasswordInputUtils.ArePasswordsVisible[guid] = false;
     PasswordInputUtils.PasswordInputsDotNetRefs[guid] = passwordInputDotNetRef;
     PasswordInputUtils.PasswordInputsValues[guid] = value || "";
 }
 
-export function blazor_PasswordInput_ParametersSet(value, guid) {
-    PasswordInputUtils.PasswordInputsValues[guid] = value || "";
+export function blazor_PasswordInput_AfterRender(value, guid) {
+    value = value || "";
+    const $passwordInput = $(guid.guidToSelector());
+   
+    PasswordInputUtils.PasswordInputsValues[guid] = value;
+
+    if (PasswordInputUtils.ArePasswordsVisible[guid]) {
+        $passwordInput.prop("value", value);
+    } else {
+        $passwordInput.prop("value", value.split("").map(() => "●").join(""));
+    }
 }
 
 $(document).ready(function() {

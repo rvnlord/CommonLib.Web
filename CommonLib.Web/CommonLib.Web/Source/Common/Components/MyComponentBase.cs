@@ -547,9 +547,7 @@ namespace CommonLib.Web.Source.Common.Components
                 ShouldRender();
             
             await InvokeAsync(StateHasChanged);
-
-
-
+            
             //_syncStateChanged.Release();
 
             return this;

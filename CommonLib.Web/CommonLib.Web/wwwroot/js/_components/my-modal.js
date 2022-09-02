@@ -163,7 +163,7 @@ $(document).ready(function() {
             return;
         }
 
-        await ModalUtils.hideModalAsync($modalToHide);
+        await ModalUtils.hideModalAsync($modalToHide, true, false);
         NavBarUtils.setStickyNavBarStyles($(".my-navbar").first());
     });
 
