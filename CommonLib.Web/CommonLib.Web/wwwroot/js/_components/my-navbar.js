@@ -108,9 +108,6 @@ $(document).ready(function () {
 
         if (!$clickedNavItem.is(".my-toggler, .my-brand, .my-search, .my-login")) {
             await NavLinkUtils.navigateAsync($clickedNavLink.guid());
-            const $contentContainer = $(".my-page-container > .my-page-content > .my-container");
-            if ($contentContainer.hasClass("disable-css-transition"))
-                $contentContainer.removeClass("disable-css-transition");
         }
 
         const $allShownNavMenus = $clickedNavLink.parents(".my-navbar").find(".my-nav-menu.shown");

@@ -142,6 +142,10 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/Register");
             NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+
+            var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
+            if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
+                await jqContentContainer.RemoveClassAsync("disable-css-transition");
         }
 
         protected async Task BtnResetPassword_ClickAsync()
@@ -150,6 +154,10 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/ResetPassword");
             NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+
+            var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
+            if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
+                await jqContentContainer.RemoveClassAsync("disable-css-transition");
         }
 
         public async Task<StringRange> GetSlideClipPathAsync(bool show, string dropClass, double width, double height)
