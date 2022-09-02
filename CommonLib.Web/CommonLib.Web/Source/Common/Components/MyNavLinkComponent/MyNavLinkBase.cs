@@ -32,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         //protected DotNetObjectReference<MyNavLinkBase> _navLinkDotNetRef { get; set; }
 
         [Inject]
-        public IJQuery JQueryService { get; set; }
+        public IJQueryService IjQueryServiceService { get; set; }
 
         [CascadingParameter]
         public IconType CascadedIcon { get; set; }
@@ -131,6 +131,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         {
             //var (cache, cacheScope) = WebUtils.GetScopedService<IComponentsCacheService>();
             var cache = WebUtils.GetService<IComponentsCacheService>();
+
+            //var t1 = cache.SessionCache.ElementAtOrDefault(0).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
+            //var t2 = cache.SessionCache.ElementAtOrDefault(1).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
+            //var t3 = cache.SessionCache.ElementAtOrDefault(2).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
+
             var navLink = cache.SessionCache[sessionId].Components.Values.OfType<MyNavLinkBase>().Single(nl => nl._guid == guid);
             navLink.NavigationManager.NavigateTo(navLink._absoluteVirtualLink);
 

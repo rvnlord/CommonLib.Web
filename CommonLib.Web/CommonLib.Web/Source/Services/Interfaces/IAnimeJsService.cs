@@ -5,10 +5,10 @@ using CommonLib.Web.Source.Models.Interfaces;
 
 namespace CommonLib.Web.Source.Services.Interfaces
 {
-    public interface IAnimeJs
+    public interface IAnimeJsService
     {
         List<AnimationJs> Animations { get; }
         dynamic DotNetRef { get; set; }
-        Task<T> CreateAsync<T>(T animeJs) where T : Models.Interfaces.IAnimeJs;
+        Task<T> CreateAsync<T>(T animeJs) where T : IAnimeJs;
     }
 }

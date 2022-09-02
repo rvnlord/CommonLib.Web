@@ -12,10 +12,10 @@ namespace CommonLib.Web.Source.Common.Converters
 {
     public static class JQueryCollectionConverter
     {
-        public static JQueryCollection ToJQueryCollection(this IEnumerable<Models.JQuery> en, IJQuery jqueryService) => new JQueryCollection(en, jqueryService);
-        public static async Task<JQueryCollection> ToJQueryCollectionAsync(this IAsyncEnumerable<Models.JQuery> en, IJQuery jqueryService) => new JQueryCollection(await en.ToListAsync().ConfigureAwait(false), jqueryService);
+        public static JQueryCollection ToJQueryCollection(this IEnumerable<Models.JQuery> en, IJQueryService jqueryService) => new JQueryCollection(en, jqueryService);
+        public static async Task<JQueryCollection> ToJQueryCollectionAsync(this IAsyncEnumerable<Models.JQuery> en, IJQueryService jqueryService) => new JQueryCollection(await en.ToListAsync().ConfigureAwait(false), jqueryService);
 
-        public static JQueryCollection ToJQueryCollection(this JToken jt, IJQuery jqueryService)
+        public static JQueryCollection ToJQueryCollection(this JToken jt, IJQueryService jqueryService)
         {
             if (jt == null) 
                 throw new ArgumentNullException(nameof(jt));

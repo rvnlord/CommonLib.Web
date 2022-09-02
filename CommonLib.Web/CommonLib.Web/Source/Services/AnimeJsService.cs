@@ -7,19 +7,18 @@ using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Source.Common.Converters;
 using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
-using IAnimeJs = CommonLib.Web.Source.Services.Interfaces.IAnimeJs;
 
 namespace CommonLib.Web.Source.Services
 {
-    public class AnimeJs : IAnimeJs
+    public class AnimeJsService : IAnimeJsService
     {
         private readonly IJSRuntime _jsRuntime;
-        private readonly IJQuery _jqueryService;
+        private readonly IJQueryService _jqueryService;
 
         public dynamic DotNetRef { get; set; }
         public List<AnimationJs> Animations { get; }
 
-        public AnimeJs(IJSRuntime jsRuntime, IJQuery jqueryService)
+        public AnimeJsService(IJSRuntime jsRuntime, IJQueryService jqueryService)
         {
             _jsRuntime = jsRuntime;
             _jqueryService = jqueryService;
@@ -41,7 +40,7 @@ namespace CommonLib.Web.Source.Services
             if (animeJs is AnimationJs anim)
             {
                 anim.Targets.JsRuntime = _jsRuntime;
-                anim.Targets.JQueryService = _jqueryService;
+                anim.Targets.IjQueryServiceService = _jqueryService;
 
                 jAnim["type"] = "animation";
 
@@ -70,7 +69,7 @@ namespace CommonLib.Web.Source.Services
                     tlAnim.Guid = Guid.NewGuid();
                     tlAnim.JsRuntime = _jsRuntime;
                     tlAnim.Targets.JsRuntime = _jsRuntime;
-                    tlAnim.Targets.JQueryService = _jqueryService;
+                    tlAnim.Targets.IjQueryServiceService = _jqueryService;
 
                     var jTlAnim = new JObject
                     {

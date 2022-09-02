@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Blazored.SessionStorage;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components;
 //using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.JSInterop;
 
@@ -26,6 +28,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             if (sessionId == Guid.Empty)
                 sessionId = Guid.NewGuid();
 
+            Logger.For(typeof(SessionStorageExtensions)).Info($"GetOrCreateSessionIdAsync(): sessionId is null, adding new session guid to storage ({sessionId})");
             await sessionStorage.SetItemAsStringAsync("SessionId", sessionId.ToString());
             return sessionId;
         }

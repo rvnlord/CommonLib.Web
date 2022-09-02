@@ -11,13 +11,13 @@ namespace CommonLib.Web.Source.Common.Extensions.Collections
     {
         public static IServiceCollection AddJQuery(this IServiceCollection services)
         {
-            services.AddScoped<IJQuery, JQuery>();
+            services.AddScoped<IJQueryService, JQueryService>();
             return services;
         }
 
         public static IServiceCollection AddAnimeJs(this IServiceCollection services)
         {
-            services.AddScoped<IAnimeJs, AnimeJs>();
+            services.AddScoped<IAnimeJsService, AnimeJsService>();
             return services;
         }
 

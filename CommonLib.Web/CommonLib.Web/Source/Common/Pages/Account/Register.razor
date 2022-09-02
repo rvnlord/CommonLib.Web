@@ -1,15 +1,11 @@
 ﻿@page "/account/register/"
-@using CommonLib.Source.Common.Extensions
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
-@using CommonLib.Web.Source.ViewModels.Account
-@using System.Linq
-@using CommonLib.Web.Source.Common.Pages.Account
+
 @inherits RegisterBase
 
 <div class="my-col-sm-auto my-col-12" style="background: #101010;">
     <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="@FormRegister_ValidSubmitAsync" class="my-container">
-        @*EditContext="CurrentEditContext"*@
         <MyFluentValidator @ref="_validator" />
         <div class="my-row">
             <div class="my-col-12">
@@ -19,54 +15,54 @@
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => RegisterUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _registerUserVM.UserName)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyTextInput For="@(() => RegisterUserVM.UserName)" Icon="" SyncPaddingGroup="register-panel">
+                <MyTextInput For="@(() => _registerUserVM.UserName)" Icon="" SyncPaddingGroup="register-panel">
                     <MyInputGroupPrepend>
                         <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyTextInput>
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => RegisterUserVM.UserName)" />
+                <MyValidationMessage For="@(() => _registerUserVM.UserName)" />
             </div>
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => RegisterUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _registerUserVM.Email)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyTextInput For="@(() => RegisterUserVM.Email)" SyncPaddingGroup="register-panel">
+                <MyTextInput For="@(() => _registerUserVM.Email)" SyncPaddingGroup="register-panel">
                     <MyInputGroupPrepend>
                         <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyTextInput>
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => RegisterUserVM.Email)" />
+                <MyValidationMessage For="@(() => _registerUserVM.Email)" />
             </div>
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => RegisterUserVM.Password)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _registerUserVM.Password)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyPasswordInput For="@(() => RegisterUserVM.Password)" SyncPaddingGroup="register-panel" />
+                <MyPasswordInput For="@(() => _registerUserVM.Password)" SyncPaddingGroup="register-panel" />
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => RegisterUserVM.Password)" />
+                <MyValidationMessage For="@(() => _registerUserVM.Password)" />
             </div>
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => RegisterUserVM.ConfirmPassword)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _registerUserVM.ConfirmPassword)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyPasswordInput For="@(() => RegisterUserVM.ConfirmPassword)" SyncPaddingGroup="register-panel" />
+                <MyPasswordInput For="@(() => _registerUserVM.ConfirmPassword)" SyncPaddingGroup="register-panel" />
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => RegisterUserVM.ConfirmPassword)" />
+                <MyValidationMessage For="@(() => _registerUserVM.ConfirmPassword)" />
             </div>
         </div>
         <div class="my-row">

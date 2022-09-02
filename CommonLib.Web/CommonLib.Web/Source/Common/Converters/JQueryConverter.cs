@@ -12,7 +12,7 @@ namespace CommonLib.Web.Source.Common.Converters
 {
     public static class JQueryConverter
     {
-        public static Models.JQuery ToJQuery(this JToken jt, IJQuery jqueryService)
+        public static Models.JQuery ToJQuery(this JToken jt, IJQueryService jqueryService)
         {
             if (jt == null)
                 throw new NullReferenceException(nameof(jt));

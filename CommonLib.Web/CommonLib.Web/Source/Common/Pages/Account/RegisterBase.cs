@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
@@ -9,7 +8,6 @@ using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Converters;
-using Microsoft.AspNetCore.Components;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
@@ -21,21 +19,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected ButtonState? _btnRegisterState;
         protected MyEditContext _editContext;
         protected MyButtonBase _btnRegister;
-
-        [Inject]
-        public IServiceProvider ServiceProvider { get; set; }
-
-        public RegisterUserVM RegisterUserVM { get; set; }
+        protected RegisterUserVM _registerUserVM { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _btnRegisterState = ButtonState.Loading; // ButtonState.Loading breaks async validation model for some reason, TODO figure it out
-            RegisterUserVM = new()
+            _btnRegisterState = ButtonState.Loading;
+            _registerUserVM = new()
             {
-                ReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8() ?? "/Account/Login?keepPrompt=true"
+                ReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8() ?? "/Account/Login"
             };
-            _editContext = new MyEditContext(RegisterUserVM);
-            //_validator = await new MyFluentValidator().InitAsync(_editContext, ServiceProvider); // included using @ref instead
+            _editContext = new MyEditContext(_registerUserVM);
             await Task.CompletedTask;
         }
 
@@ -43,8 +36,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            //await (await ComponentBaseModuleAsync).InvokeVoidAsync("blazor_MyComponentBase_RefreshLayout");
-            //await Task.Delay(10000);
             _btnRegisterState = ButtonState.Enabled;
             await StateHasChangedAsync();
         }
@@ -53,10 +44,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             _btnRegisterState = ButtonState.Loading;
             await StateHasChangedAsync();
-            var registrationResult = await AccountClient.RegisterAsync(RegisterUserVM);
+            var registrationResult = await AccountClient.RegisterAsync(_registerUserVM);
             if (registrationResult.IsError)
             {
-                if (registrationResult.Result?.ReturnUrl != null && RegisterUserVM.ReturnUrl != registrationResult.Result.ReturnUrl)
+                if (registrationResult.Result?.ReturnUrl != null && _registerUserVM.ReturnUrl != registrationResult.Result.ReturnUrl)
                     NavigationManager.NavigateTo(registrationResult.Result.ReturnUrl); // redirect to `ResendEmailConfirmation` on successful registration but when email couldn't be deployed
 
                 _validator.AddValidationMessages(registrationResult.ValidationMessages).NotifyValidationStateChanged(_validator);
@@ -79,8 +70,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(RegisterUserVM.Email).PascalCaseToCamelCase()] = RegisterUserVM.Email,
-                [nameof(RegisterUserVM.ReturnUrl).PascalCaseToCamelCase()] = RegisterUserVM.ReturnUrl.UTF8ToBase58()
+                [nameof(_registerUserVM.Email).PascalCaseToCamelCase()] = _registerUserVM.Email,
+                [nameof(_registerUserVM.ReturnUrl).PascalCaseToCamelCase()] = _registerUserVM.ReturnUrl.UTF8ToBase58()
             }.ToQueryString();
         }
     }

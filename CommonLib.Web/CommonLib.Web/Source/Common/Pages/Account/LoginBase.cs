@@ -52,8 +52,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         public MyButtonBase BtnCloseModal { get; set; }
 
         [Parameter] 
-        public EventCallback<MouseEventArgs> OnClick { get; set; }
+        public EventCallback<MouseEventArgs> OnSignUpClick { get; set; }
 
+        [Parameter] 
+        public EventCallback<MouseEventArgs> OnResetPasswordClick { get; set; }
+        
         [Inject]
         public IMapper Mapper { get; set; }
         
@@ -225,7 +228,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await StateHasChangedAsync(true);
         }
 
-        protected async Task BtnSignUp_ClickAsync(MouseEventArgs e) => await OnClick.InvokeAsync(e).ConfigureAwait(false);
+        protected async Task BtnSignUp_ClickAsync(MouseEventArgs e) => await OnSignUpClick.InvokeAsync(e).ConfigureAwait(false);
 
         protected async Task BtnSignIn_ClickAsync() => await _editForm.SubmitAsync();
 
@@ -250,5 +253,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.Password = null;
             await SetControlStatesAsync(ButtonState.Enabled);
         }
+
+        protected async Task BtnResetPassword_ClickAsync(MouseEventArgs e) => await OnResetPasswordClick.InvokeAsync(e).ConfigureAwait(false);
     }
 }

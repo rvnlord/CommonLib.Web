@@ -16,21 +16,21 @@ namespace CommonLib.Web.Source.Models
     public class JQueryCollection : CustomList<JQuery>
     {
         public IJSRuntime JsRuntime { get; set; }
-        public IJQuery JQueryService { get; set; }
+        public IJQueryService IjQueryServiceService { get; set; }
 
-        public JQueryCollection(IJQuery jqueryService)
+        public JQueryCollection(IJQueryService jqueryServiceService)
         {
-            if (jqueryService == null)
+            if (jqueryServiceService == null)
                 return;
 
-            JQueryService = jqueryService;
-            JsRuntime = jqueryService.JsRuntime;
+            IjQueryServiceService = jqueryServiceService;
+            JsRuntime = jqueryServiceService.JsRuntime;
         }
 
-        public JQueryCollection(IEnumerable<JQuery> domElements, IJQuery jqueryService)
+        public JQueryCollection(IEnumerable<JQuery> domElements, IJQueryService jqueryServiceService)
         {
-            JQueryService = jqueryService;
-            JsRuntime = (jqueryService ?? throw new NullReferenceException(nameof(jqueryService))).JsRuntime;
+            IjQueryServiceService = jqueryServiceService;
+            JsRuntime = (jqueryServiceService ?? throw new NullReferenceException(nameof(jqueryServiceService))).JsRuntime;
             _customList.AddRange(domElements);
         }
 
@@ -46,7 +46,7 @@ namespace CommonLib.Web.Source.Models
 
         public async Task<JQueryCollection> WhereAsync(Func<JQuery, ValueTask<bool>> selector)
         {
-            return await _customList.ToAsyncEnumerable().WhereAwait(selector).ToJQueryCollectionAsync(JQueryService).ConfigureAwait(false);
+            return await _customList.ToAsyncEnumerable().WhereAwait(selector).ToJQueryCollectionAsync(IjQueryServiceService).ConfigureAwait(false);
         }
 
         public Task<JQueryCollection> WhereAsync(string filterSelector) => FilterAsync(filterSelector);
@@ -56,7 +56,7 @@ namespace CommonLib.Web.Source.Models
         public async Task<JQueryCollection> FilterAsync(string filterSelector)
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.Filter", GetSelector(), filterSelector).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService).OrderByAnother(jq => jq.Guid, this).ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService).OrderByAnother(jq => jq.Guid, this).ToJQueryCollection(IjQueryServiceService);
         }
 
         public async Task<IEnumerable<T>> SelectAsync<T>(Func<JQuery, ValueTask<T>> select)
@@ -67,21 +67,21 @@ namespace CommonLib.Web.Source.Models
         public async Task<JQueryCollection> NotAsync(string notSelector)
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.Not", GetSelector(), notSelector).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService);
         }
 
         public async Task<JQueryCollection> NotAsync(JQuery notElement)
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.Not", GetSelector(), 
                     (notElement ?? throw new NullReferenceException(nameof(notElement))).GetSelector()).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService);
         }
 
         public async Task<JQueryCollection> NotAsync(JQueryCollection notElements)
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.Not", GetSelector(), 
                     (notElements ?? throw new NullReferenceException(nameof(notElements))).GetSelector()).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService);
         }
 
         public async Task<JQueryCollection> RemoveClassAsync(string classToRemoveFromAll)
@@ -95,13 +95,13 @@ namespace CommonLib.Web.Source.Models
         public async Task<JQueryCollection> ChildrenAsync()
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.Children", GetSelector()).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService);
         }
 
         public async Task<JQueryCollection> ChildrenAsync(string selector)
         {
             return (await JsRuntime.InvokeAsync<string>("BlazorJQueryUtils.ChildrenBySelector", GetSelector(), selector).ConfigureAwait(false))
-                .JsonDeserialize().ToJQueryCollection(JQueryService);
+                .JsonDeserialize().ToJQueryCollection(IjQueryServiceService);
         }
 
         public override string ToString()

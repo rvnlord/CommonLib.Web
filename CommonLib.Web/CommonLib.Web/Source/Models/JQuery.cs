@@ -15,7 +15,7 @@ namespace CommonLib.Web.Source.Models
 {
     public class JQuery
     {
-        private readonly IJQuery _jqueryService;
+        private readonly IJQueryService _jqueryService;
         private readonly IJSRuntime _jsRuntime;
         public Guid Guid { get; }
         public string OriginalSelector { get; set; }
@@ -25,7 +25,7 @@ namespace CommonLib.Web.Source.Models
         public string Value { get; set; }
         public string Text { get; set; }
 
-        public JQuery(IJQuery jqueryService, Guid id)
+        public JQuery(IJQueryService jqueryService, Guid id)
         {
             _jqueryService = jqueryService ?? throw new NullReferenceException(nameof(jqueryService));
             _jsRuntime = jqueryService.JsRuntime;

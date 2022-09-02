@@ -36,10 +36,10 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         //public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
 
         [Inject]
-        public IJQuery JQueryService { get; set; }
+        public IJQueryService JQuery { get; set; }
 
-        [Inject]
-        public Services.Interfaces.IAnimeJs AnimeJsService { get; set; }
+        [Inject] 
+        public Services.Interfaces.IAnimeJsService AnimeJsService { get; set; }
 
         [Parameter]
         public string Title { get; set; }
@@ -86,7 +86,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
                 await FinishAndRemoveRunningAnimsAsync().ConfigureAwait(false);
                 await AdjustNavMenusToDeviceSizeAsync().ConfigureAwait(false);
 
-                IJQuery.OnWindowResizingAsync += NavBar_WindowResized;
+                IJQueryService.OnWindowResizingAsync += NavBar_WindowResized;
 
                 SyncNavBarAnimsCreation.Release();
             }
@@ -138,16 +138,23 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
         protected async Task BtnSignUp_ClickAsync()
         {
-            //await (await ModalModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Modal_HideAsync", LoginModalGuid);
-            (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/Register");
+            NavigationManager.NavigateTo(registerUrl);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+        }
+
+        protected async Task BtnResetPassword_ClickAsync()
+        {
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/ResetPassword");
             NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
         }
 
         public async Task<StringRange> GetSlideClipPathAsync(bool show, string dropClass, double width, double height)
         {
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
 
             if (show)
             {
@@ -194,7 +201,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             {
                 if (navMenuAncestors.Count > 0)
                 {
-                    await navMenu.AttrAsync("anim-width", (await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false) < 768
+                    await navMenu.AttrAsync("anim-width", (await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false) < 768
                         ? await navMenuAncestors.First().OuterWidthAsync().ConfigureAwait(false)
                         : dropClass.EndsWithAny("dropdown", "dropup")
                             ? Math.Max(
@@ -213,7 +220,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             if ((await topMostNavItem.AttrAsync("init-height").ConfigureAwait(false)).IsNullOrWhiteSpace())
                 await topMostNavItem.AttrAsync("init-height", await topMostNavItem.OuterHeightAsync().ConfigureAwait(false) + "px").ConfigureAwait(false);
 
-            if (dropClass.EndsWithInvariant("dropdown") || await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false) < 768)
+            if (dropClass.EndsWithInvariant("dropdown") || await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false) < 768)
             {
                 double left = 0;
                 var top = await navLink.OuterHeightAsync().ConfigureAwait(false);
@@ -375,7 +382,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
                     CompleteAsync = Nm_HideCompleteAsync
                 }).ConfigureAwait(false));
 
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
 
             if (windowWidth < 768)
             {
@@ -475,7 +482,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
             Debug.Print(nameof(CreateHideOnmAnimAsync) + $"(arrOtherNavMenusToHide: {arrOtherNavMenusToHide.Count}): Starting");
 
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
 
             foreach (var onm in arrOtherNavMenusToHide)
             {
@@ -553,7 +560,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
             Debug.Print(nameof(CreateToggleNmOcIconAnimAsync) + $"(navLink: {navLink.Guid}, show: {show}): Starting");
 
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
             var openIcon = windowWidth < 768 ? await navLink.FindAsync(".my-nav-link-open-icon-xs").FirstAsync().ConfigureAwait(false) : await navLink.FindAsync(".my-nav-link-open-icon").FirstAsync().ConfigureAwait(false);
             var closeIcon = windowWidth < 768 ? await navLink.FindAsync(".my-nav-link-close-icon-xs").FirstAsync().ConfigureAwait(false) : await navLink.FindAsync(".my-nav-link-close-icon").FirstAsync().ConfigureAwait(false);
             var navLinkContent = await navLink.FindAsync(".my-nav-link-content").FirstAsync().ConfigureAwait(false);
@@ -669,7 +676,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
             Debug.Print(nameof(CreateHideOnmOcIconAnimAsync) + $"(arrOtherNavMenusToHide: {arrOtherNavMenusToHide.Count}): Starting");
 
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
 
             foreach (var onm in arrOtherNavMenusToHide)
             {
@@ -784,8 +791,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         {
             Debug.Print(nameof(AdjustNavMenusToDeviceSizeAsync) + "(): Starting");
 
-            var windowWidth = await JQueryService.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
-            var navMenus = await JQueryService.QueryOneAsync(".my-navbar").FindAsync(".my-nav-menu").ConfigureAwait(false);
+            var windowWidth = await JQuery.QueryOneAsync("window").WidthAsync().ConfigureAwait(false);
+            var navMenus = await JQuery.QueryOneAsync(".my-navbar").FindAsync(".my-nav-menu").ConfigureAwait(false);
 
             foreach (var nm in navMenus)
             {
@@ -840,7 +847,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
                 }
             }
 
-            var navBars = await JQueryService.QueryAsync(".my-navbar").ConfigureAwait(false);
+            var navBars = await JQuery.QueryAsync(".my-navbar").ConfigureAwait(false);
 
             foreach (var nb in navBars)
             {

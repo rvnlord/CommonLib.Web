@@ -48,6 +48,7 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncAttributes = new(1, 1);
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
         private readonly SemaphoreSlim _syncRender = new(1, 1);
+        private static readonly SemaphoreSlim _syncSessionId = new(1, 1);
         private bool _changingState;
         private MyComponentBase _layout;
         private DateTime _creationTime;
@@ -187,7 +188,8 @@ namespace CommonLib.Web.Source.Common.Components
                 if (_guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
                 {
                     _guid = Guid.NewGuid();
-                    var componentsSessionCache = await GetComponentsSessionCacheAsync(true);
+                    Logger.For<MyComponentBase>().Info("Initialize: GetComponentsSessionCacheAsync(true)");
+                    var componentsSessionCache = await GetComponentsSessionCacheAsync(SessionId == Guid.Empty);
                     componentsSessionCache.Components[_guid] = this;
                 }
 
@@ -195,10 +197,11 @@ namespace CommonLib.Web.Source.Common.Components
                 {
                     // TODO:
                     var session = HttpContextAccessor.HttpContext.Session.GetString("SessionIdTEST");
-                    if (session == null)
-                        HttpContextAccessor.HttpContext.Session.SetString("SessionIdTEST", Guid.NewGuid().ToString());
+                    //if (session == null)
+                    //    HttpContextAccessor.HttpContext.Session.SetString("SessionIdTEST", Guid.NewGuid().ToString());
                 }
-                
+
+                Logger.For<MyComponentBase>().Info("Initialize: RebuildComponentsCacheOnCrashAsync()");
                 await RebuildComponentsCacheOnCrashAsync(); // if `Layout` changed, usually on crash
                 
                 SetAllParametersToDefaults();
@@ -533,23 +536,11 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<MyComponentBase> StateHasChangedAsync(bool force = false)
         {
-            //if (!_changingState)
-            //{
-            //    await _syncStateChanged.WaitAsync();
-            //    //_changingState = true;
-            //}
-            
-            //if (_syncStateChanged.CurrentCount == 0)
-            //    _syncStateChanged.Release();
-            //await _syncStateChanged.WaitAsync();
-
             if (force)
                 ShouldRender();
             
             await InvokeAsync(StateHasChanged);
             
-            //_syncStateChanged.Release();
-
             return this;
         }
 
@@ -583,18 +574,6 @@ namespace CommonLib.Web.Source.Common.Components
         protected async Task PromptMessageAsync(NotificationType status, string message) // don't refresh if called on initialized
         {
             await (await GetPromptAsync()).AddNotificationAsync(status, message);
-
-            //var prompts = ComponentsCache.Components.Values.OfType<MyPromptBase>().ToList();
-            //foreach (var prompt in prompts)
-            //{
-            //    //prompt.Notifications.ParameterValue.Add(new Notification
-            //    //{
-            //    //    Type = status,
-            //    //    Message = message
-            //    //});
-            //    //prompt.Notifications.SetAsChanged();
-            //    //await prompt.NotifyParametersChangedAsync().StateHasChangedAsync(true);
-            //}
         }
 
         private async Task RebuildComponentsCacheOnCrashAsync()
@@ -605,7 +584,8 @@ namespace CommonLib.Web.Source.Common.Components
                 return;
             
             // cache needs layout to set temp sessionid but layuot is component so we need cache to retrieve it, pointless shit...
-            var componentsSessionCache = await GetComponentsSessionCacheAsync(true);
+            Logger.For<MyComponentBase>().Info("Initialize: RebuildComponentsCacheOnCrashAsync() --> GetComponentsSessionCacheAsync(true)");
+            var componentsSessionCache = await GetComponentsSessionCacheAsync(SessionId == Guid.Empty);
             var layouts = componentsSessionCache.Components.Values.Where(c => c._isLayout).ToArray();
 
             if (layouts.Length <= 1)
@@ -633,20 +613,30 @@ namespace CommonLib.Web.Source.Common.Components
 
         private async Task SetSessionIdAsync()
         {
-            if (!_isLayout)
-                return;
-            
-            SessionId = await SessionStorage.GetOrCreateSessionIdAsync();
+            await _syncSessionId.WaitAsync();
+
+            //Logger.For<MyComponentBase>().Info("AfterRender --> SetSessionIdAsync(): Setting sessionId");
+            if (SessionId == Guid.Empty)
+                SessionId = await SessionStorage.GetOrCreateSessionIdAsync();
 
             if (RequestScopedCache.TemporarySessionId != Guid.Empty)
             {
+                //Logger.For<MyComponentBase>().Info("AfterRender --> SetSessionIdAsync(): TemporarySessionId present, moving components to normal session\n" +
+                //                                   $"         old temp:   {RequestScopedCache.TemporarySessionId}\n" +
+                //                                   $"         new normal: {SessionId}");
                 // components should always be reecreeated from scratch
                 if (ComponentsCache.SessionCache.VorN(SessionId) == null)
                     ComponentsCache.SessionCache[SessionId] = new ComponentsCacheService.SessionData();
-                ComponentsCache.SessionCache[SessionId].Components = ComponentsCache.SessionCache[RequestScopedCache.TemporarySessionId].Components;
+                var tempSessComponents = ComponentsCache.SessionCache.VorN(RequestScopedCache.TemporarySessionId)?.Components ?? new Dictionary<Guid, MyComponentBase>();
+                foreach (var (guid, component) in tempSessComponents)
+                    ComponentsCache.SessionCache[SessionId].Components[guid] = component;
                 // notifications should be restored if session already exists so essentially nothing needs to be done since we are restoring old sessionId and pointing to its resources
                 ComponentsCache.SessionCache.Remove(RequestScopedCache.TemporarySessionId);
             }
+            //else
+            //    Logger.For<MyComponentBase>().Info("AfterRender --> SetSessionIdAsync(): temp session id empty, nothing to do");
+
+            _syncSessionId.Release();
         }
 
         public async Task<Guid> GetSessionIdAsync()
@@ -657,10 +647,25 @@ namespace CommonLib.Web.Source.Common.Components
             return SessionId;
         }
 
+        public async Task<Guid> GetSessionIdOrEmptyAsync()
+        {
+            if (SessionId == Guid.Empty)
+            {
+                var sessionid = await SessionStorage.GetSessionIdOrEmptyAsync();
+                if (sessionid != Guid.Empty)
+                    SessionId = sessionid;
+            }
+            
+            return SessionId;
+        }
+        
         public async Task<Guid> GetTemporarySessionIdAsync() // for use when JsInterop is not available i.e.: `OnInitialized`, `OnParametersSet` 
         {
             if (RequestScopedCache.TemporarySessionId == Guid.Empty)
+            {
                 RequestScopedCache.TemporarySessionId = Guid.NewGuid();
+                Logger.For<MyComponentBase>().Info($"Creating new teemporary session: {RequestScopedCache.TemporarySessionId}");
+            }
 
             return await Task.FromResult(RequestScopedCache.TemporarySessionId);
         }
@@ -670,6 +675,8 @@ namespace CommonLib.Web.Source.Common.Components
             var sessionId = useTemporarySessionId ? await GetTemporarySessionIdAsync() : await GetSessionIdAsync();
             if (ComponentsCache.SessionCache.VorN(sessionId) == null)
                 ComponentsCache.SessionCache[sessionId] = new ComponentsCacheService.SessionData();
+            var componentsCount = ComponentsCache.SessionCache[sessionId].Components.Count;
+            Logger.For<MyComponentBase>().Info($"Getting {componentsCount} components from {(!useTemporarySessionId ? "normal" : "temporary")} session: {sessionId}");
             return ComponentsCache.SessionCache[sessionId];
         }
 

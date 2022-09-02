@@ -12,11 +12,11 @@ using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Services
 {
-    public class JQuery : IJQuery
+    public class JQueryService : IJQueryService
     {
         public IJSRuntime JsRuntime { get; }
 
-        public JQuery(IJSRuntime jsRuntime)
+        public JQueryService(IJSRuntime jsRuntime)
         {
             JsRuntime = jsRuntime;
         }

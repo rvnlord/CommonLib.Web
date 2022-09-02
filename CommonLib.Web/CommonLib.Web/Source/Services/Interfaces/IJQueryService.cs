@@ -6,7 +6,7 @@ using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Services.Interfaces
 {
-    public interface IJQuery
+    public interface IJQueryService
     {
         IJSRuntime JsRuntime { get; }
         Task<JQueryCollection> QueryAsync(string selectors);
