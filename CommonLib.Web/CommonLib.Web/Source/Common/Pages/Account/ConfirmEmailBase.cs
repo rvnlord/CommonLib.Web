@@ -31,8 +31,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _btnConfirmEmailState = ButtonState.Loading;
             _confirmUserVM = new()
             {
-                Email = NavigationManager.GetQueryString<string>("email"),
-                ConfirmationCode = NavigationManager.GetQueryString<string>("code"),
+                Email = NavigationManager.GetQueryString<string>("email").Base58ToUTF8(),
+                ConfirmationCode = NavigationManager.GetQueryString<string>("code").Base58ToUTF8(),
                 ReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8() ?? "/account/login"
             };
             _editContext = new MyEditContext(_confirmUserVM);
@@ -120,9 +120,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(_confirmUserVM.Email).PascalCaseToCamelCase()] = _confirmUserVM.Email,
-                [nameof(_confirmUserVM.ReturnUrl).PascalCaseToCamelCase()] = _confirmUserVM.ReturnUrl.UTF8ToBase58()
-            }.ToQueryString();
+                [nameof(_confirmUserVM.Email).PascalCaseToCamelCase()] = _confirmUserVM.Email?.UTF8ToBase58(),
+                [nameof(_confirmUserVM.ReturnUrl).PascalCaseToCamelCase()] = _confirmUserVM.ReturnUrl?.UTF8ToBase58()
+            }.Where(kvp => kvp.Value != null).ToQueryString();
         }
     }
 }

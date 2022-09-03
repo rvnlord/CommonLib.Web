@@ -175,14 +175,14 @@ namespace CommonLib.Web.Source.Services.Account
             if (_userManager.Options.SignIn.RequireConfirmedEmail)
             {
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var deployingEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToRegister.Email, code, userToRegister.ReturnUrl.UTF8ToBase58());
+                var deployingEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToRegister.Email, code, userToRegister.ReturnUrl);
                 if (deployingEmailResponse.IsError)
                 {
-                    userToRegister.ReturnUrl = $"/Account/ResendEmailConfirmation/?email={userToRegister.Email}&returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
+                    userToRegister.ReturnUrl = $"/Account/ResendEmailConfirmation/?email={userToRegister.Email.UTF8ToBase58()}&returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
                     return new ApiResponse<RegisterUserVM>(StatusCodeType.Status500InternalServerError, "Registration had been Successful, but the email wasn't sent. Try again later.", null, userToRegister, deployingEmailResponse.ResponseException);
                 }
 
-                userToRegister.ReturnUrl = $"/Account/ConfirmEmail?email={userToRegister.Email}&returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
+                userToRegister.ReturnUrl = $"/Account/ConfirmEmail?email={userToRegister.Email.UTF8ToBase58()}&returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
                 return new ApiResponse<RegisterUserVM>(StatusCodeType.Status201Created, $"Registration for User \"{userToRegister.UserName}\" has been successful, activation email has been deployed to: \"{userToRegister.Email}\"", null, _mapper.Map(userToRegister, new RegisterUserVM()));
             }
 
@@ -257,7 +257,7 @@ namespace CommonLib.Web.Source.Services.Account
             }
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var resendingConfirmationEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToResendConfirmationEmail.Email, code, emailReturnUrl.UTF8ToBase58());
+            var resendingConfirmationEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToResendConfirmationEmail.Email, code, emailReturnUrl);
             if (resendingConfirmationEmailResponse.IsError)
                 return new ApiResponse<ResendConfirmationEmailUserVM>(StatusCodeType.Status500InternalServerError, "Can't resend Confirmation Email. Please try again later.", null, null, resendingConfirmationEmailResponse.ResponseException);
 
@@ -426,6 +426,22 @@ namespace CommonLib.Web.Source.Services.Account
 
             await _signInManager.SignOutAsync();
             return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status200OK, $"You (\"{userToLogout.UserName}\") have been successfully logged out", null, userToLogout);
+        }
+
+        public async Task<ApiResponse<ForgotPasswordUserVM>> ForgotPasswordAsync(ForgotPasswordUserVM userWithForgottenPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(userWithForgottenPassword.Email);
+            if (user == null)
+                return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status401Unauthorized, "Email not found, please Register first", new[] { new KeyValuePair<string, string>("Email", "There is no User with this Email") }.ToLookup());
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status401Unauthorized, "Please Confirm your account first", new[] { new KeyValuePair<string, string>("Email", "Your account hasn't been confirmed yet") }.ToLookup());
+
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var sendResetEmailResponse = await _emailSender.SendPasswordResetEmailAsync(userWithForgottenPassword.Email, code, userWithForgottenPassword.ReturnUrl);
+            if (sendResetEmailResponse.IsError)
+                return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status500InternalServerError, "Can't send Password Reset email. Try again later.", null, null, sendResetEmailResponse.ResponseException);
+
+            return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status201Created, $"Change Password link has been sent to: \"{userWithForgottenPassword.Email}\"", null, userWithForgottenPassword);
         }
     }
 }

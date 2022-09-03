@@ -28,7 +28,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             if (sessionId == Guid.Empty)
                 sessionId = Guid.NewGuid();
 
-            Logger.For(typeof(SessionStorageExtensions)).Info($"GetOrCreateSessionIdAsync(): sessionId is null, adding new session guid to storage ({sessionId})");
+            //Logger.For(typeof(SessionStorageExtensions)).Info($"GetOrCreateSessionIdAsync(): sessionId is null, adding new session guid to storage ({sessionId})");
             await sessionStorage.SetItemAsStringAsync("SessionId", sessionId.ToString());
             return sessionId;
         }

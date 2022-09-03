@@ -161,5 +161,10 @@ namespace CommonLib.Web.Source.Services.Account
 
             return logoutResponse;
         }
+
+        public async Task<ApiResponse<ForgotPasswordUserVM>> ForgotPasswordAsync(ForgotPasswordUserVM forgotPasswordUser)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<ForgotPasswordUserVM>>("api/account/forgotpassword", forgotPasswordUser);
+        }
     }
 }

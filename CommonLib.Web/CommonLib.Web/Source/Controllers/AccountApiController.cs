@@ -53,10 +53,7 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost("confirmemail")] // POST: api/account/confirmemail
         public async Task<JToken> ConfirmEmailAsync(JToken jConfirmUserEmail) => await EnsureResponseAsync(async () => await _accountManager.ConfirmEmailAsync(jConfirmUserEmail.To<ConfirmUserVM>()));
-
-        //[HttpPost("finduserbyemail")] // POST: api/account/finduserbyemail
-        //public JToken FindUserByEmail(JToken jEmail) => (ModelState.IsValid ? _accountManager.FindUserByEmail(jEmail["email"]?.ToString()) : _defaultInvalidResponse).ToJToken();
-
+        
         [HttpPost("finduserbyemail")] // POST: api/account/finduserbyemail
         public async Task<JToken> FindUserByEmailAsync(JToken jEmail) => await EnsureResponseAsync(async () => await _accountManager.FindUserByEmailAsync(jEmail is JValue ? jEmail.ToString() : jEmail["email"]?.ToString()));
 
@@ -75,8 +72,8 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("getexternalauthenticationschemes")] // POST: api/account/getexternalauthenticationschemes
         public async Task<JToken> GetExternalAuthenticationSchemesAsync() => await EnsureResponseAsync(async () => await _accountManager.GetExternalAuthenticationSchemesAsync());
 
-        //[HttpPost("forgotpassword")] // POST: api/account/forgotpassword
-        //public async Task<JToken> ForgotPasswordAsync(JToken jForgotPasswordUserVM) => (ModelState.IsValid ? await _accountManager.ForgotPasswordAsync(jForgotPasswordUserVM.To<ForgotPasswordUserVM>()) : _defaultInvalidResponse).ToJToken();
+        [HttpPost("forgotpassword")] // POST: api/account/forgotpassword
+        public async Task<JToken> ForgotPasswordAsync(JToken jForgotPasswordUserVM) => (ModelState.IsValid ? await _accountManager.ForgotPasswordAsync(jForgotPasswordUserVM.To<ForgotPasswordUserVM>()) : _defaultInvalidResponse).ToJToken();
 
         //[HttpPost("resetpassword")] // POST: api/account/resetpassword
         //public async Task<JToken> ResetPasswordAsync(JToken JResetPasswordUserVM) => (ModelState.IsValid ? await _accountManager.ResetPasswordAsync(JResetPasswordUserVM.To<ResetPasswordUserVM>()) : _defaultInvalidResponse).ToJToken();

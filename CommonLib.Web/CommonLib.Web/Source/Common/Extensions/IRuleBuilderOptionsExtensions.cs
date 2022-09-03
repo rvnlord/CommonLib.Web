@@ -133,16 +133,30 @@ namespace CommonLib.Web.Source.Common.Extensions
         
         public static IRuleBuilderOptions<T, string> AccountNotConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
         {
-            ApiResponse<FindUserVM> userByActivationCode = null;
+            ApiResponse<FindUserVM> user;
             return rb.MustAsync(async (_, value, _, _) =>
             {
-                userByActivationCode = value.IsEmailAddress() 
+                user = value.IsEmailAddress() 
                     ? await accountClient.FindUserByEmailAsync(value)
                     : await accountClient.FindUserByConfirmationCodeAsync(value);
-                if (userByActivationCode.IsError)
+                if (user.IsError)
                     return false;
-                return userByActivationCode.Result?.IsConfirmed != true; // userByActivationCode.Result?.EmailActivationToken != null && userByActivationCode.Result?.IsConfirmed == false
+                return user.Result?.IsConfirmed != true; // userByActivationCode.Result?.EmailActivationToken != null && userByActivationCode.Result?.IsConfirmed == false
             }).WithMessage((_, _) => "Account has already been confirmed");
+        }
+
+        public static IRuleBuilderOptions<T, string> AccountConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        {
+            ApiResponse<FindUserVM> user;
+            return rb.MustAsync(async (_, value, _, _) =>
+            {
+                user = value.IsEmailAddress() 
+                    ? await accountClient.FindUserByEmailAsync(value)
+                    : await accountClient.FindUserByConfirmationCodeAsync(value);
+                if (user.IsError)
+                    return false;
+                return user.Result?.IsConfirmed == true;
+            }).WithMessage((_, _) => "Account has not been confirmed yet");
         }
     }
 }

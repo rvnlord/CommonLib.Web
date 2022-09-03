@@ -18,7 +18,8 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
                 .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()));
             CreateMap<AuthenticateUserVM, LoginUserVM>();
             CreateMap<User, AuthenticateUserVM>();
-            //CreateMap<User, ForgotPasswordUserVM>();
+            CreateMap<User, ForgotPasswordUserVM>();
+            CreateMap<ForgotPasswordUserVM, ForgotPasswordUserVM>();
             //CreateMap<User, ResetPasswordUserVM>();
             CreateMap<User, ResendConfirmationEmailUserVM>();
             //CreateMap<EditUserVM, ResendConfirmationEmailUserVM>();

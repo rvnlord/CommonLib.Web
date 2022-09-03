@@ -5,17 +5,17 @@ using FluentValidation;
 
 namespace CommonLib.Web.Source.Validators.Account
 {
-    public class ForgotPasswordUserVMValidator : AbstractValidator<ForgotPasswordUserVM>
+    public class ResendConfirmationEmailUserVMValidator : AbstractValidator<ResendConfirmationEmailUserVM>
     {
-        public ForgotPasswordUserVMValidator(IAccountClient accountClient)
+        public ResendConfirmationEmailUserVMValidator(IAccountClient accountClient)
         {
-            ClassLevelCascadeMode = CascadeMode.Stop;
+            CascadeMode = CascadeMode.Stop;
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()
                 .EmailAddressWithMessage()
                 .EmailInUseWithMessage(accountClient)
-                .AccountConfirmedWithMessage(accountClient);
+                .AccountNotConfirmedWithMessage(accountClient);
         }
     }
 }

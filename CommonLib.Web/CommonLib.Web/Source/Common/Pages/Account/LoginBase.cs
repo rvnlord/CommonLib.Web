@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -20,7 +19,6 @@ using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -77,7 +75,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnParametersSetAsync()
         {
-            if (IsFirstParamSetup())
+            if (FirstParamSetup)
                 _btnLogoutState = ButtonState.Disabled;
 
             await Task.CompletedTask;

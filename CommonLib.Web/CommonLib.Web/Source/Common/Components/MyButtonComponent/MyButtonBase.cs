@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Converters;
@@ -9,6 +10,7 @@ using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions.Collections;
+using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
@@ -21,6 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 {
     public class MyButtonBase : MyComponentBase
     {
+        private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
         private ButtonState? _buttonStateFromValidation;
         
         protected BlazorParameter<MyButtonBase> _bpBtn;
@@ -28,6 +31,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         protected ButtonState? _state;
 
         public OrderedDictionary<IconType, MyIconBase> OtherIcons { get; set; }
+
+        public bool IsValidationStateBeingChanged { get; set; }
 
         [CascadingParameter] 
         public BlazorParameter<InputState> CascadingInputState { get; set; }
@@ -152,6 +157,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             if (e.ValidationMode != ValidationMode.Model)
                 return;
 
+            await _syncValidationStateBeingChanged.WaitAsync();
+            IsValidationStateBeingChanged = true;
+            
             if (CascadedEditContext == null)
                 _buttonStateFromValidation = ButtonState.Enabled;
             else
@@ -166,7 +174,12 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             }
             
             await StateHasChangedAsync(true);
+
+            IsValidationStateBeingChanged = false;
+            _syncValidationStateBeingChanged.Release();
         }
+
+        public async Task WaitWhileValidationStateIsBeingChanged() => await TaskUtils.WaitWhile(() => IsValidationStateBeingChanged);
     }
 
     public enum ButtonStyling

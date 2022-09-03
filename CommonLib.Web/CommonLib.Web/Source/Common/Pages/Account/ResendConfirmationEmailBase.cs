@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -69,7 +70,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _btnResendConfirmationEmailState = ButtonState.Disabled;
             await StateHasChangedAsync();
             await PromptMessageAsync(NotificationType.Success, resendEmailConfirmationResponse.Message);
-            NavigationManager.NavigateTo($"/Account/ConfirmEmail/?email={_resendConfirmationEmailUserVM.Email}&returnUrl={_resendConfirmationEmailUserVM.ReturnUrl?.UTF8ToBase58()}");
+            NavigationManager.NavigateTo($"/Account/ConfirmEmail/?{GetNavQueryStrings()}");
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
@@ -93,9 +94,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(_resendConfirmationEmailUserVM.Email).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.Email,
-                [nameof(_resendConfirmationEmailUserVM.ReturnUrl).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.ReturnUrl.UTF8ToBase58()
-            }.ToQueryString();
+                [nameof(_resendConfirmationEmailUserVM.Email).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.Email?.UTF8ToBase58(),
+                [nameof(_resendConfirmationEmailUserVM.ReturnUrl).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.ReturnUrl?.UTF8ToBase58()
+            }.Where(kvp => kvp.Value != null).ToQueryString();
         }
     }
 }

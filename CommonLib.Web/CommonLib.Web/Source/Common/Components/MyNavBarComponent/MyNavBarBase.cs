@@ -39,7 +39,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         public IJQueryService JQuery { get; set; }
 
         [Inject] 
-        public Services.Interfaces.IAnimeJsService AnimeJsService { get; set; }
+        public IAnimeJsService AnimeJsService { get; set; }
 
         [Parameter]
         public string Title { get; set; }
@@ -139,7 +139,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         protected async Task BtnSignUp_ClickAsync()
         {
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/Register");
+            var qs = new Dictionary<string, string> { ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58() }.ToQueryString();
+            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Register?{qs}");
             NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
 
@@ -151,8 +152,9 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         protected async Task BtnResetPassword_ClickAsync()
         {
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, "~/Account/ResetPassword");
-            NavigationManager.NavigateTo(registerUrl);
+            var qs = new Dictionary<string, string> { ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58() }.ToQueryString();
+            var forgotPasswordUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/ForgotPassword?{qs}");
+            NavigationManager.NavigateTo(forgotPasswordUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
@@ -190,7 +192,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             throw new InvalidEnumArgumentException("invalid class it should not happen");
         }
 
-        public async Task PrepareNavMenuAsync(Models.JQuery navLink, string dropClass)
+        public async Task PrepareNavMenuAsync(JQuery navLink, string dropClass)
         {
             Debug.Print(nameof(PrepareNavMenuAsync) + "(): Starting");
             navLink = navLink ?? throw new NullReferenceException(nameof(navLink));
@@ -358,7 +360,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             Debug.Print(nameof(FinishAndRemoveRunningAnimsAsync) + "(): Finishing");
         }
 
-        public async Task CreateToggleNmAnimAsync(Models.JQuery navMenu, bool show, string dropClass)
+        public async Task CreateToggleNmAnimAsync(JQuery navMenu, bool show, string dropClass)
         {
             Debug.Print(nameof(CreateToggleNmAnimAsync) + "(): Starting");
             if (navMenu == null)
@@ -561,7 +563,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             Debug.Print(nameof(Onm_HideCompleteAsync) + $"(animGuid: {animGuid}): Finishing");
         }
 
-        public async Task CreateToggleNmOcIconAnimAsync(Models.JQuery navLink, bool show)
+        public async Task CreateToggleNmOcIconAnimAsync(JQuery navLink, bool show)
         {
             if (navLink == null)
                 throw new NullReferenceException(nameof(navLink));
