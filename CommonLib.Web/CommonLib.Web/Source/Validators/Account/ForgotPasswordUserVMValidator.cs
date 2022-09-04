@@ -9,7 +9,8 @@ namespace CommonLib.Web.Source.Validators.Account
     {
         public ResendConfirmationEmailUserVMValidator(IAccountClient accountClient)
         {
-            CascadeMode = CascadeMode.Stop;
+            ClassLevelCascadeMode = CascadeMode.Stop;
+            RuleLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()

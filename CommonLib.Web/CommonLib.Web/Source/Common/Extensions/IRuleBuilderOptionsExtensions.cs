@@ -114,7 +114,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<T, string> Base58WithMessage<T>(this IRuleBuilder<T, string> rb)
         {
-            return rb.Must((_, value, _) => value.IsBase58()).WithMessage($"{rb.GetPropertyDisplayName()} has to be a Base58 string");
+            return rb.Must((_, value, _) => value is not null && value.IsBase58()).WithMessage($"{rb.GetPropertyDisplayName()} has to be a Base58 string");
         }
         
         public static IRuleBuilderOptions<T, string> CorrectConfirmationCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
@@ -148,15 +148,49 @@ namespace CommonLib.Web.Source.Common.Extensions
         public static IRuleBuilderOptions<T, string> AccountConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
         {
             ApiResponse<FindUserVM> user;
-            return rb.MustAsync(async (_, value, _, _) =>
+            return rb.MustAsync(async (model, value, _, _) =>
             {
-                user = value.IsEmailAddress() 
-                    ? await accountClient.FindUserByEmailAsync(value)
-                    : await accountClient.FindUserByConfirmationCodeAsync(value);
+                if (value.IsNullOrWhiteSpace())
+                    return false;
+                user = await accountClient.FindUserByEmailAsync(model.GetProperty<string>("Email"));
                 if (user.IsError)
                     return false;
                 return user.Result?.IsConfirmed == true;
             }).WithMessage((_, _) => "Account has not been confirmed yet");
+        }
+
+        public static IRuleBuilderOptions<T, string> CorrectResetPasswordCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        {
+            ValidationContext<T> validationContext = null;
+            return rb.MustAsync(async (model, value, vc, _) =>
+            {
+                validationContext = vc;
+                var checkResetPasswordCodeResp = await accountClient.CheckUserResetPasswordCodeAsync(new CheckResetPasswordCodeUserVM
+                {
+                    UserName = model.GetProperty<string>("UserName"),
+                    CheckResetPasswordCode = value
+                });
+                if (checkResetPasswordCodeResp.IsError)
+                    return false;
+                return checkResetPasswordCodeResp.Result;
+            }).WithMessage((_, _) => $"{validationContext.DisplayName} is invalid");
+        }
+
+        public static IRuleBuilderOptions<T, string> IsNotExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        {
+            ValidationContext<T> validationContext = null;
+            return rb.MustAsync(async (model, value, vc, _) =>
+            {
+                validationContext = vc;
+                var checkPasswordResp = await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
+                {
+                    UserName = model.GetProperty<string>("UserName"),
+                    Password = value
+                });
+                if (checkPasswordResp.IsError)
+                    return false;
+                return !checkPasswordResp.Result;
+            }).WithMessage((_, _) => $"Your new password can't be the same as your old password");
         }
     }
 }

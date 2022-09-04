@@ -81,7 +81,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
         private async Task ValidateModelAsync()
         {
-            Validator.SetProperty("CascadeMode", CascadeMode.Stop);
+            Validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Stop);
 
             _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Model, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>());
 
@@ -89,7 +89,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             var allModelFields = model.GetPropertyNames().Select(p => new FieldIdentifier(model, p)).ToList();
             var vc = new ValidationContext<object>(model);
             var validationResults = await Validator.ValidateAsync(vc).ConfigureAwait(false);
-            var validatorCascadeMode = Validator.GetPropertyValue("CascadeMode").ToString();
+            var validatorCascadeMode = Validator.GetPropertyValue("ClassLevelCascadeMode").ToString();
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
             
             MessageStore.Clear();
@@ -115,7 +115,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         private async Task ValidateFieldAsync(FieldIdentifier fieldIdentifier)
         {
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
-            validator.SetProperty("CascadeMode", CascadeMode.Continue);
+            validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
             if (validator == null) // not supposed to be validated
                 return;
             

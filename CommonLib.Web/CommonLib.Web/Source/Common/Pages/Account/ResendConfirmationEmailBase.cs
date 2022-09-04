@@ -94,7 +94,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(_resendConfirmationEmailUserVM.Email).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.Email?.UTF8ToBase58(),
+                [nameof(_resendConfirmationEmailUserVM.Email).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.Email?.UTF8ToBase58(false),
                 [nameof(_resendConfirmationEmailUserVM.ReturnUrl).PascalCaseToCamelCase()] = _resendConfirmationEmailUserVM.ReturnUrl?.UTF8ToBase58()
             }.Where(kvp => kvp.Value != null).ToQueryString();
         }

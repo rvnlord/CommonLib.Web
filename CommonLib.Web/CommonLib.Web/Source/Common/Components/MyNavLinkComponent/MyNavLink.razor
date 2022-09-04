@@ -3,7 +3,7 @@
 @using CommonLib.Web.Source.Common.Converters
 @inherits MyNavLinkBase
 
-@if (State == NavLinkState.Disabled)
+@if (_state == NavLinkState.Disabled)
 {
     <div class="@_renderClasses">
         @if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)
@@ -20,7 +20,7 @@
         }
     </div>
 }
-else if (State == NavLinkState.Enabled)
+else if (_state == NavLinkState.Enabled)
 {
     <a class="@_renderClasses" href="@_absoluteVirtualLink" @ref="_jsNavLink" my-guid="@_guid" @onclick:preventDefault my-opens-modal="@(NavItemType == NavItemType.Login ? $"[my-guid='{NavBar.LoginModalGuid}']" : null)" style="@_renderStyle" @attributes="@_renderAttributes">
         @if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)

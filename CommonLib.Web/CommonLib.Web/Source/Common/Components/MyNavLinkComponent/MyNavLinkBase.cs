@@ -13,6 +13,7 @@ using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
+using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -21,6 +22,9 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 {
     public class MyNavLinkBase : MyComponentBase
     {
+        protected BlazorParameter<NavLinkState?> _bpState;
+        protected NavLinkState? _state;
+
         protected ElementReference _jsNavLink { get; set; }
         protected IconType _openIcon { get; set; }
         protected IconType _closeIcon { get; set; }
@@ -44,7 +48,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         public string To { get; set; }
 
         [Parameter]
-        public NavLinkState State { get; set; }
+        public BlazorParameter<NavLinkState?> State { get; set; }
 
         [Parameter]
         public NavLinkIconPlacement IconPlacement { get; set; } = NavLinkIconPlacement.Left;
@@ -57,6 +61,13 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
         [CascadingParameter]
         public NavItemType NavItemType { get; set; }
+        
+        protected override async Task OnInitializedAsync()
+        {
+            _bpState ??= new BlazorParameter<NavLinkState?>(_state);
+
+            await Task.CompletedTask;
+        }
 
         protected override async Task OnParametersSetAsync()
         {
@@ -92,23 +103,21 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
                 _closeIconXs = NavItemType == NavItemType.Link ? null : IconType.From(LightIconType.ChevronCircleUp);
             }
 
-            if (State == NavLinkState.Disabled)
-                AddClass("disabled");
-            else
-                RemoveClasses("disabled");
-            
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
+
+            if (State.HasChanged())
+            {
+                _state = State.ParameterValue ?? NavLinkState.Enabled;
+
+                if (_state == NavLinkState.Disabled)
+                    AddClass("disabled");
+                else
+                    RemoveClasses("disabled");
+            }
             
             await Task.CompletedTask;
         }
-
-        protected override async Task OnInitializedAsync()
-        {
-            State = NavLinkState.Enabled;
-
-            await Task.CompletedTask;
-        }
-
+        
         protected override async Task OnAfterFirstRenderAsync() // this is executed before oute component after render but the outer component won't wait until this is finished unless forced
         {
             //Logger.For<MyNavLinkBase>().Info($"'OnAfterFirstRenderAfterInitAsync()' started");

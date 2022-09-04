@@ -73,10 +73,10 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> GetExternalAuthenticationSchemesAsync() => await EnsureResponseAsync(async () => await _accountManager.GetExternalAuthenticationSchemesAsync());
 
         [HttpPost("forgotpassword")] // POST: api/account/forgotpassword
-        public async Task<JToken> ForgotPasswordAsync(JToken jForgotPasswordUserVM) => (ModelState.IsValid ? await _accountManager.ForgotPasswordAsync(jForgotPasswordUserVM.To<ForgotPasswordUserVM>()) : _defaultInvalidResponse).ToJToken();
+        public async Task<JToken> ForgotPasswordAsync(JToken jForgotPasswordUserVM) => await EnsureResponseAsync(async () => await _accountManager.ForgotPasswordAsync(jForgotPasswordUserVM.To<ForgotPasswordUserVM>()));
 
-        //[HttpPost("resetpassword")] // POST: api/account/resetpassword
-        //public async Task<JToken> ResetPasswordAsync(JToken JResetPasswordUserVM) => (ModelState.IsValid ? await _accountManager.ResetPasswordAsync(JResetPasswordUserVM.To<ResetPasswordUserVM>()) : _defaultInvalidResponse).ToJToken();
+        [HttpPost("resetpassword")] // POST: api/account/resetpassword
+        public async Task<JToken> ResetPasswordAsync(JToken JResetPasswordUserVM) => await EnsureResponseAsync(async () => await _accountManager.ResetPasswordAsync(JResetPasswordUserVM.To<ResetPasswordUserVM>()));
 
         [HttpPost("resendconfirmationemail")] // POST: api/account/resendconfirmationemail
         public async Task<JToken> ResendConfirmationEmailAsync(JToken JResendEmailConfirmationUserVM) => await EnsureResponseAsync(async () => await _accountManager.ResendConfirmationEmailAsync(JResendEmailConfirmationUserVM.To<ResendConfirmationEmailUserVM>()));
@@ -92,5 +92,12 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost("logout")] // POST: api/account/logout
         public async Task<JToken> LogoutAsync(JToken JAuthUser) => await EnsureResponseAsync(async () => await _accountManager.LogoutAsync(JAuthUser.To<AuthenticateUserVM>()));
+
+        [HttpPost("checkuserresetpasswordcode")] // POST: api/account/checkuserresetpasswordcode
+        public async Task<JToken> FindUserByResetPasswordCodeAsync(JToken jCheckUserResetPasswordCode) => await EnsureResponseAsync(async () => await _accountManager.CheckUserResetPasswordCodeAsync(jCheckUserResetPasswordCode.To<CheckResetPasswordCodeUserVM>()));
+
+        [HttpPost("checkuserpassword")] // POST: api/account/checkuserpassword
+        public async Task<JToken> CheckUserPasswordAsync(JToken jCheckPasswordUser) => await EnsureResponseAsync(async () => await _accountManager.CheckUserPasswordAsync(jCheckPasswordUser.To<CheckPasswordUserVM>()));
+
     }
 }

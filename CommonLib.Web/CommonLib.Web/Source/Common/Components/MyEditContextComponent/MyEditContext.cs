@@ -7,6 +7,7 @@ using CommonLib.Web.Source.Common.Components.MyFieldStateComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyValidationMessageStoreComponent;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -87,6 +88,15 @@ namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
             OnValidationRequested?.Invoke(this, ValidationRequestedEventArgs.Empty);
             await (OnValidationRequestedAsync?.Invoke(this, ValidationRequestedEventArgs.Empty) ?? Task.CompletedTask);
             return !GetValidationMessages().Any();
+        }
+
+        public async Task<bool> ValidateFieldAsync<TProperty>(Expression<Func<TProperty>> propertyAccessor)
+        {
+            var propertyname = propertyAccessor.GetPropertyName();
+            var fi = Field(propertyname);
+            OnFieldChanged?.Invoke(this, new FieldChangedEventArgs(fi));
+            await (OnFieldChangedAsync?.Invoke(this, new FieldChangedEventArgs(fi)) ?? Task.CompletedTask);
+            return !GetValidationMessages(fi).Any();
         }
 
         public MyFieldState GetFieldState(in FieldIdentifier fieldIdentifier, bool ensureExists)

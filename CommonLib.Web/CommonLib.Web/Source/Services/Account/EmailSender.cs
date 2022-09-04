@@ -61,7 +61,7 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<IApiResponse> SendPasswordResetEmailAsync(string email, string code, string returnUrl)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            var resetPasswordurl = $"{ConfigUtils.FrontendBaseUrl}Account/ResetPassword?email={email.UTF8ToBase58()}&code={code.UTF8ToBase58()}&returnUrl={returnUrl.UTF8ToBase58()}";
+            var resetPasswordurl = $"{ConfigUtils.FrontendBaseUrl}Account/ResetPassword?email={email.UTF8ToBase58()}&code={code.UTF8ToBase58(false)}&returnUrl={returnUrl.UTF8ToBase58()}";
 
             var sbEmailBody = new StringBuilder();
             sbEmailBody.Append("Hello " + user.UserName + ",<br/><br/>");
@@ -73,7 +73,7 @@ namespace CommonLib.Web.Source.Services.Account
             sbEmailBody.Append("<br/><br/>");
             sbEmailBody.Append("Reset Password Code:");
             sbEmailBody.Append("<br/>");
-            sbEmailBody.Append("<b>" + code.UTF8ToBase58() + "</b>");
+            sbEmailBody.Append("<b>" + code.UTF8ToBase58(false) + "</b>");
             sbEmailBody.Append("<br/><br/>");
             sbEmailBody.Append("Cheers");
             sbEmailBody.Append("<br/>");

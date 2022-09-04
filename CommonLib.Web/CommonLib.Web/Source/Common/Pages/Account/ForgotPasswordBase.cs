@@ -62,12 +62,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await StateHasChangedAsync(true);
         }
 
-        protected async Task BtnChangeForgottenPassword_ClickAsync()
+        protected async Task BtnChangeForgottenPassword_ClickAsync() => await _editForm.SubmitAsync();
+        protected async Task FormChangeForgottenPassword_ValidSubmitAsync()
         {
-            if (!await _editContext.ValidateAsync()) // alternatively submit form and utilize `ValidSubmit` event
-                return;
-
-            await _btnForgotPassword.WaitWhileValidationStateIsBeingChanged(); // to fix an edge case when after model validation controls, here especially the button that shows loading status, are not fully rerendered yet and next line would run simultanously breaking that rendering
             await SetControlStatesAsync(ButtonState.Disabled, _btnForgotPassword);
             var forgotPasswordResponse = await AccountClient.ForgotPasswordAsync(_forgotPasswordUserVM);
 
@@ -82,8 +79,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             Mapper.Map(forgotPasswordResponse.Result, _forgotPasswordUserVM);
             await PromptMessageAsync(NotificationType.Success, forgotPasswordResponse.Message);
-            Logger.For<ForgotPasswordBase>().Info($"/Account/ResetPassword?{GetNavQueryStrings()}");
-            //NavigationManager.NavigateTo($"/Account/ResetPassword?{GetNavQueryStrings()}");
+            NavigationManager.NavigateTo($"/Account/ResetPassword?{GetNavQueryStrings()}");
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
@@ -107,7 +103,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(_forgotPasswordUserVM.Email).PascalCaseToCamelCase()] = _forgotPasswordUserVM.Email?.UTF8ToBase58(),
+                [nameof(_forgotPasswordUserVM.Email).PascalCaseToCamelCase()] = _forgotPasswordUserVM.Email?.UTF8ToBase58(false),
                 [nameof(_forgotPasswordUserVM.ReturnUrl).PascalCaseToCamelCase()] = _forgotPasswordUserVM.ReturnUrl?.UTF8ToBase58()
             }.Where(kvp => kvp.Value != null).ToQueryString();
         }

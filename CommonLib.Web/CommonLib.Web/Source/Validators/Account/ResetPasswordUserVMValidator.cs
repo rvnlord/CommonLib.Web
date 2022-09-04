@@ -5,28 +5,28 @@ using FluentValidation;
 
 namespace CommonLib.Web.Source.Validators.Account
 {
-    public class RegisterUserVMValidator : AbstractValidator<RegisterUserVM>
+    public class ResetPasswordVMValidator : AbstractValidator<ResetPasswordUserVM>
     {
-        public RegisterUserVMValidator(IAccountClient accountClient)
+        public ResetPasswordVMValidator(IAccountClient accountClient)
         {
             ClassLevelCascadeMode = CascadeMode.Stop;
             RuleLevelCascadeMode = CascadeMode.Stop;
 
-            RuleFor(m => m.UserName)
-                .RequiredWithMessage()
-                .MinLengthWithMessage(3)
-                .MaxLengthWithMessage(25)
-                .NameNotInUseWithMessage(accountClient)
-                .UserManagerCompliantWithMessage(accountClient);
-            
             RuleFor(m => m.Email)
                 .RequiredWithMessage()
                 .EmailAddressWithMessage()
-                .EmailNotInUseWithMessage(accountClient);
+                .EmailInUseWithMessage(accountClient);
 
+            RuleFor(m => m.ResetPasswordCode)
+                .RequiredWithMessage()
+                .Base58WithMessage()
+                .CorrectResetPasswordCodeWithMessage(accountClient)
+                .AccountConfirmedWithMessage(accountClient);
+                
             RuleFor(m => m.Password)
                 .RequiredWithMessage()
-                .UserManagerCompliantWithMessage(accountClient);
+                .UserManagerCompliantWithMessage(accountClient)
+                .IsNotExistingPasswordWithMessage(accountClient);
 
             RuleFor(m => m.ConfirmPassword)
                 .RequiredWithMessage()

@@ -101,7 +101,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 _state = _buttonStateFromValidation ?? State.ParameterValue ?? cascadingInputState ?? ButtonState.Enabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
                 _buttonStateFromValidation = null;
 
-                if (State.ParameterValue == ButtonState.Loading)
+                if (_state == ButtonState.Loading)
                     AddClasses("my-loading");
                 else
                     RemoveClasses("my-loading");
@@ -173,7 +173,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 };
             }
             
-            await StateHasChangedAsync(true);
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
 
             IsValidationStateBeingChanged = false;
             _syncValidationStateBeingChanged.Release();

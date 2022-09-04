@@ -20,7 +20,8 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<User, AuthenticateUserVM>();
             CreateMap<User, ForgotPasswordUserVM>();
             CreateMap<ForgotPasswordUserVM, ForgotPasswordUserVM>();
-            //CreateMap<User, ResetPasswordUserVM>();
+            CreateMap<User, ResetPasswordUserVM>();
+            CreateMap<ResetPasswordUserVM, ResetPasswordUserVM>();
             CreateMap<User, ResendConfirmationEmailUserVM>();
             //CreateMap<EditUserVM, ResendConfirmationEmailUserVM>();
             //CreateMap<User, EditUserVM>();

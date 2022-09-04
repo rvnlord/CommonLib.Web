@@ -16,6 +16,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -33,6 +34,7 @@ namespace CommonLib.Web.Source.Services.Account
         private readonly IHttpContextAccessor _http;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly CustomPasswordResetTokenProvider<User> _passwordResetTokenProvider;
 
         public AccountManager(UserManager<User> userManager,
             SignInManager<User> signInManager,
@@ -41,7 +43,8 @@ namespace CommonLib.Web.Source.Services.Account
             IMapper autoMapper,
             IHttpContextAccessor http,
             IPasswordHasher<User> passwordHasher,
-            RoleManager<IdentityRole<Guid>> roleManager)
+            RoleManager<IdentityRole<Guid>> roleManager, 
+            CustomPasswordResetTokenProvider<User> passwordResetTokenProvider)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +54,7 @@ namespace CommonLib.Web.Source.Services.Account
             _http = http;
             _passwordHasher = passwordHasher;
             _roleManager = roleManager;
+            _passwordResetTokenProvider = passwordResetTokenProvider;
         }
 
         public async Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name)
@@ -442,6 +446,52 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status500InternalServerError, "Can't send Password Reset email. Try again later.", null, null, sendResetEmailResponse.ResponseException);
 
             return new ApiResponse<ForgotPasswordUserVM>(StatusCodeType.Status201Created, $"Change Password link has been sent to: \"{userWithForgottenPassword.Email}\"", null, userWithForgottenPassword);
+        }
+
+        public async Task<ApiResponse<ResetPasswordUserVM>> ResetPasswordAsync(ResetPasswordUserVM userToResetPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(userToResetPassword.Email);
+            if (user == null)
+                return new ApiResponse<ResetPasswordUserVM>(StatusCodeType.Status401Unauthorized, "There is no User with this Email to Confirm", new[] { new KeyValuePair<string, string>("Email", "No such email") }.ToLookup());
+
+            var resetPasswordResult = await _userManager.ResetPasswordAsync(user, userToResetPassword.ResetPasswordCode.Base58ToUTF8(), userToResetPassword.Password);
+            if (!resetPasswordResult.Succeeded)
+            {
+                var isInvalidToken = resetPasswordResult.Errors.FirstOrDefault(e => e.Code.EqualsInvariant("InvalidToken"));
+                if (isInvalidToken != null)
+                    return new ApiResponse<ResetPasswordUserVM>(StatusCodeType.Status401Unauthorized, isInvalidToken.Description, new[] { new KeyValuePair<string, string>(nameof(ResetPasswordUserVM.ResetPasswordCode), isInvalidToken.Description) }.ToLookup());
+                var errors = resetPasswordResult.Errors.ToLookup(userToResetPassword.GetPropertyNames());
+                return new ApiResponse<ResetPasswordUserVM>(StatusCodeType.Status401Unauthorized, "Password Reset Failed", errors);
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+                await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+
+            return new ApiResponse<ResetPasswordUserVM>(StatusCodeType.Status200OK, $"Password for User: \"{userToResetPassword.UserName}\" has been changed successfully", null, _mapper.Map(user, userToResetPassword));
+        }
+
+        public async Task<ApiResponse<bool>> CheckUserResetPasswordCodeAsync(CheckResetPasswordCodeUserVM userToCheckResetPasswordCode)
+        {
+            if (userToCheckResetPasswordCode.UserName.IsNullOrWhiteSpace() || userToCheckResetPasswordCode.CheckResetPasswordCode.IsNullOrWhiteSpace())
+                return new ApiResponse<bool>(StatusCodeType.Status200OK, "Reset Password Code is incorrect", null, false);
+
+            var user = _db.Users.Single(u => u.UserName.ToLower() == userToCheckResetPasswordCode.UserName.ToLower());
+            var verificationResult = await _passwordResetTokenProvider.ValidateAsync(null, userToCheckResetPasswordCode.CheckResetPasswordCode.Base58ToUTF8(), _userManager, user);
+            if (!verificationResult)
+                return new ApiResponse<bool>(StatusCodeType.Status200OK, "Reset Password Code is incorrect", null, false);
+            return await Task.FromResult(new ApiResponse<bool>(StatusCodeType.Status200OK, "Reset Password Code is correct", null, true));
+        }
+
+        public async Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword)
+        {
+            if (userToCheckPassword.UserName.IsNullOrWhiteSpace() || userToCheckPassword.Password.IsNullOrWhiteSpace())
+                return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
+
+            var user = _db.Users.Single(u => u.UserName.ToLower() == userToCheckPassword.UserName.ToLower());
+            var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToCheckPassword.Password);
+            if (verificationResult != PasswordVerificationResult.Success)
+                return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
+            return await Task.FromResult(new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is correct", null, true));
         }
     }
 }

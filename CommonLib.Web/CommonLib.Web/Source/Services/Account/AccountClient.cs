@@ -166,5 +166,20 @@ namespace CommonLib.Web.Source.Services.Account
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<ForgotPasswordUserVM>>("api/account/forgotpassword", forgotPasswordUser);
         }
+
+        public async Task<ApiResponse<ResetPasswordUserVM>> ResetPasswordAsync(ResetPasswordUserVM resetPasswordUserVM)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<ResetPasswordUserVM>>("api/account/resetpassword", resetPasswordUserVM);
+        }
+
+        public async Task<ApiResponse<bool>> CheckUserResetPasswordCodeAsync(CheckResetPasswordCodeUserVM userToCheckResetPasswordCode)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<bool>>($"Api/Account/{nameof(CheckUserResetPasswordCodeAsync).Before("Async")}", userToCheckResetPasswordCode);
+        }
+
+        public async Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<bool>>($"Api/Account/{nameof(CheckUserPasswordAsync).Before("Async")}", userToCheckPassword);
+        }
     }
 }

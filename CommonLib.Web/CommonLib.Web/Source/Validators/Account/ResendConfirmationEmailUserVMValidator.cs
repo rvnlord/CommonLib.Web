@@ -10,6 +10,7 @@ namespace CommonLib.Web.Source.Validators.Account
         public ForgotPasswordUserVMValidator(IAccountClient accountClient)
         {
             ClassLevelCascadeMode = CascadeMode.Stop;
+            RuleLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()

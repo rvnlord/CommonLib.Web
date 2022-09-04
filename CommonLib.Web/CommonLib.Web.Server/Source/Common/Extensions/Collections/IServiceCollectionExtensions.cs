@@ -18,7 +18,6 @@ namespace CommonLib.Web.Server.Source.Common.Extensions.Collections
             { //o.ViewLocationFormats.Clear(); // {2} is area, {1} is controller, {0} is the action   
 
                 var cshtml = RazorViewEngine.ViewExtension;
-                var razor = ".razor";
                 var viewLocations = new[]
                 {
                     "/Source/Pages/{1}/{0}" + cshtml,
