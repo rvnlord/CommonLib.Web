@@ -4,53 +4,56 @@
 import "../extensions.js";
 
 class TextInputUtils {
+    static initPaddings = {
+        left: {},
+        right: {}
+    };
+
     static fixPaddingForInputGroups($input) {
+
         if (!$input.parent().is(".my-input-group"))
             return;
 
         const syncPaddingGroup = $input.attr("my-input-sync-padding-group");
         const $tiToSetPadding = syncPaddingGroup ? $(`input[my-input-sync-padding-group="${syncPaddingGroup}"]`).$toArray() : [ $input ];
-        const leftPaddings = [];
-        const rightPaddings = [];
+        const leftPaddings = {};
+        const rightPaddings = {};
 
         for (let $ti of $tiToSetPadding) {
+            const guid = $ti.guid();
             const $inputGroup = $ti.parent();
             const $inputGroupPrepend = $inputGroup.children(".my-input-group-prepend").first();
             const $inputGroupAppend = $inputGroup.children(".my-input-group-append").first();
             const prependWidth = $inputGroupPrepend.hiddenDimensions().outerWidth || 0;
             const appendWidth = $inputGroupAppend.hiddenDimensions().outerWidth || 0;
-            const leftPadding = parseFloat($ti.attr("init-padding-left") || $ti.css("padding-left")); // take init value if assigned, otherwise every element from the same group would get recalculated value and the padding would increase
-            const rightPadding = parseFloat($ti.attr("init-padding-right") || $ti.css("padding-right"));
+            const leftPadding = parseFloat(this.initPaddings.left[guid] || $ti.css("padding-left")); // take init value if assigned, otherwise every element from the same group would get recalculated value and the padding would increase
+            const rightPadding = parseFloat(this.initPaddings.right[guid] || $ti.css("padding-right"));
             const IsRightMostPrependedItemAnIcon = $inputGroupPrepend.children().last().is(".my-icon");
             const IsLeftMostAppendedItemAnIcon = $inputGroupAppend.children().first().is(".my-icon");
 
             const paddingLeft = (IsRightMostPrependedItemAnIcon ? 0 : leftPadding) + prependWidth;
             const paddingRight = (IsLeftMostAppendedItemAnIcon ? 0 : rightPadding) + appendWidth;
 
-            leftPaddings.push(paddingLeft);
-            rightPaddings.push(paddingRight);
+            leftPaddings[guid] = paddingLeft.round();
+            rightPaddings[guid] = paddingRight.round();
         }
 
         for (let $ti of $tiToSetPadding) {
-            if (!$ti.css("init-padding-left")) {
-                $ti.attr("init-padding-left", $ti.css("padding-left"));
+            const guid = $ti.guid();
+            if (!this.initPaddings.left[guid]) {
+                this.initPaddings.left[guid] = parseFloat($ti.css("padding-left")).round();
             }
-            if (!$ti.css("init-padding-right")) {
-                $ti.attr("init-padding-right", $ti.css("padding-right"));
+            if (!this.initPaddings.right[guid]) {
+                this.initPaddings.right[guid] = parseFloat($ti.css("padding-right")).round();
             }
-            $ti.css("padding-left", leftPaddings.max().round().px());
-            $ti.css("padding-right", rightPaddings.max().round().px());
+
+            $ti.css("padding-left", leftPaddings.values().max().round().px());
+            $ti.css("padding-right", rightPaddings[guid].round().px()); // I don't want to inherit riht padding from the sync group, it needs to be taken from the input itself (or it's input group)
 
             const $passwordMask = $ti.siblings(".my-password-mask").first();
             if ($passwordMask) {
-                if (!$passwordMask.css("init-padding-left")) {
-                    $passwordMask.attr("init-padding-left", $ti.css("padding-left"));
-                }
-                if (!$passwordMask.css("init-padding-right")) {
-                    $passwordMask.attr("init-padding-right", $ti.css("padding-right"));
-                }
-                $passwordMask.css("padding-left", leftPaddings.max().round().px());
-                $passwordMask.css("padding-right", rightPaddings.max().round().px());
+                $passwordMask.css("padding-left", leftPaddings.values().max().round().px());
+                $passwordMask.css("padding-right", rightPaddings[guid].round().px());
             }
         }
     }

@@ -8,6 +8,7 @@
     @if (ChildContent == null)
     {
         <input @ref="@_jsTextInput" type="text"
+               my-guid="@_guid"
                value="@Text"
                placeholder="@Placeholder"
                class="@_renderClasses"
@@ -19,6 +20,7 @@
     {
         <MyInputGroup>
             <input @ref="@_jsTextInput" type="text"
+                   my-guid="@_guid"
                    value="@Text"
                    placeholder="@Placeholder"
                    class="@_renderClasses"

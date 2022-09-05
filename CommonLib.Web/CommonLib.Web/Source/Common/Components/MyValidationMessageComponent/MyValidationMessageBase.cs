@@ -123,7 +123,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
             if (CascadedEditContext == null || e.ValidationStatus == ValidationStatus.Pending)
             {
                 Status = ValidationMessageStatus.Validating;
-                await StateHasChangedAsync().ConfigureAwait(false);
+                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
             
@@ -146,7 +146,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
                 Status = ValidationMessageStatus.Failure;
             }
 
-            await StateHasChangedAsync().ConfigureAwait(false);
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
     }
 

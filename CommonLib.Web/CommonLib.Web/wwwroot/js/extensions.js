@@ -30,6 +30,22 @@ Object.defineProperty(Object.prototype, "kvps", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "keys", {
+    value: function () {
+        return Object.entries(this).map(kvp => kvp[0]);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Object.prototype, "values", {
+    value: function () {
+        return Object.entries(this).map(kvp => kvp[1]);
+    },
+    writable: true,
+    configurable: true
+});
+
 Object.defineProperty(Object.prototype, "toTimeDateString", {
     value: function () {
         return utils.toTimeDateString(this);
