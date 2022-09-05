@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
@@ -23,6 +24,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         private MyEditContext _explicitEditContext;
         private IServiceProvider _serviceProvider;
         private MyEditContext _currentEditContext;
+        private SemaphoreSlim _syncValidation = new SemaphoreSlim(1, 1);
 
         public MyValidationMessageStore MessageStore { get; set; }
 
@@ -114,6 +116,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
         private async Task ValidateFieldAsync(FieldIdentifier fieldIdentifier)
         {
+            await _syncValidation.WaitAsync();
+
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
             validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
             if (validator == null) // not supposed to be validated
@@ -162,6 +166,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                 MessageStore.HasNoMessages(validatedFields) ? ValidationStatus.Success : ValidationStatus.Failure,
                 ValidationMode.Property,
                 invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields);
+
+            _syncValidation.Release();
         }
 
         private void SetFormValidator()

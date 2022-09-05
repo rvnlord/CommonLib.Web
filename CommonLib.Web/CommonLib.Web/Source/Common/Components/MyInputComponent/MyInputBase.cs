@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
+using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -61,13 +62,15 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             }
 
             if (!fi.In(e.ValidatedFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
+            {
+                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
+            }
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
                 State.ParameterValue = InputState.Disabled;
-                await NotifyParametersChangedAsync();
-                await StateHasChangedAsync(true);
+                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
 
@@ -81,8 +84,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             else if (validationFailed && wasCurrentFieldValidated)
                 AddClasses("my-invalid");
 
-            await NotifyParametersChangedAsync();
-            await StateHasChangedAsync(true);
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
     }
 
