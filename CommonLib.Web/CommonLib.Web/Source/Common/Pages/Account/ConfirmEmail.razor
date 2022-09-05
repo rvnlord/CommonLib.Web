@@ -16,47 +16,47 @@
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => _resetPasswordUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _confirmEmailUserVM.UserName)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyTextInput State="InputState.Disabled" For="@(() => _resetPasswordUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
+                <MyTextInput State="InputState.Disabled" For="@(() => _confirmEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
                     <MyInputGroupPrepend>
                         <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyTextInput>
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => _resetPasswordUserVM.UserName)" />
+                <MyValidationMessage For="@(() => _confirmEmailUserVM.UserName)" />
             </div>
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => _resetPasswordUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _confirmEmailUserVM.Email)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyTextInput For="@(() => _resetPasswordUserVM.Email)" SyncPaddingGroup="confirm-email-panel">
+                <MyTextInput For="@(() => _confirmEmailUserVM.Email)" SyncPaddingGroup="confirm-email-panel">
                     <MyInputGroupPrepend>
                         <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyTextInput>
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => _resetPasswordUserVM.Email)" />
+                <MyValidationMessage For="@(() => _confirmEmailUserVM.Email)" />
             </div>
         </div>
         <div class="my-row">
             <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                <MyLabel For="@(() => _resetPasswordUserVM.ConfirmationCode)" Align="@HorizontalAlignment.Right" />
+                <MyLabel For="@(() => _confirmEmailUserVM.ConfirmationCode)" Align="@HorizontalAlignment.Right" />
             </div>
             <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                <MyTextInput For="@(() => _resetPasswordUserVM.ConfirmationCode)" SyncPaddingGroup="confirm-email-panel">
+                <MyTextInput For="@(() => _confirmEmailUserVM.ConfirmationCode)" SyncPaddingGroup="confirm-email-panel">
                     <MyInputGroupPrepend>
                         <MyIcon IconType="IconType.From(LightIconType.Key)"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyTextInput>
             </div>
             <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                <MyValidationMessage For="@(() => _resetPasswordUserVM.ConfirmationCode)" />
+                <MyValidationMessage For="@(() => _confirmEmailUserVM.ConfirmationCode)" />
             </div>
         </div>
         <div class="my-row">

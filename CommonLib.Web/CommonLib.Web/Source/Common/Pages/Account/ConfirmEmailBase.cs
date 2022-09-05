@@ -24,18 +24,18 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyButtonBase _btnConfirmEmail;
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
-        protected ConfirmUserVM _resetPasswordUserVM;
+        protected ConfirmUserVM _confirmEmailUserVM;
 
         protected override async Task OnInitializedAsync()
         {
             _btnConfirmEmailState = ButtonState.Loading;
-            _resetPasswordUserVM = new()
+            _confirmEmailUserVM = new()
             {
                 Email = NavigationManager.GetQueryString<string>("email")?.Base58ToUTF8(),
                 ConfirmationCode = NavigationManager.GetQueryString<string>("code")?.Base58ToUTF8(),
                 ReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8() ?? "/account/login"
             };
-            _editContext = new MyEditContext(_resetPasswordUserVM);
+            _editContext = new MyEditContext(_confirmEmailUserVM);
             await Task.CompletedTask;
         }
 
@@ -51,7 +51,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!_resetPasswordUserVM.Email.IsNullOrWhiteSpace() && !_resetPasswordUserVM.ConfirmationCode.IsNullOrWhiteSpace())
+            if (!_confirmEmailUserVM.Email.IsNullOrWhiteSpace() && !_confirmEmailUserVM.ConfirmationCode.IsNullOrWhiteSpace())
             {
                 var isValid = await _editContext.ValidateAsync(); // validate manually if code and email are directly within the url --> validation will trigger showing the messages and disabling the inputs on success
                 if (isValid)
@@ -77,7 +77,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             _btnConfirmEmailState = ButtonState.Loading;
             await StateHasChangedAsync();
-            var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(_resetPasswordUserVM);
+            var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(_confirmEmailUserVM);
             if (emailConfirmationResponse.IsError)
             {
                 _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChanged(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
@@ -88,10 +88,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             var confirmedUser = emailConfirmationResponse.Result;
-            _resetPasswordUserVM.UserName = confirmedUser.UserName;
+            _confirmEmailUserVM.UserName = confirmedUser.UserName;
             //NavigationManager.NavigateTo($"/Account/Login/?returnUrl={_confirmUserVM.ReturnUrl?.UTF8ToBase58()}");
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
-            await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_resetPasswordUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
+            await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_confirmEmailUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
             _btnConfirmEmailState = ButtonState.Disabled;
             await StateHasChangedAsync();
 
@@ -106,22 +106,22 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (e.ValidationStatus == ValidationStatus.Pending)
                 return;
 
-            if (new FieldIdentifier(_resetPasswordUserVM, nameof(_resetPasswordUserVM.Email)).In(e.ValidFields)) // doesn't matter if we are validating model or property - as long as email is valid
+            if (new FieldIdentifier(_confirmEmailUserVM, nameof(_confirmEmailUserVM.Email)).In(e.ValidFields)) // doesn't matter if we are validating model or property - as long as email is valid
                 await SetUserNameAsync();
             else
-                _resetPasswordUserVM.UserName = null;
+                _confirmEmailUserVM.UserName = null;
 
             await StateHasChangedAsync();
         }
 
-        private async Task SetUserNameAsync() => _resetPasswordUserVM.UserName = (await AccountClient.FindUserByEmailAsync(_resetPasswordUserVM.Email)).Result?.UserName;
+        private async Task SetUserNameAsync() => _confirmEmailUserVM.UserName = (await AccountClient.FindUserByEmailAsync(_confirmEmailUserVM.Email)).Result?.UserName;
 
         protected string GetNavQueryStrings()
         {
             return new OrderedDictionary<string, string>
             {
-                [nameof(_resetPasswordUserVM.Email).PascalCaseToCamelCase()] = _resetPasswordUserVM.Email?.UTF8ToBase58(false),
-                [nameof(_resetPasswordUserVM.ReturnUrl).PascalCaseToCamelCase()] = _resetPasswordUserVM.ReturnUrl?.UTF8ToBase58()
+                [nameof(_confirmEmailUserVM.Email).PascalCaseToCamelCase()] = _confirmEmailUserVM.Email?.UTF8ToBase58(false),
+                [nameof(_confirmEmailUserVM.ReturnUrl).PascalCaseToCamelCase()] = _confirmEmailUserVM.ReturnUrl?.UTF8ToBase58()
             }.Where(kvp => kvp.Value != null).ToQueryString();
         }
     }
