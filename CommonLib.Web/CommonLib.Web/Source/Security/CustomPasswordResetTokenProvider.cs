@@ -17,7 +17,6 @@ namespace CommonLib.Web.Source.Security
         public IDataProtector Protector { get; }
         public string Name => Options.Name;
 
-
         public CustomPasswordResetTokenProvider(
             IDataProtectionProvider dataProtectionProvider, 
             IOptions<CustomPasswordResetTokenProviderOptions> options,

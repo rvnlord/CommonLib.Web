@@ -4,13 +4,12 @@
 import "../extensions.js";
 
 class TextInputUtils {
-    static initPaddings = {
+    static initPaddings = { // if I stored it as an attribute it might interfere with blazor rendering
         left: {},
-        right: {}
+        right: {} 
     };
 
     static fixPaddingForInputGroups($input) {
-
         if (!$input.parent().is(".my-input-group"))
             return;
 
@@ -48,7 +47,7 @@ class TextInputUtils {
             }
 
             $ti.css("padding-left", leftPaddings.values().max().round().px());
-            $ti.css("padding-right", rightPaddings[guid].round().px()); // I don't want to inherit riht padding from the sync group, it needs to be taken from the input itself (or it's input group)
+            $ti.css("padding-right", rightPaddings[guid].round().px()); // I don't want to inherit right padding from the sync group, it needs to be taken from the input itself (or it's input group)
 
             const $passwordMask = $ti.siblings(".my-password-mask").first();
             if ($passwordMask) {
