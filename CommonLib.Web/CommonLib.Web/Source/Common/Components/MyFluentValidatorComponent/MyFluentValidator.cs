@@ -116,7 +116,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
         private async Task ValidateFieldAsync(FieldIdentifier fieldIdentifier)
         {
-            await _syncValidation.WaitAsync();
+            await _syncValidation.WaitAsync(); // to prevent UI updating with incorrect messages, especially for other fields when this one changed
 
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
             validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
@@ -125,7 +125,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             
             _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Property, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>());
 
-            var model = _currentEditContext.Model;
+            var model = _currentEditContext.Model; 
             var allModelFields = fieldIdentifier.Model.GetPropertyNames().Select(p => new FieldIdentifier(fieldIdentifier.Model, p)).ToList();
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
             var validatedFields = new List<FieldIdentifier>(); // check all not empty fields (to accomodate for 'equal' validator)
