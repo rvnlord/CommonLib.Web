@@ -15,6 +15,7 @@ using CommonLib.Web.Source.Common.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
+using CommonLib.Web.Source.Common.Extensions;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -65,7 +66,7 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync()
         {
             var isInitialized = _jsRuntime.GetProperty<bool>("IsInitialized");
-            var cookieTIcket = isInitialized ? await _jsRuntime.InvokeAsync<string>("Cookies.get", "Ticket") : null;
+            var cookieTIcket = isInitialized ? await _jsRuntime.InvokeAndCatchCancellationAsync<string>("Cookies.get", "Ticket") : null;
             var localStorageTicket = isInitialized ? await _localStorage.GetItemAsStringAsync("Ticket") : null;
             var userToAuthenticate = new AuthenticateUserVM { Ticket = cookieTIcket ?? localStorageTicket, IsAuthenticated = false };
             return await HttpClient.PostJTokenAsync<ApiResponse<AuthenticateUserVM>>("api/account/authenticateuser", userToAuthenticate);

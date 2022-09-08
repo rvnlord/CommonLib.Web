@@ -34,5 +34,26 @@ namespace CommonLib.Web.Source.Common.Extensions
             
             throw new NotSupportedException("Module not importeed, error not thrown - it shouldn't happen");
         }
+
+        public static async ValueTask InvokeAndCatchCancellationAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            try
+            {
+                await jsRuntime.InvokeVoidAsync(identifier, args);
+            }
+            catch (TaskCanceledException) { }
+        }
+
+        public static ValueTask<TValue> InvokeAndCatchCancellationAsync<TValue>(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            try
+            {
+                return jsRuntime.InvokeAsync<TValue>(identifier, args);
+            }
+            catch (TaskCanceledException)
+            {
+                return new ValueTask<TValue>();
+            }
+        }
     }
 }

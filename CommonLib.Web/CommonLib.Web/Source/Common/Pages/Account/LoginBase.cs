@@ -6,6 +6,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
@@ -152,11 +153,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             
-            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result; // so IsAuthenticated returns corect value
-            await StateHasChangedAsync(); // for Auth change to true so Render can swap Login btn for Logout, btnLogout is disabled on render to prevent it being momentarily available
-            
-            _btnLogout.State.ParameterValue = ButtonState.Enabled; // using `_btnLogout.State.ParameterValue = ButtonState.Enabled;` if value is set on render would mean that after render it would always revert to "hard coded" disabled value so I have to use variable
             _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
+
+            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result; // so IsAuthenticated returns correct value
+            await StateHasChangedAsync(); // for Auth change to true so Render can swap Login btn for Logout, btnLogout is disabled on render to prevent it being momentarily available
+
+            await TaskUtils.WaitUntil(() => _btnLogout is not null);
+            _btnLogout.State.ParameterValue = ButtonState.Enabled; // using `_btnLogout.State.ParameterValue = ButtonState.Enabled;` if value is set on render would mean that after render it would always revert to "hard coded" disabled value so I have to use variable
             _btnDismiss.State.ParameterValue = ButtonState.Enabled;
             BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
             await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true);

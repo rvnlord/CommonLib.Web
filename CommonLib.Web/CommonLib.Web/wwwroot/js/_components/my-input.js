@@ -1,4 +1,4 @@
-﻿/// <reference path="../../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
 /// <reference path="../../libs/custom/@types/animejs/index.d.ts" />
 
 import "../extensions.js";
@@ -18,7 +18,7 @@ class TextInputUtils {
         const leftPaddings = {};
         const rightPaddings = {};
 
-        for (let $ti of $tiToSetPadding) {
+        for (let $ti of $tiToSetPadding) { 
             const guid = $ti.guid();
             const $inputGroup = $ti.parent();
             const $inputGroupPrepend = $inputGroup.children(".my-input-group-prepend").first();

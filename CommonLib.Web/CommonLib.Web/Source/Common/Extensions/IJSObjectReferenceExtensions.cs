@@ -11,7 +11,8 @@ namespace CommonLib.Web.Source.Common.Extensions
         {
             try
             {
-                await jsObjectReference.InvokeVoidAsync(identifier, args);
+                if (jsObjectReference is not null)
+                    await jsObjectReference.InvokeVoidAsync(identifier, args);
             }
             catch (TaskCanceledException) { }
         }

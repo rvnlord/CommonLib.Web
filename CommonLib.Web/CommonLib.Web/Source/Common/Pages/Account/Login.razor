@@ -2,106 +2,138 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Converters
+@using Telerik.Blazor.Components
 @inherits LoginBase
 
-<MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="FormLogin_ValidSubmitAsync">
-    <div class="my-container">
-        <div class="my-row">
+@if (!IsAuthenticated())
+{
+    <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="FormLogin_ValidSubmitAsync">
+        <div class="my-container">
+            <div class="my-row">
 
-            <div class="my-col-md-7 my-col-12">
-                <div class="my-container my-container-no-gutter my-login-modal-left-panel-container">
-                    <div class="my-col-12">
-                        <div class="my-container my-container-no-gutter" style="margin-bottom: 0; box-shadow: inset 0 -1px 0 0 #646464">
-                            <div class="my-col-12">
-                                <h4>Local Login:</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="my-col-12">
-                        <div class="my-container my-container-no-gutter">
-                            <div class="my-row">
-                                <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
-                                    <MyLabel For="@(() => _loginUserVM.UserName)" />
-                                </div>
-                                <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
-                                    <MyTextInput For="@(() => _loginUserVM.UserName)" SyncPaddingGroup="login-modal" @ref="_txtUserName">
-                                        <MyInputGroupPrepend>
-                                            <MyIcon IconType="IconType.From(LightIconType.UserLock)"></MyIcon>
-                                        </MyInputGroupPrepend>
-                                    </MyTextInput>
-                                </div>
-                            </div>
-                            <div class="my-row">
-                                <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
-                                    <MyLabel For="@(() => _loginUserVM.Password)"></MyLabel>
-                                </div>
-                                <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
-                                    <MyPasswordInput For="@(() => _loginUserVM.Password)" SyncPaddingGroup="login-modal" @ref="_txtPassword"></MyPasswordInput>
-                                </div>
-                            </div>
-                            <div class="my-row">
-                                <div class="my-col-md-8 my-col-12 my-offset-md-4">
-                                    <MyCheckBox For="@(() => _loginUserVM.RememberMe)" @ref="_cbRememberMe"></MyCheckBox>
+                <div class="my-col-md-7 my-col-12">
+                    <div class="my-container my-container-no-gutter my-login-modal-left-panel-container">
+                        <div class="my-col-12">
+                            <div class="my-container my-container-no-gutter" style="margin-bottom: 0; box-shadow: inset 0 -1px 0 0 #646464">
+                                <div class="my-col-12">
+                                    <h4>Local Login:</h4>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="my-col-12">
-                        <div class="my-container my-container-no-gutter" style="box-shadow: inset 0 1px 0 0 #646464; margin-top: 0;">
-                            <div class="my-offset-md-4 my-col-md-4 my-col-12">
-                                @if (!IsAuthenticated())
-                                {
+                        <div class="my-col-12">
+                            <div class="my-container my-container-no-gutter">
+                                <div class="my-row">
+                                    <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
+                                        <MyLabel For="@(() => _loginUserVM.UserName)" />
+                                    </div>
+                                    <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
+                                        <MyTextInput For="@(() => _loginUserVM.UserName)" SyncPaddingGroup="login-modal" @ref="_txtUserName">
+                                            <MyInputGroupPrepend>
+                                                <MyIcon IconType="IconType.From(LightIconType.UserLock)"></MyIcon>
+                                            </MyInputGroupPrepend>
+                                        </MyTextInput>
+                                    </div>
+                                </div>
+                                <div class="my-row">
+                                    <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
+                                        <MyLabel For="@(() => _loginUserVM.Password)"></MyLabel>
+                                    </div>
+                                    <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
+                                        <MyPasswordInput For="@(() => _loginUserVM.Password)" SyncPaddingGroup="login-modal" @ref="_txtPassword"></MyPasswordInput>
+                                    </div>
+                                </div>
+                                <div class="my-row">
+                                    <div class="my-col-md-8 my-col-12 my-offset-md-4">
+                                        <MyCheckBox For="@(() => _loginUserVM.RememberMe)" @ref="_cbRememberMe"></MyCheckBox>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="my-col-12">
+                            <div class="my-container my-container-no-gutter" style="box-shadow: inset 0 1px 0 0 #646464; margin-top: 0;">
+                                <div class="my-offset-md-4 my-col-md-4 my-col-12">
                                     <MyButton Value="@("Sign In".ToBp())" Icon="IconType.From(LightIconType.SignIn)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnSignIn_ClickAsync" @ref="_btnLogin"></MyButton>
-                                }
-                                else
-                                {
-                                    <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
-                                }
-                            </div>
-                            <div class="my-col-md-4 my-col-12">
-                                <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync" @ref="_btnRegister"></MyButton>
-                            </div>
-                            <div class="my-col-md-4 my-col-12 my-order-md-0 my-order-1">
-                                <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close" @ref="_btnDismiss"></MyButton>
-                            </div>
-                            <div class="my-col-md-8 my-col-12">
-                                <MyButton Value="@("Reset Password".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync" @ref="_btnResetPassword"></MyButton>
+                                </div>
+                                <div class="my-col-md-4 my-col-12">
+                                    <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync" @ref="_btnRegister"></MyButton>
+                                </div>
+                                <div class="my-col-md-4 my-col-12 my-order-md-0 my-order-1">
+                                    <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close" @ref="_btnDismiss"></MyButton>
+                                </div>
+                                <div class="my-col-md-8 my-col-12">
+                                    <MyButton Value="@("Reset Password".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync" @ref="_btnResetPassword"></MyButton>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="my-col-md-5 my-col-12">
-                <div class="my-container my-container-no-gutter">
-                    <div class="my-col-12">
-                        <div class="my-container my-container-no-gutter my-login-modal-right-panel-title-container">
-                            <div class="my-col-12">
-                                <h4>External Login:</h4>
+                <div class="my-col-md-5 my-col-12">
+                    <div class="my-container my-container-no-gutter">
+                        <div class="my-col-12">
+                            <div class="my-container my-container-no-gutter my-login-modal-right-panel-title-container">
+                                <div class="my-col-12">
+                                    <h4>External Login:</h4>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="my-col-12">
-                        <div class="my-container my-container-no-gutter">
-                            @if (_loginUserVM.ExternalLogins.Count == 0)
-                            {
-                                <div class="my-col-12">
-                                    <div>No External Login providers Defined</div>
-                                </div>
-                            }
-                            else
-                            {
-                                foreach (var provider in _loginUserVM.ExternalLogins)
+                        <div class="my-col-12">
+                            <div class="my-container my-container-no-gutter">
+                                @if (_loginUserVM.ExternalLogins.Count == 0)
                                 {
-                                    <div class="my-col-4">
-                                        <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" @ref="_btnExternalLogins[provider.Name]" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
+                                    <div class="my-col-12">
+                                        <div>No External Login providers Defined</div>
                                     </div>
                                 }
-                            }
+                                else
+                                {
+                                    foreach (var provider in _loginUserVM.ExternalLogins)
+                                    {
+                                        <div class="my-col-4">
+                                            <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" @ref="_btnExternalLogins[provider.Name]" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
+                                        </div>
+                                    }
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</MyEditForm>
-
+    </MyEditForm>
+}
+else
+{
+    <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" Class="my-p-10px">
+        <GridLayoutColumns>
+            <GridLayoutColumn Width="150px"></GridLayoutColumn>
+            <GridLayoutColumn Width="auto"></GridLayoutColumn>
+        </GridLayoutColumns>
+        <GridLayoutRows>
+            <GridLayoutRow></GridLayoutRow>
+            <GridLayoutRow></GridLayoutRow>
+            <GridLayoutRow></GridLayoutRow>
+        </GridLayoutRows>
+        <GridLayoutItems>
+            <GridLayoutItem Column="1" Row="1" RowSpan="2">
+                <div class="css-grid-example-item">
+                    item 1
+                </div>
+            </GridLayoutItem>
+            <GridLayoutItem Column="2" Row="1">
+                <div class="css-grid-example-item">
+                    item 2
+                </div>
+            </GridLayoutItem>
+            <GridLayoutItem Column="2" Row="2">
+                <div class="css-grid-example-item">
+                    item 3
+                </div>
+            </GridLayoutItem>
+            <GridLayoutItem Column="1" Row="3" ColumnSpan="2">
+                <div class="css-grid-example-item">
+                    <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
+                </div>
+            </GridLayoutItem>
+        </GridLayoutItems>
+    </TelerikGridLayout>
+}

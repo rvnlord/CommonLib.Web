@@ -770,7 +770,7 @@ Object.defineProperty(Array.prototype, "orderByWithDirection", {
 
 // #endregion
 
-// #region JqueryExtensions
+// #region JQueryExtensions
 
 function jQueryArray($selectors) {
     if ($selectors.length === 0) {
