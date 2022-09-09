@@ -2,6 +2,7 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Converters
+@using Telerik.Blazor
 @using Telerik.Blazor.Components
 @inherits LoginBase
 
@@ -103,34 +104,56 @@
 }
 else
 {
-    <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" Class="my-p-10px">
+    <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" VerticalAlign="GridLayoutVerticalAlign.Top" Class="my-p-10px">
         <GridLayoutColumns>
             <GridLayoutColumn Width="150px"></GridLayoutColumn>
             <GridLayoutColumn Width="auto"></GridLayoutColumn>
         </GridLayoutColumns>
         <GridLayoutRows>
             <GridLayoutRow></GridLayoutRow>
-            <GridLayoutRow></GridLayoutRow>
-            <GridLayoutRow></GridLayoutRow>
         </GridLayoutRows>
         <GridLayoutItems>
-            <GridLayoutItem Column="1" Row="1" RowSpan="2">
+            <GridLayoutItem Column="1" Row="1" RowSpan="3">
                 <div class="css-grid-example-item">
-                    item 1
+                    <div class="logged-user-no-avatar-container">
+                        <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
+                    </div>
                 </div>
             </GridLayoutItem>
             <GridLayoutItem Column="2" Row="1">
-                <div class="css-grid-example-item">
-                    item 2
-                </div>
+                <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" VerticalAlign="GridLayoutVerticalAlign.Top">
+                    <GridLayoutColumns>
+                        <GridLayoutColumn Width="auto"></GridLayoutColumn>
+                    </GridLayoutColumns>
+                    <GridLayoutRows>
+                        <GridLayoutRow></GridLayoutRow>
+                    </GridLayoutRows>
+                    <GridLayoutItems>
+                        <GridLayoutItem Column="1" Row="1">
+                            <div class="css-grid-example-item">
+                                <div class="logged-user-username">
+                                    @AuthenticatedUser.UserName
+                                </div>
+                                <div class="logged-user-login-time">
+                                    login time
+                                </div>
+                            </div>
+                        </GridLayoutItem>
+                        <GridLayoutItem Column="1" Row="2">
+                            <div class="logged-user-roles css-grid-example-item">
+                                roles
+                            </div>
+                        </GridLayoutItem>
+                        <GridLayoutItem Column="1" Row="3">
+                            <div class="logged-user-claims css-grid-example-item">
+                                claims
+                            </div>
+                        </GridLayoutItem>
+                    </GridLayoutItems>
+                </TelerikGridLayout>
             </GridLayoutItem>
-            <GridLayoutItem Column="2" Row="2">
-                <div class="css-grid-example-item">
-                    item 3
-                </div>
-            </GridLayoutItem>
-            <GridLayoutItem Column="1" Row="3" ColumnSpan="2">
-                <div class="css-grid-example-item">
+            <GridLayoutItem Column="1" Row="4" ColumnSpan="2">
+                <div class="logged-user-actions css-grid-example-item">
                     <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
                 </div>
             </GridLayoutItem>

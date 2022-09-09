@@ -1,0 +1,51 @@
+﻿@namespace CommonLib.Web.Source.Common.Pages.Account
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .logged-user-no-avatar-container {
+        width: 150px;
+        height: 150px;
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px white, 0 0 6px 2px blue;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .logged-user-no-avatar {
+        width: 100px;
+        height: 100px;
+        max-width: 100px;
+        max-height: 100px;
+        flex: 0 0 100px;
+    }
+
+    .logged-user-username {
+        font-size: @((FontSize * 1.5).Px());
+        line-height: @((LineHeight * 1.5).Px());
+    }
+
+    .logged-user-login-time {
+        font-style: italic;
+        color: darkgray;
+    }
+
+    .logged-user-roles {
+
+    }
+
+    .logged-user-claims {
+
+    }
+
+    .logged-user-actions {
+
+    }
+
+</style>

@@ -30,7 +30,7 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await (await InputModuleAsync).InvokeVoidAsync("blazor_Input_AfterRender", _jsTextInput);
+            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsTextInput);
         }
 
         protected override async Task OnParametersSetAsync() 

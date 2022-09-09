@@ -71,13 +71,13 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
         {
             _passwordInputDotNetRef = DotNetObjectReference.Create(this);
 
-            await (await InputModuleAsync).InvokeVoidAsync("blazor_Input_AfterRender", _jsPasswordInput).ConfigureAwait(false);
-            await (await ModuleAsync).InvokeVoidAsync("blazor_PasswordInput_AfterFirstRender", Text, _guid, _passwordInputDotNetRef).ConfigureAwait(false);
+            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsPasswordInput).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_PasswordInput_AfterFirstRender", Text, _guid, _passwordInputDotNetRef).ConfigureAwait(false);
         }
 
         protected override async Task OnAfterRenderAsync(bool _)
         {
-            await (await ModuleAsync).InvokeVoidAsync("blazor_PasswordInput_AfterRender", Text, _guid).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_PasswordInput_AfterRender", Text, _guid).ConfigureAwait(false);
         }
 
         [JSInvokable]

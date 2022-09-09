@@ -127,6 +127,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             {
                 Mapper.Map(AuthenticatedUser, _loginUserVM);
 
+                await TaskUtils.WaitUntil(() => _btnLogout is not null);
                 _btnLogout.State.ParameterValue = ButtonState.Enabled;
                 _btnDismiss.State.ParameterValue = ButtonState.Enabled;
                 BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
