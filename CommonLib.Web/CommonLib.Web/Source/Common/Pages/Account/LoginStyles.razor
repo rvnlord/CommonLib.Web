@@ -36,16 +36,35 @@
         color: darkgray;
     }
 
-    .logged-user-roles {
+    .logged-user-roles-container { 
+        display: flex; 
+    }
 
+    .logged-user-roles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: @Gutter.Px();
+    }
+
+    .logged-user-no-roles {
+        font-style: italic;
+        color: darkgray;
+    }
+
+    .logged-user-claims-container {
+        display: flex; 
     }
 
     .logged-user-claims {
-
+        display: flex;
+        flex-wrap: wrap;
+        gap: @Gutter.Px();
     }
 
-    .logged-user-actions {
-
+    .logged-user-no-claims {
+        font-style: italic;
+        color: darkgray;
     }
 
+    .logged-user-actions { }
 </style>

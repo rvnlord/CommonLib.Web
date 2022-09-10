@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.ViewModels.Account
 {
@@ -17,6 +18,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public bool HasPassword { get; set; }
         public bool RememberMe { get; set; }
         public Guid SessionId { get; set; } // TODO: anon id to differentiate between users in Singleton Cache Service, it needs to be done even if user is not authenticated
+        public ExtendedTime LoginTimestamp { get; set; }
 
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsInvariant(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsInvariant(claim));

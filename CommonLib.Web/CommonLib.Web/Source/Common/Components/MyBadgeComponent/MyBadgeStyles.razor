@@ -1,0 +1,45 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyBadgeComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .my-badge {
+        display: inline-block;
+        height: @LineHeight.Px();
+        border-radius: 3px;
+        font-size: 14px;
+        line-height: 21px;
+        padding: 1.5px 5px;
+        box-sizing: border-box;
+    }
+    
+    .my-badge.primary {
+        color: white;
+        background: linear-gradient(150deg, rgba(0, 0, 128, 0.95) 0, rgba(8, 8, 32, 0.95) 90%);
+    }
+    
+    .my-badge.success {
+        color: white;
+        background: linear-gradient(150deg, rgba(0, 128, 0, 0.95) 0, rgba(8, 34, 8, 0.95) 90%);
+    }
+
+    .my-badge.error {
+        color: white;
+        background: linear-gradient(150deg, rgba(255, 0, 0, 0.95) 0, rgba(128, 8, 8, 0.95) 99%);
+    }
+
+    .my-badge.warning {
+        color: white;
+        background: linear-gradient(150deg, rgba(170, 170, 0, 0.95) 0, rgba(85, 85, 8, 0.95) 90%);
+    }
+
+    .my-badge.info {
+        color: white;
+        background: linear-gradient(150deg, rgba(2, 124, 128, 0.95) 0, rgba(8, 31, 32, 0.95) 90%);
+    }
+
+</style>
+

@@ -38,12 +38,14 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyButtonBase _btnRegister;
         protected MyButtonBase _btnResetPassword;
         protected MyButtonBase _btnDismiss;
+        protected MyButtonBase _btnEdit;
         protected OrderedDictionary<string, MyButtonBase> _btnExternalLogins;
         protected MyCheckBoxBase _cbRememberMe;
         protected MyTextInputBase _txtUserName;
         protected MyPasswordInputBase _txtPassword;
         protected LoginUserVM _loginUserVM;
         protected BlazorParameter<ButtonState?> _btnLogoutState;
+        protected BlazorParameter<ButtonState?> _btnEditState;
        
         public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
 
@@ -77,7 +79,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected override async Task OnParametersSetAsync()
         {
             if (FirstParamSetup)
+            {
                 _btnLogoutState = ButtonState.Disabled;
+                _btnEditState = ButtonState.Disabled;
+            }
 
             await Task.CompletedTask;
         }
@@ -130,6 +135,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await TaskUtils.WaitUntil(() => _btnLogout is not null);
                 _btnLogout.State.ParameterValue = ButtonState.Enabled;
                 _btnDismiss.State.ParameterValue = ButtonState.Enabled;
+                _btnEdit.State.ParameterValue = ButtonState.Enabled;
                 BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
                 await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true); 
                 await StateHasChangedAsync();
@@ -162,6 +168,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await TaskUtils.WaitUntil(() => _btnLogout is not null);
             _btnLogout.State.ParameterValue = ButtonState.Enabled; // using `_btnLogout.State.ParameterValue = ButtonState.Enabled;` if value is set on render would mean that after render it would always revert to "hard coded" disabled value so I have to use variable
             _btnDismiss.State.ParameterValue = ButtonState.Enabled;
+            _btnEdit.State.ParameterValue = ButtonState.Enabled;
             BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
             await BtnCloseModal.NotifyParametersChangedAsync().StateHasChangedAsync(true);
             await StateHasChangedAsync(true);
@@ -188,6 +195,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await StateHasChangedAsync();
 
             _btnLogout.State.ParameterValue = ButtonState.Enabled;
+            _btnEdit.State.ParameterValue = ButtonState.Enabled;
             _btnLogin.State.ParameterValue = ButtonState.Disabled;
             _btnDismiss.State.ParameterValue = ButtonState.Enabled;
             BtnCloseModal.State.ParameterValue = ButtonState.Enabled;
@@ -216,7 +224,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (btnLoading != null)
                 btnLoading.State.ParameterValue = ButtonState.Loading;
 
-            var otherButtons = new[] { _btnLogin, _btnLogout, _btnRegister, _btnDismiss, _btnResetPassword, BtnCloseModal }.Concat(_btnExternalLogins.Values).Except(btnLoading).ToArray();
+            var otherButtons = new[] { _btnLogin, _btnLogout, _btnEdit, _btnRegister, _btnDismiss, _btnResetPassword, BtnCloseModal }.Concat(_btnExternalLogins.Values).Except(btnLoading).ToArray();
             foreach (var btn in otherButtons)
                 if (btn != null)
                     btn.State.ParameterValue = otherControlsState;
@@ -257,5 +265,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         }
 
         protected async Task BtnResetPassword_ClickAsync(MouseEventArgs e) => await OnResetPasswordClick.InvokeAsync(e).ConfigureAwait(false);
+
+        protected async Task BtnEdit_ClickAsync()
+        {
+
+        }
     }
 }

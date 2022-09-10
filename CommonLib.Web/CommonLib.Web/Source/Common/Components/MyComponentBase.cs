@@ -49,7 +49,7 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
         private readonly SemaphoreSlim _syncRender = new(1, 1);
         private static readonly SemaphoreSlim _syncSessionId = new(1, 1);
-        private bool _changingState;
+        //private bool _changingState;
         private MyComponentBase _layout;
         private DateTime _creationTime;
         private MyPromptBase _prompt;
@@ -356,12 +356,17 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void RemoveClasses(string cls, params string[] classes)
         {
+            RemoveClasses(classes.Prepend(cls).ToArray());
+        }
+
+        protected void RemoveClasses(string[] classes)
+        {
             if (IsDisposed)
                 return;
 
             _syncClasses.Wait();
 
-            _classes.RemoveAll(s => s.In(classes.Prepend(cls)));
+            _classes.RemoveAll(s => s.In(classes));
             _renderClasses = _classes.JoinAsString(" ");
 
             _syncClasses.Release();

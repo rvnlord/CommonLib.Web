@@ -2,6 +2,8 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Extensions.Collections
+@using CommonLib.Web.Source.Common.Components.MyBadgeComponent
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @inherits LoginBase
@@ -113,8 +115,8 @@ else
             <GridLayoutRow></GridLayoutRow>
         </GridLayoutRows>
         <GridLayoutItems>
-            <GridLayoutItem Column="1" Row="1" RowSpan="3">
-                <div class="css-grid-example-item">
+            <GridLayoutItem Column="1" Row="1">
+                <div>
                     <div class="logged-user-no-avatar-container">
                         <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
                     </div>
@@ -130,32 +132,75 @@ else
                     </GridLayoutRows>
                     <GridLayoutItems>
                         <GridLayoutItem Column="1" Row="1">
-                            <div class="css-grid-example-item">
+                            <div>
                                 <div class="logged-user-username">
                                     @AuthenticatedUser.UserName
                                 </div>
                                 <div class="logged-user-login-time">
-                                    login time
+                                    last login: @AuthenticatedUser.LoginTimestamp.ToLocal().ToTimeDateString()
                                 </div>
                             </div>
                         </GridLayoutItem>
+                        @{
+                            //var testItems = Enumerable.Range(1, 10).Select(i => "TestItem" + i).ToArray();
+                            var roles = AuthenticatedUser.Roles.Select(r => r.Name).ToArray();
+                            var claims = AuthenticatedUser.Claims.Select(r => r.Name).ToArray();
+                        }
                         <GridLayoutItem Column="1" Row="2">
-                            <div class="logged-user-roles css-grid-example-item">
-                                roles
+                            <div class="logged-user-roles-container">
+                                @if (!roles.Any()) 
+                                {
+                                    <div class="logged-user-no-roles">(no roles assigned)</div>
+                                }
+                                else
+                                {
+                                    <div class="logged-user-roles">
+                                        @foreach (var role in roles)
+                                        {
+                                            <MyBadge Badge="@BadgeKind.Primary">@role</MyBadge>
+                                        }
+                                    </div>
+                                }
                             </div>
                         </GridLayoutItem>
                         <GridLayoutItem Column="1" Row="3">
-                            <div class="logged-user-claims css-grid-example-item">
-                                claims
+                            <div class="logged-user-claims-container">
+                                @if (!claims.Any()) 
+                                {
+                                    <div class="logged-user-no-claims">(no claims assigned)</div>
+                                }
+                                else
+                                {
+                                    <div class="logged-user-claims">
+                                        @foreach (var claim in claims)
+                                        {
+                                            <MyBadge Badge="@BadgeKind.Info">@claim</MyBadge>
+                                        }
+                                    </div>
+                                }                            
                             </div>
                         </GridLayoutItem>
                     </GridLayoutItems>
                 </TelerikGridLayout>
             </GridLayoutItem>
-            <GridLayoutItem Column="1" Row="4" ColumnSpan="2">
-                <div class="logged-user-actions css-grid-example-item">
-                    <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
-                </div>
+            <GridLayoutItem Column="1" Row="2" ColumnSpan="2">
+                <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" HorizontalAlign="GridLayoutHorizontalAlign.Left" Class="logged-user-actions ">
+                    <GridLayoutColumns>
+                        <GridLayoutColumn Width="max-content"></GridLayoutColumn>
+                        <GridLayoutColumn Width="max-content"></GridLayoutColumn>
+                    </GridLayoutColumns>
+                    <GridLayoutRows>
+                        <GridLayoutRow></GridLayoutRow>
+                    </GridLayoutRows>
+                    <GridLayoutItems>
+                        <GridLayoutItem Column="1" Row="1">  
+                            <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
+                        </GridLayoutItem>
+                        <GridLayoutItem Column="2" Row="1">  
+                            <MyButton Value="@("Edit".ToBp())" State="_btnEditState" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" OnClick="BtnEdit_ClickAsync" @ref="_btnEdit"></MyButton>
+                        </GridLayoutItem>
+                    </GridLayoutItems>
+                </TelerikGridLayout>
             </GridLayoutItem>
         </GridLayoutItems>
     </TelerikGridLayout>

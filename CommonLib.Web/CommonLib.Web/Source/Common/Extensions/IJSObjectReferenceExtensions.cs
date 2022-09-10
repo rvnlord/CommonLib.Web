@@ -65,7 +65,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             }
         }
         
-        public static ValueTask InvokeVoidAndCatchCancellationAsync(this IJSObjectReference jsObjectReference, string identifier, TimeSpan timeout, params object?[]? args)
+        public static ValueTask InvokeVoidAndCatchCancellationAsync(this IJSObjectReference jsObjectReference, string identifier, TimeSpan timeout, params object[] args)
         {
             try
             {

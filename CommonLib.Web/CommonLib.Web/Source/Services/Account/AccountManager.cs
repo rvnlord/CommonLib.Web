@@ -154,6 +154,7 @@ namespace CommonLib.Web.Source.Services.Account
             userToAuthenticate.RememberMe = rememberMe;
             userToAuthenticate.HasPassword = user.PasswordHash != null;
             userToAuthenticate.IsAuthenticated = true;
+            userToAuthenticate.LoginTimestamp = timeStamp.ToExtendedTime();
             userToAuthenticate.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
             userToAuthenticate.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
             return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status200OK, "Getting Authenticated User was Successful", null, userToAuthenticate);
