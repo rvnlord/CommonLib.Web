@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
 using CommonLib.Web.Source.Common.Extensions;
+using Z.Expressions;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -191,5 +192,37 @@ namespace CommonLib.Web.Source.Services.Account
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<bool>>($"Api/Account/{nameof(CheckUserPasswordAsync).Before("Async")}", userToCheckPassword);
         }
+
+        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyid", id);
+        }
+
+        public async Task<ApiResponse<EditUserVM>> EditAsync(EditUserVM editUser)
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>("api/account/edit", new
+            {
+                AuthenticatedUser = authUser, 
+                UserToEdit = editUser
+            });
+
+            if (editResp.IsError)
+                return editResp;
+
+            if (authUser?.RememberMe == true)
+            {
+                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket, new { expires = 365 * 24 * 60 * 60 });
+                await _localStorage.SetItemAsync("Ticket",  editResp.Result.Ticket);
+            }
+            else
+            {
+                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket);
+                await _localStorage.RemoveItemAsync("Ticket");
+            }
+
+            return editResp;
+        }
+
     }
 }

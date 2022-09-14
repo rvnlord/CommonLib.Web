@@ -87,8 +87,8 @@ namespace CommonLib.Web.Source.Controllers
         //[HttpPost("verifyuserpassword")] // POST: api/account/verifyuserpassword
         //public JToken VerifyUserPassword(JToken jUserIdAndPassword) => (ModelState.IsValid ? _accountManager.VerifyUserPassword(jUserIdAndPassword["userId"].To<Guid>(), jUserIdAndPassword["password"]?.ToString()) : _defaultInvalidResponse).ToJToken();
 
-        //[HttpPost("edit")] // POST: api/account/edit
-        //public async Task<JToken> EditAsync(JToken JAuthUserAndEditUser) => (ModelState.IsValid ? await _accountManager.EditAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()) : _defaultInvalidResponse).ToJToken();
+        [HttpPost("edit")] // POST: api/account/edit
+        public async Task<JToken> EditAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.EditAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
 
         [HttpPost("logout")] // POST: api/account/logout
         public async Task<JToken> LogoutAsync(JToken JAuthUser) => await EnsureResponseAsync(async () => await _accountManager.LogoutAsync(JAuthUser.To<AuthenticateUserVM>()));
@@ -98,6 +98,9 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost("checkuserpassword")] // POST: api/account/checkuserpassword
         public async Task<JToken> CheckUserPasswordAsync(JToken jCheckPasswordUser) => await EnsureResponseAsync(async () => await _accountManager.CheckUserPasswordAsync(jCheckPasswordUser.To<CheckPasswordUserVM>()));
+
+        [HttpPost("finduserbyid")] // POST: api/account/finduserbyid
+        public async Task<JToken> FindUserByIdAsync(JToken jId) => await EnsureResponseAsync(async () => await _accountManager.FindUserByIdAsync(Guid.Parse(jId is JValue ? jId.ToString() : jId["id"]?.ToString() ?? "")));
 
     }
 }

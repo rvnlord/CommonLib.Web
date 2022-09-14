@@ -19,6 +19,7 @@ using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
+using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -58,8 +59,14 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         [Parameter] 
         public EventCallback<MouseEventArgs> OnResetPasswordClick { get; set; }
         
+        [Parameter] 
+        public EventCallback<MouseEventArgs> OnEditClick { get; set; }
+        
         [Inject]
         public IMapper Mapper { get; set; }
+        
+        [Inject]
+        public IJQueryService JQuery { get; set; }
         
         protected override async Task OnInitializedAsync()
         {
@@ -266,9 +273,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task BtnResetPassword_ClickAsync(MouseEventArgs e) => await OnResetPasswordClick.InvokeAsync(e).ConfigureAwait(false);
 
-        protected async Task BtnEdit_ClickAsync()
-        {
-
-        }
+        protected async Task BtnEdit_ClickAsync(MouseEventArgs e) => await OnEditClick.InvokeAsync(e).ConfigureAwait(false);
     }
 }

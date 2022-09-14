@@ -9,6 +9,7 @@ using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RestSharp;
@@ -55,6 +56,8 @@ namespace CommonLib.Web.Source.Services
 
         public async Task<IJSObjectReference> ImportModuleAsync(string modulePath)
         {
+            if (modulePath == null)
+                return null;
             return await _jsRuntime.ImportModuleAndRetryIfCancelledAsync(modulePath);
         }
 
@@ -81,6 +84,7 @@ namespace CommonLib.Web.Source.Services
             const string js = ".js";
             //const string wwwroot = "wwwroot";
             const string pagePrefix = "./js/";
+            const string componentPrefix = "./js/_components/";
             var virtualPrefix = nav.BaseUri;
             var componentOrPageNormalized = NormalizeComponentOrPageName(componentOrPageName);
 
@@ -89,23 +93,32 @@ namespace CommonLib.Web.Source.Services
 
             //var pageProjectDir = WebUtils.GetAbsolutePhysicalPath();
             //var componentProjectDir = FileUtils.GetProjectDir<MyComponentBase>();
-            var componentProjName = "CommonLib.Web"; //componentProjectDir.AfterLast(@"\");
-            var componentPrefix = $"./_content/{componentProjName}/js/_components/";
+            var commonProjName = "CommonLib.Web"; //componentProjectDir.AfterLast(@"\");
+            var commonComponentPrefix = $"./_content/{commonProjName}/js/_components/";
+            var commonPagePrefix = $"./_content/{commonProjName}/js/_pages/";
             //var physicalComponentPath = PathUtils.Combine(PathSeparator.BSlash, componentProjectDir, wwwroot, componentPrefix.After("./_content/CommonLib.Web/"), componentOrPageNormalized, js);
             //var physicalPagePath = PathUtils.Combine(PathSeparator.BSlash, pageProjectDir, wwwroot, pagePrefix, componentOrPageNormalized, js);
             
-            var virtualComponentPath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, componentPrefix, componentOrPageNormalized, js);
-            var virtualPagePath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, pagePrefix, componentOrPageNormalized, js);
-
+            var virtualCommonComponentPath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, commonComponentPrefix, componentOrPageNormalized, js);
+            var virtualCommonPagePath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, commonPagePrefix, componentOrPageNormalized, js);
+            var virtualLocalComponentPath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, componentPrefix, componentOrPageNormalized, js);
+            var virtualLocalPagePath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, pagePrefix, componentOrPageNormalized, js);
+            
             if (http.GetField<bool>("_disposed"))
                 http = new HttpClient { BaseAddress = http.BaseAddress };
 
-            if ((await http.GetAsync(virtualComponentPath)).IsSuccessStatusCode)
-                return virtualComponentPath;
-            if ((await http.GetAsync(virtualPagePath)).IsSuccessStatusCode)
-                return virtualPagePath;
+            if ((await http.GetAsync(virtualCommonComponentPath)).IsSuccessStatusCode)
+                return virtualCommonComponentPath;
+            if ((await http.GetAsync(virtualCommonPagePath)).IsSuccessStatusCode)
+                return virtualCommonPagePath;
+            if ((await http.GetAsync(virtualLocalComponentPath)).IsSuccessStatusCode)
+                return virtualLocalComponentPath;
+            if ((await http.GetAsync(virtualLocalPagePath)).IsSuccessStatusCode)
+                return virtualLocalPagePath;
 
-            throw new Exception("There is no file with this path");
+            Logger.For<MyJsRuntime>().Warn($"There is no \"{componentOrPageNormalized}\" page or component");
+
+            return null;
         }
     }
 }

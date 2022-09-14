@@ -23,11 +23,11 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<User, ResetPasswordUserVM>();
             CreateMap<ResetPasswordUserVM, ResetPasswordUserVM>();
             CreateMap<User, ResendConfirmationEmailUserVM>();
-            //CreateMap<EditUserVM, ResendConfirmationEmailUserVM>();
-            //CreateMap<User, EditUserVM>();
-            //CreateMap<EditUserVM, User>();
-            //CreateMap<AuthenticateUserVM, EditUserVM>();
-            //CreateMap<EditUserVM, EditUserVM>(); // if this is not set the mapping for same objects will work but will not update the existing dest object only create a new one
+            CreateMap<EditUserVM, ResendConfirmationEmailUserVM>();
+            CreateMap<User, EditUserVM>();
+            CreateMap<EditUserVM, User>();
+            CreateMap<AuthenticateUserVM, EditUserVM>();
+            CreateMap<EditUserVM, EditUserVM>(); // if this is not set the mapping for same objects will work but will not update the existing dest object only create a new one
             //CreateMap<User, AdminEditUserVM>()
             //    .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
             //CreateMap<AdminEditUserVM, User>()

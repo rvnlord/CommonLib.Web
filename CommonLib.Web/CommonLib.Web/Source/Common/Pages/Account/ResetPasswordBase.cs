@@ -32,7 +32,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         protected ResetPasswordUserVM _resetPasswordUserVM { get; set; }
-
         protected MyButtonBase _btnResetPassword { get; set; }
         protected MyTextInputBase _txtEmail { get; set; }
         protected MyTextInputBase _txtResetPasswordCode { get; set; }

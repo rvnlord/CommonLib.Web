@@ -20,6 +20,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -700,6 +701,8 @@ namespace CommonLib.Web.Source.Common.Components
             return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
         }
 
+        public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
+
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)
@@ -739,6 +742,8 @@ namespace CommonLib.Web.Source.Common.Components
 
                 HttpClient?.Dispose();
             }
+
+            await Task.CompletedTask;
         }
 
         public async ValueTask DisposeAsync()

@@ -43,7 +43,7 @@ namespace CommonLib.Web.Source.Services.Account
             IMapper autoMapper,
             IHttpContextAccessor http,
             IPasswordHasher<User> passwordHasher,
-            RoleManager<IdentityRole<Guid>> roleManager, 
+            RoleManager<IdentityRole<Guid>> roleManager,
             CustomPasswordResetTokenProvider<User> passwordResetTokenProvider)
         {
             _userManager = userManager;
@@ -414,7 +414,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             _mapper.Map(user, userToExternalLogin);
             userToExternalLogin.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, userToExternalLogin.RememberMe);
-            
+
             return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToExternalLogin.ExternalProvider}\" as: \"{userToExternalLogin.UserName}\"", null, userToExternalLogin);
         }
 
@@ -494,5 +494,69 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
             return await Task.FromResult(new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is correct", null, true));
         }
+
+        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
+        {
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Id", null);
+
+            var foundUser = _mapper.Map(user, new FindUserVM());
+            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
+            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
+
+            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Id has been Successful", null, foundUser);
+        }
+
+        public async Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
+        {
+            if (authUser == null || !authUser.IsAuthenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
+            if (userToEdit.Id == default)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Id wasn't supplied", new[] { new KeyValuePair<string, string>("Id", "Id is empty") }.ToLookup());
+
+            userToEdit.Id = authUser.Id; // to fix the case when malicious user edited the Id manually
+            var user = await _userManager.FindByIdAsync(userToEdit.Id.ToString());
+            if (userToEdit.Id == default)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no User with the supplied Id") }.ToLookup());
+
+            var isConfirmationRequired = !userToEdit.Email.EqualsInvariant(user.Email) && _userManager.Options.SignIn.RequireConfirmedEmail;
+            user.Email = userToEdit.Email.IsNullOrWhiteSpace() ? user.Email : userToEdit.Email;
+            user.UserName = userToEdit.UserName.IsNullOrWhiteSpace() ? user.UserName : userToEdit.UserName;
+            await _userManager.UpdateAsync(user);
+
+            if (!userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.NewPassword.EqualsInvariant(userToEdit.OldPassword))
+            {
+                if (user.PasswordHash != null && _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.OldPassword) != PasswordVerificationResult.Success) // user should be allowed to change password if he didn't set one at all (was logging in exclusively with an external provider) or if he provided correct Old Password to his Account
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Old Password is not Correct", new[] { new KeyValuePair<string, string>("OldPassword", "Incorrect Password") }.ToLookup());
+
+                var errors = new List<IdentityError>();
+                foreach (var v in _userManager.PasswordValidators)
+                    errors.AddRange((await v.ValidateAsync(_userManager, user, userToEdit.NewPassword)).Errors);
+                if (errors.Any())
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "New Password is Invalid", errors.ToLookup(userToEdit.GetPropertyNames().Append("Password")).RenameKey("Password", nameof(userToEdit.NewPassword)));
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, userToEdit.NewPassword); // use db directly to override identity validation because we want to be able to provide password for a null hash if user didn't set password before
+                userToEdit.Ticket = await GenerateLoginTicketAsync(userToEdit.Id, user.PasswordHash, authUser.RememberMe);
+                await _db.SaveChangesAsync();
+            }
+
+            if (isConfirmationRequired)
+            {
+                user.EmailConfirmed = false;
+                await _db.SaveChangesAsync();
+                var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
+                if (resendConfirmationResult.IsError)
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
+
+                userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
+                await _signInManager.SignOutAsync();
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\", since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
+            }
+
+            await _signInManager.SignInAsync(user, true);
+            return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\"", null, userToEdit);
+        }
+
     }
 }

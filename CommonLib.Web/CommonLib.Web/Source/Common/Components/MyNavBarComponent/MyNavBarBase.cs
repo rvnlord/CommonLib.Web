@@ -30,7 +30,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         protected DotNetObjectReference<MyNavBarBase> _navBarDotNetRef { get; set; }
         //protected Task<IJSObjectReference> _modalModuleAsync;
         
-        public ConcurrentBag<Models.Interfaces.IAnimeJs> NavBarAnims { get; } = new ConcurrentBag<Models.Interfaces.IAnimeJs>();
+        public ConcurrentBag<IAnimeJs> NavBarAnims { get; } = new ConcurrentBag<Models.Interfaces.IAnimeJs>();
         public SemaphoreSlim SyncNavBarAnimsCreation { get; } = new SemaphoreSlim(1, 1);
         public bool RunPureJavascriptVersion => true;
         //public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
@@ -155,6 +155,18 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             var qs = new Dictionary<string, string> { ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58() }.ToQueryString();
             var forgotPasswordUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/ForgotPassword?{qs}");
             NavigationManager.NavigateTo(forgotPasswordUrl);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+
+            var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
+            if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
+                await jqContentContainer.RemoveClassAsync("disable-css-transition");
+        }
+        
+        protected async Task BtnEdit_ClickAsync()
+        {
+            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
+            NavigationManager.NavigateTo(registerUrl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");

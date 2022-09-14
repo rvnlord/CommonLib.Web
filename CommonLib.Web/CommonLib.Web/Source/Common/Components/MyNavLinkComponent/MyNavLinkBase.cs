@@ -149,6 +149,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             navLink.NavigationManager.NavigateTo(navLink._absoluteVirtualLink);
 
             //await cacheScope.DisposeScopeAsync();
+
+            await Task.CompletedTask;
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)

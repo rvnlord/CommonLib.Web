@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         public string SyncPaddingGroup { get; set; }
 
         [Parameter]
-        public BlazorParameter<InputState> State { get; set; }
+        public BlazorParameter<InputState?> State { get; set; }
 
         protected async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
         {

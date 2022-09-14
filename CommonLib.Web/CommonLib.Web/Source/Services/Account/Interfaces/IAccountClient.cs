@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -24,5 +25,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<ResetPasswordUserVM>> ResetPasswordAsync(ResetPasswordUserVM resetPasswordUserVM);
         Task<ApiResponse<bool>> CheckUserResetPasswordCodeAsync(CheckResetPasswordCodeUserVM userToCheckResetPasswordCode);
         Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword);
+        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id);
+        Task<ApiResponse<EditUserVM>> EditAsync(EditUserVM user);
     }
 }
