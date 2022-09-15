@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
+using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
@@ -31,6 +32,8 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
 
         public List<MyButtonBase> InputGroupButtons { get; set; }
+
+        public List<MyIconBase> InputGroupIcons { get; set; }
 
         public string Text { get; protected set; }
 

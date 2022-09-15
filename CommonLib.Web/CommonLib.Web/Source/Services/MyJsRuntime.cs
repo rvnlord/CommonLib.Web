@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Utils;
@@ -22,6 +23,11 @@ namespace CommonLib.Web.Source.Services
         private readonly IJSRuntime _jsRuntime;
         private HttpClient _httpClient;
         private NavigationManager _navigationManager;
+        private static string _commonWwwRootDir;
+        private static string _currentWwwRootDir;
+
+        public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyJsRuntime>();
+        public static string CurrentWwwRootDir => _currentWwwRootDir ??= FileUtils.GetCurrentProjectAspNetWwwRootDir();
 
         public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager)
         {
@@ -81,43 +87,52 @@ namespace CommonLib.Web.Source.Services
 
         private static async Task<string> GetModulePathAsync(string componentOrPageName, NavigationManager nav, HttpClient http)
         {
+            var componentOrPageNormalized = NormalizeComponentOrPageName(componentOrPageName);
             const string js = ".js";
-            //const string wwwroot = "wwwroot";
             const string pagePrefix = "./js/";
             const string componentPrefix = "./js/_components/";
-            var virtualPrefix = nav.BaseUri;
-            var componentOrPageNormalized = NormalizeComponentOrPageName(componentOrPageName);
-
-            // !!! AppDomain.CurrentDomain.GetAssemblies() but from my project and check http if exists !!!
-            // not working, problem with DevServer package - Children could not evaluated in Blazor Web Assembly. #66401 
-
-            //var pageProjectDir = WebUtils.GetAbsolutePhysicalPath();
-            //var componentProjectDir = FileUtils.GetProjectDir<MyComponentBase>();
             var commonProjName = "CommonLib.Web"; //componentProjectDir.AfterLast(@"\");
             var commonComponentPrefix = $"./_content/{commonProjName}/js/_components/";
             var commonPagePrefix = $"./_content/{commonProjName}/js/_pages/";
-            //var physicalComponentPath = PathUtils.Combine(PathSeparator.BSlash, componentProjectDir, wwwroot, componentPrefix.After("./_content/CommonLib.Web/"), componentOrPageNormalized, js);
-            //var physicalPagePath = PathUtils.Combine(PathSeparator.BSlash, pageProjectDir, wwwroot, pagePrefix, componentOrPageNormalized, js);
-            
+
+            var virtualPrefix = nav.BaseUri;
             var virtualCommonComponentPath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, commonComponentPrefix, componentOrPageNormalized, js);
             var virtualCommonPagePath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, commonPagePrefix, componentOrPageNormalized, js);
             var virtualLocalComponentPath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, componentPrefix, componentOrPageNormalized, js);
             var virtualLocalPagePath = PathUtils.Combine(PathSeparator.FSlash, virtualPrefix, pagePrefix, componentOrPageNormalized, js);
             
-            if (http.GetField<bool>("_disposed"))
-                http = new HttpClient { BaseAddress = http.BaseAddress };
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
+            {
+                if (http.GetField<bool>("_disposed"))
+                    http = new HttpClient { BaseAddress = http.BaseAddress };
 
-            if ((await http.GetAsync(virtualCommonComponentPath)).IsSuccessStatusCode)
-                return virtualCommonComponentPath;
-            if ((await http.GetAsync(virtualCommonPagePath)).IsSuccessStatusCode)
-                return virtualCommonPagePath;
-            if ((await http.GetAsync(virtualLocalComponentPath)).IsSuccessStatusCode)
-                return virtualLocalComponentPath;
-            if ((await http.GetAsync(virtualLocalPagePath)).IsSuccessStatusCode)
-                return virtualLocalPagePath;
+                if ((await http.GetAsync(virtualCommonComponentPath)).IsSuccessStatusCode)
+                    return virtualCommonComponentPath;
+                if ((await http.GetAsync(virtualCommonPagePath)).IsSuccessStatusCode)
+                    return virtualCommonPagePath;
+                if ((await http.GetAsync(virtualLocalComponentPath)).IsSuccessStatusCode)
+                    return virtualLocalComponentPath;
+                if ((await http.GetAsync(virtualLocalPagePath)).IsSuccessStatusCode)
+                    return virtualLocalPagePath;
+            }
+            else
+            {
+                var physicalCommonComponentPath = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, componentPrefix, componentOrPageNormalized, js);
+                var physicalCommonPagePath = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, pagePrefix, componentOrPageNormalized, js);
+                var physicalLocalComponentPath = PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, componentPrefix, componentOrPageNormalized, js);
+                var physicalLocalPagePath = PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, pagePrefix, componentOrPageNormalized, js);
 
+                if (File.Exists(physicalCommonComponentPath))
+                    return virtualCommonComponentPath;
+                if (File.Exists(physicalCommonPagePath))
+                    return virtualCommonPagePath;
+                if (File.Exists(physicalLocalComponentPath))
+                    return virtualLocalComponentPath;
+                if (File.Exists(physicalLocalPagePath))
+                    return virtualLocalPagePath;
+            }
+            
             Logger.For<MyJsRuntime>().Warn($"There is no \"{componentOrPageNormalized}\" page or component");
-
             return null;
         }
     }

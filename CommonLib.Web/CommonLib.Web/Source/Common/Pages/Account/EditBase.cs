@@ -69,9 +69,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 _bpPwdNewPasswordState = InputState.Disabled;
                 _bpPwdConfirmNewPasswordState = InputState.Disabled;
             }
-
-            // TODO: find a way to disable parts of inputs (icons, buttons) before render
-
+            
             await Task.CompletedTask;
         }
         
@@ -130,16 +128,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (dontChangeComponents != null)
                 controlsWithState = controlsWithState.Except(dontChangeComponents);
 
+            var notifyParamsChangedTasks = new List<Task>();
+            var changeStateTasks = new List<Task>();
             foreach (var control in controlsWithState)
             {
                 var propType = control.GetProperty("State").GetProperty("ParameterValue").GetType();
                 var enumValues = Enum.GetValues(propType).IColToArray();
                 var val = enumValues.Single(v => StringExtensions.EndsWithInvariant(EnumConverter.EnumToString(v.CastToReflected(propType)), state.EnumToString()));
                 control.GetProperty("State").SetPropertyValue("ParameterValue", val);
-                await (Task<MyComponentBase>) (control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, Array.Empty<object>()) ?? throw new NullReferenceException());
-                await (Task<MyComponentBase>) (control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException());
+                changeStateTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+                notifyParamsChangedTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
             }
-            
+
+            await Task.WhenAll(notifyParamsChangedTasks);
+            await Task.WhenAll(changeStateTasks);
             await NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
     }

@@ -226,8 +226,10 @@ namespace CommonLib.Web.Source.Common.Extensions
         public static IRuleBuilderOptions<T, string> IsExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
         {
             ApiResponse<bool> checkPasswordResp = null;
-            return rb.MustAsync(async (model, value, _, _) =>
+            ValidationContext<T> validationContext = null;
+            return rb.MustAsync(async (model, value, vc, _) =>
             {
+                validationContext = vc;
                 checkPasswordResp = await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
                 {
                     UserName = model.GetProperty<string>("UserName"),
@@ -236,7 +238,7 @@ namespace CommonLib.Web.Source.Common.Extensions
                 return !checkPasswordResp.IsError && checkPasswordResp.Result;
             }).WithMessage((_, _) => checkPasswordResp.IsError 
                 ? checkPasswordResp.Message 
-                : "Your new password can't be the same as your old password");
+                : $"{validationContext.DisplayName} is Incorrect");
         }
     }
 }

@@ -5,6 +5,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -23,6 +24,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
         {
             _bpPasswordInput ??= new BlazorParameter<MyInputBase>(this);
             InputGroupButtons ??= new List<MyButtonBase>();
+            InputGroupIcons ??= new List<MyIconBase>();
             await Task.CompletedTask;
         }
 
@@ -60,11 +62,27 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
 
             CascadedEditContext?.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
+            var notifyParamsChangedTasks = new List<Task>();
+            var changeStateTasks = new List<Task>();
             foreach (var inputGroupButton in InputGroupButtons)
             {
-                await inputGroupButton.NotifyParametersChangedAsync();
-                await inputGroupButton.StateHasChangedAsync(true);
+                if (!inputGroupButton.CascadingInput.HasValue())
+                    inputGroupButton.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+                notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
+                changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
+                Logger.For<MyPasswordInputBase>().Info($"OnParametersSetAsync(): State = {State.ParameterValue}, notified {inputGroupButton.Icon.ParameterValue} about params change");
             }
+
+            foreach (var inputGroupIcon in InputGroupIcons)
+            {
+                if (!inputGroupIcon.CascadingInput.HasValue())
+                    inputGroupIcon.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+                notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
+                changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
+            }
+
+            await Task.WhenAll(notifyParamsChangedTasks);
+            await Task.WhenAll(changeStateTasks);
         }
 
         protected override async Task OnAfterFirstRenderAsync()

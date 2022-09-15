@@ -60,6 +60,8 @@ namespace CommonLib.Web.Source.Common.Utils
             return ServiceProvider.GetInstance(serviceType);
         }
 
+        public static object GetService(string serviceTypeName) => GetService(Type.GetType(serviceTypeName));
+
         public static (T, Scope) GetScopedService<T>() where T : class
         {
             var (service, scope) = GetScopedService(typeof(T));

@@ -8,9 +8,11 @@ using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 {
@@ -25,6 +27,7 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
         {
             _bpTextInput ??= new BlazorParameter<MyInputBase>(this);
             InputGroupButtons ??= new List<MyButtonBase>();
+            InputGroupIcons ??= new List<MyIconBase>();
             await Task.CompletedTask.ConfigureAwait(false);
         }
 
@@ -67,11 +70,26 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
+            var notifyParamsChangedTasks = new List<Task>();
+            var changeStateTasks = new List<Task>();
             foreach (var inputGroupButton in InputGroupButtons)
             {
-                await inputGroupButton.NotifyParametersChangedAsync();
-                await inputGroupButton.StateHasChangedAsync(true);
+                if (!inputGroupButton.CascadingInput.HasValue())
+                    inputGroupButton.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+                notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
+                changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
             }
+
+            foreach (var inputGroupIcon in InputGroupIcons)
+            {
+                if (!inputGroupIcon.CascadingInput.HasValue())
+                    inputGroupIcon.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+                notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
+                changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
+            }
+
+            await Task.WhenAll(notifyParamsChangedTasks);
+            await Task.WhenAll(changeStateTasks);
         }
         
         protected void InputText_Input(ChangeEventArgs e)

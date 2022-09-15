@@ -10,6 +10,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         [DisplayName("User Name")]
         public string UserName { get; set; }
         public string Email { get; set; }
+        [DisplayName("Old Password")]
         public string OldPassword { get; set; }
         public bool HasPassword { get; set; }
         [DisplayName("New Password")]

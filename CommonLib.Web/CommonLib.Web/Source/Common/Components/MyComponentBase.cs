@@ -170,9 +170,9 @@ namespace CommonLib.Web.Source.Common.Components
             try
             {
                 await InitializeAsync();
-                await SetParametersAsync();
+                await SetParametersAsync(true);
                 
-                await StateHasChangedAsync();
+                await StateHasChangedAsync(true);
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)
             {
@@ -219,12 +219,13 @@ namespace CommonLib.Web.Source.Common.Components
         protected virtual void OnInitialized() { }
         protected virtual async Task OnInitializedAsync() => await Task.CompletedTask;
 
-        private async Task SetParametersAsync()
+        private async Task SetParametersAsync(bool forceSetCascadingParamsAsChangedOnFirstSetup)
         {
             // Set Parameters
             if (_firstParamSetup)
             {
-                SetCascadingBlazorParametersAsChanged();
+                if (forceSetCascadingParamsAsChangedOnFirstSetup)
+                    SetCascadingBlazorParametersAsChanged();
                 await OnFirstParametersSetAsync();
             }
                 
@@ -563,9 +564,9 @@ namespace CommonLib.Web.Source.Common.Components
         private event MyAsyncEventHandler<MyComponentBase, EventArgs> OnStateChangedAsync;
         private async Task OnStateChangingAsync() => await OnStateChangedAsync.InvokeAsync(this, EventArgs.Empty);
 
-        public async Task<MyComponentBase> NotifyParametersChangedAsync()
+        public async Task<MyComponentBase> NotifyParametersChangedAsync(bool forceSetCascadingParamsAsChangedOnFirstSetup = true)
         {
-            await SetParametersAsync(); // for when params were not really changed but their values were
+            await SetParametersAsync(forceSetCascadingParamsAsChangedOnFirstSetup); // for when params were not really changed but their values were
             return this;
         }
 

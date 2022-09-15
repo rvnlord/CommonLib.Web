@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
@@ -19,28 +21,31 @@ using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using NLog;
+using EnumConverter = CommonLib.Source.Common.Converters.EnumConverter;
 using Logger = CommonLib.Source.Common.Utils.UtilClasses.Logger;
+using StringConverter = CommonLib.Source.Common.Converters.StringConverter;
 
 namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 {
     public class MyIconBase : MyComponentBase
     {
+        private static string _wwwRootDir;
         private static Dictionary<IconType, HtmlNode> _svgCache { get; set; }
-
         private Dictionary<string, string> _svgStyle { get; set; }
        
-        protected bool _disabled;
+        protected bool _disabled { get; set; }
         protected string _renderSvgStyle { get; set; }
         protected string _svgXmlns { get; set; }
         protected string _svgViewBox { get; set; }
         protected string _dPath { get; set; }
-        
+
+        public static string WwwRootDir => _wwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
+
         [Parameter] public BlazorParameter<IconType> IconType { get; set; }
         [Parameter] public string Color { get; set; }
         [Parameter] public BlazorParameter<IconSizeMode> SizeMode { get; set; } = IconSizeMode.InheritFromStyles;
         [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
-        [CascadingParameter] public BlazorParameter<ButtonState?> CascadingButtonState { get; set; }
-        [CascadingParameter] public BlazorParameter<InputState> CascadingInputState { get; set; }
+        [CascadingParameter] public BlazorParameter<MyInputBase> CascadingInput { get; set; }
         [CascadingParameter] public BlazorParameter<MyButtonBase> CascadingButton { get; set; }
 
         protected override async Task OnInitializedAsync()
@@ -75,12 +80,29 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 _dPath = null;
                 return;
             }
+            
+            var cascadingInputHasChanged = CascadingInput.HasChanged();
+            if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
+            {
+                CascadingInput.ParameterValue.InputGroupIcons.AddIfNotExists(this);
+                CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
+            }
 
-            if (CascadingButton.HasChanged() && CascadingButton.HasValue())
-                CascadingButton.ParameterValue.OtherIcons[IconType.ParameterValue] = this;
+            var cascadingButtonHasChanged = CascadingButton.HasChanged();
+            if (cascadingButtonHasChanged && CascadingButton.HasValue())
+            {
+                if (!_guid.In(new [] { CascadingButton.ParameterValue.IconBefore?._guid, CascadingButton.ParameterValue.IconAfter?._guid }.Where(i => i is not null).Cast<Guid>()))
+                    CascadingButton.ParameterValue.OtherIcons[IconType.ParameterValue] = this;
+                CascadingButton.SetAsUnchanged(); // so the notify won't end up here again
+            }
 
-            if (CascadingButtonState.HasValue() && CascadingButtonState.ParameterValue == ButtonState.Disabled
-                || CascadingInputState.HasValue() && CascadingInputState.ParameterValue == InputState.Disabled)
+            //if (cascadingInputHasChanged && CascadingInput.HasValue())
+            //    await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false);
+            //else if (cascadingButtonHasChanged && CascadingButton.HasValue())
+            //    await CascadingButton.ParameterValue.NotifyParametersChangedAsync(false);
+
+            if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
+                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue == InputState.Disabled)
             {
                 _disabled = true;
             }
@@ -100,20 +122,21 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 
                 try
                 {
-                    //if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
-                    //{
                     var svg = _svgCache.VorN(IconType.ParameterValue);
                     if (svg == null)
                     {
-                        svg = (await HttpClient.GetStringAsync(new Uri(iconPath))).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
+                        {
+                            svg = (await HttpClient.GetStringAsync(new Uri(iconPath))).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                        }
+                        else
+                        {
+                            iconPath = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir, $@"Icons\{iconSetDirName}\{iconName}.svg");
+                            svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                        }
+
                         _svgCache[IconType.ParameterValue] = svg;
                     }
-                    //}
-                    //else
-                    //{
-                    //    iconPath = $@"{WebUtils.GetAbsolutePhysicalContentPath()}\Content\Icons\{iconSetDirName}\{iconName}.svg";
-                    //    svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
-                    //}
 
                     _svgXmlns = svg.GetAttributeValue("xmlns");
                     _svgViewBox = svg.GetAttributeValue("viewBox");

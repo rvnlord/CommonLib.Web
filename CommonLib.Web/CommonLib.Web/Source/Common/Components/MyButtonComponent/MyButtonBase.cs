@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
-using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
@@ -16,7 +15,6 @@ using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
@@ -26,17 +24,15 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
         private ButtonState? _buttonStateFromValidation;
         
-        protected BlazorParameter<MyButtonBase> _bpBtn;
-        protected BlazorParameter<ButtonState?> _bpState;
-        protected ButtonState? _state;
+        protected ButtonState? _state { get; set; }
+        protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
+        public MyIconBase IconBefore { get; set; }
+        public MyIconBase IconAfter { get; set; }
         public OrderedDictionary<IconType, MyIconBase> OtherIcons { get; set; }
 
         public bool IsValidationStateBeingChanged { get; set; }
-
-        [CascadingParameter] 
-        public BlazorParameter<InputState> CascadingInputState { get; set; }
-
+        
         [CascadingParameter] 
         public BlazorParameter<MyInputBase> CascadingInput { get; set; }
 
@@ -71,7 +67,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         {
             OtherIcons ??= new OrderedDictionary<IconType, MyIconBase>();
             _bpBtn ??= new BlazorParameter<MyButtonBase>(this);
-            _bpState ??= new BlazorParameter<ButtonState?>(_state);
             await Task.CompletedTask;
             //await OnParametersSetAsync();
         }
@@ -91,13 +86,24 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
-
-            if (CascadingInput.HasChanged())
-                CascadingInput?.ParameterValue?.InputGroupButtons.AddIfNotExists(this);
-
-            if (State.HasChanged() || CascadingInputState.HasChanged() || _buttonStateFromValidation != null && _state != _buttonStateFromValidation)
+            
+            if (CascadingInput.HasChanged() && CascadingInput.HasValue())
             {
-                ButtonState? cascadingInputState = !CascadingInputState.HasValue() ? null : CascadingInputState.ParameterValue == InputState.Enabled ? ButtonState.Enabled : ButtonState.Disabled;
+                CascadingInput.ParameterValue.InputGroupButtons.AddIfNotExists(this);
+                CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
+                //await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false); // `false` so the notify won't end up here again, but this is not enough, input has to specify false as well because here I am setting input params indirectly, not this params
+            }
+
+            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
+            {
+                Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
+
+                ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue switch
+                {
+                    InputState.Disabled => ButtonState.Disabled,
+                    InputState.Enabled => ButtonState.Enabled,
+                    _ => null
+                };
                 _state = _buttonStateFromValidation ?? State.ParameterValue ?? cascadingInputState ?? ButtonState.Enabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
                 _buttonStateFromValidation = null;
 
@@ -106,7 +112,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 else
                     RemoveClasses("my-loading");
             }
-            
+
             //Logger.For<MyButtonBase>().Info($"{nameof(OnParametersSetAsync)}(): {Value.ParameterValue}: {_renderClasses}");
             //Logger.For<MyButtonBase>().Info($"{nameof(OnParametersSetAsync)}(), Styling.HasChanged() = {Styling.HasChanged()}");
             if (Styling.HasChanged())
@@ -131,8 +137,17 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 IconPlacement.ParameterValue ??= ButtonIconPlacement.Left;
             if (SubmitsForm.HasChanged())
                 SubmitsForm.ParameterValue ??= false;
-            
-            await Task.CompletedTask;
+
+            var icons = OtherIcons.Values.Prepend(IconBefore).Prepend(IconAfter).Where(i => i is not null).ToArray();
+            var changeStateTasks = new List<Task>();
+            foreach (var icon in icons)
+            {
+                if (!icon.CascadingButton.HasValue())
+                    icon.CascadingButton.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+                changeStateTasks.Add(icon.NotifyParametersChangedAsync());
+                changeStateTasks.Add(icon.StateHasChangedAsync(true));
+            }
+            await Task.WhenAll(changeStateTasks);
         }
 
         protected override async Task OnAfterFirstRenderAsync()
