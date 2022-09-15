@@ -21,6 +21,8 @@ namespace CommonLib.Web.Source.Common.Utils
     {
         public static string BackendUrl { get; private set; }
         public static WebAssemblyHostBuilder HostBuilder { get; set; }
+        public static dynamic ServerHostBuilder { get; set; }
+        public static dynamic ServerHostEnvironment => ServerHostBuilder.Environment; // IWebHostEnvironment
         public static IConfiguration Configuration => HostBuilder.Configuration;
         public static HttpClient HttpClient => GetService<HttpClient>();
         public static HtmlEncoder HtmlEncoder => GetService<HtmlEncoder>();
@@ -28,7 +30,7 @@ namespace CommonLib.Web.Source.Common.Utils
         public static Container ServiceProvider { get; set; }
         
         public static IJSRuntime JsRuntime { get; private set; }
-        
+       
         public static void Configure(IJSRuntime js) => JsRuntime = js;
         public static void Configure(Container serviceProvider) => ServiceProvider = serviceProvider;
 

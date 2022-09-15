@@ -15,7 +15,7 @@ namespace CommonLib.Web.Source.Security
         public KeyRing()
         {
             // Create the keyring directory if one doesn't exist.
-            var keyRingDirectory = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetCurrentProjectDir(), "keyring");
+            var keyRingDirectory = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryProjectDir(), "keyring");
             Directory.CreateDirectory(keyRingDirectory);
 
             var directoryInfo = new DirectoryInfo(keyRingDirectory);

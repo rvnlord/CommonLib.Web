@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
-using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
-using CommonLib.Source.Common.Utils.TypeUtils;
+using CommonLib.Web.Source.Common.Utils;
+using CommonLib.Web.Source.Services;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -29,7 +26,9 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 {
     public class MyIconBase : MyComponentBase
     {
-        private static string _wwwRootDir;
+        private static string _commonWwwRootDir;
+        private static string _currentWwwRootDir;
+        private static bool? _isProduction;
         private static Dictionary<IconType, HtmlNode> _svgCache { get; set; }
         private Dictionary<string, string> _svgStyle { get; set; }
        
@@ -39,8 +38,10 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         protected string _svgViewBox { get; set; }
         protected string _dPath { get; set; }
 
-        public static string WwwRootDir => _wwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
-
+        public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
+        public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
+        public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
+        
         [Parameter] public BlazorParameter<IconType> IconType { get; set; }
         [Parameter] public string Color { get; set; }
         [Parameter] public BlazorParameter<IconSizeMode> SizeMode { get; set; } = IconSizeMode.InheritFromStyles;
@@ -131,7 +132,9 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                         }
                         else
                         {
-                            iconPath = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir, $@"Icons\{iconSetDirName}\{iconName}.svg");
+                            iconPath = !IsProduction 
+                                ? PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, $@"Icons\{iconSetDirName}\{iconName}.svg")
+                                : PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, @"_content\CommonLib.Web", $@"Icons\{iconSetDirName}\{iconName}.svg");
                             svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 

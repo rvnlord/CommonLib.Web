@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
@@ -25,9 +26,11 @@ namespace CommonLib.Web.Source.Services
         private NavigationManager _navigationManager;
         private static string _commonWwwRootDir;
         private static string _currentWwwRootDir;
+        private static bool? _isProduction;
 
         public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyJsRuntime>();
-        public static string CurrentWwwRootDir => _currentWwwRootDir ??= FileUtils.GetCurrentProjectAspNetWwwRootDir();
+        public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
+        public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
 
         public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager)
         {
@@ -35,30 +38,6 @@ namespace CommonLib.Web.Source.Services
             _httpClient = httpClient;
             _navigationManager = navigationManager;
         }
-
-        //public async ValueTask JsVoidFromModule(string modulePath, string functionName)
-        //{
-        //    var jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", modulePath).ConfigureAwait(false);
-        //    await jsModule.InvokeVoidAsync(functionName).ConfigureAwait(false);
-        //    await jsModule.DisposeAsync();
-        //}
-
-        //public async ValueTask JsVoidFromModule(string modulePath, string functionName, params object[] paramsters)
-        //{
-        //    var jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", modulePath).ConfigureAwait(false);
-        //    await jsModule.InvokeVoidAsync(functionName, paramsters).ConfigureAwait(false);
-        //    await jsModule.DisposeAsync();
-        //}
-
-        //public async ValueTask JsVoidFromComponent(string componentName, string functionName)
-        //{
-        //    await JsVoidFromModule(GetModulePath(componentName), functionName).ConfigureAwait(false);
-        //} // `.` before the path is mandatory, otherwise it won't work
-
-        //public async ValueTask JsVoidFromComponent(string componentName, string functionName, params object[] paramsters)
-        //{
-        //    await JsVoidFromModule(GetModulePath(componentName), functionName, paramsters).ConfigureAwait(false);
-        //}
 
         public async Task<IJSObjectReference> ImportModuleAsync(string modulePath)
         {
@@ -117,8 +96,12 @@ namespace CommonLib.Web.Source.Services
             }
             else
             {
-                var physicalCommonComponentPath = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, componentPrefix, componentOrPageNormalized, js);
-                var physicalCommonPagePath = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, pagePrefix, componentOrPageNormalized, js);
+                var physicalCommonComponentPath = !IsProduction 
+                    ? PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, componentPrefix, componentOrPageNormalized, js)
+                    : PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content", commonProjName, componentPrefix, componentOrPageNormalized, js);
+                var physicalCommonPagePath = !IsProduction 
+                    ? PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, pagePrefix, componentOrPageNormalized, js)
+                    : PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content", commonProjName, pagePrefix, componentOrPageNormalized, js);
                 var physicalLocalComponentPath = PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, componentPrefix, componentOrPageNormalized, js);
                 var physicalLocalPagePath = PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, pagePrefix, componentOrPageNormalized, js);
 

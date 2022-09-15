@@ -85,7 +85,7 @@ namespace CommonLib.Web.Server.Source.Common.Extensions
         public static IApplicationBuilder RunTestLogs<TStartup>(this IApplicationBuilder app)
         {
             var logger = Logger.For<TStartup>().Log(LogLevel.Info, $@"Log Path: {Logger.LogPath}"); // it shouldn't change LogPath defined in global logger
-            logger.Log(LogLevel.Info, $@"Executing Assembly Location: {FileUtils.GetAssemblyDir()}");
+            logger.Log(LogLevel.Info, $@"Entry Assembly Location: {FileUtils.GetEntryAssemblyDir()}");
             logger.Log(LogLevel.Info, $@"Is Electron? Raw: {AspNetLibConfig.RunType == RunType.AspNetWithRawElectron} || Full: {AspNetLibConfig.RunType == RunType.AspNetWithBuiltElectron} || Portable: {AspNetLibConfig.RunType == RunType.AspNetWithPortableElectron}");
             logger.Log(LogLevel.Info, $@"Content Path: {WebServerUtils.GetAbsolutePhysicalContentPath(AspNetLibConfig.RunType)}");
             return app;

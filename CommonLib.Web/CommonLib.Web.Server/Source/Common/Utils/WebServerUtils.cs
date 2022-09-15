@@ -11,6 +11,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Extensions.Collections;
+using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services;
 using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -158,6 +159,7 @@ namespace CommonLib.Web.Server.Source.Common.Utils
         public static void UseGlobalHostBuilder(WebApplicationBuilder builder)
         {
             HostBuilder = builder;
+            WebUtils.ServerHostBuilder = builder;
         }
 
         public static void ConfigureUrls(string frontendBaseUrl) => Task.Run(async () => await ConfigureUrlsAsync(frontendBaseUrl));

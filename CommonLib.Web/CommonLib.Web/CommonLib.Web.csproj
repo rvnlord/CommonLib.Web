@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="libman.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.2.0" />
     <PackageReference Include="FluentValidation" Version="11.1.0" />
@@ -87,6 +91,10 @@
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\libs\libman\%40types\jquery\" />
     <Folder Include="wwwroot\libs\libman\cookies-js\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="libman.json" />
   </ItemGroup>
 
   <ItemGroup>
