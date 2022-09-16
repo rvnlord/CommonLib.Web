@@ -117,7 +117,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync(HttpContext http, ClaimsPrincipal principal, AuthenticateUserVM userToAuthenticate)
         {
-            userToAuthenticate.IsAuthenticated = false;
+            userToAuthenticate.AuthenticationStatus = AuthStatus.NotAuthenticated;
             var contextPrincipal = http != null ? (await http.AuthenticateAsync(IdentityConstants.ApplicationScheme))?.Principal : null;
             var principals = new[] { principal, contextPrincipal };
             var claimsPrincipal = principals.FirstOrDefault(p => p?.Identity?.Name != null && p.Identity.IsAuthenticated);
@@ -153,7 +153,7 @@ namespace CommonLib.Web.Source.Services.Account
             _mapper.Map(user, userToAuthenticate);
             userToAuthenticate.RememberMe = rememberMe;
             userToAuthenticate.HasPassword = user.PasswordHash != null;
-            userToAuthenticate.IsAuthenticated = true;
+            userToAuthenticate.AuthenticationStatus = AuthStatus.Authenticated;
             userToAuthenticate.LoginTimestamp = timeStamp.ToExtendedTime();
             userToAuthenticate.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
             userToAuthenticate.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
@@ -426,7 +426,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync(AuthenticateUserVM userToLogout)
         {
-            if (userToLogout == null || !userToLogout.IsAuthenticated)
+            if (userToLogout == null || !userToLogout.HasAuthenticationStatus(AuthStatus.Authenticated))
                 return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized so you can't log out", null);
 
             await _signInManager.SignOutAsync();
@@ -510,7 +510,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
         {
-            if (authUser == null || !authUser.IsAuthenticated)
+            if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
             if (userToEdit.Id == default)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Id wasn't supplied", new[] { new KeyValuePair<string, string>("Id", "Id is empty") }.ToLookup());

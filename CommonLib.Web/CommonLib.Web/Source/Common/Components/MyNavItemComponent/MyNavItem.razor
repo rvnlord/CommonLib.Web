@@ -3,6 +3,7 @@
 @using CommonLib.Source.Common.Extensions
 @using CommonLib.Source.Common.Extensions.Collections
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.ViewModels.Account
 
 @inherits MyNavItemBase
 
@@ -44,7 +45,7 @@
             }
             else if (Type == NavItemType.Login)
             {
-                if (IsAuthenticated())
+                if (HasAuthenticationStatus(AuthStatus.Authenticated))
                 {
                     <MyNavLink To="null" MatchEmptyRoute="false">@AuthenticatedUser.UserName</MyNavLink>
                 }

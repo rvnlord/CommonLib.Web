@@ -76,7 +76,7 @@ namespace CommonLib.Web.Source.Services.Account
             var userToAuthenticate = new AuthenticateUserVM
             {
                 Ticket = cookieTIcket ?? localStorageTicket, 
-                IsAuthenticated = false,
+                AuthenticationStatus = AuthStatus.NotChecked,
                 SessionId = sessionId
             };
             return await HttpClient.PostJTokenAsync<ApiResponse<AuthenticateUserVM>>("api/account/authenticateuser", userToAuthenticate);

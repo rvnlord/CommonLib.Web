@@ -300,7 +300,39 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected bool IsFirstParamSetup() => _firstParamSetup;
 
-        protected bool IsAuthenticated() => AuthenticatedUser?.IsAuthenticated == true;
+        protected bool HasAuthenticationStatus(AuthStatus authStatus) => AuthenticatedUser == null && authStatus == AuthStatus.NotChecked || AuthenticatedUser != null && AuthenticatedUser.HasAuthenticationStatus(authStatus);
+        
+        protected bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticatedUser == null && AuthStatus.NotChecked.In(authStatuses) || AuthenticatedUser != null && AuthenticatedUser.HasAnyAuthenticationStatus(authStatuses);
+
+        protected async Task<bool> EnsureAuthenticatedAsync()
+        {
+            var authResponse = await AccountClient.GetAuthenticatedUserAsync();
+            AuthenticatedUser = authResponse.Result;
+            if (!authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated))
+            {
+                await StateHasChangedAsync(true);
+                return true;
+            }
+
+            await PromptMessageAsync(NotificationType.Error, authResponse.Message);
+            await StateHasChangedAsync(true);
+            return false;
+        }
+
+        protected async Task<bool> EnsureAuthenticationPerformedAsync()
+        {
+            var authResponse = await AccountClient.GetAuthenticatedUserAsync();
+            AuthenticatedUser = authResponse.Result;
+            if (!authResponse.IsError) 
+            {
+                await StateHasChangedAsync(true);
+                return true;
+            }
+
+            await PromptMessageAsync(NotificationType.Error, authResponse.Message);
+            await StateHasChangedAsync(true);
+            return false;
+        }
 
         protected void SetMainCustomAndUserDefinedClasses(string mainClass, IEnumerable<string> customClasses, bool preserveExistingClasses = false)
         {

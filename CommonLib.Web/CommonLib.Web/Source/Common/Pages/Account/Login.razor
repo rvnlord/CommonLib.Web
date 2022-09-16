@@ -4,11 +4,12 @@
 @using CommonLib.Source.Common.Converters
 @using CommonLib.Source.Common.Extensions.Collections
 @using CommonLib.Web.Source.Common.Components.MyBadgeComponent
+@using CommonLib.Web.Source.ViewModels.Account
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @inherits LoginBase
 
-@if (!IsAuthenticated())
+@if (HasAnyAuthenticationStatus(AuthStatus.NotAuthenticated, AuthStatus.NotChecked))
 {
     <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="FormLogin_ValidSubmitAsync">
         <div class="my-container">
@@ -104,7 +105,7 @@
         </div>
     </MyEditForm>
 }
-else
+else if (HasAuthenticationStatus(AuthStatus.Authenticated))
 {
     <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" VerticalAlign="GridLayoutVerticalAlign.Top" Class="my-p-10px">
         <GridLayoutColumns>

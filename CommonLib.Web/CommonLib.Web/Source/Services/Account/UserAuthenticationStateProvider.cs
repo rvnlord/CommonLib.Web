@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Account.Interfaces;
+using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -25,7 +26,7 @@ namespace CommonLib.Web.Source.Services.Account
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 
             var authenticatingUser = authenticationResponse.Result;
-            if (!authenticatingUser.IsAuthenticated)
+            if (!authenticatingUser.HasAuthenticationStatus(AuthStatus.Authenticated))
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 
             var claims = new[] { new Claim(ClaimTypes.Name, authenticatingUser.UserName) }.Concat(authenticatingUser.Claims.ToNameValueList().Select(c => new Claim(c.Item1, c.Item2)));

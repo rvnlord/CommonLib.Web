@@ -75,15 +75,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            var authResponse = await AccountClient.GetAuthenticatedUserAsync();
-            if (authResponse.IsError || !authResponse.Result.IsAuthenticated)
-            {
-                await PromptMessageAsync(NotificationType.Error, authResponse.Message);
-                UserAuthStateProvider.StateChanged();
+            if (!await EnsureAuthenticatedAsync())
                 return;
-            }
+            
+            // TODO: find a way to reload navbar in EnsureAuth (set in)
 
-            AuthenticatedUser = authResponse.Result;
             Mapper.Map(AuthenticatedUser, _editUserVM);
             var disabledComponents = _editUserVM.HasPassword ? new[] { _txtId } : new MyComponentBase[] { _txtId, _pwdOldPassword };
             await SetControlStatesAsync(ButtonState.Enabled, null, disabledComponents);
@@ -94,9 +90,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             await SetControlStatesAsync(ButtonState.Disabled, _btnSave);
 
-            if (!IsAuthenticated())
+            if (!await EnsureAuthenticatedAsync())
             {
-                await PromptMessageAsync(NotificationType.Error, "You are not Authenticated");
                 await SetControlStatesAsync(ButtonState.Disabled);
                 await ShowLoginModalAsync();
                 return;

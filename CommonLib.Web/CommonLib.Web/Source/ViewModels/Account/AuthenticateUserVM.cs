@@ -9,7 +9,13 @@ namespace CommonLib.Web.Source.ViewModels.Account
     public class AuthenticateUserVM : IEquatable<AuthenticateUserVM>
     {
         public Guid Id { get; set; }
-        public bool IsAuthenticated { get; set; }
+        public bool? IsAuthenticated => AuthenticationStatus switch {
+            AuthStatus.NotChecked => null,
+            AuthStatus.Authenticated => true,
+            AuthStatus.NotAuthenticated => false,
+            _ => null
+        };
+        public AuthStatus AuthenticationStatus { get; set; }
         public string UserName { get; set; }
         public string Email { get; set; }
         public List<FindRoleVM> Roles { get; set; } = new();
@@ -20,10 +26,12 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public Guid SessionId { get; set; } // TODO: anon id to differentiate between users in Singleton Cache Service, it needs to be done even if user is not authenticated
         public ExtendedTime LoginTimestamp { get; set; }
 
+        public bool HasAuthenticationStatus(AuthStatus authStatus) => authStatus == AuthenticationStatus;
+        public bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticationStatus.In(authStatuses);
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsInvariant(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsInvariant(claim));
 
-        public static AuthenticateUserVM NotAuthenticated => new() { IsAuthenticated = false };
+        public static AuthenticateUserVM NotAuthenticated => new() { AuthenticationStatus = AuthStatus.NotAuthenticated };
 
         public override bool Equals(object o)
         {
@@ -51,5 +59,12 @@ namespace CommonLib.Web.Source.ViewModels.Account
         {
             return !Equals(left, right);
         }
+    }
+
+    public enum AuthStatus
+    {
+        NotChecked,
+        Authenticated,
+        NotAuthenticated
     }
 }

@@ -98,13 +98,15 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             await SetControlStatesAsync(ButtonState.Disabled);
             
-            AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
+            if (!await EnsureAuthenticationPerformedAsync())
+                return;
+
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             
             await StateHasChangedAsync(); // to re-render External Login Buttons and get their references using @ref in .razor file
             await SetControlStatesAsync(ButtonState.Disabled); // disable External Login Buttons
             
-            if (!IsAuthenticated()) // try to authorize with what is present in queryStrings, possibly from an external provider
+            if (!HasAuthenticationStatus(AuthStatus.Authenticated)) // try to authorize with what is present in queryStrings, possibly from an external provider
             {
                 var remoteStatus = NavigationManager.GetQueryString<string>("remoteStatus")?.ToEnumN<NotificationType>();
                 var remoteMessage = NavigationManager.GetQueryString<string>("remoteMessage");
@@ -119,8 +121,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 
                 if (queryUser != null)
                 {
-                    await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false);
-                    //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
+                    await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false); //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
                     queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                     queryUser.ExternalLogins = _loginUserVM.ExternalLogins.ToList();
                     queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName;
