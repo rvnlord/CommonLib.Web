@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Blazored.SessionStorage;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
@@ -20,7 +21,9 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Source.Models;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
+using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -48,7 +51,7 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncStyles = new(1, 1);
         private readonly SemaphoreSlim _syncAttributes = new(1, 1);
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
-        private readonly SemaphoreSlim _syncRender = new(1, 1);
+        private readonly OrderedSemaphore _syncRender = new(1, 1);
         private static readonly SemaphoreSlim _syncSessionId = new(1, 1);
         //private bool _changingState;
         private MyComponentBase _layout;
@@ -136,12 +139,15 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Inject]
         public IHttpContextAccessor HttpContextAccessor { get; set; }
-
+        
         //[Inject]
         //public ProtectedSessionStorage SessionStorage { get; set; }
 
         [Inject]
         public IRequestScopedCacheService RequestScopedCache { get; set; }
+
+        [Inject]
+        public IMapper Mapper { get; set; }
 
         protected MyComponentBase()
         {
@@ -246,7 +252,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             try
             {
-                //await _syncRender.WaitAsync(); // if `State` is being changed manually by calling `StateHasChangedAsync` // also block render
+                await _syncRender.WaitAsync(); // if `State` is being changed manually by calling `StateHasChangedAsync` also block render | For instance first render may enter this method and subsequent render can enter as well before the first render finished thus leaving some parts like session not initialized properly
 
                 //if (_syncStateChanged.CurrentCount == 0) // if we are waiting for render in `WaitForRenderAsync`
                 //    _syncStateChanged.Release();
@@ -275,6 +281,8 @@ namespace CommonLib.Web.Source.Common.Components
                 
                 OnAfterRender(isFirstRenderAfterInit);
                 await OnAfterRenderAsync(isFirstRenderAfterInit);
+
+                await OnAfterRenderFinishingAsync(isFirstRenderAfterInit);
             }
             catch (TaskCanceledException)
             {
@@ -282,8 +290,8 @@ namespace CommonLib.Web.Source.Common.Components
             }
             finally
             {
-                //if (_syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
-                //    _syncRender.Release();
+                if (_syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
+                    await _syncRender.ReleaseAsync();
             }
         }
 
@@ -306,31 +314,52 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected async Task<bool> EnsureAuthenticatedAsync()
         {
+            var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
+            var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
             AuthenticatedUser = authResponse.Result;
             if (!authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated))
             {
-                await StateHasChangedAsync(true);
+                if (!AuthenticatedUser.Equals(prevAuthUser)) // to rpeveeent infinite AftereRender loop
+                {
+                    await StateHasChangedAsync(true);
+                    await navBar.StateHasChangedAsync(true);
+                }
                 return true;
             }
 
             await PromptMessageAsync(NotificationType.Error, authResponse.Message);
-            await StateHasChangedAsync(true);
+            if (!AuthenticatedUser.Equals(prevAuthUser))
+            {
+                await StateHasChangedAsync(true);
+                await navBar.StateHasChangedAsync(true);
+            }
             return false;
         }
 
         protected async Task<bool> EnsureAuthenticationPerformedAsync()
         {
+            var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
+            var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
             AuthenticatedUser = authResponse.Result;
             if (!authResponse.IsError) 
             {
-                await StateHasChangedAsync(true);
+                if (!AuthenticatedUser.Equals(prevAuthUser))
+                {
+                    await StateHasChangedAsync(true);
+                    await navBar.StateHasChangedAsync(true);
+                }
+
                 return true;
             }
 
             await PromptMessageAsync(NotificationType.Error, authResponse.Message);
-            await StateHasChangedAsync(true);
+            if (!AuthenticatedUser.Equals(prevAuthUser))
+            {
+                await StateHasChangedAsync(true);
+                await navBar.StateHasChangedAsync(true);
+            }
             return false;
         }
 
@@ -734,6 +763,11 @@ namespace CommonLib.Web.Source.Common.Components
             return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
         }
 
+        public async Task<TComponent> ComponentByTypeAsync<TComponent>() where TComponent : MyComponentBase
+        {
+            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single();
+        }
+
         public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
 
         protected virtual async Task DisposeAsync(bool disposing)
@@ -797,5 +831,20 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         public override int GetHashCode() => _guid.GetHashCode();
+
+        public event MyAsyncEventHandler<MyComponentBase, AfterRenderFinishedEventArgs> AfterRenderFinished;
+
+        private async Task OnAfterRenderFinishingAsync(AfterRenderFinishedEventArgs e) => await AfterRenderFinished.InvokeAsync(this, e);
+        private async Task OnAfterRenderFinishingAsync(bool isFirstRender) => await OnAfterRenderFinishingAsync(new AfterRenderFinishedEventArgs(isFirstRender));
+
+        public class AfterRenderFinishedEventArgs : EventArgs
+        {
+            public bool IsFirstRender { get; }
+            
+            public AfterRenderFinishedEventArgs(bool isFirstRender)
+            {
+                IsFirstRender = isFirstRender;
+            }
+        }
     }
 }

@@ -32,10 +32,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected ForgotPasswordUserVM _forgotPasswordUserVM { get; set; }
         protected MyTextInputBase _txtEmail { get; set; }
         protected BlazorParameter<ButtonState?> _btnForgotPasswordState;
-
-        [Inject]
-        public IMapper Mapper { get; set; }
-
+        
         protected override async Task OnInitializedAsync()
         {
             var inheritedReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?");

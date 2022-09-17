@@ -38,10 +38,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyPasswordInputBase _pwdPassword { get; set; }
         protected MyPasswordInputBase _pwdConfirmPassword { get; set; }
         protected MyNavLinkBase _nlForgotPassword { get; set; }
-
-        [Inject]
-        public IMapper Mapper { get; set; }
-
+        
         protected override async Task OnInitializedAsync()
         {
             _resetPasswordUserVM = new()

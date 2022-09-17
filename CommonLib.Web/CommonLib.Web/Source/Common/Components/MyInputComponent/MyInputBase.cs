@@ -26,9 +26,12 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
     public abstract class MyInputBase : MyComponentBase
     {
+        private bool _disabledByValidation;
+
         protected string _propName { get; set; }
         protected Task<IJSObjectReference> _inputModuleAsync;
-        
+        private BlazorParameter<InputState?> _state;
+
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
 
         public List<MyButtonBase> InputGroupButtons { get; set; }
@@ -47,7 +50,20 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         public string SyncPaddingGroup { get; set; }
 
         [Parameter]
-        public BlazorParameter<InputState?> State { get; set; }
+        public BlazorParameter<InputState?> State
+        {
+            get => _state;
+            set
+            {
+                if (ForceState?.ParameterValue == true && _state.HasValue() && _state.ParameterValue != value.ParameterValue)
+                   throw new Exception("State is forced and it cannot be changed");
+
+                _state = value;
+            }
+        }
+
+        [Parameter]
+        public BlazorParameter<bool?> ForceState { get; set; }
 
         protected async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
         {
@@ -57,14 +73,15 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
+            if (ForceState?.ParameterValue == true)
+                return;
 
-            if (fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
+            if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
             {
                 RemoveClasses("my-valid", "my-invalid");
-                State.ParameterValue = InputState.Enabled;
             }
 
-            if (!fi.In(e.ValidatedFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
+            if (e.ValidationMode == ValidationMode.Property && !fi.In(e.ValidatedFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
             {
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
@@ -77,8 +94,11 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 return;
             }
 
+            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
+                State.ParameterValue = InputState.Enabled;
+
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
-            var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(fi => fi.FieldName));
+            var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));
             var wasValidationSuccessful = e.ValidationStatus == ValidationStatus.Success;
             var validationFailed = e.ValidationStatus == ValidationStatus.Failure;
 

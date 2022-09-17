@@ -12,7 +12,7 @@
 else if (HasAuthenticationStatus(AuthStatus.Authenticated))
 {
     <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-        <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="@FormEdit_ValidSubmitAsync" class="my-container">
+        <MyEditForm @ref="_editForm" EditContext="_editContext" class="my-container">
             <MyFluentValidator @ref="_validator" />
             <div class="my-row">
                 <div class="my-col-12">
@@ -25,7 +25,7 @@ else if (HasAuthenticationStatus(AuthStatus.Authenticated))
                     <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
                 </div>
                 <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" @ref="_txtId" State="_bpTxtIdState">
+                    <MyTextInput For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" @ref="_txtId" State="_bpTxtIdState" ForceState="true">
                         <MyInputGroupPrepend>
                             <MyIcon IconType="IconType.From(LightIconType.IdBadge)"></MyIcon>
                         </MyInputGroupPrepend>

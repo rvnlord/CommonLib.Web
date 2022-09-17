@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
+using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
@@ -47,7 +49,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
         {
             if (Type == NavItemType.Login)
             {
-                var prevAuthUser = AuthenticatedUser;
+                var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent  
                 AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
                 if (!AuthenticatedUser.Equals(prevAuthUser))
                     await StateHasChangedAsync();

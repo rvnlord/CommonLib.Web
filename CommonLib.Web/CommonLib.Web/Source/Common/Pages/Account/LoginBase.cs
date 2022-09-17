@@ -63,20 +63,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         public EventCallback<MouseEventArgs> OnEditClick { get; set; }
         
         [Inject]
-        public IMapper Mapper { get; set; }
-        
-        [Inject]
         public IJQueryService JQuery { get; set; }
         
         protected override async Task OnInitializedAsync()
         {
             var inheritedReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?");
-            var currentUrl = NavigationManager.Uri;
 
             _loginUserVM ??= new LoginUserVM
             {
                 //RememberMe = true,
-                ReturnUrl = inheritedReturnUrl ?? currentUrl // methods executed on load events (initialised, afterrender, parametersset) can't raise `AuthenticationStateChanged` Event because it would cause an infinite loop when the Control State changes
+                ReturnUrl = inheritedReturnUrl // methods executed on load events (initialised, afterrender, parametersset) can't raise `AuthenticationStateChanged` Event because it would cause an infinite loop when the Control State changes
             };
             _editContext ??= new MyEditContext(_loginUserVM);
             _btnExternalLogins ??= new OrderedDictionary<string, MyButtonBase>();
@@ -150,6 +146,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
         }
 
+        protected override async Task OnAfterRenderAsync(bool isFirstRender)
+        {
+            if (isFirstRender)
+                return;
+            await EnsureAuthenticationPerformedAsync();
+        }
+
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
         {
             await SetControlStatesAsync(ButtonState.Disabled, _btnExternalLogins[queryUser.ExternalProvider]);
@@ -163,7 +166,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
             
             await PromptMessageAsync(NotificationType.Success, externalLoginResult.Message);
-            NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
+            if (!externalLoginResult.Result.ReturnUrl.IsNullOrWhiteSpace())
+                NavigationManager.NavigateTo(externalLoginResult.Result.ReturnUrl);
             UserAuthStateProvider.StateChanged();
 
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
@@ -194,7 +198,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             await PromptMessageAsync(NotificationType.Success, loginResult.Message);
-            NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
+            if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace())
+                NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
             UserAuthStateProvider.StateChanged();
 
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();

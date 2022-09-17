@@ -288,7 +288,7 @@ export class Prompt {
             selector: n => n._timeStamp, 
             descending: true
         }, {
-            selector: n =>  n._$notification.closest(".my-row").prevAll(".my-row").length, 
+            selector: n => n._$notification.closest(".my-row").prevAll(".my-row").length, 
             descending: false
         });
     }

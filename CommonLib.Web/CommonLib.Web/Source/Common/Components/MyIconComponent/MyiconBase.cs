@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         private static string _commonWwwRootDir;
         private static string _currentWwwRootDir;
         private static bool? _isProduction;
-        private static Dictionary<IconType, HtmlNode> _svgCache { get; set; }
+        private static ConcurrentDictionary<IconType, HtmlNode> _svgCache { get; set; }
         private Dictionary<string, string> _svgStyle { get; set; }
        
         protected bool _disabled { get; set; }
@@ -51,7 +52,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 
         protected override async Task OnInitializedAsync()
         {
-            _svgCache ??= new Dictionary<IconType, HtmlNode>();
+            _svgCache ??= new ConcurrentDictionary<IconType, HtmlNode>();
             _svgStyle ??= new Dictionary<string, string>();
             await Task.CompletedTask;
         }
@@ -138,7 +139,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                             svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 
-                        _svgCache[IconType.ParameterValue] = svg;
+                        _svgCache.TryAdd(IconType.ParameterValue, svg);
                     }
 
                     _svgXmlns = svg.GetAttributeValue("xmlns");

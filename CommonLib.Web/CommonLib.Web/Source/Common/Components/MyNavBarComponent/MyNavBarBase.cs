@@ -165,8 +165,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         protected async Task BtnEdit_ClickAsync()
         {
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
-            NavigationManager.NavigateTo(registerUrl);
+            var editurl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
+            NavigationManager.NavigateTo(editurl);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");

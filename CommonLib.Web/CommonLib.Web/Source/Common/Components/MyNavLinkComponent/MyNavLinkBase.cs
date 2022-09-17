@@ -138,18 +138,9 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         [JSInvokable] // to fix no navigation on clicking some `a` tags while using `@onclick="NavLink_ClickAsync"`
         public static async Task NavLink_ClickAsync(Guid guid, Guid sessionId) // MouseEventArgs e
         {
-            //var (cache, cacheScope) = WebUtils.GetScopedService<IComponentsCacheService>();
             var cache = WebUtils.GetService<IComponentsCacheService>();
-
-            //var t1 = cache.SessionCache.ElementAtOrDefault(0).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
-            //var t2 = cache.SessionCache.ElementAtOrDefault(1).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
-            //var t3 = cache.SessionCache.ElementAtOrDefault(2).Value?.Components.Values.OfType<MyNavLinkBase>().FirstOrDefault(nl => nl._guid == guid);
-
             var navLink = cache.SessionCache[sessionId].Components.Values.OfType<MyNavLinkBase>().Single(nl => nl._guid == guid);
             navLink.NavigationManager.NavigateTo(navLink._absoluteVirtualLink);
-
-            //await cacheScope.DisposeScopeAsync();
-
             await Task.CompletedTask;
         }
 
