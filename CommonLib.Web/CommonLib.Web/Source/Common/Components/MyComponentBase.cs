@@ -72,8 +72,17 @@ namespace CommonLib.Web.Source.Common.Components
         internal const string BodyPropertyName = nameof(Body);
 
         public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
-        public Task<IJSObjectReference> PromptModuleAsync => _promptModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyPromptBase).BeforeLast("Base"), NavigationManager, HttpClient);
         public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
+        public Task<IJSObjectReference> PromptModuleAsync
+        {
+            get
+            {
+                if (_isLayout)
+                    return _promptModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyPromptBase).BeforeLast("Base"), NavigationManager, HttpClient);
+                return _layout?.PromptModuleAsync;
+            }
+        }
+
         public bool IsRendered => !_firstRenderAfterInit;
         public bool IsDisposed { get; set; }
         public bool FirstParamSetup => _firstParamSetup;
@@ -267,12 +276,12 @@ namespace CommonLib.Web.Source.Common.Components
                 if (isFirstRenderAfterInit)
                 {
                     _firstRenderAfterInit = false;
-                    await PromptModuleAsync; // this makes prompt js available within any component
                     await SetSessionIdAsync();
                     await OnAfterFirstRenderAsync();
 
                     if (_isLayout)
                     {
+                        await PromptModuleAsync; // this makes prompt js available within any component
                         var prompts = (await GetComponentsSessionCacheAsync()).Components.Values.OfType<MyPromptBase>().ToArray();
                         foreach (var prompt in prompts)
                             await prompt.StateHasChangedAsync();
@@ -284,7 +293,7 @@ namespace CommonLib.Web.Source.Common.Components
 
                 await OnAfterRenderFinishingAsync(isFirstRenderAfterInit);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)
             {
                 //Logger.For<MyComponentBase>().Warn("'OnAfterRenderAsync' was canceled, disposed component?");
             }
