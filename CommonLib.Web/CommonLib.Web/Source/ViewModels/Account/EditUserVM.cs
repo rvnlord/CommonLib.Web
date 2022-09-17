@@ -6,7 +6,8 @@ namespace CommonLib.Web.Source.ViewModels.Account
     public class EditUserVM
     {
         public Guid Id { get; set; }
-        public string IdString => Id.ToString();
+        [DisplayName("Id")]
+        public string IdString => Id != Guid.Empty ? Id.ToString() : null;
         [DisplayName("User Name")]
         public string UserName { get; set; }
         public string Email { get; set; }

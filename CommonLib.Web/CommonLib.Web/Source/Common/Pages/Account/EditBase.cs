@@ -45,14 +45,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyPasswordInputBase _pwdOldPassword { get; set; }
         protected MyPasswordInputBase _pwdNewPassword { get; set; }
         protected MyPasswordInputBase _pwdConfirmNewPassword { get; set; }
-        protected BlazorParameter<ButtonState?> _bpBtnSaveState { get; set; }
-        protected BlazorParameter<InputState?> _bpTxtIdState { get; set; }
-        protected BlazorParameter<InputState?> _bpTxtUserNameState { get; set; }
-        protected BlazorParameter<InputState?> _bpTxtEmailState { get; set; }
-        protected BlazorParameter<InputState?> _bpPwdOldPasswordState { get; set; }
-        protected BlazorParameter<InputState?> _bpPwdNewPasswordState { get; set; }
-        protected BlazorParameter<InputState?> _bpPwdConfirmNewPasswordState { get; set; }
-        
+
         protected override async Task OnInitializedAsync()
         {
             _editUserVM = new(); 
@@ -63,17 +56,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnParametersSetAsync()
         {
-            if (FirstParamSetup)
-            {
-                _bpBtnSaveState = ButtonState.Disabled;
-                _bpTxtIdState = InputState.Disabled;
-                _bpTxtUserNameState = InputState.Disabled;
-                _bpTxtEmailState = InputState.Disabled;
-                _bpPwdOldPasswordState = InputState.Disabled;
-                _bpPwdNewPasswordState = InputState.Disabled;
-                _bpPwdConfirmNewPasswordState = InputState.Disabled;
-            }
-            
             await Task.CompletedTask;
         }
         
@@ -83,7 +65,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             
             _allControls = this.GetPropertyNames().Select(this.GetPropertyOrNull<MyComponentBase>).Where(c => c is not null)
-                .Where(c => c.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").GetType().IsEnum == true).ToArray();
+                .Where(c => c.GetPropertyOrNull("State") is not null).ToArray();
             foreach (var control in _allControls)
             {
                 control.AfterRenderFinished -= Control_AfterRenderFinished;
@@ -91,7 +73,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             Mapper.Map(AuthenticatedUser, _editUserVM);
-            _disabledComponents = _editUserVM.HasPassword ? new[] { _txtId } : new MyComponentBase[] { _txtId, _pwdOldPassword };
+            _disabledComponents = _editUserVM.HasPassword ? new MyComponentBase[] { _txtId } : new MyComponentBase[] { _txtId, _pwdOldPassword };
             await SetControlStatesAsync(ButtonState.Enabled, null, _disabledComponents);
         }
 
@@ -165,10 +147,30 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var changeStateTasks = new List<Task>();
             foreach (var control in controlsToChangeStata.ToArray())
             {
-                var propType = control.GetProperty("State").GetProperty("ParameterValue").GetType();
-                var enumValues = Enum.GetValues(propType).IColToArray();
-                var val = enumValues.Single(v => StringExtensions.EndsWithInvariant(EnumConverter.EnumToString(v.CastToReflected(propType)), state.EnumToString()));
-                control.GetProperty("State").SetPropertyValue("ParameterValue", val);
+                var stateProp = control.GetProperty("State").GetProperty("ParameterValue");
+                var enumType = stateProp.GetType();
+                Type propType = null;
+                bool? isForcedProp = null;
+                var isEnum = enumType.IsEnum;
+                if (!isEnum)
+                {
+                    isForcedProp = stateProp.GetProperty<bool?>("IsForced");
+                    stateProp = stateProp.GetProperty("State");
+                    propType = enumType;
+                    enumType = stateProp.GetType();
+                }
+                var enumValues = Enum.GetValues(enumType).IColToArray();
+                var val = enumValues.Single(v => StringExtensions.EndsWithInvariant(EnumConverter.EnumToString(v.CastToReflected(enumType)), state.EnumToString()));
+
+                if (!isEnum)
+                {
+                    val = Activator.CreateInstance(propType, val, false);
+                    if (isForcedProp != true)
+                        control.GetProperty("State").SetProperty("ParameterValue", val);
+                }
+                else 
+                    control.GetProperty("State").SetProperty("ParameterValue", val);
+
                 changeStateTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
                 notifyParamsChangedTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
             }

@@ -22,14 +22,14 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
     public class MyButtonBase : MyComponentBase
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
-        private ButtonState? _buttonStateFromValidation;
+        //private ButtonState? _buttonStateFromValidation;
         
-        protected ButtonState? _state { get; set; }
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
         public MyIconBase IconBefore { get; set; }
         public MyIconBase IconAfter { get; set; }
         public OrderedDictionary<IconType, MyIconBase> OtherIcons { get; set; }
+        //public ButtonState? CurrentState { get; set; }
 
         public bool IsValidationStateBeingChanged { get; set; }
         
@@ -42,8 +42,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         [Parameter]
         public BlazorParameter<string> Value { get; set; }
 
-        [Parameter]
-        public BlazorParameter<ButtonState?> State { get; set; }
+        [Parameter] public BlazorParameter<ButtonState?> State { get; set; }
 
         [Parameter]
         public BlazorParameter<ButtonStyling?> Styling { get; set; }
@@ -94,20 +93,20 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 //await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false); // `false` so the notify won't end up here again, but this is not enough, input has to specify false as well because here I am setting input params indirectly, not this params
             }
 
-            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || _buttonStateFromValidation != null && _state != _buttonStateFromValidation)
+            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
                 Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
 
-                ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue switch
+                ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue?.State switch
                 {
-                    InputState.Disabled => ButtonState.Disabled,
-                    InputState.Enabled => ButtonState.Enabled,
+                    InputStateKind.Disabled => ButtonState.Disabled,
+                    InputStateKind.Enabled => ButtonState.Enabled,
                     _ => null
                 };
-                _state = _buttonStateFromValidation ?? State.ParameterValue ?? cascadingInputState ?? ButtonState.Enabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
-                _buttonStateFromValidation = null;
+                State.ParameterValue = cascadingInputState ?? State.ParameterValue ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                //_buttonStateFromValidation = null;
 
-                if (_state == ButtonState.Loading)
+                if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");
                 else
                     RemoveClasses("my-loading");
@@ -176,10 +175,10 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             IsValidationStateBeingChanged = true;
             
             if (CascadedEditContext == null)
-                _buttonStateFromValidation = ButtonState.Enabled;
+                State.ParameterValue = ButtonState.Enabled;
             else
             {
-                _buttonStateFromValidation = e.ValidationStatus switch
+                State.ParameterValue = e.ValidationStatus switch
                 {
                     ValidationStatus.Pending => SubmitsForm.ParameterValue == true ? ButtonState.Loading : ButtonState.Disabled,
                     ValidationStatus.Failure => ButtonState.Enabled,

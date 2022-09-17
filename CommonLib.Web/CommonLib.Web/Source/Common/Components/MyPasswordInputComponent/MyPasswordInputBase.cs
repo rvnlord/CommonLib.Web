@@ -20,7 +20,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
 
         protected ElementReference _jsPasswordInput;
         protected BlazorParameter<MyInputBase> _bpPasswordInput;
-        
+       
         protected override async Task OnInitializedAsync()
         {
             _bpPasswordInput ??= new BlazorParameter<MyInputBase>(this);
@@ -56,11 +56,16 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
                     ? $"{displayName}..."
                     : null;
 
-            if (State.ParameterValue == InputState.Disabled)
-                AddAttribute("disabled", string.Empty);
-            else
-                RemoveAttribute("disabled");
+            if (State.HasChanged())
+            {
+                State.ParameterValue = State.ParameterValue ?? InputState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
 
+                if (State.ParameterValue.IsDisabled) // Disabled or ForceDisabled
+                    AddAttribute("disabled", string.Empty);
+                else
+                    RemoveAttribute("disabled");
+            }
+            
             CascadedEditContext?.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
             var notifyParamsChangedTasks = new List<Task>();

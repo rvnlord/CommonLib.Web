@@ -43,10 +43,14 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
                     ? $"{displayName}..."
                     : null;
             
-            if (State.ParameterValue == InputState.Disabled)
-                AddAttribute("disabled", string.Empty);
-            else
-                RemoveAttribute("disabled");
+            if (State.HasChanged())
+            {
+                State.ParameterValue ??= InputState.Disabled;
+                if (State.ParameterValue.IsDisabled)
+                    AddAttribute("disabled", string.Empty);
+                else
+                    RemoveAttribute("disabled");
+            }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 

@@ -5,12 +5,12 @@
 @namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonBase
 
-@if (_state is not null)
+@if (State.ParameterValue is not null)
 {
     @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
         
     <CascadingValue Value="_bpBtn">
-        @if (_state == ButtonState.Enabled)
+        @if (State.ParameterValue == ButtonState.Enabled)
         {
             <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
                 @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
@@ -28,7 +28,7 @@
                 @ChildContent
             </button>
         }
-        else if (_state == ButtonState.Disabled)
+        else if (State.ParameterValue == ButtonState.Disabled)
         {
             <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                 @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
@@ -46,7 +46,7 @@
                 @ChildContent
             </button>
         }
-        else if (_state == ButtonState.Loading)
+        else if (State.ParameterValue == ButtonState.Loading)
         {
             <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                 @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)

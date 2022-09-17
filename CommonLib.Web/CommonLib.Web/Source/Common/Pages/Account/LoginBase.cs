@@ -246,7 +246,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             MyInputBase[] allInputs = { _cbRememberMe, _txtUserName, _txtPassword };
             foreach (var input in allInputs)
-                input.State.ParameterValue = otherControlsState == ButtonState.Enabled ? InputState.Enabled : InputState.Disabled;
+                input.State.ParameterValue = otherControlsState == ButtonState.Enabled && !input.State.ParameterValue.IsForced ? InputState.Enabled : InputState.Disabled;
             
             await StateHasChangedAsync(true);
         }

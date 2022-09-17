@@ -131,7 +131,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             MyInputBase[] allInputs = { _txtEmail, _txtResetPasswordCode, _pwdPassword, _pwdConfirmPassword };
             foreach (var input in allInputs)
-                input.State.ParameterValue = otherControlsState == ButtonState.Enabled ? InputState.Enabled : InputState.Disabled;
+                input.State.ParameterValue = otherControlsState == ButtonState.Enabled && !input.State.ParameterValue.IsForced ? InputState.Enabled : InputState.Disabled;
 
             MyNavLinkBase[] allNavLinks = { _nlForgotPassword };
             foreach (var navLink in allNavLinks)

@@ -11,8 +11,6 @@ using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
-using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 {
@@ -22,7 +20,7 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
         
         protected BlazorParameter<MyInputBase> _bpTextInput;
         protected ElementReference _jsTextInput;
-
+      
         protected override async Task OnInitializedAsync()
         {
             _bpTextInput ??= new BlazorParameter<MyInputBase>(this);
@@ -63,10 +61,15 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
                     ? $"{displayName}..."
                     : null;
 
-            if (State.ParameterValue == InputState.Disabled)
-                AddAttribute("disabled", string.Empty);
-            else
-                RemoveAttribute("disabled");
+            if (State.HasChanged())
+            {
+                State.ParameterValue = State.ParameterValue ?? InputState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+
+                if (State.ParameterValue.IsDisabled) // Disabled or ForceDisabled
+                    AddAttribute("disabled", string.Empty);
+                else
+                    RemoveAttribute("disabled");
+            }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
