@@ -22,9 +22,11 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Pages.Shared;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -54,13 +56,17 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
         private readonly OrderedSemaphore _syncRender = new(1, 1);
         private static readonly SemaphoreSlim _syncSessionId = new(1, 1);
-        private OrderedSemaphore _syncComponentCached = new(1, 1);
-        private OrderedSemaphore _syncAllComponentCached = new(1, 1);
+        private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);        
+        private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
+        private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
+        private static readonly OrderedSemaphore _syncSessionComponentsCache = new(1, 1);
         private DateTime _creationTime;
         private MyPromptBase _prompt;
         private Guid _sessionId;
         private bool _isCacheBeingRebuilt;
-   
+        private bool _isCached;
+        private bool _sessionIdAlreadySet;
+
         protected Guid _guid { get; set; }
         protected string _id { get; set; }
         protected string _renderClasses { get; set; } // this properties prevents async component rendering from throwing if clicking sth fast would change the collection before it is iterated properly within the razor file
@@ -69,11 +75,22 @@ namespace CommonLib.Web.Source.Common.Components
         protected List<string> _classes { get; } = new();
         protected OrderedDictionary<string, string> _style { get; } = new();
         protected OrderedDictionary<string, string> _attributes { get; } = new();
-        protected bool _isLayout
+
+        protected bool _isCommonLayout
         {
             get
             {
-                return GetType().IsSubclassOf(typeof(MyLayoutComponentBase)) && GetType() == typeof(MyLayoutComponent);
+                var type = GetType();
+                return type.IsSubclassOf(typeof(MyLayoutComponentBase)) && type == typeof(MyLayoutComponent);
+            }
+        }
+
+        protected bool _isSpecialisedLayout
+        {
+            get
+            {
+                var type = GetType();
+                return type.IsSubclassOf(typeof(MyLayoutComponentBase)) && type.Name.In("_Layout", "MainLayout");
             }
         }
 
@@ -85,7 +102,7 @@ namespace CommonLib.Web.Source.Common.Components
         {
             get
             {
-                if (_isLayout)
+                if (_isCommonLayout)
                     return _promptModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyPromptBase).BeforeLast("Base"), NavigationManager, HttpClient);
                 return Layout?.ParameterValue.PromptModuleAsync;
             }
@@ -106,7 +123,18 @@ namespace CommonLib.Web.Source.Common.Components
             set =>  _sessionId = value;
         }
 
-        public bool IsCached { get; set; }
+        public bool IsCached
+        {
+            get => _isCached;
+            set
+            {
+                if (value)
+                    Layout.ParameterValue.CachedComponents[_guid] = this;
+                else
+                    Layout.ParameterValue.CachedComponents.Remove(_guid);
+                _isCached = value;
+            }
+        }
 
         [Parameter]
         public RenderFragment Body { get; set; }
@@ -212,9 +240,7 @@ namespace CommonLib.Web.Source.Common.Components
             if (!_isInitialized)
             {
                 if (_guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
-                {
                     _guid = Guid.NewGuid();
-                }
                 
                 SetAllParametersToDefaults(); // TODO: is this really needed? | it can't be aftere `parameters.SetParameterProperties(this)` because it would break Cascading Params
                 
@@ -238,13 +264,13 @@ namespace CommonLib.Web.Source.Common.Components
                 if (forceSetCascadingParamsAsChangedOnFirstSetup)
                     SetCascadingBlazorParametersAsChanged();
 
-                if (Layout.HasValue() && !_isLayout) // Style components would not have Layout value as they are rendered manually to a css file
+                if (Layout.HasValue() && !IsDisposed) // Style components would not have Layout value as they are rendered manually to a css file so we need `Layout.HasValue()`, also a specialized layout from an app would have a value and wouldn't be a common layout so I need to account for that lateer, here `&& !_isCommonLayout && !_isSpecialisedLayout` is not needed because MyLayoutComponent utilizes these event | IsDisposed is an edge case, I don't want the component to remain in cache if it was disposed before params were initialised
                 {
-                    Layout.ParameterValue.AddComponent(this);
+                    Layout.ParameterValue.Components[_guid] = this;
                     Layout.ParameterValue.LayoutSessionIdSet -= Layout_SessionIdSet; // also add an event to layout itself as well so app can trigger Rebuild component cache
                     Layout.ParameterValue.LayoutSessionIdSet += Layout_SessionIdSet;
-                    Layout.ParameterValue.AfterFirstRenderWhenAllCached -= Layout_CurrentComponentFirstRenderedAndAllCached;
-                    Layout.ParameterValue.AfterFirstRenderWhenAllCached += Layout_CurrentComponentFirstRenderedAndAllCached;
+                    Layout.ParameterValue.AfterCurrentComponentFirstRenderedAndAllCached -= Layout_CurrentComponentFirstRenderedAndAllCached;
+                    Layout.ParameterValue.AfterCurrentComponentFirstRenderedAndAllCached += Layout_CurrentComponentFirstRenderedAndAllCached;
                 }
 
                 await OnFirstParametersSetAsync();
@@ -280,14 +306,16 @@ namespace CommonLib.Web.Source.Common.Components
                 {
                     _firstRenderAfterInit = false;
                     
-                    if (_isLayout)
+                    if (_isCommonLayout)
                     {
                         await SetSessionIdAsync();
                         await PromptModuleAsync; // this makes prompt js available within any component
                         var prompts = await ComponentsByTypeAsync<MyPromptBase>();
                         foreach (var prompt in prompts)
                             await prompt.StateHasChangedAsync();
+                        await _syncSessionComponentsCache.WaitAsync();
                         ComponentsCache.SessionCache[SessionId].Components[_guid] = this;
+                        await _syncSessionComponentsCache.ReleaseAsync();
                         await ((MyLayoutComponentBase) this).OnLayoutSessionIdSettingAsync(SessionId);
                     }
 
@@ -301,9 +329,19 @@ namespace CommonLib.Web.Source.Common.Components
                 OnAfterRender(isFirstRenderAfterInit);
                 await OnAfterRenderAsync(isFirstRenderAfterInit);
                 await OnAfterRenderFinishingAsync(isFirstRenderAfterInit);
-
-                if (!_isLayout && Layout.HasValue()) // because `MyLayoutComponent` is wrapping `_Layout`, these events shouldn't bee called for it either
+                
+                if (Layout.HasValue() && !_isCommonLayout)
                 {
+                    if (GetType().In(typeof(MyIconBase), typeof(MyIcon)) && ((MyIconBase)this).IconType.ParameterValue.Equals(IconType.From(LightIconType.SignOut)))
+                    {
+                        Logger.For<MyComponentBase>().Info($"Signout Rendered, SessionId = {SessionId}");
+                    }
+
+                    if (SessionId != Guid.Empty && isFirstRenderAfterInit) // to take account controls that were initialised later
+                    {
+                        //Logger.For<MyComponentBase>().Info($"[{GetType().Name}] {this} loaded after layout, calling `Layout_SessionIdSet` manually");
+                        await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
+                    }
                     BeginWaitingUntilCached(isFirstRenderAfterInit);
                     BeginWaitingUntilAllCached(isFirstRenderAfterInit);
                 }
@@ -321,32 +359,58 @@ namespace CommonLib.Web.Source.Common.Components
 
         private async Task Layout_SessionIdSet(MyComponentBase sender, MyLayoutComponentBase.LayoutSessionIdSetEventArgs e, CancellationToken token)
         {
-            if (_isLayout)
+            if (GetType().In(typeof(MyIconBase), typeof(MyIcon)) && ((MyIconBase)this).IconType.ParameterValue.Equals(IconType.From(LightIconType.SignOut)))
+            {
+                Logger.For<MyComponentBase>().Info($"Signout Layout_SessionIdSet() Called");
+            }
+
+            await _syncAfterSessionIdSet.WaitAsync();
+
+            if (_isCommonLayout)
             {
                 await RebuildComponentsCacheOnCrashAsync();
+                await _syncAfterSessionIdSet.ReleaseAsync();
                 return;
             }
 
-            //await _syncComponentCached.WaitAsync();
-
+            if (IsDisposed || !Layout.HasValue())
+            {
+                await _syncAfterSessionIdSet.ReleaseAsync();
+                return;
+            }
+            
             ComponentsCache.SessionCache[SessionId].Components[_guid] = this;
             IsCached = true;
+
+            if (_sessionIdAlreadySet)
+            {
+                await _syncAfterSessionIdSet.ReleaseAsync();
+                return;
+            }
+
+            _sessionIdAlreadySet = true;
+
             await OnAfterFirstRenderedAndCachedAsync(); // this one concrete component is rendered and cached, if we are in `Login` panel, it will notify `Login` is chached but other components like `Navbar` may still not be rendered
-            if (Layout.ParameterValue.AreAllCached)
-                await OnAfterFirstRenderWhenAllCachingAsync(); // the trick is that once layout is cached all other components had to be cached before it
+            //Logger.For<MyComponentBase>().Info($"Cached: {Layout.ParameterValue.CachedComponents.Count}, not cached: {Layout.ParameterValue.Components.Count}, remaining: [ {Layout.ParameterValue.Components.Values.Except(Layout.ParameterValue.CachedComponents.Values).Select(c => c.GetType().Name).JoinAsString(", ")} ]");
+            if (Layout.ParameterValue.AreAllCachedForTheFirstTime)
+            {
+                //Logger.For<MyComponentBase>().Info($"[{GetType().Name}] Calling: OnAfterFirstRenderWhenAllCachingAsync()");
+                await Layout.ParameterValue.OnAfterCurrentComponentFirstRenderedAndAllCachingAsync(); // the trick is that once layout is cached all other components had to be cached before it
+                //Logger.For<MyComponentBase>().Info($"[{GetType().Name}] Called: OnAfterFirstRenderWhenAllCachingAsync()");
+            }
             
-            //await _syncComponentCached.ReleaseAsync();
+            await _syncAfterSessionIdSet.ReleaseAsync();
         }
 
         private void BeginWaitingUntilCached(bool isFirstRender)
         {
             Task.Run(async () =>
             {
-                await TaskUtils.WaitUntil(() => IsCached);
+                await TaskUtils.WaitUntil(() => IsCached, 25, 10000);
 
-                //await _syncComponentCached.WaitAsync();
+                await _syncComponentCached.WaitAsync();
                 await OnAfterRenderedAndCachedAsync(isFirstRender);
-                //await _syncComponentCached.ReleaseAsync();
+                await _syncComponentCached.ReleaseAsync();
             });
         }
 
@@ -354,20 +418,17 @@ namespace CommonLib.Web.Source.Common.Components
         {
             Task.Run(async () =>
             {
-                await TaskUtils.WaitUntil(() =>
-                {
-                    return Layout.ParameterValue.AreAllCached;
-                });
+                await TaskUtils.WaitUntil(() => Layout.ParameterValue.WereAllCachedAtleastOnce, 25, 10000);
 
-                //await _syncAllComponentsCached.WaitAsync();
+                await _syncAllComponentsCached.WaitAsync();
                 await OnAfterRenderWhenAllCachedAsync(isFirstRender);
-                //await _syncAllComponentsCached.ReleaseAsync();
+                await _syncAllComponentsCached.ReleaseAsync();
             });
         }
 
-        private async Task Layout_CurrentComponentFirstRenderedAndAllCached(MyComponentBase sender, MyLayoutComponentBase.AfterFirstRenderWhenAllCachedEventArgs e, CancellationToken token)
+        private async Task Layout_CurrentComponentFirstRenderedAndAllCached(MyComponentBase sender, MyLayoutComponentBase.AfterCurrentComponentFirstRenderedAndAllCachedEventArgs e, CancellationToken token)
         {
-            if (_isLayout)
+            if (_isCommonLayout)
                 return;
 
             await OnAfterFirstRenderWhenAllCachedAsync();
@@ -734,13 +795,13 @@ namespace CommonLib.Web.Source.Common.Components
         {
             _creationTime = DateTime.UtcNow;
 
-            if (!_isLayout || _isCacheBeingRebuilt)
+            if (!_isCommonLayout || _isCacheBeingRebuilt)
                 return;
 
             _isCacheBeingRebuilt = true;
 
             var componentsSessionCache = await GetComponentsSessionCacheAsync();
-            var layouts = componentsSessionCache.Components.Values.Where(c => c._isLayout).ToArray();
+            var layouts = componentsSessionCache.Components.Values.Where(c => c._isCommonLayout).ToArray();
 
             if (!layouts.Except(this).Any())
             {
@@ -757,7 +818,7 @@ namespace CommonLib.Web.Source.Common.Components
                 componentsSessionCache.Components.Remove(incorrectLayout._guid);
             }
 
-            var componentsWithWrongLayout = componentsSessionCache.Components.Values.Where(c => !c._isLayout && !c.Layout.ParameterValue.Equals(correctLayout)).ToArray();
+            var componentsWithWrongLayout = componentsSessionCache.Components.Values.Where(c => !c._isCommonLayout && !c.Layout.ParameterValue.Equals(correctLayout)).ToArray();
             foreach (var componentWithWrongLayout in componentsWithWrongLayout)
             {
                 await componentWithWrongLayout.DisposeAsync();
@@ -822,7 +883,10 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<List<TComponent>> ComponentsByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
         {
-            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Where(c => cssClass.In(c._classes)).ToList();
+            await _syncSessionComponentsCache.WaitAsync();
+            var componentsByClass = ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Where(c => cssClass.In(c._classes)).ToList();
+            await _syncSessionComponentsCache.ReleaseAsync();
+            return componentsByClass;
         }
 
         public async Task<TComponent> ComponentByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
@@ -832,18 +896,26 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<TComponent> ComponentByIdAsync<TComponent>(string id) where TComponent : MyComponentBase
         {
-            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
+            await _syncSessionComponentsCache.WaitAsync();
+            var componentById = ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.ToArray().OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
+            await _syncSessionComponentsCache.ReleaseAsync();
+            return componentById;
         }
 
         public async Task<TComponent> ComponentByTypeAsync<TComponent>() where TComponent : MyComponentBase
         {
-            var t = ComponentsCache.SessionCache[SessionId].Components.Values.Select(c => c.GetType().Name).Distinct().ToArray();
-            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().Single();
+            await _syncSessionComponentsCache.WaitAsync();
+            var ComponentByType = ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.ToArray().OfType<TComponent>().Single();
+            await _syncSessionComponentsCache.ReleaseAsync();
+            return ComponentByType;
         }
 
         public async Task<List<TComponent>> ComponentsByTypeAsync<TComponent>() where TComponent : MyComponentBase
         {
-            return ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.OfType<TComponent>().ToList();
+            await _syncSessionComponentsCache.WaitAsync();
+            var componentsByType = ComponentsCache.SessionCache[await GetSessionIdAsync()].Components.Values.ToArray().OfType<TComponent>().ToList();
+            await _syncSessionComponentsCache.ReleaseAsync();
+            return componentsByType;
         }
 
         public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
@@ -856,14 +928,25 @@ namespace CommonLib.Web.Source.Common.Components
             if (disposing)
             {
                 IsDisposed = true;
-                if (RequestScopedCache.TemporarySessionId != Guid.Empty && ComponentsCache.SessionCache.VorN(RequestScopedCache.TemporarySessionId) != null)
-                    ComponentsCache.SessionCache[RequestScopedCache.TemporarySessionId].Components.RemoveAll(c => c.Value.Equals(this));
+                //if (RequestScopedCache.TemporarySessionId != Guid.Empty && ComponentsCache.SessionCache.VorN(RequestScopedCache.TemporarySessionId) != null)
+                //    ComponentsCache.SessionCache[RequestScopedCache.TemporarySessionId].Components.RemoveAll(c => c.Value.Equals(this));
                 if (SessionId != Guid.Empty && ComponentsCache.SessionCache.VorN(SessionId) != null)
+                {
+                    await _syncSessionComponentsCache.WaitAsync();
                     ComponentsCache.SessionCache[SessionId].Components.RemoveAll(c => c.Value.Equals(this));
+                    await _syncSessionComponentsCache.ReleaseAsync();
+                }
+                if (Layout.HasValue())
+                {
+                    Layout.ParameterValue.Components.Remove(_guid);
+                    Layout.ParameterValue.CachedComponents.Remove(_guid);
+                    Layout.ParameterValue.LayoutSessionIdSet -= Layout_SessionIdSet;
+                    Layout.ParameterValue.AfterCurrentComponentFirstRenderedAndAllCached -= Layout_CurrentComponentFirstRenderedAndAllCached;
+                }
                 //if (_moduleAsync != null)
-                //{
+                
                 //    var module = await _moduleAsync;
-                //    try { await module.DisposeAsync(); } catch (JSDisconnectedException) { } 
+                //    try { await module.DisposeAsync(); } catch (JSDisconnectedException) { }
                 //}
                 //_moduleAsync?.Dispose();
 
@@ -928,16 +1011,5 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public event MyAsyncEventHandler<MyComponentBase, AfterFirstRenderWhenAllCachedEventArgs> AfterFirstRenderWhenAllCached;
-        private async Task OnAfterFirstRenderWhenAllCachingAsync(AfterFirstRenderWhenAllCachedEventArgs e)
-        {
-            await AfterFirstRenderWhenAllCached.InvokeAsync(this, e);
-            await OnAfterFirstRenderWhenAllCachedAsync();
-        }
-        protected async Task OnAfterFirstRenderWhenAllCachingAsync() => await OnAfterFirstRenderWhenAllCachingAsync(new AfterFirstRenderWhenAllCachedEventArgs());
-        public class AfterFirstRenderWhenAllCachedEventArgs : EventArgs
-        {
-            public AfterFirstRenderWhenAllCachedEventArgs() { }
-        }
     }
 }

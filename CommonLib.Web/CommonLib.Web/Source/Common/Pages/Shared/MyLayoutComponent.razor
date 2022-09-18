@@ -6,16 +6,7 @@
         <PageTitle>@Title</PageTitle>
 
         <div class="my-body">
-
-            @if (IsElectron)
-            {
-                <MyTitlebar AppTitle="@Title" />
-            }
-
-            <div class="my-page-scroll-container" @ref="_jsMyPageScrollContainer">
-                @Body
-            </div>
-
+            @Body
         </div>
     </CascadingValue>
 </TelerikRootComponent>

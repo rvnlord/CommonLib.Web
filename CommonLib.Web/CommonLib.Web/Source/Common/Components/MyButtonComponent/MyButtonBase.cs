@@ -95,7 +95,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
             if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
-                Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
+                //Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
 
                 ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue?.State switch
                 {

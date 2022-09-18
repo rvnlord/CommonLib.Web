@@ -13,27 +13,19 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
 {
     public class MyLayoutComponentBase : MyComponentBase
     {
-        private OrderedSemaphore _syncComponents = new(1, 1);
-
         protected ElementReference _jsMyPageScrollContainer { get; set; }
         protected BlazorParameter<MyLayoutComponentBase> _bpLayoutToCascade { get; set; }
         public Dictionary<Guid, MyComponentBase> Components { get; set; }
+        public Dictionary<Guid, MyComponentBase> CachedComponents { get; set; }
 
-        public bool AreAllCached
-        {
-            get
-            {
-                _syncComponents.Wait();
-                var areCached = Components.Values.All(c => c.IsCached);
-                _syncComponents.Release();
-                return areCached;
-            }
-        }
+        public bool WereAllCachedAtleastOnce { get; private set; }
+        public bool AreAllCachedForTheFirstTime => !WereAllCachedAtleastOnce && (WereAllCachedAtleastOnce = CachedComponents.Count == Components.Count);
 
         protected override async Task OnInitializedAsync()
         {
             _bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(this);
             Components = new Dictionary<Guid, MyComponentBase>();
+            CachedComponents = new Dictionary<Guid, MyComponentBase>();
             await Task.CompletedTask;
         }
         
@@ -41,14 +33,6 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
         {
             var navBar = (await GetComponentsSessionCacheAsync()).Components.Values.OfType<MyNavBarBase>().Single();
             await navBar.Setup(_jsMyPageScrollContainer);
-        }
-
-        public MyComponentBase AddComponent(MyComponentBase component)
-        {
-            _syncComponents.Wait();
-            Components[component.GetProperty<Guid>("_guid")] = component; 
-            _syncComponents.Release();
-            return component;
         }
 
         public event MyAsyncEventHandler<MyComponentBase, LayoutSessionIdSetEventArgs> LayoutSessionIdSet;
@@ -66,6 +50,18 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
             {
                 Sessionid = sessionid;
             }
+        }
+
+        public event MyAsyncEventHandler<MyComponentBase, AfterCurrentComponentFirstRenderedAndAllCachedEventArgs> AfterCurrentComponentFirstRenderedAndAllCached;
+        private async Task OnAfterCurrentComponentFirstRenderedAndAllCachingAsync(AfterCurrentComponentFirstRenderedAndAllCachedEventArgs e)
+        {
+            await AfterCurrentComponentFirstRenderedAndAllCached.InvokeAsync(this, e);
+            //Logger.For<MyComponentBase>().Info($"[{GetType().Name}] Called: OnAfterFirstRenderWhenAllCachedAsync()");
+        }
+        public async Task OnAfterCurrentComponentFirstRenderedAndAllCachingAsync() => await OnAfterCurrentComponentFirstRenderedAndAllCachingAsync(new AfterCurrentComponentFirstRenderedAndAllCachedEventArgs());
+        public class AfterCurrentComponentFirstRenderedAndAllCachedEventArgs : EventArgs
+        {
+            public AfterCurrentComponentFirstRenderedAndAllCachedEventArgs() { }
         }
     }
 }
