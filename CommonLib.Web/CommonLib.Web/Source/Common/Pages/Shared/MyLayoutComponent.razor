@@ -1,0 +1,21 @@
+﻿@inherits MyLayoutComponentBase
+@using static CommonLib.Web.Source.AspNetLibConfig
+
+<TelerikRootComponent>
+    <CascadingValue Value="_bpLayoutToCascade">
+        <PageTitle>@Title</PageTitle>
+
+        <div class="my-body">
+
+            @if (IsElectron)
+            {
+                <MyTitlebar AppTitle="@Title" />
+            }
+
+            <div class="my-page-scroll-container" @ref="_jsMyPageScrollContainer">
+                @Body
+            </div>
+
+        </div>
+    </CascadingValue>
+</TelerikRootComponent>
