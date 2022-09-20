@@ -1,8 +1,9 @@
-﻿@inherits MyLayoutComponentBase
-@using static CommonLib.Web.Source.AspNetLibConfig
+﻿@using static CommonLib.Web.Source.AspNetLibConfig
+
+@inherits MyLayoutComponentBase
 
 <TelerikRootComponent>
-    <CascadingValue Value="_bpLayoutToCascade">
+    <CascadingValue Value="_bpLayoutToCascade" Name="LayoutParameter">
         <PageTitle>@Title</PageTitle>
 
         <div class="my-body">

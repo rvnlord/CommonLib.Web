@@ -5,27 +5,31 @@
 @inherits MyDropDownBase<TProperty>
 @typeparam TProperty
 
-<div class="my-dropdown @_validationClass">
-    <div class="my-dropdown-value-and-icon-container" tabindex="0">
-        @if (SelectedItem != null)
-        {
-            <div class="my-dropdown-value" value="@SelectedItem.Index">@SelectedItem.Text</div>
-        }
-        <MyIcon IconType="(Icon ?? IconType.From(LightIconType.ChevronDown)).ToBp()" SizeMode="IconSizeMode.Contain.ToBp()" class="my-dropdown-icon" />
-        <MyIcon IconType="(Icon ?? IconType.From(LightIconType.ChevronUp)).ToBp()" SizeMode="@IconSizeMode.Contain.ToBp()" class="my-dropdown-open-icon" style="display: none" />
-    </div>
-    <ul class="my-dropdown-options-container" my-guid="@_ddlGuid">
-        @if (EmptyItem != null)
-        {
-            <li class="my-dropdown-option" value="@(EmptyItem.Index?.ToString() ?? "")" @onclick="@(e => DdlOption_ClickAsync(e, EmptyItem.Index, _ddlGuid))">@EmptyItem.Text</li>
-        }
-        @if (_ddlItems != null)
-        {
-            @foreach (var item in _ddlItems.Where(i => i.Text != "None"))
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="my-dropdown @_validationClass">
+        <div class="my-dropdown-value-and-icon-container" tabindex="0">
+            @if (SelectedItem != null)
             {
-                <li class="my-dropdown-option" value="@item.Index" @onclick="@(e => DdlOption_ClickAsync(e, item.Index, _ddlGuid))">@item.Text</li>
+                <div class="my-dropdown-value" value="@SelectedItem.Index">@SelectedItem.Text</div>
             }
-        }
-        @ChildContent
-    </ul>
-</div>
+            <MyIcon IconType="(Icon ?? IconType.From(LightIconType.ChevronDown)).ToBp()" SizeMode="IconSizeMode.Contain.ToBp()" class="my-dropdown-icon" />
+            <MyIcon IconType="(Icon ?? IconType.From(LightIconType.ChevronUp)).ToBp()" SizeMode="@IconSizeMode.Contain.ToBp()" class="my-dropdown-open-icon" style="display: none" />
+        </div>
+        <ul class="my-dropdown-options-container" my-guid="@_ddlGuid">
+            @if (EmptyItem != null)
+            {
+                <li class="my-dropdown-option" value="@(EmptyItem.Index?.ToString() ?? "")" @onclick="@(e => DdlOption_ClickAsync(e, EmptyItem.Index, _ddlGuid))">@EmptyItem.Text</li>
+            }
+            @if (_ddlItems != null)
+            {
+                @foreach (var item in _ddlItems.Where(i => i.Text != "None"))
+                {
+                    <li class="my-dropdown-option" value="@item.Index" @onclick="@(e => DdlOption_ClickAsync(e, item.Index, _ddlGuid))">@item.Text</li>
+                }
+            }
+            @ChildContent
+        </ul>
+    </div>
+
+</CascadingValue>

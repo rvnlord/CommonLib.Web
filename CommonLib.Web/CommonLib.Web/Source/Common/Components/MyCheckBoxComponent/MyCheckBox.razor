@@ -1,10 +1,14 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
 @inherits MyCheckBoxBase
 
-<div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" >
-    <label class="my-checkbox-container">
-        <input type="checkbox" @onchange="CheckBox_Checked" checked="@Value" @attributes="@_renderAttributes" />
-        <span class="my-checkmark"></span>
-        <span class="my-checkbox-label">@Description</span>
-    </label>
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" >
+        <label class="my-checkbox-container">
+            <input type="checkbox" @onchange="CheckBox_Checked" checked="@Value" @attributes="@_renderAttributes" />
+            <span class="my-checkmark"></span>
+            <span class="my-checkbox-label">@Description</span>
+        </label>
+    </div>
+
+</CascadingValue>

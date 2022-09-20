@@ -1,34 +1,39 @@
-﻿@namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
-@using CommonLib.Web.Source.Common.Components.MyInputComponent
+﻿@using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Web.Source.Models
+
+@namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 @inherits MyTextInputBase
 
-<CascadingValue Value="State"> @* don't use mew BlazorParameter<> here directly cause it will not propagate correctly *@
-<CascadingValue Value="_bpTextInput">
-    @if (ChildContent == null)
-    {
-        <input @ref="@_jsTextInput" type="text"
-               my-guid="@_guid"
-               value="@Text"
-               placeholder="@Placeholder"
-               class="@_renderClasses"
-               style="@_renderStyle"
-               @attributes="@_renderAttributes"
-               @oninput="@InputText_Input" />
-    }
-    else
-    {
-        <MyInputGroup>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <CascadingValue Value="State"> @* don't use mew BlazorParameter<> here directly cause it will not propagate correctly *@
+    <CascadingValue Value="_bpTextInput">
+        @if (ChildContent == null)
+        {
             <input @ref="@_jsTextInput" type="text"
                    my-guid="@_guid"
                    value="@Text"
                    placeholder="@Placeholder"
                    class="@_renderClasses"
                    style="@_renderStyle"
-                   @oninput="@InputText_Input"
-                   @attributes="@_renderAttributes" />
-            @ChildContent
-        </MyInputGroup>
-    }
-</CascadingValue>
+                   @attributes="@_renderAttributes"
+                   @oninput="@InputText_Input" />
+        }
+        else
+        {
+            <MyInputGroup>
+                <input @ref="@_jsTextInput" type="text"
+                       my-guid="@_guid"
+                       value="@Text"
+                       placeholder="@Placeholder"
+                       class="@_renderClasses"
+                       style="@_renderStyle"
+                       @oninput="@InputText_Input"
+                       @attributes="@_renderAttributes" />
+                @ChildContent
+            </MyInputGroup>
+        }
+    </CascadingValue>
+    </CascadingValue>
+
 </CascadingValue>

@@ -3,26 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
-using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
-using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
-using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
@@ -54,7 +49,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await Task.CompletedTask;
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override async Task OnParametersSetAsync() 
         {
             await Task.CompletedTask;
         }
@@ -63,6 +58,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticatedAsync())
                 return;
+            
+            var layout = Layout;
+            var parent = Parent;
+            var children = Children;
+            var descendants = Descendants;
             
             _allControls = this.GetPropertyNames().Select(this.GetPropertyOrNull<MyComponentBase>).Where(c => c is not null)
                 .Where(c => c.GetPropertyOrNull("State") is not null).ToArray();

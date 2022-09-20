@@ -18,14 +18,19 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
         public Dictionary<Guid, MyComponentBase> Components { get; set; }
         public Dictionary<Guid, MyComponentBase> CachedComponents { get; set; }
 
+        internal const string BodyPropertyName = nameof(Body);
+
         public bool WereAllCachedAtleastOnce { get; private set; }
         public bool AreAllCachedForTheFirstTime => !WereAllCachedAtleastOnce && (WereAllCachedAtleastOnce = CachedComponents.Count == Components.Count);
 
+        [Parameter]
+        public RenderFragment Body { get; set; }
+        
         protected override async Task OnInitializedAsync()
         {
             _bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(this);
-            Components = new Dictionary<Guid, MyComponentBase>();
-            CachedComponents = new Dictionary<Guid, MyComponentBase>();
+            Components ??= new Dictionary<Guid, MyComponentBase>();
+            CachedComponents ??= new Dictionary<Guid, MyComponentBase>();
             await Task.CompletedTask;
         }
         

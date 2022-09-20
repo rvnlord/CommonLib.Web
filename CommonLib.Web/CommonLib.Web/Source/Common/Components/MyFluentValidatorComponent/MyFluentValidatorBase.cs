@@ -7,9 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
-using CommonLib.Web.Source.Common.Components.MyValidationMessageStoreComponent;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using FluentValidation;
 using FluentValidation.Internal;
 using Microsoft.AspNetCore.Components;
@@ -19,12 +19,12 @@ using MoreLinq;
 
 namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 {
-    public class MyFluentValidator : MyComponentBase
+    public class MyFluentValidatorBase : MyComponentBase
     {
         private MyEditContext _explicitEditContext;
         private IServiceProvider _serviceProvider;
         private MyEditContext _currentEditContext;
-        private SemaphoreSlim _syncValidation = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim _syncValidation = new(1, 1);
 
         public MyValidationMessageStore MessageStore { get; set; }
 
@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             await Task.CompletedTask;
         }
 
-        public async Task<MyFluentValidator> InitAsync(MyEditContext editContext, IServiceProvider serviceProvider)
+        public async Task<MyFluentValidatorBase> InitAsync(MyEditContext editContext, IServiceProvider serviceProvider)
         {
             _explicitEditContext = editContext;
             _serviceProvider = serviceProvider;
@@ -243,7 +243,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             IsDisposed = true;
         }
 
-        ~MyFluentValidator() 
+        ~MyFluentValidatorBase() 
         {
             _ = DisposeAsync(false);
         }

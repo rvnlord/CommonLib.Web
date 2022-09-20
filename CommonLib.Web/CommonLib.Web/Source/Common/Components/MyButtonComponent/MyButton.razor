@@ -5,65 +5,69 @@
 @namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonBase
 
-@if (State.ParameterValue is not null)
-{
-    @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
-        
-    <CascadingValue Value="_bpBtn">
-        @if (State.ParameterValue == ButtonState.Enabled)
-        {
-            <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
-                }
-                @if (!Value.ParameterValue.IsNullOrWhiteSpace())
-                {
-                    <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
-                }
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
-                }
-                @ChildContent
-            </button>
-        }
-        else if (State.ParameterValue == ButtonState.Disabled)
-        {
-            <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
-                }
-                @if (!Value.ParameterValue.IsNullOrWhiteSpace())
-                {
-                    <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
-                }
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
-                }
-                @ChildContent
-            </button>
-        }
-        else if (State.ParameterValue == ButtonState.Loading)
-        {
-            <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
-                }
-                @if (!Value.ParameterValue.IsNullOrWhiteSpace())
-                {
-                    <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
-                }
-                @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
-                {
-                    <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
-                }
-                @ChildContent
-                <MyImage Path="~/images/content-loader.gif" class="my-btn-loader" style="padding-top: 0"></MyImage>
-            </button>
-        }
-    </CascadingValue>
-}
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (State.ParameterValue is not null)
+    {
+        @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
+
+        <CascadingValue Value="_bpBtn">
+            @if (State.ParameterValue == ButtonState.Enabled)
+            {
+                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                    }
+                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    {
+                        <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
+                    }
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                    }
+                    @ChildContent
+                </button>
+            }
+            else if (State.ParameterValue == ButtonState.Disabled)
+            {
+                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                    }
+                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    {
+                        <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
+                    }
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                    }
+                    @ChildContent
+                </button>
+            }
+            else if (State.ParameterValue == ButtonState.Loading)
+            {
+                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                    }
+                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    {
+                        <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
+                    }
+                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    {
+                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                    }
+                    @ChildContent
+                    <MyImage Path="~/images/content-loader.gif" class="my-btn-loader" style="padding-top: 0"></MyImage>
+                </button>
+            }
+        </CascadingValue>
+    }
+
+</CascadingValue>

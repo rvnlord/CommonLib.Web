@@ -1,15 +1,20 @@
-﻿@namespace CommonLib.Web.Source.Common.Components.MyTileComponent
+﻿@using CommonLib.Web.Source.Common.Utils.UtilClasses
 
-@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@namespace CommonLib.Web.Source.Common.Components.MyTileComponent
+@inherits MyComponentBase
 
-<div class="my-menu-tile" @onclick="@OnClick">
-    <div class="my-menu-tile-content">
-        <MyIcon IconType="@Icon" Class="my-menu-tile-icon" Color="@IconColor" />
-        <div class="my-menu-tile-text">
-            @Text
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="my-menu-tile" @onclick="@OnClick">
+        <div class="my-menu-tile-content">
+            <MyIcon IconType="@Icon" Class="my-menu-tile-icon" Color="@IconColor" />
+            <div class="my-menu-tile-text">
+                @Text
+            </div>
         </div>
     </div>
-</div>
+
+</CascadingValue>
 
 @code {
     [Parameter]

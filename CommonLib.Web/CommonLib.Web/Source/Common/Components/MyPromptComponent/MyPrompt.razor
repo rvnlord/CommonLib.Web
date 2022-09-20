@@ -9,4 +9,8 @@
 @namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
 @inherits MyPromptBase
 
-<div id="@_id" rendered="false"></div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div id="@_id" rendered="false"></div>
+
+</CascadingValue>

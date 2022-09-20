@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CommonLib.Web.Source.Common.Components.MyValidationMessageStoreComponent;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace CommonLib.Web.Source.Common.Components.MyFieldStateComponent
+namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
     public class MyFieldState
     {

@@ -1,4 +1,8 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonDescriptionBase
 
-<div class="my-btn-description">@ChildContent</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="my-btn-description">@ChildContent</div>
+
+</CascadingValue>

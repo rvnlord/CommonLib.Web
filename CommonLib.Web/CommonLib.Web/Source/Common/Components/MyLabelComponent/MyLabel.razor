@@ -2,11 +2,15 @@
 @using CommonLib.Source.Common.Extensions.Collections
 
 @namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
-@typeparam TProperty
 @inherits MyLabelBase<TProperty>
+@typeparam TProperty
 
-<div class="@_classes.JoinAsString(" ")" style="@_style.CssDictionaryToString()">
-    <div class="@_descriptionClasses.JoinAsString(" ")">
-        @_displayName
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="@_classes.JoinAsString(" ")" style="@_style.CssDictionaryToString()">
+        <div class="@_descriptionClasses.JoinAsString(" ")">
+            @_displayName
+        </div>
     </div>
-</div>
+
+</CascadingValue>

@@ -1,7 +1,10 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyNavMenuComponent
-
 @inherits MyNavMenuBase
 
-<div class="@_renderClasses">
-    @ChildContent
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="@_renderClasses">
+        @ChildContent
+    </div>
+
+</CascadingValue>

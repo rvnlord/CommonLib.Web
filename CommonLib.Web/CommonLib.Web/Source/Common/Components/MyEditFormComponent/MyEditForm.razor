@@ -4,10 +4,14 @@
 @namespace CommonLib.Web.Source.Common.Components.MyEditFormComponent
 @inherits MyEditFormBase
 
-<form class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" onsubmit="@_handleSubmitDelegate">
-    <CascadingValue Value="_fixedEditContext">
-    <CascadingValue Value="_fixedEditContextBp">
-        @ChildContent
-    </CascadingValue> 
-    </CascadingValue>
-</form>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <form class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" onsubmit="@_handleSubmitDelegate">
+        <CascadingValue Value="_fixedEditContext">
+        <CascadingValue Value="_fixedEditContextBp">
+            @ChildContent
+        </CascadingValue> 
+        </CascadingValue>
+    </form>
+
+</CascadingValue>

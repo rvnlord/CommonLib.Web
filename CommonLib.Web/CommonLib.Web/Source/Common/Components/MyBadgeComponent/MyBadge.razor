@@ -1,10 +1,14 @@
-﻿@namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
+﻿@namespace CommonLib.Web.Source.Common.Components.MyBadgeComponent
 @inherits MyBadgeBase
 
-<div id="@_id" 
-     my-guid="@_guid"
-     class="@_renderClasses"
-     style="@_renderStyle"
-     @attributes="@_renderAttributes">
-     @ChildContent
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div id="@_id" 
+         my-guid="@_guid"
+         class="@_renderClasses"
+         style="@_renderStyle"
+         @attributes="@_renderAttributes">
+         @ChildContent
+    </div>
+
+</CascadingValue>

@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using CommonLib.Web.Source.Common.Components.MyFieldStateComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
-using CommonLib.Web.Source.Common.Components.MyValidationMessageStoreComponent;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
 {
-    public sealed class MyEditContext : ComponentBase
+    public sealed class MyEditContext
     {
         private readonly Dictionary<FieldIdentifier, MyFieldState> _fieldStates;
 
@@ -46,13 +45,13 @@ namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
             OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields));
         }
 
-        public void NotifyValidationStateChanged(in FieldIdentifier? validatedField, MyFluentValidator validator)
+        public void NotifyValidationStateChanged(in FieldIdentifier? validatedField, MyFluentValidatorBase validator)
         {
             OnValidationStateChanged?.Invoke(this, new MyValidationStateChangedEventArgs(validatedField, validator));
             OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validatedField, validator));
         }
 
-        public void NotifyValidationStateChanged(MyFluentValidator validator) => NotifyValidationStateChanged(null, validator);
+        public void NotifyValidationStateChanged(MyFluentValidatorBase validator) => NotifyValidationStateChanged(null, validator);
 
         public void MarkAsUnmodified(in FieldIdentifier fieldIdentifier)
         {
@@ -142,7 +141,7 @@ namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
             AllModelFields = allModelFields;
         }
 
-        public MyValidationStateChangedEventArgs(FieldIdentifier? validatedField, MyFluentValidator validator)
+        public MyValidationStateChangedEventArgs(FieldIdentifier? validatedField, MyFluentValidatorBase validator)
         {
             var model = validator.CascadedEditContext.ParameterValue.Model;
             AllModelFields = validator.CascadedEditContext.ParameterValue.Model.GetPropertyNames().Select(p => new FieldIdentifier(model, p)).ToList();

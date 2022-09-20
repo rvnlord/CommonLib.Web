@@ -4,106 +4,120 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.ViewModels.Account
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
+
 @inherits EditBase
 
-@if (HasAuthenticationStatus(AuthStatus.NotAuthenticated)) // show nothing if null, not checked
-{
-    <div class="no-page-error">You need to be logged in to access this page</div>
-}
-else if (HasAuthenticationStatus(AuthStatus.Authenticated))
-{
-    <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-        <MyEditForm @ref="_editForm" EditContext="_editContext" class="my-container">
-            <MyFluentValidator @ref="_validator" />
-            <div class="my-row">
-                <div class="my-col-12">
-                    <h3>Edit</h3>
-                    <hr class="my-mt-10px" />
-                </div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (HasAuthenticationStatus(AuthStatus.NotChecked))
+    {
+        <div class="no-page-error">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-message">Authorizing...</div>
             </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
+        </div>
+    }
+    else if (HasAuthenticationStatus(AuthStatus.NotAuthenticated)) // show nothing if null, not checked
+    {
+        <div class="no-page-error">You need to be logged in to access this page</div>
+    }
+    else if (HasAuthenticationStatus(AuthStatus.Authenticated))
+    {
+        <div class="my-col-sm-auto my-col-12" style="background: #101010;">
+            <MyEditForm @ref="_editForm" EditContext="_editContext" class="my-container">
+                <MyFluentValidator @ref="_validator" />
+                <div class="my-row">
+                    <div class="my-col-12">
+                        <h3>Edit</h3>
+                        <hr class="my-mt-10px" />
+                    </div>
                 </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" @ref="_txtId">
-                        <MyInputGroupPrepend>
-                            <MyIcon IconType="IconType.From(LightIconType.IdBadge)"></MyIcon>
-                        </MyInputGroupPrepend>
-                    </MyTextInput>
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyTextInput State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" @ref="_txtId">
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.IdBadge)"></MyIcon>
+                            </MyInputGroupPrepend>
+                        </MyTextInput>
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.Id)" />
+                    </div>
                 </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.Id)" />
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyTextInput For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel" @ref="_txtUserName">
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
+                            </MyInputGroupPrepend>
+                        </MyTextInput>
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.UserName)" />
+                    </div>
                 </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyTextInput For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel" @ref="_txtEmail">
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
+                            </MyInputGroupPrepend>
+                        </MyTextInput>
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.Email)" />
+                    </div>
                 </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel" @ref="_txtUserName">
-                        <MyInputGroupPrepend>
-                            <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
-                        </MyInputGroupPrepend>
-                    </MyTextInput>
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdOldPassword" />
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
+                    </div>
                 </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.UserName)" />
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdNewPassword" />
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
+                    </div>
                 </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                <div class="my-row">
+                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
+                        <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
+                    </div>
+                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
+                        <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdConfirmNewPassword" />
+                    </div>
+                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
+                        <MyValidationMessage For="@(() => _editUserVM.ConfirmNewPassword)" />
+                    </div>
                 </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel" @ref="_txtEmail">
-                        <MyInputGroupPrepend>
-                            <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
-                        </MyInputGroupPrepend>
-                    </MyTextInput>
+                <div class="my-row">
+                    <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
+                        <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" @ref="_btnSave" />
+                    </div>
                 </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.Email)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdOldPassword" />
-                </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdNewPassword" />
-                </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                    <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdConfirmNewPassword" />
-                </div>
-                <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                    <MyValidationMessage For="@(() => _editUserVM.ConfirmNewPassword)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                    <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" @ref="_btnSave" />
-                </div>
-            </div>
-        </MyEditForm>
-    </div>
-}
+            </MyEditForm>
+        </div>
+    }
+
+</CascadingValue>

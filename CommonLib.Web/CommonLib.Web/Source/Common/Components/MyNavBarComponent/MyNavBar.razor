@@ -1,23 +1,27 @@
-﻿@namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
-@using CommonLib.Web.Source.Common.Utils.UtilClasses
+﻿@using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.Common.Converters
 
+@namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 @inherits MyNavBarBase
 
-<div style="position: relative">
-    <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
-        <CascadingValue Value="this">
-            <MyModal class="my-login-modal" my-guid="@LoginModalGuid">
-                <MyModalBody>
-                    <Login OnSignUpClick="BtnSignUp_ClickAsync" OnResetPasswordClick="BtnResetPassword_ClickAsync" OnEditClick="BtnEdit_ClickAsync"></Login>
-                </MyModalBody>
-            </MyModal>
-            <div class="spinner-container" style="background: linear-gradient(to bottom, #202020, black); z-index: 11; margin: 0;">
-                <div class="spinner" style="width: 27px; height: 27px"></div>
-            </div>
-            @ChildContent
-        </CascadingValue>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div style="position: relative">
+        <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
+            <CascadingValue Value="this">
+                <MyModal class="my-login-modal" my-guid="@LoginModalGuid">
+                    <MyModalBody>
+                        <Login OnSignUpClick="BtnSignUp_ClickAsync" OnResetPasswordClick="BtnResetPassword_ClickAsync" OnEditClick="BtnEdit_ClickAsync"></Login>
+                    </MyModalBody>
+                </MyModal>
+                <div class="spinner-container" style="background: linear-gradient(to bottom, #202020, black); z-index: 11; margin: 0;">
+                    <div class="spinner" style="width: 27px; height: 27px"></div>
+                </div>
+                @ChildContent
+            </CascadingValue>
+        </div>
+        <MyPrompt id="promptMain" Max="3" NewFor="TimeSpan.FromSeconds(3)" RemoveAfter="TimeSpan.FromSeconds(0)" />
     </div>
-    <MyPrompt id="promptMain" Max="3" NewFor="TimeSpan.FromSeconds(3)" RemoveAfter="TimeSpan.FromSeconds(0)" />
-</div>
+
+</CascadingValue>

@@ -1,6 +1,9 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyImageComponent
-
 @inherits MyImageBase
 
-<div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" original-height="@_originalHeight" original-width="@_originalWidth" expected-width="@_expectedWidth">
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" original-height="@_originalHeight" original-width="@_originalWidth" expected-width="@_expectedWidth">
+    </div>
+
+</CascadingValue>

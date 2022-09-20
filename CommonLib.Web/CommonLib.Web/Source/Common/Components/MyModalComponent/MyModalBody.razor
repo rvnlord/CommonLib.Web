@@ -4,6 +4,10 @@
 @namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 @inherits MyModalBodyBase
 
-<div class="@_classes.JoinAsString(" ")" style="@_style.CssDictionaryToString()">
-    @ChildContent
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="@_classes.JoinAsString(" ")" style="@_style.CssDictionaryToString()">
+        @ChildContent
+    </div>
+
+</CascadingValue>

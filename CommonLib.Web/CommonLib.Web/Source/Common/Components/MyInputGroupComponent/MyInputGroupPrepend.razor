@@ -1,6 +1,10 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyInputGroupComponent
 @inherits MyInputGroupPrependBase
 
-<div class="my-input-group-prepend">
-    @ChildContent
-</div>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="my-input-group-prepend">
+        @ChildContent
+    </div>
+
+</CascadingValue>

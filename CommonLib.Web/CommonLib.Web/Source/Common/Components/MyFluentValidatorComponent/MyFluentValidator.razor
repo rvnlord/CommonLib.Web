@@ -1,0 +1,11 @@
+﻿@using CommonLib.Web.Source.Models
+@using CommonLib.Web.Source.Common.Components.MyEditContextComponent
+
+@namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
+@inherits MyFluentValidatorBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @ChildContent
+
+</CascadingValue>

@@ -3,18 +3,22 @@
 @namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 @inherits MyModalBase
 
-@if (ChildContent != null)
-{
-    <div class="my-modal-background">
-        <div @ref="@JsModal" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
-            <div class="my-modal-titlebar">
-                <MyButton @ref="_btnCloseModal" Styling="@ButtonStyling.Clear" Sizing="ButtonSizing.Quadratic" class="my-close my-font-sized my-mt-10px my-mr-10px">
-                    <MyIcon Color="none" IconType="@IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.EnforceQuadraticAndCover"></MyIcon>
-                </MyButton>
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (ChildContent != null)
+    {
+        <div class="my-modal-background">
+            <div @ref="@JsModal" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
+                <div class="my-modal-titlebar">
+                    <MyButton @ref="_btnCloseModal" Styling="@ButtonStyling.Clear" Sizing="ButtonSizing.Quadratic" class="my-close my-font-sized my-mt-10px my-mr-10px">
+                        <MyIcon Color="none" IconType="@IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.EnforceQuadraticAndCover"></MyIcon>
+                    </MyButton>
+                </div>
+                <CascadingValue Value="_btnCloseModal">
+                    @ChildContent
+                </CascadingValue>
             </div>
-            <CascadingValue Value="_btnCloseModal">
-                @ChildContent
-            </CascadingValue>
         </div>
-    </div>
-}
+    }
+
+</CascadingValue>
