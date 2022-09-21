@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
+using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Models;
+using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using OpenQA.Selenium;
 
 namespace CommonLib.Web.Source.Common.Pages.Shared
 {
@@ -16,13 +20,9 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
         protected ElementReference _jsMyPageScrollContainer { get; set; }
         protected BlazorParameter<MyLayoutComponentBase> _bpLayoutToCascade { get; set; }
         public Dictionary<Guid, MyComponentBase> Components { get; set; }
-        public Dictionary<Guid, MyComponentBase> CachedComponents { get; set; }
 
         internal const string BodyPropertyName = nameof(Body);
-
-        public bool WereAllCachedAtleastOnce { get; private set; }
-        public bool AreAllCachedForTheFirstTime => !WereAllCachedAtleastOnce && (WereAllCachedAtleastOnce = CachedComponents.Count == Components.Count);
-
+        
         [Parameter]
         public RenderFragment Body { get; set; }
         
@@ -30,22 +30,20 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
         {
             _bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(this);
             Components ??= new Dictionary<Guid, MyComponentBase>();
-            CachedComponents ??= new Dictionary<Guid, MyComponentBase>();
             await Task.CompletedTask;
         }
         
-        protected override async Task OnAfterFirstRenderWhenAllCachedAsync()
+        protected override async Task OnAfterFirstRenderAsync()
         {
-            var navBar = (await GetComponentsSessionCacheAsync()).Components.Values.OfType<MyNavBarBase>().Single();
+            var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             await navBar.Setup(_jsMyPageScrollContainer);
         }
-
+        
+        [JSInvokable]
+        public static async Task UseNavLinkByGuidAsync(Guid sessionId, Guid navLinkGuid) => (await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyNavLinkBase>(navLinkGuid)).NavLink_Click();
+        
         public event MyAsyncEventHandler<MyComponentBase, LayoutSessionIdSetEventArgs> LayoutSessionIdSet;
-        private async Task OnLayoutSessionIdSettingAsync(LayoutSessionIdSetEventArgs e)
-        {
-            await LayoutSessionIdSet.InvokeAsync(this, e);
-            await OnLayoutSessionIdSetAsync(e.Sessionid);
-        }
+        private async Task OnLayoutSessionIdSettingAsync(LayoutSessionIdSetEventArgs e) => await LayoutSessionIdSet.InvokeAsync(this, e);
         public async Task OnLayoutSessionIdSettingAsync(Guid sessionid) => await OnLayoutSessionIdSettingAsync(new LayoutSessionIdSetEventArgs(sessionid));
         public class LayoutSessionIdSetEventArgs : EventArgs
         {
@@ -56,17 +54,6 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
                 Sessionid = sessionid;
             }
         }
-
-        public event MyAsyncEventHandler<MyComponentBase, AfterCurrentComponentFirstRenderedAndAllCachedEventArgs> AfterCurrentComponentFirstRenderedAndAllCached;
-        private async Task OnAfterCurrentComponentFirstRenderedAndAllCachingAsync(AfterCurrentComponentFirstRenderedAndAllCachedEventArgs e)
-        {
-            await AfterCurrentComponentFirstRenderedAndAllCached.InvokeAsync(this, e);
-            //Logger.For<MyComponentBase>().Info($"[{GetType().Name}] Called: OnAfterFirstRenderWhenAllCachedAsync()");
-        }
-        public async Task OnAfterCurrentComponentFirstRenderedAndAllCachingAsync() => await OnAfterCurrentComponentFirstRenderedAndAllCachingAsync(new AfterCurrentComponentFirstRenderedAndAllCachedEventArgs());
-        public class AfterCurrentComponentFirstRenderedAndAllCachedEventArgs : EventArgs
-        {
-            public AfterCurrentComponentFirstRenderedAndAllCachedEventArgs() { }
-        }
+        
     }
 }

@@ -89,13 +89,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             await Task.CompletedTask;
         }
-
-        protected override Task OnAfterFirstRenderAsync()
-        {
-            return base.OnAfterFirstRenderAsync();
-        }
-
-        protected override async Task OnAfterFirstRenderWhenAllCachedAsync()
+        
+        protected override async Task OnAfterFirstRenderAsync()
         {
             await SetControlStatesAsync(ButtonState.Disabled);
             
@@ -150,15 +145,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await StateHasChangedAsync();
             }
         }
-
-        protected override Task OnAfterRenderAsync(bool firstRender)
+        
+        protected override async Task OnAfterRenderAsync(bool isFirstRender)
         {
-            return base.OnAfterRenderAsync(firstRender);
-        }
-
-        protected override async Task OnAfterRenderWhenAllCachedAsync(bool isFirstRender)
-        {
-            if (isFirstRender)
+            if (isFirstRender || IsDisposed)
                 return;
             await EnsureAuthenticationPerformedAsync(); 
         }
