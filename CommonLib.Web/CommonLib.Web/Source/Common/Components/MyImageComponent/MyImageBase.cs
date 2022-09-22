@@ -80,7 +80,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                         var commonAbsoluteVirtualPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, @"_content\CommonLib.Web", Path.ParameterValue);
                         var localAbsoluteVirtualPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, Path.ParameterValue);
 
-                        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
                         {
                             var isCommonResource = (await HttpClient.GetAsync(commonAbsoluteVirtualPath)).IsSuccessStatusCode;
                             var bytesImage = isCommonResource ? await HttpClient.GetByteArrayAsync(commonAbsoluteVirtualPath) : await HttpClient.GetByteArrayAsync(localAbsoluteVirtualPath);
