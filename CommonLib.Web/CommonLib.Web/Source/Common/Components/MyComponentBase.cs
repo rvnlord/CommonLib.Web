@@ -62,7 +62,6 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
         private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
         private static readonly OrderedSemaphore _syncComponentsCache = new(1, 1);
-        private DateTime _creationTime;
         private MyPromptBase _prompt;
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
@@ -556,6 +555,41 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void SetUserDefinedStyles(bool preserveExistingStyles = false) => SetCustomAndUserDefinedStyles(null, preserveExistingStyles);
 
+        protected void AddStylesIfNotExist(Dictionary<string, string> customStyles)
+        {
+            if (IsDisposed)
+                return;
+
+            _syncStyles.Wait();
+            
+            if (customStyles != null)
+                _style.AddRange(customStyles.Where(s => !s.Value.IsNullOrWhiteSpace() && !s.Key.In(_style.Keys)));
+            _renderStyle = _style.CssDictionaryToString();
+
+            _syncStyles.Release();
+        }
+
+        protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string> { [key] = value });
+
+        protected void AddOrUpdateStyles(Dictionary<string, string> customStyles)
+        {
+            if (IsDisposed)
+                return;
+
+            _syncStyles.Wait();
+
+            if (customStyles != null)
+                foreach (var (key, value) in customStyles)
+                    if (!value.IsNullOrWhiteSpace())
+                        _style.AddOrUpdate(key, value);
+
+            _renderStyle = _style.CssDictionaryToString();
+
+            _syncStyles.Release();
+        }
+
+        protected void AddOrUpdateStyle(string key, string value) => AddOrUpdateStyles(new Dictionary<string, string> { [key] = value });
+
         protected void SetCustomAndUserDefinedAttributes(Dictionary<string, string> customAttributes, bool preserveExistingAttributes = false)
         {
             if (IsDisposed)
@@ -801,10 +835,13 @@ namespace CommonLib.Web.Source.Common.Components
                 IsCached = false;
                 if (LayoutParameter.HasValue())
                 {
-                    LayoutParameter.ParameterValue.Components.Remove(_guid);
-                    LayoutParameter.ParameterValue.LayoutSessionIdSet -= Layout_SessionIdSet;
+                    Layout.Components.Remove(_guid);
+                    Layout.LayoutSessionIdSet -= Layout_SessionIdSet;
                 }
 
+                if (_isCommonLayout && SessionId != Guid.Empty)
+                    SessionCache[SessionId].CurrentLayout = null;
+                
                 _syncClasses?.Dispose();
                 _syncStyles?.Dispose();
                 _syncAttributes?.Dispose();

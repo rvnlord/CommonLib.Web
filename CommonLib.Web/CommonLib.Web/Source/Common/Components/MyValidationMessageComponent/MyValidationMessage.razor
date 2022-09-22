@@ -1,6 +1,7 @@
 ﻿@using CommonLib.Source.Common.Extensions
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Components.MyIconComponent
+@using CommonLib.Web.Source.Common.Converters
 
 @namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 @inherits MyValidationMessageBase<TProperty>
@@ -14,7 +15,7 @@
             {
                 if (Status == ValidationMessageStatus.Validating)
                 {
-                    <MyImage Path="~/images/inline-loader.gif" style="@_strImageCss"></MyImage>
+                    <MyImage Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
                 }
                 else if (_iconType != null)
                 {
@@ -35,7 +36,7 @@
 
                 if (Status == ValidationMessageStatus.Validating)
                 {
-                    <MyImage Path="~/images/inline-loader.gif" style="@_strImageCss"></MyImage>
+                    <MyImage Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
                 }
                 else if (_iconType != null)
                 {

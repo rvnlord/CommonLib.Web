@@ -64,7 +64,7 @@
                         <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
-                    <MyImage Path="~/images/content-loader.gif" class="my-btn-loader" style="padding-top: 0"></MyImage>
+                    <MyImage Path="@("~/images/content-loader.gif".ToBp())" class="my-btn-loader" style="padding-top: 0"></MyImage>
                 </button>
             }
         </CascadingValue>

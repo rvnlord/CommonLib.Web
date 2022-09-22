@@ -105,9 +105,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 
             if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
                 || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabled == true)
-            {
                 _disabled = true;
-            }
             else
                 _disabled = false;
 
