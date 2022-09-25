@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
-using CommonLib.Web.Source.Common.Utils.UtilClasses;
-using Microsoft.AspNetCore.Components;
+using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
+namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
     public sealed class MyEditContext
     {
@@ -77,7 +75,6 @@ namespace CommonLib.Web.Source.Common.Components.MyEditContextComponent
         }
 
         public IEnumerable<string> GetValidationMessages(string fieldName) => GetValidationMessages(new FieldIdentifier(Model, fieldName));
-        //public IEnumerable<string> GetValidationMessages(Expression<Func<object>> accessor) => GetValidationMessages(FieldIdentifier.Create(accessor));
         public IEnumerable<string> GetValidationMessages<TProperty>(Expression<Func<TProperty>> accessor) => GetValidationMessages(FieldIdentifier.Create(accessor));
         public bool IsModified(in FieldIdentifier fieldIdentifier) => _fieldStates.TryGetValue(fieldIdentifier, out var state) && state.IsModified;
         public bool IsModified(Expression<Func<object>> accessor) => IsModified(FieldIdentifier.Create(accessor));

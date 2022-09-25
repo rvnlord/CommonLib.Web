@@ -17,6 +17,8 @@
             }
         }
 
+        public T V => ParameterValue;
+
         public T PreviousParameterValue => _previousParameterValue;
 
         public BlazorParameter(T parameterValue)

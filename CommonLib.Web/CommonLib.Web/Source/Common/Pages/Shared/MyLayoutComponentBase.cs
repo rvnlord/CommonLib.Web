@@ -11,7 +11,6 @@ using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using OpenQA.Selenium;
 
 namespace CommonLib.Web.Source.Common.Pages.Shared
 {
@@ -54,6 +53,5 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
                 Sessionid = sessionid;
             }
         }
-        
     }
 }

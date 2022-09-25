@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Blazored.SessionStorage;
-using CommonLib.Web.Source.Common.Components.MyEditContextComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
@@ -34,6 +33,8 @@ using Microsoft.JSInterop;
 using Truncon.Collections;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
+using MoreLinq;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -109,6 +110,7 @@ namespace CommonLib.Web.Source.Common.Components
         public bool IsRendered => !_firstRenderAfterInit;
         public bool IsDisposed { get; set; }
         public bool FirstParamSetup => _firstParamSetup;
+        public bool IsRerendered { get; set; } // to be set manually on demand
 
         public Guid SessionId
         {
@@ -149,6 +151,22 @@ namespace CommonLib.Web.Source.Common.Components
                 foreach (var child in Children)
                     descendants.AddRange(child.Descendants);
                 return descendants;
+            }
+        }
+
+        public List<MyComponentBase> Ancestors
+        {
+            get
+            {
+                var ancestors = new List<MyComponentBase>();
+                var parent = Parent;
+                while (parent is not null)
+                {
+                    ancestors.Add(parent);
+                    parent = ancestors.Last().Parent;
+                }
+
+                return ancestors;
             }
         }
 
@@ -318,6 +336,7 @@ namespace CommonLib.Web.Source.Common.Components
                 OnAfterRender(isFirstRenderAfterInit);
                 await OnAfterRenderAsync(isFirstRenderAfterInit);
                 await OnAfterRenderFinishingAsync(isFirstRenderAfterInit);
+                IsRerendered = true;
 
                 if (LayoutParameter.HasValue() && !_isCommonLayout && SessionId != Guid.Empty && isFirstRenderAfterInit)
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
@@ -455,7 +474,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             if (classes != null)
-                _classes.AddRange(classes.Prepend(cls).Where(c => !c.IsNullOrWhiteSpace()));
+                _classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace()));
             _renderClasses = _classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
@@ -479,7 +498,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void RemoveClasses(string cls, params string[] classes)
         {
-            RemoveClasses(classes.Prepend(cls).ToArray());
+            RemoveClasses(classes.Prepend_(cls).ToArray());
         }
 
         protected void RemoveClasses(string[] classes)
@@ -569,7 +588,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncStyles.Release();
         }
 
-        protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string> { [key] = value });
+        protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string>{ [key] = value });
 
         protected void AddOrUpdateStyles(Dictionary<string, string> customStyles)
         {
@@ -824,6 +843,63 @@ namespace CommonLib.Web.Source.Common.Components
         
         public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
 
+        protected static void ClearControlsRerenderingStatus(IEnumerable<MyComponentBase> controls) => controls.ForEach(c => c.IsRerendered = false);
+
+        protected static async Task WaitForControlsToRerender(IEnumerable<MyComponentBase> controls)
+        {
+            await TaskUtils.WaitUntil(() => controls.All(v => v.IsRerendered));
+            ClearControlsRerenderingStatus(controls);
+        }
+
+        protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null)
+        {
+            var arrControlsToChangeState = controlsToChangeState.ToArray();
+            ClearControlsRerenderingStatus(arrControlsToChangeState);
+
+            if (btnLoading != null)
+                btnLoading.State.ParameterValue = ButtonState.Loading;
+            
+            if (btnLoading != null)
+                arrControlsToChangeState = arrControlsToChangeState.Except(btnLoading).ToArray();
+
+            var notifyParamsChangedTasks = new List<Task>();
+            var changeStateTasks = new List<Task>();
+            foreach (var control in arrControlsToChangeState)
+            {
+                var stateProp = control.GetProperty("State").GetProperty("ParameterValue");
+                var enumType = stateProp.GetType();
+                Type propType = null;
+                bool? isForcedProp = null;
+                var isEnum = enumType.IsEnum;
+                if (!isEnum)
+                {
+                    isForcedProp = stateProp.GetProperty<bool?>("IsForced");
+                    stateProp = stateProp.GetProperty("State");
+                    propType = enumType;
+                    enumType = stateProp.GetType();
+                }
+                var enumValues = Enum.GetValues(enumType).IColToArray();
+                var val = enumValues.Single(v => StringExtensions.EndsWithInvariant(EnumConverter.EnumToString(v.CastToReflected(enumType)), state.EnumToString()));
+
+                if (!isEnum)
+                {
+                    val = Activator.CreateInstance(propType, val, false);
+                    if (isForcedProp != true)
+                        control.GetProperty("State").SetProperty("ParameterValue", val);
+                }
+                else 
+                    control.GetProperty("State").SetProperty("ParameterValue", val);
+
+                changeStateTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+                notifyParamsChangedTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+            }
+
+            await Task.WhenAll(notifyParamsChangedTasks);
+            await Task.WhenAll(changeStateTasks);
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+            await WaitForControlsToRerender(arrControlsToChangeState);
+        }
+        
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)
@@ -895,6 +971,5 @@ namespace CommonLib.Web.Source.Common.Components
                 IsFirstRender = isFirstRender;
             }
         }
-
     }
 }

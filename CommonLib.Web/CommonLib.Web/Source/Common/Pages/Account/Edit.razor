@@ -38,7 +38,7 @@
                         <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" @ref="_txtId">
+                        <MyTextInput State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel">
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.IdBadge)"></MyIcon>
                             </MyInputGroupPrepend>
@@ -53,7 +53,7 @@
                         <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel" @ref="_txtUserName">
+                        <MyTextInput For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel">
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                             </MyInputGroupPrepend>
@@ -68,7 +68,7 @@
                         <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel" @ref="_txtEmail">
+                        <MyTextInput For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel">
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
                             </MyInputGroupPrepend>
@@ -83,7 +83,7 @@
                         <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdOldPassword" />
+                        <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" />
                     </div>
                     <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
                         <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
@@ -94,7 +94,7 @@
                         <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdNewPassword" />
+                        <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" />
                     </div>
                     <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
                         <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
@@ -105,7 +105,7 @@
                         <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
                     </div>
                     <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" @ref="_pwdConfirmNewPassword" />
+                        <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" />
                     </div>
                     <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
                         <MyValidationMessage For="@(() => _editUserVM.ConfirmNewPassword)" />
@@ -113,7 +113,7 @@
                 </div>
                 <div class="my-row">
                     <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                        <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" @ref="_btnSave" />
+                        <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
                     </div>
                 </div>
             </MyEditForm>
