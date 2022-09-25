@@ -1,25 +1,16 @@
-﻿using System;
-using SimpleInjector;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
+﻿using SimpleInjector;
 using System.Reflection;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
-using CommonLib.Web.Source.Common.Extensions.Collections;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services;
 using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -84,7 +75,6 @@ namespace CommonLib.Web.Server.Source.Common.Utils
                 RunType.AspNetWithPortableElectron => executingAssemblyDir.BeforeFirstOrWholeIgnoreCase(@"\bin"),
                 _ => throw new Exception("Invalid Run Type"),
             };
-            //LoggerUtils.Logger.Log(LogLevel.Info, $@"Content Path: {contentPath}");
             return contentPath;
         }
 

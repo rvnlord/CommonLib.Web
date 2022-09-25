@@ -29,19 +29,19 @@ namespace CommonLib.Web.Source.Common.Extensions
             return rb.Must((_, value, _) => value.Length <= maxLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at most {maxLength} characters");
         }
 
-        public static IRuleBuilderOptions<T, string> NameNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> NameNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindUserVM> userByNameResp = null;
             ApiResponse<FindUserVM> userByIdResp = null;
             return rb.MustAsync(async (model, value, _, _) =>
             {
-                userByNameResp = await accountClient.FindUserByNameAsync(value);
+                userByNameResp = accountClient is not null ? await accountClient.FindUserByNameAsync(value) : await accountManager.FindUserByNameAsync(value);
                 if (userByNameResp.IsError)
                     return false;
                 var id = model.GetProperty<Guid?>("Id");
                 if (id != null && id != Guid.Empty)
                 {
-                    userByIdResp = await accountClient.FindUserByIdAsync((Guid)id);
+                    userByIdResp = accountClient is not null ? await accountClient.FindUserByIdAsync((Guid)id) : await accountManager.FindUserByIdAsync((Guid)id);
                     if (userByIdResp.IsError)
                         return false;
                 }
@@ -57,22 +57,24 @@ namespace CommonLib.Web.Source.Common.Extensions
                     : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
         }
 
-        public static IRuleBuilderOptions<T, string> UserManagerCompliantWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> UserManagerCompliantWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<bool> userManagerComplianceResp = null;
             return rb.MustAsync(async (_, value, vc, _) =>
             {
-                userManagerComplianceResp = await accountClient.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value);
+                userManagerComplianceResp = accountClient is not null ? await accountClient.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value) : await accountManager.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value);
                 return !userManagerComplianceResp.IsError && userManagerComplianceResp.Result;
             }).WithMessage((_, _) => userManagerComplianceResp.Message);
         }
         
-        public static IRuleBuilderOptions<T, string> UserManagerCompliantOrNullWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> UserManagerCompliantOrNullWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<bool> userManagerComplianceResp = null;
             return rb.MustAsync(async (_, value, vc, _) =>
             {
-                userManagerComplianceResp = await accountClient.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value);
+                userManagerComplianceResp = accountClient is not null 
+                    ? await accountClient.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value)
+                    : await accountManager.CheckUserManagerComplianceAsync(vc.PropertyName, vc.DisplayName, value);
                 return value.IsNullOrWhiteSpace() || (!userManagerComplianceResp.IsError && userManagerComplianceResp.Result);
             }).WithMessage((_, _) => userManagerComplianceResp.Message);
         }
@@ -87,19 +89,19 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, value) => $"{validationContext.DisplayName} \"{value}\" must be a valid email address");
         }
 
-        public static IRuleBuilderOptions<T, string> EmailNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> EmailNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindUserVM> userByEmailResp = null;
             ApiResponse<FindUserVM> userByIdResp = null;
             return rb.MustAsync(async (model, value, vc, _) =>
             {
-                userByEmailResp = await accountClient.FindUserByEmailAsync(value);
+                userByEmailResp = accountClient is not null ? await accountClient.FindUserByEmailAsync(value) : await accountManager.FindUserByEmailAsync(value);
                 if (userByEmailResp.IsError)
                     return false;
                 var id = model.GetProperty<Guid?>("Id");
                 if (id != null && id != Guid.Empty)
                 {
-                    userByIdResp = await accountClient.FindUserByIdAsync((Guid)id);
+                    userByIdResp = accountClient is not null ? await accountClient.FindUserByIdAsync((Guid)id) : await accountManager.FindUserByIdAsync((Guid)id);
                     if (userByIdResp.IsError)
                         return false;
                 }
@@ -115,14 +117,14 @@ namespace CommonLib.Web.Source.Common.Extensions
                     : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
         }
 
-        public static IRuleBuilderOptions<T, string> EmailInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> EmailInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ValidationContext<T> validationContext = null;
             ApiResponse<FindUserVM> userByEmailAsync = null;
             return rb.MustAsync(async (_, value, vc, _) =>
             {
                 validationContext = vc;
-                userByEmailAsync = await accountClient.FindUserByEmailAsync(value);
+                userByEmailAsync = accountClient != null ? await accountClient.FindUserByEmailAsync(value) : await accountManager.FindUserByEmailAsync(value);
                 if (userByEmailAsync.IsError)
                     return false;
                 return userByEmailAsync.Result != null;
@@ -140,7 +142,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 validationContext = vc;
                 (_, _, otherPropValue, otherPropDisplayName) = predicate.GetModelAndProperty(o);
-                return value != null && otherPropValue != null && value.EqualsInvariant(otherPropValue);
+                return value.EqualsInvariant(otherPropValue);
             }).WithMessage((_, value) => $"{validationContext.DisplayName} \"{value}\" must be equal to {otherPropDisplayName} \"{otherPropValue}\"");
         }
 
@@ -149,92 +151,110 @@ namespace CommonLib.Web.Source.Common.Extensions
             return rb.Must((_, value, _) => value is not null && value.IsBase58()).WithMessage($"{rb.GetPropertyDisplayName()} has to be a Base58 string");
         }
         
-        public static IRuleBuilderOptions<T, string> CorrectConfirmationCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> CorrectConfirmationCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ValidationContext<T> validationContext = null;
-            ApiResponse<FindUserVM> userByActivationCode = null;
-            return rb.MustAsync(async (_, value, vc, _) =>
+            ApiResponse<FindUserVM> userByActivationCode;
+            return rb.MustAsync(async (model, _, vc, _) =>
             {
                 validationContext = vc;
-                userByActivationCode = await accountClient.FindUserByConfirmationCodeAsync(value);
+                var id = model.GetProperty<Guid>("Id");
+                userByActivationCode = accountClient is not null ? await accountClient.FindUserByIdAsync(id) : await accountManager.FindUserByIdAsync(id);
                 if (userByActivationCode.IsError)
                     return false;
                 return userByActivationCode.Result != null;
             }).WithMessage((_, _) => $"{validationContext.DisplayName} is invalid");
         }
         
-        public static IRuleBuilderOptions<T, string> AccountNotConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> AccountNotConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindUserVM> user;
-            return rb.MustAsync(async (_, value, _, _) =>
+            return rb.MustAsync(async (model, _, _, _) =>
             {
-                user = value.IsEmailAddress() 
-                    ? await accountClient.FindUserByEmailAsync(value)
-                    : await accountClient.FindUserByConfirmationCodeAsync(value);
+                var id = model.GetProperty<Guid>("Id");
+                user = accountClient is not null ? await accountClient.FindUserByIdAsync(id) : await accountManager.FindUserByIdAsync(id);
                 if (user.IsError)
                     return false;
                 return user.Result?.IsConfirmed != true; // userByActivationCode.Result?.EmailActivationToken != null && userByActivationCode.Result?.IsConfirmed == false
             }).WithMessage((_, _) => "Account has already been confirmed");
         }
 
-        public static IRuleBuilderOptions<T, string> AccountConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> AccountConfirmedWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindUserVM> user;
             return rb.MustAsync(async (model, value, _, _) =>
             {
                 if (value.IsNullOrWhiteSpace())
                     return false;
-                user = await accountClient.FindUserByEmailAsync(model.GetProperty<string>("Email"));
+                user = accountClient is not null ? await accountClient.FindUserByEmailAsync(model.GetProperty<string>("Email")) :  await accountManager.FindUserByEmailAsync(model.GetProperty<string>("Email"));
                 if (user.IsError)
                     return false;
                 return user.Result?.IsConfirmed == true;
             }).WithMessage((_, _) => "Account has not been confirmed yet");
         }
 
-        public static IRuleBuilderOptions<T, string> CorrectResetPasswordCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> CorrectResetPasswordCodeWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ValidationContext<T> validationContext = null;
             return rb.MustAsync(async (model, value, vc, _) =>
             {
                 validationContext = vc;
-                var checkResetPasswordCodeResp = await accountClient.CheckUserResetPasswordCodeAsync(new CheckResetPasswordCodeUserVM
-                {
-                    UserName = model.GetProperty<string>("UserName"),
-                    CheckResetPasswordCode = value
-                });
+                var checkResetPasswordCodeResp = accountClient is not null 
+                    ? await accountClient.CheckUserResetPasswordCodeAsync(new CheckResetPasswordCodeUserVM
+                    {
+                        UserName = model.GetProperty<string>("UserName"),
+                        CheckResetPasswordCode = value
+                    }) 
+                    : await accountManager.CheckUserResetPasswordCodeAsync(new CheckResetPasswordCodeUserVM
+                    {
+                        UserName = model.GetProperty<string>("UserName"),
+                        CheckResetPasswordCode = value
+                    });
                 if (checkResetPasswordCodeResp.IsError)
                     return false;
                 return checkResetPasswordCodeResp.Result;
             }).WithMessage((_, _) => $"{validationContext.DisplayName} is invalid");
         }
 
-        public static IRuleBuilderOptions<T, string> IsNotExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> IsNotExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             return rb.MustAsync(async (model, value, _, _) =>
             {
-                var checkPasswordResp = await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
-                {
-                    UserName = model.GetProperty<string>("UserName"),
-                    Password = value
-                });
+                var checkPasswordResp = accountClient is not null 
+                    ? await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
+                    {
+                        UserName = model.GetProperty<string>("UserName"),
+                        Password = value
+                    }) 
+                    : await accountManager.CheckUserPasswordAsync(new CheckPasswordUserVM
+                    {
+                        UserName = model.GetProperty<string>("UserName"),
+                        Password = value
+                    });
                 if (checkPasswordResp.IsError)
                     return false;
                 return !checkPasswordResp.Result;
             }).WithMessage((_, _) => $"Your new password can't be the same as your old password");
         }
 
-        public static IRuleBuilderOptions<T, string> IsExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient)
+        public static IRuleBuilderOptions<T, string> IsExistingPasswordWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<bool> checkPasswordResp = null;
             ValidationContext<T> validationContext = null;
             return rb.MustAsync(async (model, value, vc, _) =>
             {
                 validationContext = vc;
-                checkPasswordResp = await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
-                {
-                    UserName = model.GetProperty<string>("UserName"),
-                    Password = value
-                });
+                checkPasswordResp = accountClient is not null
+                    ? await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
+                    {
+                        Id = model.GetProperty<Guid>("Id"),
+                        Password = value
+                    })
+                    : await accountManager.CheckUserPasswordAsync(new CheckPasswordUserVM
+                    {
+                        Id = model.GetProperty<Guid>("Id"),
+                        Password = value
+                    });
                 return !checkPasswordResp.IsError && checkPasswordResp.Result;
             }).WithMessage((_, _) => checkPasswordResp.IsError 
                 ? checkPasswordResp.Message 

@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.DbContext;
-using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Models.Account;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -16,7 +14,10 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Security;
+using CommonLib.Web.Source.Validators.Account;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +36,7 @@ namespace CommonLib.Web.Source.Services.Account
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly CustomPasswordResetTokenProvider<User> _passwordResetTokenProvider;
+        private readonly IValidator<EditUserVM> _userToEditValidator;
 
         public AccountManager(UserManager<User> userManager,
             SignInManager<User> signInManager,
@@ -485,10 +487,10 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword)
         {
-            if (userToCheckPassword.UserName.IsNullOrWhiteSpace() || userToCheckPassword.Password.IsNullOrWhiteSpace())
+            if ((userToCheckPassword.Id == Guid.Empty && userToCheckPassword.UserName.IsNullOrWhiteSpace()) || userToCheckPassword.Password.IsNullOrWhiteSpace())
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
 
-            var user = _db.Users.Single(u => u.UserName.ToLower() == userToCheckPassword.UserName.ToLower());
+            var user = userToCheckPassword.Id != Guid.Empty ? _db.Users.Single(u => u.Id == userToCheckPassword.Id) : _db.Users.Single(u => u.UserName.ToLower() == userToCheckPassword.UserName.ToLower());
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToCheckPassword.Password);
             if (verificationResult != PasswordVerificationResult.Success)
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
@@ -512,22 +514,51 @@ namespace CommonLib.Web.Source.Services.Account
         {
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
-            if (userToEdit.Id == default)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Id wasn't supplied", new[] { new KeyValuePair<string, string>("Id", "Id is empty") }.ToLookup());
+            if (!(await new EditUserVMValidator(this).ValidateAsync(userToEdit)).IsValid)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
             userToEdit.Id = authUser.Id; // to fix the case when malicious user edited the Id manually
-            var user = await _userManager.FindByIdAsync(userToEdit.Id.ToString());
-            if (userToEdit.Id == default)
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
+            if (user is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no User with the supplied Id") }.ToLookup());
 
-            var isConfirmationRequired = !userToEdit.Email.EqualsInvariant(user.Email) && _userManager.Options.SignIn.RequireConfirmedEmail;
-            user.Email = userToEdit.Email.IsNullOrWhiteSpace() ? user.Email : userToEdit.Email;
-            user.UserName = userToEdit.UserName.IsNullOrWhiteSpace() ? user.UserName : userToEdit.UserName;
-            await _userManager.UpdateAsync(user);
+            var userNameChanged = !userToEdit.UserName.EqualsIgnoreCase(user.UserName);
+            var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
+            var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsIgnoreCase(userToEdit.NewPassword);
+            var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
-            if (!userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.NewPassword.EqualsInvariant(userToEdit.OldPassword))
+            if (!userNameChanged && !emailChanged && !passwordChanged)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
+            
+            var propsToChange = new List<string>();
+
+            if (userNameChanged)
             {
-                if (user.PasswordHash != null && _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.OldPassword) != PasswordVerificationResult.Success) // user should be allowed to change password if he didn't set one at all (was logging in exclusively with an external provider) or if he provided correct Old Password to his Account
+                user.UserName = userToEdit.UserName;
+                propsToChange.Add(nameof(user.UserName));
+            }
+
+            if (emailChanged)
+            {
+                user.Email = userToEdit.Email;
+
+                if (isConfirmationRequired)
+                {
+                    user.EmailConfirmed = false;
+                    var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
+                    if (resendConfirmationResult.IsError)
+                        return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
+
+                    userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
+                }
+
+                propsToChange.Add(nameof(user.Email));
+            }
+
+            if (passwordChanged)
+            {
+                var isOldPasswordCorrect = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.OldPassword) == PasswordVerificationResult.Success;
+                if (user.PasswordHash != null && !isOldPasswordCorrect) // user should be allowed to change password if he didn't set one at all (was logging in exclusively with an external provider) or if he provided correct Old Password to his Account
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Old Password is not Correct", new[] { new KeyValuePair<string, string>("OldPassword", "Incorrect Password") }.ToLookup());
 
                 var errors = new List<IdentityError>();
@@ -538,24 +569,20 @@ namespace CommonLib.Web.Source.Services.Account
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, userToEdit.NewPassword); // use db directly to override identity validation because we want to be able to provide password for a null hash if user didn't set password before
                 userToEdit.Ticket = await GenerateLoginTicketAsync(userToEdit.Id, user.PasswordHash, authUser.RememberMe);
-                await _db.SaveChangesAsync();
+
+                propsToChange.Add("Password");
             }
 
+            await _db.SaveChangesAsync();
+            
             if (isConfirmationRequired)
             {
-                user.EmailConfirmed = false;
-                await _db.SaveChangesAsync();
-                var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
-                if (resendConfirmationResult.IsError)
-                    return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
-
-                userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
                 await _signInManager.SignOutAsync();
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\", since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}, since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
             }
-
-            await _signInManager.SignInAsync(user, true);
-            return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\"", null, userToEdit);
+            
+            await _signInManager.SignInAsync(user, authUser.RememberMe);
+            return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", null, userToEdit);
         }
 
     }

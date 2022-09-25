@@ -35,6 +35,7 @@ using Microsoft.AspNetCore.Http;
 using NBitcoin;
 using MoreLinq;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -847,7 +848,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static async Task WaitForControlsToRerender(IEnumerable<MyComponentBase> controls)
         {
-            await TaskUtils.WaitUntil(() => controls.All(v => v.IsRerendered));
+            await TaskUtils.WaitUntil(() => controls.All(c => c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced)));
             ClearControlsRerenderingStatus(controls);
         }
 

@@ -66,13 +66,32 @@ namespace CommonLib.Web.Source.Common.Utils
 
         public static (T, Scope) GetScopedService<T>() where T : class
         {
-            var (service, scope) = GetScopedService(typeof(T));
-            return ((T)service, scope);
+            var (service, scope) = GetScopedServiceOrNull<T>();
+            if (service is null)
+                throw new NullReferenceException("Service can't be null");
+            return (service, scope);
+        }
+
+        public static (T, Scope) GetScopedServiceOrNull<T>() where T : class
+        {
+            var (service, scope) = GetScopedServiceOrNull(typeof(T));
+            return (service as T, scope);
         }
 
         public static (object, Scope) GetScopedService(Type serviceType)
         {
-            var lifestyle = ServiceProvider.GetRegistration(serviceType)?.Lifestyle;
+            var (service, scope) = GetScopedServiceOrNull(serviceType);
+            if (service is null)
+                throw new NullReferenceException("Service can't be null");
+            return (service, scope);
+        }
+
+        public static (object, Scope) GetScopedServiceOrNull(Type serviceType)
+        {
+            var registration = ServiceProvider.GetRegistration(serviceType);
+            if (registration is null)
+                return (null, null);
+            var lifestyle = registration?.Lifestyle;
             if (lifestyle == null)
                 throw new NullReferenceException($"\"{serviceType.Name}\" has no Lifestyle defined");
             if (!lifestyle.Name.In("Scoped", "Async Scoped", "Transient"))

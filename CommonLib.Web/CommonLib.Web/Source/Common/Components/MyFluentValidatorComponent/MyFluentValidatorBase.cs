@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         private MyEditContext _explicitEditContext;
         private IServiceProvider _serviceProvider;
         private MyEditContext _currentEditContext;
-        private SemaphoreSlim _syncValidation = new(1, 1);
+        private readonly SemaphoreSlim _syncValidation = new(1, 1);
 
         public MyValidationMessageStore MessageStore { get; set; }
 
@@ -47,7 +47,6 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         {
             _explicitEditContext = editContext;
             _serviceProvider = serviceProvider;
-            //await OnInitializedAsync();
             await OnParametersSetAsync();
             return this;
         }
@@ -56,8 +55,6 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         {
             _currentEditContext = _explicitEditContext ?? CascadedEditContext?.ParameterValue;
             if (_currentEditContext != null)
-                //if (_currentEditContext == null)
-                //    throw new InvalidOperationException($"{nameof(MyFluentValidator)} requires a cascading parameter of type {nameof(MyEditContext)}. For example, you can use {nameof(MyFluentValidator)} inside an EditForm.");
             {
                 ServiceScope = (_serviceProvider ?? ServiceProvider).CreateScope();
 
@@ -112,7 +109,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                 MessageStore.HasNoMessages() ? ValidationStatus.Success : ValidationStatus.Failure,
                 ValidationMode.Model, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields);
         }
-
+        
         private async Task ValidateFieldAsync(FieldIdentifier fieldIdentifier)
         {
             await _syncValidation.WaitAsync(); // to prevent UI updating with incorrect messages, especially for other fields when this one changed
@@ -172,17 +169,19 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         private void SetFormValidator()
         {
             var formType = _currentEditContext.Model.GetType();
-            Validator = GetValidatorForObjectType(formType);
+            Validator = GetModelValidator(formType);
             if (Validator == null)
                 throw new InvalidOperationException($"FluentValidation.IValidator<{formType.FullName}> is not registered in the application service provider.");
         }
 
-        private IValidator GetValidatorForObjectType(Type modelType)
+        private IValidator GetModelValidator(Type modelType)
         {
             var validatorType = typeof(IValidator<>);
             var formValidatorType = validatorType.MakeGenericType(modelType);
             return ServiceScope.ServiceProvider.GetService(formValidatorType) as IValidator;
         }
+
+        private IValidator GetModelValidator<TModel>() => GetModelValidator(typeof(TModel));
 
         private IValidator GetFieldValidator(MyEditContext editContext, in FieldIdentifier fieldIdentifier)
         {
@@ -193,7 +192,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             if (ChildValidators.ContainsKey(modelType))
                 return ChildValidators[modelType];
 
-            var validator = GetValidatorForObjectType(modelType);
+            var validator = GetModelValidator(modelType);
             ChildValidators[modelType] = validator;
             return validator;
         }

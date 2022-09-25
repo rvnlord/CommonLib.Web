@@ -45,6 +45,7 @@ namespace CommonLib.Web.Server.Source.Common.Extensions
         public static void UseGlobalServiceProvider(this IApplicationBuilder app, Container container)
         {
             WebServerUtils.Configure(container);
+            WebUtils.Configure(container);
         }
 
         public static void UseGlobalServiceProvider(this IApplicationBuilder app, IServiceProvider serviceProvider)
