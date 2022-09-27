@@ -22,7 +22,7 @@
                     <MyLabel For="@(() => _confirmEmailUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                 </div>
                 <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput State="InputState.Disabled" For="@(() => _confirmEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
+                    <MyTextInput State="InputState.ForceDisabled" For="@(() => _confirmEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
                         <MyInputGroupPrepend>
                             <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                         </MyInputGroupPrepend>
@@ -64,7 +64,7 @@
             </div>
             <div class="my-row">
                 <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                    <MyButton Value="@("Confirm Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.CheckCircle)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnConfirmEmailState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-confirm-email" @ref="_btnConfirmEmail" />
+                    <MyButton Value="@("Confirm Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.CheckCircle)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-confirm-email" />
                 </div>
             </div>
             <div class="my-row">

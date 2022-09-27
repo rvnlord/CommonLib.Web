@@ -1,4 +1,4 @@
-﻿/// <reference path="../../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
 /// <reference path="../../libs/custom/@types/animejs/index.d.ts" />
 
 import "../extensions.js";
@@ -20,10 +20,17 @@ export function blazor_PasswordInput_AfterRender(value, guid) {
     const $passwordInput = $(guid.guidToSelector());
    
     PasswordInputUtils.PasswordInputsValues[guid] = value;
+    const $btnTogglePassword = $passwordInput.nextAll("div.my-input-group-append").find(".my-btn-toggle-password-visibility")
+    const $iconPasswordShown = $btnTogglePassword.find(".my-icon-password-shown");
+    const $iconPasswordHidden = $btnTogglePassword.find(".my-icon-password-hidden");
 
     if (PasswordInputUtils.ArePasswordsVisible[guid]) {
+        $iconPasswordHidden.removeClass("my-d-flex").addClass("my-d-none");
+        $iconPasswordShown.removeClass("my-d-none").addClass("my-d-flex");
         $passwordInput.prop("value", value);
     } else {
+        $iconPasswordShown.removeClass("my-d-flex").addClass("my-d-none");
+        $iconPasswordHidden.removeClass("my-d-none").addClass("my-d-flex");
         $passwordInput.prop("value", value.split("").map(() => "●").join(""));
     }
 }

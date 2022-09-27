@@ -21,5 +21,6 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string ReturnUrl { get; set; }
         public string ExternalProviderKey { get; set; }
         public string Ticket { get; set; }
+        public bool IsConfirmed { get; set; }
     }
 }

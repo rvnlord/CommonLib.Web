@@ -36,6 +36,12 @@ using NBitcoin;
 using MoreLinq;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
+using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
+using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
+using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
+using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -73,7 +79,6 @@ namespace CommonLib.Web.Source.Common.Components
         protected string _renderClasses { get; set; } // these properties prevents async component rendering from throwing if clicking sth fast would change the collection before it is iterated properly within the razor file
         protected string _renderStyle { get; set; }
         protected Dictionary<string, object> _renderAttributes { get; } = new();
-        protected List<string> _classes { get; } = new();
         protected OrderedDictionary<string, string> _style { get; } = new();
         protected OrderedDictionary<string, string> _attributes { get; } = new();
         protected BlazorParameter<MyComponentBase> _bpParentToCascade { get; set; }
@@ -96,6 +101,8 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
         
+        public List<string> Classes { get; } = new();
+
         public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
         public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
         public Task<IJSObjectReference> PromptModuleAsync
@@ -451,15 +458,15 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             if (!preserveExistingClasses)
-                _classes.Clear();
+                Classes.Clear();
             if (!mainClass.IsNullOrWhiteSpace())
-                _classes.Add(mainClass);
+                Classes.Add(mainClass);
             if (customClasses != null)
-                _classes.AddRange(customClasses.Where(c => !c.IsNullOrWhiteSpace()));
+                Classes.AddRange(customClasses.Where(c => !c.IsNullOrWhiteSpace()));
             var additionalClasses = AdditionalAttributes.VorN("class")?.ToString().NullifyIf(s => s.IsNullOrWhiteSpace())?.Split(" ");
             if (additionalClasses != null)
-                _classes.AddRange(additionalClasses.Where(c => !c.IsNullOrWhiteSpace()));
-            _renderClasses = _classes.Distinct().JoinAsString(" ");
+                Classes.AddRange(additionalClasses.Where(c => !c.IsNullOrWhiteSpace()));
+            _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
         }
@@ -475,8 +482,8 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             if (classes != null)
-                _classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace()));
-            _renderClasses = _classes.Distinct().JoinAsString(" ");
+                Classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace()));
+            _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
         }
@@ -489,8 +496,8 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             if (classes != null)
-                _classes.AddRange(classes.Where(c => !c.IsNullOrWhiteSpace()));
-            _renderClasses = _classes.Distinct().JoinAsString(" ");
+                Classes.AddRange(classes.Where(c => !c.IsNullOrWhiteSpace()));
+            _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
         }
@@ -509,8 +516,8 @@ namespace CommonLib.Web.Source.Common.Components
 
             _syncClasses.Wait();
 
-            _classes.RemoveAll(s => s.In(classes));
-            _renderClasses = _classes.JoinAsString(" ");
+            Classes.RemoveAll(s => s.In(classes));
+            _renderClasses = Classes.JoinAsString(" ");
 
             _syncClasses.Release();
         }
@@ -803,7 +810,7 @@ namespace CommonLib.Web.Source.Common.Components
         public async Task<List<TComponent>> ComponentsByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
         {
             await _syncComponentsCache.WaitAsync();
-            var componentsByClass = (Layout ?? (MyLayoutComponentBase)this).Components.Values.OfType<TComponent>().Where(c => cssClass.In(c._classes)).ToList();
+            var componentsByClass = (Layout ?? (MyLayoutComponentBase)this).Components.Values.OfType<TComponent>().Where(c => cssClass.In(c.Classes)).ToList();
             await _syncComponentsCache.ReleaseAsync();
             return componentsByClass;
         }
@@ -846,9 +853,12 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static void ClearControlsRerenderingStatus(IEnumerable<MyComponentBase> controls) => controls.ForEach(c => c.IsRerendered = false);
 
-        protected static async Task WaitForControlsToRerender(IEnumerable<MyComponentBase> controls)
+        protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
         {
-            await TaskUtils.WaitUntil(() => controls.All(c => c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced)));
+            await TaskUtils.WaitUntil(() => controls.All(c =>
+            {
+                return c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced);
+            }));
             ClearControlsRerenderingStatus(controls);
         }
 
@@ -857,18 +867,28 @@ namespace CommonLib.Web.Source.Common.Components
             var arrControlsToChangeState = controlsToChangeState.ToArray();
             ClearControlsRerenderingStatus(arrControlsToChangeState);
 
-            if (btnLoading != null)
+            if (btnLoading is not null)
+            {
                 btnLoading.State.ParameterValue = ButtonState.Loading;
-            
-            if (btnLoading != null)
                 arrControlsToChangeState = arrControlsToChangeState.Except(btnLoading).ToArray();
+            }
 
             var notifyParamsChangedTasks = new List<Task>();
             var changeStateTasks = new List<Task>();
             foreach (var control in arrControlsToChangeState)
             {
                 var stateProp = control.GetProperty("State").GetProperty("ParameterValue");
-                var enumType = stateProp.GetType();
+                var enumType = stateProp?.GetType();
+                if (enumType is null) // special case, uninitialised Blazor param
+                {
+                    var stateType = control.GetProperty("State").GetType().GetProperty("ParameterValue")?.PropertyType;
+                    if (stateType?.IsGenericType == true && stateType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        enumType = Nullable.GetUnderlyingType(stateType);
+                }
+
+                if (enumType is null)
+                    throw new NullReferenceException("enumType shouldn't be null at this point");
+               
                 Type propType = null;
                 bool? isForcedProp = null;
                 var isEnum = enumType.IsEnum;
@@ -898,8 +918,10 @@ namespace CommonLib.Web.Source.Common.Components
             await Task.WhenAll(notifyParamsChangedTasks);
             await Task.WhenAll(changeStateTasks);
             await NotifyParametersChangedAsync().StateHasChangedAsync(true);
-            await WaitForControlsToRerender(arrControlsToChangeState);
+            await WaitForControlsToRerenderAsync(arrControlsToChangeState);
         }
+
+        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink or MyCheckBox && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
         
         protected virtual async Task DisposeAsync(bool disposing)
         {

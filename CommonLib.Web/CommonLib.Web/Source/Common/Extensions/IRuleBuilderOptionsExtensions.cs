@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -48,8 +49,8 @@ namespace CommonLib.Web.Source.Common.Extensions
 
                 var userById = userByIdResp?.Result;
                 var userByName = userByNameResp.Result;
-                
-                return (userById is null || userById.UserName.EqualsIgnoreCase(value)) && (userByName is null || userByName.UserName.EqualsIgnoreCase(value));
+
+                return userByName is null || userByName.UserName.EqualsIgnoreCase(userById?.UserName); // if there is no such user with supplied name or if its this user's current name
             }).WithMessage((_, value) => userByNameResp.IsError 
                 ? userByNameResp.Message 
                 : userByIdResp?.IsError == true
@@ -109,7 +110,7 @@ namespace CommonLib.Web.Source.Common.Extensions
                 var userById = userByIdResp?.Result;
                 var userByEmail = userByEmailResp.Result;
                 
-                return (userById is null || userById.Email.EqualsIgnoreCase(value)) && (userByEmail is null || userByEmail.Email.EqualsIgnoreCase(value));
+                return userByEmail is null || userByEmail.Email.EqualsIgnoreCase(userById?.Email);
             }).WithMessage((_, value) => userByEmailResp.IsError 
                 ? userByEmailResp.Message 
                 : userByIdResp?.IsError == true
@@ -158,8 +159,8 @@ namespace CommonLib.Web.Source.Common.Extensions
             return rb.MustAsync(async (model, _, vc, _) =>
             {
                 validationContext = vc;
-                var id = model.GetProperty<Guid>("Id");
-                userByActivationCode = accountClient is not null ? await accountClient.FindUserByIdAsync(id) : await accountManager.FindUserByIdAsync(id);
+                var confirmationCode = model.GetProperty<string>("ConfirmationCode").Base58ToUTF8();
+                    userByActivationCode = accountClient is not null ? await accountClient.FindUserByConfirmationCodeAsync(confirmationCode) : await accountManager.FindUserByConfirmationCodeAsync(confirmationCode);
                 if (userByActivationCode.IsError)
                     return false;
                 return userByActivationCode.Result != null;
@@ -171,8 +172,17 @@ namespace CommonLib.Web.Source.Common.Extensions
             ApiResponse<FindUserVM> user;
             return rb.MustAsync(async (model, _, _, _) =>
             {
-                var id = model.GetProperty<Guid>("Id");
-                user = accountClient is not null ? await accountClient.FindUserByIdAsync(id) : await accountManager.FindUserByIdAsync(id);
+                var id = model.GetPropertyOrNull<object>("Id") as Guid?;
+                var email = model.GetPropertyOrNull<string>("Email");
+                var userName = model.GetPropertyOrNull<string>("UserName");
+                if (id is not null)
+                    user = accountClient is not null ? await accountClient.FindUserByIdAsync((Guid)id) : await accountManager.FindUserByIdAsync((Guid)id);
+                else if (email is not null)
+                    user = accountClient is not null ? await accountClient.FindUserByEmailAsync(email) : await accountManager.FindUserByEmailAsync(email);
+                else if (userName is not null)
+                    user = accountClient is not null ? await accountClient.FindUserByNameAsync(userName) : await accountManager.FindUserByNameAsync(userName);
+                else
+                    return false;
                 if (user.IsError)
                     return false;
                 return user.Result?.IsConfirmed != true; // userByActivationCode.Result?.EmailActivationToken != null && userByActivationCode.Result?.IsConfirmed == false
@@ -223,12 +233,12 @@ namespace CommonLib.Web.Source.Common.Extensions
                 var checkPasswordResp = accountClient is not null 
                     ? await accountClient.CheckUserPasswordAsync(new CheckPasswordUserVM
                     {
-                        UserName = model.GetProperty<string>("UserName"),
+                        Id = model.GetProperty<Guid>("Id"),
                         Password = value
                     }) 
                     : await accountManager.CheckUserPasswordAsync(new CheckPasswordUserVM
                     {
-                        UserName = model.GetProperty<string>("UserName"),
+                        Id = model.GetProperty<Guid>("Id"),
                         Password = value
                     });
                 if (checkPasswordResp.IsError)
@@ -260,5 +270,17 @@ namespace CommonLib.Web.Source.Common.Extensions
                 ? checkPasswordResp.Message 
                 : $"{validationContext.DisplayName} is Incorrect");
         }
+        
+        public static IRuleBuilderOptions<T, string> RequiredIfHasPasswordWithMessage<T>(this IRuleBuilder<T, string> rb)
+        {
+            ValidationContext<T> validationContext = null;
+            return rb.Must((model, value, vc) =>
+            {
+                validationContext = vc;
+                var hasPassword = model.GetProperty<bool>("HasPassword");
+                return hasPassword && !value.IsNullOrWhiteSpace() || !hasPassword;
+            }).WithMessage((_, _) => $"{validationContext.DisplayName} is required");
+        }
+        
     }
 }

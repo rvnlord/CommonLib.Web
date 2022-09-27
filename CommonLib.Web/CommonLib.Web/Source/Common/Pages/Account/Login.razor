@@ -35,7 +35,7 @@
                                             <MyLabel For="@(() => _loginUserVM.UserName)" />
                                         </div>
                                         <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
-                                            <MyTextInput For="@(() => _loginUserVM.UserName)" SyncPaddingGroup="login-modal" @ref="_txtUserName">
+                                            <MyTextInput For="@(() => _loginUserVM.UserName)" SyncPaddingGroup="login-modal">
                                                 <MyInputGroupPrepend>
                                                     <MyIcon IconType="IconType.From(LightIconType.UserLock)"></MyIcon>
                                                 </MyInputGroupPrepend>
@@ -47,12 +47,12 @@
                                             <MyLabel For="@(() => _loginUserVM.Password)"></MyLabel>
                                         </div>
                                         <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
-                                            <MyPasswordInput For="@(() => _loginUserVM.Password)" SyncPaddingGroup="login-modal" @ref="_txtPassword"></MyPasswordInput>
+                                            <MyPasswordInput For="@(() => _loginUserVM.Password)" SyncPaddingGroup="login-modal"></MyPasswordInput>
                                         </div>
                                     </div>
                                     <div class="my-row">
                                         <div class="my-col-md-8 my-col-12 my-offset-md-4">
-                                            <MyCheckBox For="@(() => _loginUserVM.RememberMe)" @ref="_cbRememberMe"></MyCheckBox>
+                                            <MyCheckBox For="@(() => _loginUserVM.RememberMe)"></MyCheckBox>
                                         </div>
                                     </div>
                                 </div>
@@ -60,16 +60,16 @@
                             <div class="my-col-12">
                                 <div class="my-container my-container-no-gutter" style="box-shadow: inset 0 1px 0 0 #646464; margin-top: 0;">
                                     <div class="my-offset-md-4 my-col-md-4 my-col-12">
-                                        <MyButton Value="@("Sign In".ToBp())" Icon="IconType.From(LightIconType.SignIn)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnSignIn_ClickAsync" @ref="_btnLogin"></MyButton>
+                                        <MyButton Value="@("Sign In".ToBp())" Icon="IconType.From(LightIconType.SignIn)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnSignIn_ClickAsync"></MyButton>
                                     </div>
                                     <div class="my-col-md-4 my-col-12">
-                                        <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync" @ref="_btnRegister"></MyButton>
+                                        <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync"></MyButton>
                                     </div>
                                     <div class="my-col-md-4 my-col-12 my-order-md-0 my-order-1">
-                                        <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close" @ref="_btnDismiss"></MyButton>
+                                        <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close"></MyButton>
                                     </div>
                                     <div class="my-col-md-8 my-col-12">
-                                        <MyButton Value="@("Reset Password".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync" @ref="_btnResetPassword"></MyButton>
+                                        <MyButton Value="@("Reset Password".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync"></MyButton>
                                     </div>
                                 </div>
                             </div>
@@ -97,7 +97,7 @@
                                         foreach (var provider in _loginUserVM.ExternalLogins)
                                         {
                                             <div class="my-col-4">
-                                                <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" @ref="_btnExternalLogins[provider.Name]" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
+                                                <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
                                             </div>
                                         }
                                     }
@@ -199,10 +199,10 @@
                         </GridLayoutRows>
                         <GridLayoutItems>
                             <GridLayoutItem Column="1" Row="1">  
-                                <MyButton Value="@("Sign Out".ToBp())" State="_btnLogoutState" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync" @ref="_btnLogout"></MyButton>
+                                <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync"></MyButton>
                             </GridLayoutItem>
                             <GridLayoutItem Column="2" Row="1">  
-                                <MyButton Value="@("Edit".ToBp())" State="_btnEditState" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" OnClick="BtnEdit_ClickAsync" @ref="_btnEdit"></MyButton>
+                                <MyButton Value="@("Edit".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" OnClick="BtnEdit_ClickAsync"></MyButton>
                             </GridLayoutItem>
                         </GridLayoutItems>
                     </TelerikGridLayout>

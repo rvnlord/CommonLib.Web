@@ -42,14 +42,16 @@ namespace CommonLib.Web.Source.Validators.Account
                 .RequiredWithMessage()
                 .MinLengthWithMessage(3)
                 .MaxLengthWithMessage(25)
-                .UserManagerCompliantWithMessage(AccountClient, AccountManager);
+                .UserManagerCompliantWithMessage(AccountClient, AccountManager)
+                .NameNotInUseWithMessage(AccountClient, AccountManager);
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()
-                .EmailAddressWithMessage();
+                .EmailAddressWithMessage()
+                .EmailNotInUseWithMessage(AccountClient, AccountManager);
 
             RuleFor(m => m.OldPassword)
-                .RequiredWithMessage()
+                .RequiredIfHasPasswordWithMessage()
                 .IsExistingPasswordWithMessage(AccountClient, AccountManager);
 
             RuleFor(m => m.NewPassword)

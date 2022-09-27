@@ -63,7 +63,7 @@ namespace CommonLib.Web.Source.Services.Account
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.UserName.ToLower() == name.ToLower());
             if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Name", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
@@ -76,7 +76,7 @@ namespace CommonLib.Web.Source.Services.Account
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.Email.ToLower() == email.ToLower());
             if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Email", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Email", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
@@ -375,9 +375,15 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin)
         {
             var user = await _userManager.FindByEmailAsync(userToExternalLogin.Email);
-            if (user == null)
+            var userAccountNotExist = user is null;
+            if (userAccountNotExist)
             {
-                var userToRegister = new RegisterUserVM { UserName = userToExternalLogin.UserName, Email = userToExternalLogin.Email };
+                var userToRegister = new RegisterUserVM
+                {
+                    UserName = userToExternalLogin.UserName ?? userToExternalLogin.Email.BeforeFirstOrNull("@"), 
+                    Email = userToExternalLogin.Email,
+                    ReturnUrl = userToExternalLogin.ReturnUrl
+                };
                 var registerUserResponse = await RegisterAsync(userToRegister);
                 if (registerUserResponse.IsError)
                     return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message, null);
@@ -385,7 +391,12 @@ namespace CommonLib.Web.Source.Services.Account
             }
 
             if (!user.EmailConfirmed && _userManager.Options.SignIn.RequireConfirmedEmail)
-                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please Confirm your email first", null);
+            {
+                _mapper.Map(user, userToExternalLogin); // to account for isconfirmed
+                return userAccountNotExist 
+                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", null, userToExternalLogin) 
+                    : new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first", null);
+            }
 
             var externalLoginResult = await _signInManager.ExternalLoginSignInAsync(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.RememberMe, true);
             if (!externalLoginResult.Succeeded)
@@ -487,10 +498,14 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword)
         {
-            if ((userToCheckPassword.Id == Guid.Empty && userToCheckPassword.UserName.IsNullOrWhiteSpace()) || userToCheckPassword.Password.IsNullOrWhiteSpace())
+            if ((userToCheckPassword.Id == Guid.Empty && userToCheckPassword.UserName.IsNullOrWhiteSpace()))
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
 
             var user = userToCheckPassword.Id != Guid.Empty ? _db.Users.Single(u => u.Id == userToCheckPassword.Id) : _db.Users.Single(u => u.UserName.ToLower() == userToCheckPassword.UserName.ToLower());
+            if (user.PasswordHash is null)
+                return userToCheckPassword.Password is null 
+                    ? new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is correct", null, true)
+                    : new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToCheckPassword.Password);
             if (verificationResult != PasswordVerificationResult.Success)
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
@@ -524,7 +539,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             var userNameChanged = !userToEdit.UserName.EqualsIgnoreCase(user.UserName);
             var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
-            var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsIgnoreCase(userToEdit.NewPassword);
+            var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsInvariant(userToEdit.NewPassword);
             var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
             if (!userNameChanged && !emailChanged && !passwordChanged)
@@ -541,24 +556,13 @@ namespace CommonLib.Web.Source.Services.Account
             if (emailChanged)
             {
                 user.Email = userToEdit.Email;
-
-                if (isConfirmationRequired)
-                {
-                    user.EmailConfirmed = false;
-                    var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
-                    if (resendConfirmationResult.IsError)
-                        return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
-
-                    userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
-                }
-
                 propsToChange.Add(nameof(user.Email));
             }
 
             if (passwordChanged)
             {
-                var isOldPasswordCorrect = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.OldPassword) == PasswordVerificationResult.Success;
-                if (user.PasswordHash != null && !isOldPasswordCorrect) // user should be allowed to change password if he didn't set one at all (was logging in exclusively with an external provider) or if he provided correct Old Password to his Account
+                var isOldPasswordCorrect = user.PasswordHash is null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.OldPassword) == PasswordVerificationResult.Success;
+                if (!isOldPasswordCorrect) // user should be allowed to change password if he didn't set one at all (was logging in exclusively with an external provider) or if he provided correct Old Password to his Account
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Old Password is not Correct", new[] { new KeyValuePair<string, string>("OldPassword", "Incorrect Password") }.ToLookup());
 
                 var errors = new List<IdentityError>();
@@ -569,14 +573,23 @@ namespace CommonLib.Web.Source.Services.Account
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, userToEdit.NewPassword); // use db directly to override identity validation because we want to be able to provide password for a null hash if user didn't set password before
                 userToEdit.Ticket = await GenerateLoginTicketAsync(userToEdit.Id, user.PasswordHash, authUser.RememberMe);
+                userToEdit.HasPassword = true;
 
                 propsToChange.Add("Password");
             }
-
+            
             await _db.SaveChangesAsync();
             
             if (isConfirmationRequired)
             {
+                user.EmailConfirmed = false;
+                userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
+                userToEdit.ShouldLogout = true;
+
+                var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
+                if (resendConfirmationResult.IsError)
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
+                
                 await _signInManager.SignOutAsync();
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}, since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
             }

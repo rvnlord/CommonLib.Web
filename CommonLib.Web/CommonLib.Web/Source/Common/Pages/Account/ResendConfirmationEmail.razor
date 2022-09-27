@@ -22,7 +22,7 @@
                     <MyLabel For="@(() => _resendConfirmationEmailUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                 </div>
                 <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput State="InputState.Disabled" For="@(() => _resendConfirmationEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
+                    <MyTextInput State="InputState.ForceDisabled" For="@(() => _resendConfirmationEmailUserVM.UserName)" SyncPaddingGroup="confirm-email-panel">
                         <MyInputGroupPrepend>
                             <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                         </MyInputGroupPrepend>
@@ -49,7 +49,7 @@
             </div>
             <div class="my-row">
                 <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                    <MyButton Value="@("Resend Confirmation Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.EnvelopeOpen)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnResendConfirmationEmailState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-resend-confirmation-email" @ref="_btnResendConfirmationEmail" />
+                    <MyButton Value="@("Resend Confirmation Email".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.EnvelopeOpen)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-resend-confirmation-email" />
                 </div>
             </div>
             <div class="my-row">

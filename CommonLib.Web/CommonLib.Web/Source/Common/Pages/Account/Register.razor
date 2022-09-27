@@ -21,7 +21,7 @@
                     <MyLabel For="@(() => _registerUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                 </div>
                 <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                    <MyTextInput For="@(() => _registerUserVM.UserName)" Icon="" SyncPaddingGroup="register-panel">
+                    <MyTextInput For="@(() => _registerUserVM.UserName)" SyncPaddingGroup="register-panel">
                         <MyInputGroupPrepend>
                             <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
                         </MyInputGroupPrepend>
@@ -70,7 +70,7 @@
             </div>
             <div class="my-row">
                 <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                    <MyButton Value="@("Register".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Auto" State="@_btnRegisterState" IconPlacement="ButtonIconPlacement.Right" class="my-btn-register" @ref="_btnRegister" />
+                    <MyButton Value="@("Register".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-register" />
                 </div>
             </div>
             <div class="my-row">

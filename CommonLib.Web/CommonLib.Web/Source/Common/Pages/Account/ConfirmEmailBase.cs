@@ -7,8 +7,11 @@ using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
+using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
+using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -19,16 +22,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 {
     public class ConfirmEmailBase : MyComponentBase
     {
+        private MyComponentBase[] _allControls;
+        private MyButtonBase _btnConfirmEmail;
+
         protected MyFluentValidator _validator;
-        protected ButtonState _btnConfirmEmailState;
-        protected MyButtonBase _btnConfirmEmail;
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
         protected ConfirmUserVM _confirmEmailUserVM;
 
         protected override async Task OnInitializedAsync()
         {
-            _btnConfirmEmailState = ButtonState.Loading;
             _confirmEmailUserVM = new()
             {
                 Email = NavigationManager.GetQueryString<string>("email")?.Base58ToUTF8(),
@@ -51,6 +54,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
+            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _btnConfirmEmail = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+            
             if (!_confirmEmailUserVM.Email.IsNullOrWhiteSpace() && !_confirmEmailUserVM.ConfirmationCode.IsNullOrWhiteSpace())
             {
                 var isValid = await _editContext.ValidateAsync(); // validate manually if code and email are directly within the url --> validation will trigger showing the messages and disabling the inputs on success
@@ -59,41 +65,39 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 else
                 {
                     await PromptMessageAsync(NotificationType.Error, "Account cannot be activated, please check the validation Messages");
-                    _btnConfirmEmailState = ButtonState.Enabled;
-                    await StateHasChangedAsync();
+                    await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 }
                 return;
             }
            
-            _btnConfirmEmailState = ButtonState.Enabled;
-            await StateHasChangedAsync();
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
-        protected async Task FormConfirmEmail_ValidSubmitAsync() => await ConfirmEmailAsync();
+        protected async Task FormConfirmEmail_ValidSubmitAsync()
+        {
+            _confirmEmailUserVM.ConfirmationCode = _confirmEmailUserVM.ConfirmationCode.Base58ToUTF8(); // unwrap code before sending if it was entered manually
+            await ConfirmEmailAsync();
+        }
 
         protected async Task BtnSubmit_ClickAsync() => await _editForm.SubmitAsync();
 
         private async Task ConfirmEmailAsync()
         {
-            _btnConfirmEmailState = ButtonState.Loading;
-            await StateHasChangedAsync();
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnConfirmEmail);
             var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(_confirmEmailUserVM);
             if (emailConfirmationResponse.IsError)
             {
                 _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChanged(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
                 await PromptMessageAsync(NotificationType.Error, emailConfirmationResponse.Message);
-                _btnConfirmEmailState = ButtonState.Enabled;
-                await StateHasChangedAsync();
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
             }
 
             var confirmedUser = emailConfirmationResponse.Result;
             _confirmEmailUserVM.UserName = confirmedUser.UserName;
-            //NavigationManager.NavigateTo($"/Account/Login/?returnUrl={_confirmUserVM.ReturnUrl?.UTF8ToBase58()}");
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
             await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_confirmEmailUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
-            _btnConfirmEmailState = ButtonState.Disabled;
-            await StateHasChangedAsync();
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
 
         } // https://localhost:44396/Account/ConfirmEmail?email=rvnlord@gmail.com&code=xxx
 

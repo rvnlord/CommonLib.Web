@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
@@ -22,6 +23,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
     {
         private MyComponentBase[] _allControls;
         private MyButtonBase _btnSave;
+        private MyPasswordInputBase _pwdOldPassword;
 
         protected MyFluentValidator _validator { get; set; }
         protected MyEditForm _editForm { get; set; }
@@ -47,8 +49,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
             _btnSave = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+            _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
 
             Mapper.Map(AuthenticatedUser, _editUserVM);
+            if (!_editUserVM.HasPassword)
+                _pwdOldPassword.State.ParameterValue = InputState.ForceDisabled;
+
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
         
@@ -66,7 +72,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!await _editContext.ValidateAsync())
                 return;
             
-            await WaitForControlsToRerender(_allControls);
+            await WaitForControlsToRerenderAsync(_allControls);
 
             var editResponse = await AccountClient.EditAsync(_editUserVM);
             if (editResponse.IsError)
@@ -82,7 +88,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             await EnsureAuthenticationPerformedAsync();
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
+            {
+                if (_editUserVM.HasPassword && _pwdOldPassword.State.V == InputState.ForceDisabled)
+                    _pwdOldPassword.State.ParameterValue = InputState.Enabled;
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            }
             else
             {
                 await SetControlStatesAsync(ButtonState.Disabled, _allControls);

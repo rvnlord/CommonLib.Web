@@ -140,6 +140,10 @@ namespace CommonLib.Web.Source.Services.Account
                 return loginResponse;
 
             var loggedUser = loginResponse.Result;
+
+            if (!loggedUser.IsConfirmed)
+                return loginResponse;
+
             if (loggedUser.RememberMe)
             {
                 await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", loggedUser.Ticket, new { expires = 365 * 24 * 60 * 60 });
@@ -210,17 +214,25 @@ namespace CommonLib.Web.Source.Services.Account
             if (editResp.IsError)
                 return editResp;
 
-            if (authUser?.RememberMe == true)
+            if (editResp.Result.ShouldLogout)
             {
-                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket, new { expires = 365 * 24 * 60 * 60 });
-                await _localStorage.SetItemAsync("Ticket",  editResp.Result.Ticket);
+                await _jsRuntime.InvokeVoidAsync("Cookies.expire", "Ticket");
+                await _localStorage.RemoveItemAsync("Ticket");
             }
             else
             {
-                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket);
-                await _localStorage.RemoveItemAsync("Ticket");
+                if (authUser?.RememberMe == true)
+                {
+                    await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket, new { expires = 365 * 24 * 60 * 60 });
+                    await _localStorage.SetItemAsync("Ticket",  editResp.Result.Ticket);
+                }
+                else
+                {
+                    await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", editResp.Result.Ticket);
+                    await _localStorage.RemoveItemAsync("Ticket");
+                }
             }
-
+            
             return editResp;
         }
 

@@ -7,7 +7,11 @@ using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
+using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -18,16 +22,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 {
     public class ResendConfirmationEmailBase : MyComponentBase
     {
+        private MyComponentBase[] _allControls;
+        private MyButtonBase _btnResendConfirmationEmail;
+
         protected MyFluentValidator _validator;
-        protected ButtonState _btnResendConfirmationEmailState;
-        protected MyButtonBase _btnResendConfirmationEmail;
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
         protected ResendConfirmationEmailUserVM _resendConfirmationEmailUserVM;
         
         protected override async Task OnInitializedAsync()
         {
-            _btnResendConfirmationEmailState = ButtonState.Loading;
             _resendConfirmationEmailUserVM = new()
             {
                 Email = NavigationManager.GetQueryString<string>("email"),
@@ -49,26 +53,27 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            _btnResendConfirmationEmailState = ButtonState.Enabled;
-            await StateHasChangedAsync();
+            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _btnResendConfirmationEmail = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
         protected async Task BtnSubmit_ClickAsync() => await _editForm.SubmitAsync();
 
         public async Task FormResendConfirmationEmail_ValidSubmitAsync()
         {
-            _btnResendConfirmationEmailState = ButtonState.Loading;
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnResendConfirmationEmail);
             var resendEmailConfirmationResponse = await AccountClient.ResendConfirmationEmailAsync(_resendConfirmationEmailUserVM);
             if (resendEmailConfirmationResponse.IsError)
             {
                 _validator.AddValidationMessages(resendEmailConfirmationResponse.ValidationMessages).NotifyValidationStateChanged(_validator);
                 await PromptMessageAsync(NotificationType.Error, resendEmailConfirmationResponse.Message);
-                _btnResendConfirmationEmailState = ButtonState.Enabled;
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
             }
 
-            _btnResendConfirmationEmailState = ButtonState.Disabled;
-            await StateHasChangedAsync();
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
             await PromptMessageAsync(NotificationType.Success, resendEmailConfirmationResponse.Message);
             NavigationManager.NavigateTo($"/Account/ConfirmEmail/?{GetNavQueryStrings()}");
         }

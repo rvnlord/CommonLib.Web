@@ -1,23 +1,19 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
-using CommonLib.Source.Common.Extensions.Collections;
-using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
-using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Truncon.Collections;
 
@@ -25,13 +21,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 {
     public class ForgotPasswordBase : MyComponentBase
     {
+        private MyComponentBase[] _allControls;
+        private MyButtonBase _btnForgotPassword;
+
         protected MyFluentValidator _validator { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
-        protected MyButtonBase _btnForgotPassword { get; set; }
         protected ForgotPasswordUserVM _forgotPasswordUserVM { get; set; }
-        protected MyTextInputBase _txtEmail { get; set; }
-        protected BlazorParameter<ButtonState?> _btnForgotPasswordState;
         
         protected override async Task OnInitializedAsync()
         {
@@ -46,7 +42,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (FirstParamSetup)
             {
-                _btnForgotPasswordState = ButtonState.Disabled;
                 await SetUserNameAsync();
                 _editContext.ReBindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
             }
@@ -55,22 +50,23 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            _btnForgotPassword.State.ParameterValue = ButtonState.Enabled;
-            await StateHasChangedAsync(true);
+            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _btnForgotPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
         protected async Task BtnChangeForgottenPassword_ClickAsync() => await _editForm.SubmitAsync();
         protected async Task FormChangeForgottenPassword_ValidSubmitAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _btnForgotPassword);
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnForgotPassword);
             var forgotPasswordResponse = await AccountClient.ForgotPasswordAsync(_forgotPasswordUserVM);
-
             if (forgotPasswordResponse.IsError)
             {
                 _btnForgotPassword.State.ParameterValue = ButtonState.Enabled;
                 _validator.AddValidationMessages(forgotPasswordResponse.ValidationMessages).NotifyValidationStateChanged(_validator); ;
                 await PromptMessageAsync(NotificationType.Error, forgotPasswordResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled);
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
             }
 
@@ -103,23 +99,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 [nameof(_forgotPasswordUserVM.Email).PascalCaseToCamelCase()] = _forgotPasswordUserVM.Email?.UTF8ToBase58(false),
                 [nameof(_forgotPasswordUserVM.ReturnUrl).PascalCaseToCamelCase()] = _forgotPasswordUserVM.ReturnUrl?.UTF8ToBase58()
             }.Where(kvp => kvp.Value != null).ToQueryString();
-        }
-
-        private async Task SetControlStatesAsync(ButtonState otherControlsState, MyButtonBase btnLoading = null)
-        {
-            if (btnLoading != null)
-                btnLoading.State.ParameterValue = ButtonState.Loading;
-
-            var otherButtons = new[] { _btnForgotPassword }.Except(btnLoading).ToArray();
-            foreach (var btn in otherButtons)
-                if (btn != null)
-                    btn.State.ParameterValue = otherControlsState;
-            
-            MyInputBase[] allInputs = { _txtEmail };
-            foreach (var input in allInputs)
-                input.State.ParameterValue = otherControlsState == ButtonState.Enabled && !input.State.ParameterValue.IsForced ? InputState.Enabled : InputState.Disabled;
-            
-            await StateHasChangedAsync(true);
         }
     }
 }

@@ -21,5 +21,6 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string Ticket { get; set; }
         public string ReturnUrl { get; set; }
         public string Avatar { get; set; }
+        public bool ShouldLogout { get; set; }
     }
 }

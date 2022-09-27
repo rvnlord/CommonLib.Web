@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
-using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
@@ -19,7 +17,6 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.ViewModels.Account;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Truncon.Collections;
 
@@ -27,17 +24,14 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 {
     public class ResetPasswordBase : MyComponentBase
     {
+        private MyComponentBase[] _allControls;
+        private MyButtonBase _btnResetPassword;
+
         protected MyFluentValidator _validator { get; set; }
         protected BlazorParameter<ButtonState?> _bpBtnResetPasswordState { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         protected ResetPasswordUserVM _resetPasswordUserVM { get; set; }
-        protected MyButtonBase _btnResetPassword { get; set; }
-        protected MyTextInputBase _txtEmail { get; set; }
-        protected MyTextInputBase _txtResetPasswordCode { get; set; }
-        protected MyPasswordInputBase _pwdPassword { get; set; }
-        protected MyPasswordInputBase _pwdConfirmPassword { get; set; }
-        protected MyNavLinkBase _nlForgotPassword { get; set; }
         
         protected override async Task OnInitializedAsync()
         {
@@ -66,8 +60,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!_resetPasswordUserVM.Email.IsNullOrWhiteSpace() && !_resetPasswordUserVM.ResetPasswordCode.IsNullOrWhiteSpace())
                 await _editContext.ValidateFieldAsync(() => _resetPasswordUserVM.ResetPasswordCode);
             
-            _btnResetPassword.State.ParameterValue = ButtonState.Enabled;
-            await StateHasChangedAsync(true);
+            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _btnResetPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
         
         protected async Task BtnSubmit_ClickAsync() => await _editForm.SubmitAsync();
@@ -75,20 +71,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         private async Task ResetPasswordAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _btnResetPassword);
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnResetPassword);
             var resetPasswordResponse = await AccountClient.ResetPasswordAsync(_resetPasswordUserVM);
             if (resetPasswordResponse.IsError)
             {
                 _validator.AddValidationMessages(resetPasswordResponse.ValidationMessages).NotifyValidationStateChanged(_validator);
                 await PromptMessageAsync(NotificationType.Error, resetPasswordResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled);
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
             }
 
             Mapper.Map(resetPasswordResponse.Result, _resetPasswordUserVM);
             await PromptMessageAsync(NotificationType.Success, resetPasswordResponse.Message);
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
-            await SetControlStatesAsync(ButtonState.Disabled);
+            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
@@ -117,27 +113,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 [nameof(_resetPasswordUserVM.Email).PascalCaseToCamelCase()] = _resetPasswordUserVM.Email?.UTF8ToBase58(false),
                 [nameof(_resetPasswordUserVM.ReturnUrl).PascalCaseToCamelCase()] = _resetPasswordUserVM.ReturnUrl?.UTF8ToBase58()
             }.Where(kvp => kvp.Value != null).ToQueryString();
-        }
-
-        private async Task SetControlStatesAsync(ButtonState otherControlsState, MyButtonBase btnLoading = null)
-        {
-            if (btnLoading != null)
-                btnLoading.State.ParameterValue = ButtonState.Loading;
-
-            var otherButtons = new[] { _btnResetPassword }.Except(btnLoading).ToArray();
-            foreach (var btn in otherButtons)
-                if (btn != null)
-                    btn.State.ParameterValue = otherControlsState;
-            
-            MyInputBase[] allInputs = { _txtEmail, _txtResetPasswordCode, _pwdPassword, _pwdConfirmPassword };
-            foreach (var input in allInputs)
-                input.State.ParameterValue = otherControlsState == ButtonState.Enabled && !input.State.ParameterValue.IsForced ? InputState.Enabled : InputState.Disabled;
-
-            MyNavLinkBase[] allNavLinks = { _nlForgotPassword };
-            foreach (var navLink in allNavLinks)
-                navLink.State.ParameterValue = otherControlsState == ButtonState.Enabled ? NavLinkState.Enabled : NavLinkState.Disabled;
-
-            await StateHasChangedAsync(true);
         }
     }
 }

@@ -12,7 +12,8 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<User, User>();
             CreateMap<User, RegisterUserVM>();
             CreateMap<User, ConfirmUserVM>();
-            CreateMap<User, LoginUserVM>();
+            CreateMap<User, LoginUserVM>()
+                .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
             CreateMap<LoginUserVM, LoginUserVM>()
                 .ForMember(d => d.ExternalLogins, o => o.Condition(s => s.ExternalLogins?.Any() == true))
                 .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()));
