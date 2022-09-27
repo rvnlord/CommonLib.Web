@@ -11,7 +11,7 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
         {
             CreateMap<User, User>();
             CreateMap<User, RegisterUserVM>();
-            CreateMap<User, ConfirmUserVM>();
+            CreateMap<User, ConfirmUserVM>().ForAllMembers(o => o.Condition((_, _, m) => m is not null));
             CreateMap<User, LoginUserVM>()
                 .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
             CreateMap<LoginUserVM, LoginUserVM>()
@@ -21,6 +21,7 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<User, AuthenticateUserVM>();
             CreateMap<User, ForgotPasswordUserVM>();
             CreateMap<ForgotPasswordUserVM, ForgotPasswordUserVM>();
+            CreateMap<ConfirmUserVM, ConfirmUserVM>();
             CreateMap<User, ResetPasswordUserVM>();
             CreateMap<ResetPasswordUserVM, ResetPasswordUserVM>();
             CreateMap<User, ResendConfirmationEmailUserVM>();

@@ -63,7 +63,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!await EnsureAuthenticationPerformedAsync())
+            if (!await EnsureAuthenticationPerformedAsync(true))
                 return;
 
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
@@ -113,11 +113,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (isFirstRender || IsDisposed)
                 return;
-            
-            ClearControlsRerenderingStatus(new [] { _editForm });
-            await EnsureAuthenticationPerformedAsync();
-            await WaitForControlsToRerenderAsync(new[] { _editForm });
-            SetControls();
+
+            if (await EnsureAuthenticationChangedAsync(false))
+            {
+                SetControls();
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            }
         }
 
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
@@ -135,7 +136,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, externalLoginResponse.Message);
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
-            await EnsureAuthenticationPerformedAsync();
+            await EnsureAuthenticationPerformedAsync(false);
             SetControls();
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
             if (!_loginUserVM.IsConfirmed)
@@ -160,9 +161,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
 
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            await EnsureAuthenticationPerformedAsync();
-            SetControls();
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            if (await EnsureAuthenticationChangedAsync(true))
+            {
+                SetControls();
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            }
         }
 
         protected async Task BtnExternalLogin_ClickAsync(MouseEventArgs e, string provider)
@@ -201,9 +204,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.UserName = null;
             _loginUserVM.Password = null;
 
-            await EnsureAuthenticationPerformedAsync();
-            SetControls();
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            if (await EnsureAuthenticationChangedAsync(true))
+            {
+                SetControls();
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            }
         }
 
         private void SetControls()

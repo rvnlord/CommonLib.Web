@@ -399,55 +399,52 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticatedUser == null && AuthStatus.NotChecked.In(authStatuses) || AuthenticatedUser != null && AuthenticatedUser.HasAnyAuthenticationStatus(authStatuses);
 
-        protected async Task<bool> EnsureAuthenticatedAsync()
+        protected async Task<ComponentAuthenticationStatus> AuthenticateAsync()
         {
             var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
             var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
             AuthenticatedUser = authResponse.Result;
-            if (!authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated))
-            {
-                if (!AuthenticatedUser.Equals(prevAuthUser)) // to rpeveeent infinite AftereRender loop
-                {
-                    await StateHasChangedAsync(true);
-                    await navBar.StateHasChangedAsync(true);
-                }
-                return true;
-            }
 
-            await PromptMessageAsync(NotificationType.Error, authResponse.Message);
+            var authStatus = new ComponentAuthenticationStatus
+            {
+                AuthenticationPerformed = !authResponse.IsError,
+                AuthenticationChanged = !AuthenticatedUser.Equals(prevAuthUser),
+                AuthenticationSuccessful = !authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated),
+                ResponseMessage = authResponse.Message
+            };
+            
             if (!AuthenticatedUser.Equals(prevAuthUser))
             {
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
             }
-            return false;
+
+            return authStatus;
         }
 
-        protected async Task<bool> EnsureAuthenticationPerformedAsync()
+        protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage) // true if user authenticated
         {
-            var navBar = await ComponentByTypeAsync<MyNavBarBase>();
-            var authResponse = await AccountClient.GetAuthenticatedUserAsync();
-            var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
-            AuthenticatedUser = authResponse.Result;
-            if (!authResponse.IsError) 
-            {
-                if (!AuthenticatedUser.Equals(prevAuthUser))
-                {
-                    await StateHasChangedAsync(true);
-                    await navBar.StateHasChangedAsync(true);
-                }
+            var authStatus = await AuthenticateAsync();
+            if (authStatus.AuthenticationFailed && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, "You are not Authenticated");
+            return authStatus.AuthenticationSuccessful;
+        }
 
-                return true;
-            }
+        protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage) // true if authentication didn't throw, regardless if user is authenticated
+        {
+            var authStatus = await AuthenticateAsync();
+            if (authStatus.AuthenticationNotPerformed && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
+            return authStatus.AuthenticationPerformed;
+        }
 
-            await PromptMessageAsync(NotificationType.Error, authResponse.Message);
-            if (!AuthenticatedUser.Equals(prevAuthUser))
-            {
-                await StateHasChangedAsync(true);
-                await navBar.StateHasChangedAsync(true);
-            }
-            return false;
+        protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage) // true if authentication didn't throw, regardless if user is authenticated
+        {
+            var authStatus = await AuthenticateAsync();
+            if (authStatus.AuthenticationNotChanged && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
+            return authStatus.AuthenticationChanged;
         }
 
         protected void SetMainCustomAndUserDefinedClasses(string mainClass, IEnumerable<string> customClasses, bool preserveExistingClasses = false)
@@ -855,10 +852,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
         {
-            await TaskUtils.WaitUntil(() => controls.All(c =>
-            {
-                return c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced);
-            }));
+            await TaskUtils.WaitUntil(() => controls.All(c => c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced)));
             ClearControlsRerenderingStatus(controls);
         }
 
@@ -993,6 +987,27 @@ namespace CommonLib.Web.Source.Common.Components
             {
                 IsFirstRender = isFirstRender;
             }
+        }
+
+        protected class ComponentAuthenticationStatus
+        {
+            public bool AuthenticationPerformed { get; set; }
+            public bool AuthenticationChanged { get; set; }
+            public bool AuthenticationSuccessful { get; set; }
+            public bool AuthenticationNotPerformed => !AuthenticationPerformed;
+            public bool AuthenticationNotChanged => !AuthenticationChanged;
+            public bool AuthenticationFailed => !AuthenticationSuccessful;
+
+            public string ResponseMessage { get; internal set; }
+
+            public ComponentAuthenticationStatus(bool authenticationPerformed, bool authenticationChanged, bool authenticationSuccessful)
+            {
+                AuthenticationPerformed = authenticationPerformed;
+                AuthenticationChanged = authenticationChanged;
+                AuthenticationSuccessful = authenticationSuccessful;
+            }
+
+            public ComponentAuthenticationStatus() { }
         }
     }
 }

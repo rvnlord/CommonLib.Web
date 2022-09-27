@@ -70,10 +70,10 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                 try
                 {
                     await _syncImageLoad.WaitAsync(); // to prevent loading to cache the same image multiple times
-                    
+
                     Image imgData;
                     var imgName = Path.ParameterValue.AfterLastOrWhole("/");
-                    
+
                     var imgPath = _imgPathsCache.VorN(imgName);
                     if (imgPath is null)
                     {
@@ -108,7 +108,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                                 else
                                     imgPath = new ImgPaths { Physical = productionLocalAbsolutePhysicalPath, Virtual = localAbsoluteVirtualPath };
                             }
-                            
+
                             imgData = await Image.LoadAsync(imgPath.Physical);
                         }
 
@@ -116,18 +116,20 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                     }
                     else
                         imgData = await Image.LoadAsync(imgPath.Physical);
-                    
+
                     AddOrUpdateStyle("background-image", $"url('{imgPath.Virtual}')");
-                    
+
                     _originalHeight = $"{imgData.Height}px";
                     _originalWidth = $"{imgData.Width}px";
                     _expectedWidth = AdditionalAttributes.VorN("expected-width")?.ToString();
-
-                    _syncImageLoad.Release();
                 }
                 catch (TaskCanceledException)
                 {
                     Logger.For<MyImageBase>().Warn("Getting 'imgData' data has been canceled, did you suddenly refresh the page?");
+                }
+                finally
+                {
+                    _syncImageLoad.Release();
                 }
             }
         }

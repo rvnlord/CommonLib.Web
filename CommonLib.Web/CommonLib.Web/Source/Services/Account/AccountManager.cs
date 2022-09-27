@@ -165,11 +165,25 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister)
         {
             var user = new User { UserName = userToRegister.UserName, Email = userToRegister.Email };
-            var result = userToRegister.Password != null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
+            var result = userToRegister.Password is not null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
             if (!result.Succeeded) // new List<IdentityError> { new() { Code = "Password", Description = "Password Error TEST" } }
             {
-                var errors = result.Errors.ToLookup(userToRegister.GetPropertyNames());
-                return new ApiResponse<RegisterUserVM>(StatusCodeType.Status401Unauthorized, "Invalid Model", errors, null);
+                if (result.Errors.Any(e => e.Code.EqualsIgnoreCase("DuplicateUserName")))
+                {
+                    var i = 1;
+                    while (await _db.Users.SingleOrDefaultAsync(u => u.UserName.ToLower() == userToRegister.UserName.ToLower()) is not null)
+                    {
+                        userToRegister.UserName += i++;
+                        user.UserName = userToRegister.UserName;
+                    }
+                    result = userToRegister.Password is not null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
+                }
+
+                if (!result.Succeeded)
+                {
+                    var errors = result.Errors.ToLookup(userToRegister.GetPropertyNames());
+                    return new ApiResponse<RegisterUserVM>(StatusCodeType.Status401Unauthorized, result.Errors.First().Description.Replace("'", "\""), errors, null);
+                }
             }
 
             await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
@@ -201,7 +215,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<ConfirmUserVM>> ConfirmEmailAsync(ConfirmUserVM userToConfirm)
         {
-            var user = await _userManager.FindByEmailAsync(userToConfirm.Email);
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToConfirm.Email.ToLower());
             if (user == null)
                 return new ApiResponse<ConfirmUserVM>(StatusCodeType.Status401Unauthorized, "There is no User with this Email to Confirm", new[] { new KeyValuePair<string, string>("Email", "No such email") }.ToLookup());
 
@@ -218,7 +232,10 @@ namespace CommonLib.Web.Source.Services.Account
                 var errors = confirmationResult.Errors.ToSinglePropertyLookup("ConfirmationCode");
                 return new ApiResponse<ConfirmUserVM>(StatusCodeType.Status401Unauthorized, "Email confirmation failed", errors);
             }
-            return new ApiResponse<ConfirmUserVM>(StatusCodeType.Status200OK, "Email has been Confirmed Successfully", null, _mapper.Map(user, new ConfirmUserVM()));
+
+            _mapper.Map(user, userToConfirm); // account for null in source if destination is not null in MappingProfile
+
+            return new ApiResponse<ConfirmUserVM>(StatusCodeType.Status200OK, "Email has been Confirmed Successfully", null, userToConfirm);
         }
 
         public async Task<string> GenerateLoginTicketAsync(Guid id, string passwordHash, bool rememberMe)
@@ -253,7 +270,7 @@ namespace CommonLib.Web.Source.Services.Account
             var successMessage = $"Confirmation email has been sent to: \"{userToResendConfirmationEmail.Email}\" if there is an account associated with it";
             userToResendConfirmationEmail.ReturnUrl += $"?email={userToResendConfirmationEmail.Email}";
             var emailReturnUrl = PathUtils.Combine(PathSeparator.FSlash, ConfigUtils.FrontendBaseUrl, "Account/Login");
-            var user = await _userManager.FindByEmailAsync(userToResendConfirmationEmail.Email);
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToResendConfirmationEmail.Email.ToLower());
             if (user == null)
                 return new ApiResponse<ResendConfirmationEmailUserVM>(StatusCodeType.Status200OK, successMessage, null, userToResendConfirmationEmail);
 
@@ -374,7 +391,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin)
         {
-            var user = await _userManager.FindByEmailAsync(userToExternalLogin.Email);
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToExternalLogin.Email.ToLower());
             var userAccountNotExist = user is null;
             if (userAccountNotExist)
             {
@@ -556,6 +573,9 @@ namespace CommonLib.Web.Source.Services.Account
             if (emailChanged)
             {
                 user.Email = userToEdit.Email;
+                user.NormalizedEmail = userToEdit.Email.ToUpperInvariant();
+                if (isConfirmationRequired)
+                    user.EmailConfirmed = false;
                 propsToChange.Add(nameof(user.Email));
             }
 
@@ -582,7 +602,6 @@ namespace CommonLib.Web.Source.Services.Account
             
             if (isConfirmationRequired)
             {
-                user.EmailConfirmed = false;
                 userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
                 userToEdit.ShouldLogout = true;
 

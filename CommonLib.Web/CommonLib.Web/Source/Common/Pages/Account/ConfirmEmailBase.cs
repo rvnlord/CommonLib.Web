@@ -35,7 +35,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _confirmEmailUserVM = new()
             {
                 Email = NavigationManager.GetQueryString<string>("email")?.Base58ToUTF8(),
-                ConfirmationCode = NavigationManager.GetQueryString<string>("code")?.Base58ToUTF8(),
+                ConfirmationCode = NavigationManager.GetQueryString<string>("code"),
                 ReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8() ?? "/account/login"
             };
             _editContext = new MyEditContext(_confirmEmailUserVM);
@@ -73,18 +73,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
-        protected async Task FormConfirmEmail_ValidSubmitAsync()
-        {
-            _confirmEmailUserVM.ConfirmationCode = _confirmEmailUserVM.ConfirmationCode.Base58ToUTF8(); // unwrap code before sending if it was entered manually
-            await ConfirmEmailAsync();
-        }
+        protected async Task FormConfirmEmail_ValidSubmitAsync() => await ConfirmEmailAsync();
 
         protected async Task BtnSubmit_ClickAsync() => await _editForm.SubmitAsync();
 
         private async Task ConfirmEmailAsync()
         {
             await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnConfirmEmail);
-            var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(_confirmEmailUserVM);
+            var confirmUserToSend = Mapper.Map(_confirmEmailUserVM, new ConfirmUserVM());
+            confirmUserToSend.ConfirmationCode = confirmUserToSend.ConfirmationCode.Base58ToUTF8();
+            var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(confirmUserToSend);
             if (emailConfirmationResponse.IsError)
             {
                 _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChanged(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
@@ -93,8 +91,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
-            var confirmedUser = emailConfirmationResponse.Result;
-            _confirmEmailUserVM.UserName = confirmedUser.UserName;
+            Mapper.Map(emailConfirmationResponse.Result, _confirmEmailUserVM);
+            _confirmEmailUserVM.ConfirmationCode = _confirmEmailUserVM.ConfirmationCode.UTF8ToBase58(false);
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
             await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_confirmEmailUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
             await SetControlStatesAsync(ButtonState.Disabled, _allControls);

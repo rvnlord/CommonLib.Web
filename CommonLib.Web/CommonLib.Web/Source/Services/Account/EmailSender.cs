@@ -36,7 +36,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<IApiResponse> SendConfirmationEmailAsync(string email, string code, string returnUrl)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
             var verifyUrl = $"{ConfigUtils.FrontendBaseUrl}Account/ConfirmEmail?email={email.UTF8ToBase58()}&code={code.UTF8ToBase58(false)}&returnUrl={returnUrl.UTF8ToBase58()}"; // can't be `{_http.HttpContext.Request.Scheme}://{_http.HttpContext.Request.Host}{_http.HttpContext.Request.PathBase}` because the backend address is different, on local machine it is just a port, on a server it might be a completely different domain
 
             var sbEmailBody = new StringBuilder();
@@ -60,7 +60,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<IApiResponse> SendPasswordResetEmailAsync(string email, string code, string returnUrl)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
             var resetPasswordurl = $"{ConfigUtils.FrontendBaseUrl}Account/ResetPassword?email={email.UTF8ToBase58()}&code={code.UTF8ToBase58(false)}&returnUrl={returnUrl.UTF8ToBase58()}";
 
             var sbEmailBody = new StringBuilder();

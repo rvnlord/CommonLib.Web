@@ -14,7 +14,7 @@ namespace CommonLib.Web.Source.Common.Extensions
                 if (jsObjectReference is not null)
                     await jsObjectReference.InvokeVoidAsync(identifier, args);
             }
-            catch (TaskCanceledException) { }
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException) { }
         }
 
         public static ValueTask<TValue> InvokeAndCatchCancellationAsync<TValue>(this IJSObjectReference jsObjectReference, string identifier, params object[] args)
@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 return jsObjectReference.InvokeAsync<TValue>(identifier, args);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException)
             {
                 return new ValueTask<TValue>();
             }
@@ -35,7 +35,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 return jsObjectReference.InvokeAsync<TValue>(identifier, cancellationToken, args);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException)
             {
                 return new ValueTask<TValue>();
             }
@@ -47,7 +47,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 return jsObjectReference.InvokeVoidAsync(identifier, cancellationToken, args);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException)
             {
                 return new ValueTask();
             }
@@ -59,7 +59,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 return jsObjectReference.InvokeAsync<TValue>(identifier, timeout, args);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException)
             {
                 return new ValueTask<TValue>();
             }
@@ -71,7 +71,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 return jsObjectReference.InvokeVoidAndCatchCancellationAsync(identifier, timeout, args);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or JSDisconnectedException)
             {
                 return new ValueTask();
             }

@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!await EnsureAuthenticatedAsync())
+            if (!await EnsureAuthenticatedAsync(true))
                 return;
             
             _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
@@ -62,7 +62,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnSave);
 
-            if (!await EnsureAuthenticatedAsync())
+            if (!await EnsureAuthenticatedAsync(true))
             {
                 await SetControlStatesAsync(ButtonState.Disabled, _allControls);
                 await ShowLoginModalAsync();
@@ -86,7 +86,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             Mapper.Map(editResponse.Result, _editUserVM);
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
 
-            await EnsureAuthenticationPerformedAsync();
+            await EnsureAuthenticationPerformedAsync(false);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
             {
                 if (_editUserVM.HasPassword && _pwdOldPassword.State.V == InputState.ForceDisabled)
