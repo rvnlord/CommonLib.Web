@@ -1,0 +1,61 @@
+﻿@page "/Test/ControlsTest/"
+
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
+
+@inherits ControlsTestBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div class="my-col-sm-auto my-col-12" style="background: #101010;">
+        <MyEditForm Model="@_employee" class="my-container" style="background: #101010;">
+            <MyFluentValidator />
+            <div class="my-row">
+                <div class="my-col-12 my-media-query-test-container">
+                    <MyMediaQuery DeviceSize="DeviceSizeKind.XS" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
+                    <MyMediaQuery DeviceSize="DeviceSizeKind.SM" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
+                    <div>@MediaQueryMessage</div>
+                </div>
+            </div>
+            <div class="my-row">
+                <div class="my-col-sm-2 my-col-12">
+                    <MyLabel For="@(() => _employee.Name)" Align="@HorizontalAlignment.Right" />
+                </div>
+                <div class="my-col-sm-3 my-col-12">
+                    <MyTextInput For="@(() => _employee.Name)" />
+                </div>
+                <div class="my-col-sm-7 my-col-12">
+                    <MyValidationMessage For="@(() => _employee.Name)" />
+                </div>
+            </div>
+            <div class="my-row">
+                <div class="my-col-sm-2 my-col-12">
+                    <MyLabel For="@(() => _employee.Department)" Align="@HorizontalAlignment.Right" />
+                </div>
+                <div class="my-col-sm-3 my-col-12">
+                    <MyDropDown For="@(() => _employee.Department)" />
+                </div>
+                <div class="my-col-sm-7 my-col-12">
+                    <MyValidationMessage For="@(() => _employee.Department)" />
+                </div>
+            </div>
+            <div class="my-row">
+                <div class="my-col-sm-2 my-col-12">
+                    <MyLabel For="@(() => _employee.Domain)" Align="@HorizontalAlignment.Right" />
+                </div>
+                <div class="my-col-sm-3 my-col-12">
+                    <MyDropDown For="@(() => _employee.Domain)" PossibleValues="@(new[] { "test1.com", "test2.com", "test3.com", "test4.com" })" />
+                </div>
+                <div class="my-col-sm-7 my-col-12">
+                    <MyValidationMessage For="@(() => _employee.Domain)" />
+                </div>
+            </div>
+            <div class="my-row">
+                <div class="my-col-sm-3 my-col-12 my-offset-sm-2">
+                    <MyButton Value="@("Submit".ToBp())" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" />
+                </div>
+            </div>
+        </MyEditForm>
+    </div>
+
+</CascadingValue>

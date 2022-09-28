@@ -46,9 +46,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticatedAsync(true))
                 return;
-            
-            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
-            _btnSave = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+
+            _allControls = GetInputControls();
+            _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
             _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
 
             Mapper.Map(AuthenticatedUser, _editUserVM);

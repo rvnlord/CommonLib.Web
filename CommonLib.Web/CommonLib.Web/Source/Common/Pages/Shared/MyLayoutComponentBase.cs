@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
+using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Utils;
@@ -40,7 +42,7 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
         
         [JSInvokable]
         public static async Task UseNavLinkByGuidAsync(Guid sessionId, Guid navLinkGuid) => (await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyNavLinkBase>(navLinkGuid)).NavLink_Click();
-        
+
         public event MyAsyncEventHandler<MyComponentBase, LayoutSessionIdSetEventArgs> LayoutSessionIdSet;
         private async Task OnLayoutSessionIdSettingAsync(LayoutSessionIdSetEventArgs e) => await LayoutSessionIdSet.InvokeAsync(this, e);
         public async Task OnLayoutSessionIdSettingAsync(Guid sessionid) => await OnLayoutSessionIdSettingAsync(new LayoutSessionIdSetEventArgs(sessionid));

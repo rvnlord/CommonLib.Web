@@ -34,6 +34,9 @@ namespace CommonLib.Web.Source.Common.Components
             ["lg"] = 992,
             ["xl"] = 1200
         };
+
+
+
         public const int ColsNo = 12;
         public const double MenuGutter = 12.5;
         public const int FixedColMaxSize = 1000;
@@ -44,5 +47,14 @@ namespace CommonLib.Web.Source.Common.Components
             "overflow: hidden;" +
             "text-overflow: ellipsis;" +
             "white-space: nowrap;";
+    }
+
+    public enum DeviceSizeKind
+    {
+        XS,
+        SM,
+        MD,
+        LG,
+        XL
     }
 }

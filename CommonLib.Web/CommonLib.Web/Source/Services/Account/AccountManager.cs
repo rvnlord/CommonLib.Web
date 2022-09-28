@@ -36,7 +36,6 @@ namespace CommonLib.Web.Source.Services.Account
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly CustomPasswordResetTokenProvider<User> _passwordResetTokenProvider;
-        private readonly IValidator<EditUserVM> _userToEditValidator;
 
         public AccountManager(UserManager<User> userManager,
             SignInManager<User> signInManager,

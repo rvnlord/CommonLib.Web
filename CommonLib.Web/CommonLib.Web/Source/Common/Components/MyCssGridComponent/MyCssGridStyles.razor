@@ -1,0 +1,36 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .my-css-grid {
+        display: grid;
+    }
+
+    @*@foreach (var (device, breakpoint) in Devices)
+    {
+        if (device != "xs")
+        {
+            @($"@media (min-width: {breakpoint.Px()}) {{")
+        }
+
+        foreach (var order in Enumerable.Range(-1, 12))
+        {
+            <text>
+                @($".my-css-grid-columns-layout{(device == "xs" ? "" : $"-{device}")}-{order} {{")
+                @($"order: {order};")
+                @($"}}")
+            </text>
+        }
+
+        if (device != "xs")
+        {
+            @($"}}")
+        }
+    }*@
+
+</style>
+

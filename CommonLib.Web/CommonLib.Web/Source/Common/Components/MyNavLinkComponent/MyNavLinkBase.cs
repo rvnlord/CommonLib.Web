@@ -110,7 +110,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             await Task.CompletedTask;
         }
         
-        protected override async Task OnAfterFirstRenderAsync() // this is executed before oute component after render but the outer component won't wait until this is finished unless forced
+        protected override async Task OnAfterFirstRenderAsync() // this is executed before outer component after render but the outer component won't wait until this is finished unless forced
         {
             await Task.CompletedTask;
         }

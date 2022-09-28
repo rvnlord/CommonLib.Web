@@ -1,0 +1,10 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyMediaQueryComponent
+@inherits MyMediaQueryBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+    
+    <div my-guid="@_guid" class="my-d-none my-media-query">
+        @ChildContent
+    </div>
+
+</CascadingValue>
