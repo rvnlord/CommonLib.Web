@@ -18,15 +18,7 @@ namespace CommonLib.Web.Source.Common.Components.MyMediaQueryComponent
 
         [Parameter]
         public EventCallback<MyMediaQueryChangedEventArgs> OnChange { get; set; }
-
-        //protected override Task OnFirstParametersSetAsync()
-        //{
-        //    if (FirstParamSetup)
-        //    {
-        //        SetUserDefinedAttributes();
-        //    }
-        //}
-
+        
         protected override async Task OnAfterFirstRenderAsync()
         {
             var mediaQueryDotNetRef = DotNetObjectReference.Create(this);

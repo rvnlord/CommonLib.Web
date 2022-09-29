@@ -1,4 +1,7 @@
-﻿using CommonLib.Source.Common.Extensions;
+﻿using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.TypeUtils;
+using CommonLib.Web.Source.Common.Extensions;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Components
@@ -26,7 +29,7 @@ namespace CommonLib.Web.Source.Common.Components
             "font-weight: 400;" +
             "font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";";
         
-        public static OrderedDictionary<string, double> Devices => new OrderedDictionary<string, double>
+        public static OrderedDictionary<string, double> DeviceSizeKindNamesWithSizes => new()
         {
             ["xs"] = 0,
             ["sm"] = 576,
@@ -35,6 +38,7 @@ namespace CommonLib.Web.Source.Common.Components
             ["xl"] = 1200
         };
 
+        public static OrderedDictionary<string, string> DeviceSizeKindNamesWithMediaQueries => EnumUtils.GetValues<DeviceSizeKind>().ToOrderedDictionary(d => d.EnumToString().ToLower(), d => d.ToMediaQuery());
 
 
         public const int ColsNo = 12;

@@ -2,6 +2,7 @@
 
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Source.Common.Converters
 
 @inherits ControlsTestBase
 
@@ -10,6 +11,26 @@
     <div class="my-col-sm-auto my-col-12" style="background: #101010;">
         <MyEditForm Model="@_employee" class="my-container" style="background: #101010;">
             <MyFluentValidator />
+            <MyCssGrid Padding="StylesConfig.HalfGutter.Px()" Gap="StylesConfig.Gutter.Px()" class="my-test">
+                <MyCssGridTemplate ColumnsLayout="@("auto".ToBp())" RowsLayout="@("repeat(12, minmax(80px, auto))".ToBp())" />
+                <MyCssGridTemplate DeviceSize="DeviceSizeKind.SM" ColumnsLayout="@("60px auto".ToBp())" RowsLayout="@("repeat(6, minmax(60px, auto))".ToBp())" />
+                <MyCssGridTemplate DeviceSize="DeviceSizeKind.MD" ColumnsLayout="@("60px auto 200px 100px".ToBp())" RowsLayout="@("repeat(3, minmax(40px, auto))".ToBp())" />
+                @{
+                    var cssGrid = Descendants.SingleOrDefault(d => d is MyEditForm)?.Descendants.SingleOrDefault(d => d is MyCssGrid) as MyCssGrid; // just for test, normally one can simply use @ref
+                }
+                <div class="item1">1</div>
+                <div class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout.EnumToString() ?? "not defined")</div>
+                <div class="item3">3</div>  
+                <div class="item4">4</div>
+                <div class="item5">5</div>
+                <div class="item6">6</div>
+                <div class="item7">7</div>
+                <div class="item8">8</div>
+                <div class="item9">9</div>
+                <div class="item10">10</div>
+                <div class="item11">11</div>
+                <div class="item12">12</div>
+            </MyCssGrid>
             <div class="my-row">
                 <div class="my-col-12 my-media-query-test-container">
                     <MyMediaQuery DeviceSize="DeviceSizeKind.XS" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>

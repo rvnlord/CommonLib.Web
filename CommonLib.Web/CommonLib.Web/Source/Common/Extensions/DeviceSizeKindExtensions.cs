@@ -7,9 +7,9 @@ namespace CommonLib.Web.Source.Common.Extensions
 {
     public static class DeviceSizeKindExtensions
     {
-        public static double GetMinWidth(this DeviceSizeKind deviceSize) => StylesConfig.Devices[deviceSize.EnumToString().ToLowerInvariant()];
-        public static double? GetMaxWidthOrNull(this DeviceSizeKind deviceSize) => deviceSize.ToInt() + 1 <= EnumUtils.GetValues<DeviceSizeKind>().Count() 
-            ? StylesConfig.Devices[(deviceSize + 1).EnumToString().ToLowerInvariant()] - 0.02
+        public static double GetMinWidth(this DeviceSizeKind deviceSize) => StylesConfig.DeviceSizeKindNamesWithSizes[deviceSize.EnumToString().ToLowerInvariant()];
+        public static double? GetMaxWidthOrNull(this DeviceSizeKind deviceSize) => deviceSize.ToInt() + 1 < EnumUtils.GetValues<DeviceSizeKind>().Count() 
+            ? StylesConfig.DeviceSizeKindNamesWithSizes[(deviceSize + 1).EnumToString().ToLowerInvariant()] - 0.02
             : null;
 
         public static string ToMediaQuery(this DeviceSizeKind deviceSize)

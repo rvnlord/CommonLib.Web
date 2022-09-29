@@ -125,7 +125,7 @@
         box-sizing: border-box;
     }
 
-    @foreach (var (name, size) in Devices)
+    @foreach (var (name, size) in DeviceSizeKindNamesWithSizes)
     {
         @: @($"@media (min-width: {size.Px()}) {{")
             @for (double i = 1; i <= ColsNo; i++)
@@ -179,7 +179,7 @@
         @: @("}}")
     }
 
-    @foreach (var (name, size) in Devices)
+    @foreach (var (name, size) in DeviceSizeKindNamesWithSizes)
     {
         @: @($"@media (min-width: {size.Px()}) {{")
             @for (double i = 1; i <= ColsNo; i++)
@@ -202,7 +202,7 @@
         @: @("}}")
     }
 
-    @foreach (var (device, breakpoint) in Devices)
+    @foreach (var (device, breakpoint) in DeviceSizeKindNamesWithSizes)
     {
         if (device != "xs")
         {
