@@ -111,104 +111,87 @@
     }
     else if (HasAuthenticationStatus(AuthStatus.Authenticated))
     {
-        <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" VerticalAlign="GridLayoutVerticalAlign.Top" Class="my-p-10px">
-            <GridLayoutColumns>
-                <GridLayoutColumn Width="150px"></GridLayoutColumn>
-                <GridLayoutColumn Width="auto"></GridLayoutColumn>
-            </GridLayoutColumns>
-            <GridLayoutRows>
-                <GridLayoutRow></GridLayoutRow>
-            </GridLayoutRows>
-            <GridLayoutItems>
-                <GridLayoutItem Column="1" Row="1">
-                    <div>
-                        <div class="logged-user-no-avatar-container">
-                            <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
-                        </div>
+        <MyCssGrid 
+            Padding="StylesConfig.Gutter.Px()" 
+            Gap="StylesConfig.Gutter.Px()" 
+            Template="@(new CssGridLayout("150px auto", "repeat(2, auto)"))">
+            <MyCssGridItem>
+                <div>
+                    <div class="logged-user-no-avatar-container">
+                        <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
                     </div>
-                </GridLayoutItem>
-                <GridLayoutItem Column="2" Row="1">
-                    <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" VerticalAlign="GridLayoutVerticalAlign.Top">
-                        <GridLayoutColumns>
-                            <GridLayoutColumn Width="auto"></GridLayoutColumn>
-                        </GridLayoutColumns>
-                        <GridLayoutRows>
-                            <GridLayoutRow></GridLayoutRow>
-                        </GridLayoutRows>
-                        <GridLayoutItems>
-                            <GridLayoutItem Column="1" Row="1">
-                                <div>
-                                    <div class="logged-user-username">
-                                        @AuthenticatedUser.UserName
-                                    </div>
-                                    <div class="logged-user-login-time">
-                                        last login: @AuthenticatedUser.LoginTimestamp.ToLocal().ToTimeDateString()
-                                    </div>
-                                </div>
-                            </GridLayoutItem>
-                            @{
-                                //var testItems = Enumerable.Range(1, 10).Select(i => "TestItem" + i).ToArray();
-                                var roles = AuthenticatedUser.Roles.Select(r => r.Name).ToArray();
-                                var claims = AuthenticatedUser.Claims.Select(r => r.Name).ToArray();
+                </div>
+            </MyCssGridItem>
+            <MyCssGridItem>
+                <MyCssGrid
+                    Gap="StylesConfig.Gutter.Px()" 
+                    Template="@(new CssGridLayout("auto", "repeat(3, auto)"))">
+                    <MyCssGridItem Area="@(new CssGridArea(1, 1))">
+                        <div>
+                            <div class="logged-user-username">
+                                @AuthenticatedUser.UserName
+                            </div>
+                            <div class="logged-user-login-time">
+                                last login: @AuthenticatedUser.LoginTimestamp.ToLocal().ToTimeDateString()
+                            </div>
+                        </div>
+                    </MyCssGridItem>
+                    @{
+                        //var testItems = Enumerable.Range(1, 10).Select(i => "TestItem" + i).ToArray();
+                        var roles = AuthenticatedUser.Roles.Select(r => r.Name).ToArray();
+                        var claims = AuthenticatedUser.Claims.Select(r => r.Name).ToArray();
+                    }
+                    <MyCssGridItem Area="@(new CssGridArea(1, 2))">
+                        <div class="logged-user-roles-container">
+                            @if (!roles.Any()) 
+                            {
+                                <div class="logged-user-no-roles">(no roles assigned)</div>
                             }
-                            <GridLayoutItem Column="1" Row="2">
-                                <div class="logged-user-roles-container">
-                                    @if (!roles.Any()) 
+                            else
+                            {
+                                <div class="logged-user-roles">
+                                    @foreach (var role in roles)
                                     {
-                                        <div class="logged-user-no-roles">(no roles assigned)</div>
-                                    }
-                                    else
-                                    {
-                                        <div class="logged-user-roles">
-                                            @foreach (var role in roles)
-                                            {
-                                                <MyBadge Badge="@BadgeKind.Primary">@role</MyBadge>
-                                            }
-                                        </div>
+                                        <MyBadge Badge="@BadgeKind.Primary">@role</MyBadge>
                                     }
                                 </div>
-                            </GridLayoutItem>
-                            <GridLayoutItem Column="1" Row="3">
-                                <div class="logged-user-claims-container">
-                                    @if (!claims.Any()) 
+                            }
+                        </div>
+                    </MyCssGridItem>
+                    <MyCssGridItem Area="@(new CssGridArea(1, 3))">
+                        <div class="logged-user-claims-container">
+                            @if (!claims.Any()) 
+                            {
+                                <div class="logged-user-no-claims">(no claims assigned)</div>
+                            }
+                            else
+                            {
+                                <div class="logged-user-claims">
+                                    @foreach (var claim in claims)
                                     {
-                                        <div class="logged-user-no-claims">(no claims assigned)</div>
+                                        <MyBadge Badge="@BadgeKind.Info">@claim</MyBadge>
                                     }
-                                    else
-                                    {
-                                        <div class="logged-user-claims">
-                                            @foreach (var claim in claims)
-                                            {
-                                                <MyBadge Badge="@BadgeKind.Info">@claim</MyBadge>
-                                            }
-                                        </div>
-                                    }                            
                                 </div>
-                            </GridLayoutItem>
-                        </GridLayoutItems>
-                    </TelerikGridLayout>
-                </GridLayoutItem>
-                <GridLayoutItem Column="1" Row="2" ColumnSpan="2">
-                    <TelerikGridLayout ColumnSpacing="10px" RowSpacing="10px" HorizontalAlign="GridLayoutHorizontalAlign.Left" Class="logged-user-actions ">
-                        <GridLayoutColumns>
-                            <GridLayoutColumn Width="max-content"></GridLayoutColumn>
-                            <GridLayoutColumn Width="max-content"></GridLayoutColumn>
-                        </GridLayoutColumns>
-                        <GridLayoutRows>
-                            <GridLayoutRow></GridLayoutRow>
-                        </GridLayoutRows>
-                        <GridLayoutItems>
-                            <GridLayoutItem Column="1" Row="1">  
-                                <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Auto" OnClick="BtnSignOut_ClickAsync"></MyButton>
-                            </GridLayoutItem>
-                            <GridLayoutItem Column="2" Row="1">  
-                                <MyButton Value="@("Edit".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" OnClick="BtnEdit_ClickAsync"></MyButton>
-                            </GridLayoutItem>
-                        </GridLayoutItems>
-                    </TelerikGridLayout>
-                </GridLayoutItem>
-            </GridLayoutItems>
-        </TelerikGridLayout>
+                            }                            
+                        </div>
+                    </MyCssGridItem>
+                </MyCssGrid>
+            </MyCssGridItem>
+            <MyCssGridItem Area="@(new CssGridArea(1, 2, 2))">
+                <MyCssGrid
+                    Gap="StylesConfig.Gutter.Px()" 
+                    Template="@(new CssGridLayout("repeat(2, 1fr)", "auto"))"
+                    MDTemplate="@(new CssGridLayout("repeat(2, max-content)", "auto"))"
+                    class="logged-user-actions">
+                    <MyCssGridItem>  
+                        <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" OnClick="BtnSignOut_ClickAsync"></MyButton>
+                    </MyCssGridItem>
+                    <MyCssGridItem>  
+                        <MyButton Value="@("Edit".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnEdit_ClickAsync"></MyButton>
+                    </MyCssGridItem>
+                </MyCssGrid>
+            </MyCssGridItem>
+        </MyCssGrid>
     }
 
 </CascadingValue>
