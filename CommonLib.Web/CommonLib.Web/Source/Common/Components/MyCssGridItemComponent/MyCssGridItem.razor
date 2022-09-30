@@ -1,0 +1,19 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
+@inherits MyCssGridItemBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+    
+    @if (!Hide.HasValue() || Hide.V.From is null && Hide.V.To is null 
+        || CurrentDeviceSize < Hide.V.From && Hide.V.To is null || Hide.V.From is null && CurrentDeviceSize > Hide.V.To 
+        || CurrentDeviceSize < Hide.V.From && CurrentDeviceSize > Hide.V.To)
+    {
+        <div id="@_id" 
+             my-guid="@_guid"
+             class="@_renderClasses"
+             style="@_renderStyle"
+             @attributes="@_renderAttributes">
+            @ChildContent
+        </div>
+    }
+    
+</CascadingValue>

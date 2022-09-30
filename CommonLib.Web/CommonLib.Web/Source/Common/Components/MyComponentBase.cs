@@ -614,6 +614,24 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void AddOrUpdateStyle(string key, string value) => AddOrUpdateStyles(new Dictionary<string, string> { [key] = value });
 
+        protected void RemoveStyles(string[] customStyles)
+        {
+            if (IsDisposed)
+                return;
+
+            _syncStyles.Wait();
+
+            if (customStyles != null)
+                foreach (var key in customStyles)
+                    _style.RemoveIfExists(key);
+
+            _renderStyle = _style.CssDictionaryToString();
+
+            _syncStyles.Release();
+        }
+
+        protected void RemoveStyle(string key) => RemoveStyles(new[] { key });
+        
         protected void SetCustomAndUserDefinedAttributes(Dictionary<string, string> customAttributes, bool preserveExistingAttributes = false)
         {
             if (IsDisposed)

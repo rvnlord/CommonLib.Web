@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Web.Source.Common.Components.MyCssGridComponent;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
@@ -36,6 +38,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridTemplateComponent
             if (ColumnsLayout.HasChanged() || RowsLayout.HasChanged())
             {
                 var deviceSize = DeviceSize.V ?? throw new NullReferenceException("DeviceSize Parameter Value can't be null");
+                if (cssGrid.GridLayouts.VorN(deviceSize) is not null)
+                    throw new ArgumentException($"Template for {deviceSize.EnumToString()} device size has already benn set in CssGrid Parameter");
                 cssGrid.GridLayouts[deviceSize] = new CssGridLayout
                 {
                     DeviceSize = deviceSize,
@@ -53,5 +57,13 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridTemplateComponent
         public DeviceSizeKind DeviceSize { get; set; } = DeviceSizeKind.XS;
         public string ColumnsLayout { get; set; }
         public string RowsLayout { get; set; }
+
+        public CssGridLayout() { }
+
+        public CssGridLayout(string columnsLayout, string rowsLayout)
+        {
+            ColumnsLayout = columnsLayout;
+            RowsLayout = rowsLayout;
+        }
     }
 }

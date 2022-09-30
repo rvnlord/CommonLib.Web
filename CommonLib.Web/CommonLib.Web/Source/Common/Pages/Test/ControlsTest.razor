@@ -11,25 +11,28 @@
     <div class="my-col-sm-auto my-col-12" style="background: #101010;">
         <MyEditForm Model="@_employee" class="my-container" style="background: #101010;">
             <MyFluentValidator />
-            <MyCssGrid Padding="StylesConfig.HalfGutter.Px()" Gap="StylesConfig.Gutter.Px()" class="my-test">
-                <MyCssGridTemplate ColumnsLayout="@("auto".ToBp())" RowsLayout="@("repeat(12, minmax(80px, auto))".ToBp())" />
-                <MyCssGridTemplate DeviceSize="DeviceSizeKind.SM" ColumnsLayout="@("60px auto".ToBp())" RowsLayout="@("repeat(6, minmax(60px, auto))".ToBp())" />
-                <MyCssGridTemplate DeviceSize="DeviceSizeKind.MD" ColumnsLayout="@("60px auto 200px 100px".ToBp())" RowsLayout="@("repeat(3, minmax(40px, auto))".ToBp())" />
+            <MyCssGrid 
+                Padding="StylesConfig.HalfGutter.Px()" 
+                Gap="StylesConfig.Gutter.Px()" 
+                Template="@(new CssGridLayout("auto", "repeat(12, minmax(80px, auto))"))"
+                SMTemplate="@(new CssGridLayout("60px auto", "repeat(6, minmax(60px, auto))"))"
+                MDTemplate="@(new CssGridLayout("60px auto 200px 100px", "repeat(3, minmax(40px, auto))"))"
+                class="my-test">
                 @{
                     var cssGrid = Descendants.SingleOrDefault(d => d is MyEditForm)?.Descendants.SingleOrDefault(d => d is MyCssGrid) as MyCssGrid; // just for test, normally one can simply use @ref
                 }
-                <div class="item1">1</div>
-                <div class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout.EnumToString() ?? "not defined")</div>
-                <div class="item3">3</div>  
-                <div class="item4">4</div>
-                <div class="item5">5</div>
-                <div class="item6">6</div>
-                <div class="item7">7</div>
-                <div class="item8">8</div>
-                <div class="item9">9</div>
-                <div class="item10">10</div>
-                <div class="item11">11</div>
-                <div class="item12">12</div>
+                <MyCssGridItem class="item1">1</MyCssGridItem>
+                <MyCssGridItem class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout.EnumToString() ?? "not defined")</MyCssGridItem>
+                <MyCssGridItem class="item3">3</MyCssGridItem>  
+                <MyCssGridItem class="item4">4</MyCssGridItem>
+                <MyCssGridItem class="item5">5</MyCssGridItem>
+                <MyCssGridItem class="item6" MDArea="@(new CssGridArea(2, 2, 2, 1))">6</MyCssGridItem>
+                <MyCssGridItem class="item7" Hide="@(new CssGridAreaHide(DeviceSizeKind.MD))">7</MyCssGridItem>
+                <MyCssGridItem class="item8">8</MyCssGridItem>
+                <MyCssGridItem class="item9">9</MyCssGridItem>
+                <MyCssGridItem class="item10">10</MyCssGridItem>
+                <MyCssGridItem class="item11">11</MyCssGridItem>
+                <MyCssGridItem class="item12">12</MyCssGridItem>
             </MyCssGrid>
             <div class="my-row">
                 <div class="my-col-12 my-media-query-test-container">
