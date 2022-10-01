@@ -6,18 +6,37 @@
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
-    <CascadingValue Value="State"> @* don't use mew BlazorParameter<> here directly cause it will not propagate correctly *@
+    <CascadingValue Value="State">
     <CascadingValue Value="_bpTextInput">
-        @if (ChildContent == null)
+        @if (ChildContent is null)
         {
-            <input @ref="@_jsTextInput" type="text"
-                   my-guid="@_guid"
-                   value="@Text"
-                   placeholder="@Placeholder"
-                   class="@_renderClasses"
-                   style="@_renderStyle"
-                   @attributes="@_renderAttributes"
-                   @oninput="@InputText_Input" />
+            @if (Icon.HasValue())
+            {
+                <MyInputGroup>
+                    <input @ref="@_jsTextInput" type="text"
+                           my-guid="@_guid"
+                           value="@Text"
+                           placeholder="@Placeholder"
+                           class="@_renderClasses"
+                           style="@_renderStyle"
+                           @oninput="@InputText_Input"
+                           @attributes="@_renderAttributes" />
+                    <MyInputGroupPrepend>
+                        <MyIcon IconType="Icon.V"></MyIcon>
+                    </MyInputGroupPrepend>
+                </MyInputGroup>
+            }
+            else
+            {
+                <input @ref="@_jsTextInput" type="text"
+                       my-guid="@_guid"
+                       value="@Text"
+                       placeholder="@Placeholder"
+                       class="@_renderClasses"
+                       style="@_renderStyle"
+                       @attributes="@_renderAttributes"
+                       @oninput="@InputText_Input" />
+            }
         }
         else
         {

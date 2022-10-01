@@ -116,13 +116,13 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
                 Status = ValidationMessageStatus.NotValidated;
             }
 
-            if (!fi.In(e.ValidatedFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
+            if (!fi.In(e.ValidatedFields) && e.ValidationStatus == ValidationStatus.Pending && !fi.In(e.PendingFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
             {
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
 
-            if (CascadedEditContext == null || e.ValidationStatus == ValidationStatus.Pending)
+            if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Pending || fi.In(e.PendingFields))
             {
                 Status = ValidationMessageStatus.Validating;
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);

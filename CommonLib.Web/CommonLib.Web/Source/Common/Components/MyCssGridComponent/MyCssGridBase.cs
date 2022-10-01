@@ -60,7 +60,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
             if (FirstParamSetup)
             {
                 SetMainAndUserDefinedClasses("my-css-grid");
-                SetCustomAndUserDefinedStyles(new Dictionary<string, string> { ["opacity"] = "0" });
+                SetUserDefinedStyles();
+                //SetCustomAndUserDefinedStyles(new Dictionary<string, string> { ["opacity"] = "0" });
                 SetUserDefinedAttributes();
             }
 
@@ -113,24 +114,25 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
                 GridLayouts[XLTemplate.V.DeviceSize] = XLTemplate.V;
             }
 
-            await Task.CompletedTask;
+            if (FirstParamSetup)
+                await SetGridTemplateStylesAsync(DeviceSizeKind.XL, false);
         }
 
-        protected override async Task OnAfterFirstRenderAsync()
+        protected override async Task OnLayoutAfterRenderFinishedAsync(Guid sessionId, DeviceSizeKind deviceSize)
         {
-            var deviceSizeN = (await (await ModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_CssGridUtils_GetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries)).ToEnumN<DeviceSizeKind>();
-            var deviceSize = deviceSizeN ?? throw new NullReferenceException("deviceSize shouldn't be null");
+            //var deviceSizeN = (await (await ModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_CssGrid_GetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries)).ToEnumN<DeviceSizeKind>();
+            //var deviceSize = deviceSizeN ?? throw new NullReferenceException("deviceSize shouldn't be null");
             await SetGridTemplateStylesAsync(deviceSize);
-            await OnDeviceSizeChangingAsync(deviceSize);
+            //await OnDeviceSizeChangingAsync(deviceSize);
         }
 
-        protected async Task MediaQuery_ChangedAsync(MyMediaQueryChangedEventArgs e)
+        protected override async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize)
         {
-            await SetGridTemplateStylesAsync(e.DeviceSize);
-            await OnDeviceSizeChangingAsync(e.DeviceSize);
+            await SetGridTemplateStylesAsync(deviceSize);
+            //await OnDeviceSizeChangingAsync(deviceSize);
         }
 
-        private async Task SetGridTemplateStylesAsync(DeviceSizeKind deviceSize)
+        private async Task SetGridTemplateStylesAsync(DeviceSizeKind deviceSize, bool refresh = true)
         {
             CurrentDeviceSize = deviceSize;
             HighestDeviceSizeWithLayout = GridLayouts.Keys?.Cast<DeviceSizeKind?>().Where(d => d <= CurrentDeviceSize)?.MaxOrDefault(); // ?? throw new NullReferenceException($"Template for {CurrentDeviceSize.EnumToString()} or smaller device is not defined");
@@ -147,12 +149,13 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
                 AddOrUpdateStyle("grid-template-rows", $"repeat({Children.OfType<MyCssGridItemBase>().Count()}, minmax({StylesConfig.InputHeight.Px()}, max-content))");
             }
             
-            RemoveStyle("opacity");
-            await StateHasChangedAsync(true);
+            //RemoveStyle("opacity");
+            if (refresh)
+                await StateHasChangedAsync(true);
         }
         
-        public event MyAsyncEventHandler<MyCssGridBase, MyMediaQueryChangedEventArgs> DeviceSizeChanged;
-        private async Task OnDeviceSizeChangingAsync(MyMediaQueryChangedEventArgs e) => await DeviceSizeChanged.InvokeAsync(this, e);
-        private async Task OnDeviceSizeChangingAsync(DeviceSizeKind deviceSize) => await OnDeviceSizeChangingAsync(new MyMediaQueryChangedEventArgs(deviceSize));
+        //public event MyAsyncEventHandler<MyCssGridBase, MyMediaQueryChangedEventArgs> DeviceSizeChanged;
+        //private async Task OnDeviceSizeChangingAsync(MyMediaQueryChangedEventArgs e) => await DeviceSizeChanged.InvokeAsync(this, e);
+        //private async Task OnDeviceSizeChangingAsync(DeviceSizeKind deviceSize) => await OnDeviceSizeChangingAsync(new MyMediaQueryChangedEventArgs(deviceSize));
     }
 }

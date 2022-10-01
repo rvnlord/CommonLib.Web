@@ -81,14 +81,14 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         {
             Validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Stop);
 
-            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Model, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>());
-
             var model = _currentEditContext.Model;
             var allModelFields = model.GetPropertyNames().Select(p => new FieldIdentifier(model, p)).ToList();
             var vc = new ValidationContext<object>(model);
             var validationResults = await Validator.ValidateAsync(vc).ConfigureAwait(false);
             var validatorCascadeMode = Validator.GetPropertyValue("ClassLevelCascadeMode").ToString();
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
+            
+            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Model, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), fieldsWithValidationRules);
             
             MessageStore.Clear();
 
@@ -107,7 +107,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
             _currentEditContext.NotifyValidationStateChanged(
                 MessageStore.HasNoMessages() ? ValidationStatus.Success : ValidationStatus.Failure,
-                ValidationMode.Model, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields);
+                ValidationMode.Model, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, new List<FieldIdentifier>());
         }
         
         private async Task ValidateFieldAsync(FieldIdentifier fieldIdentifier)
@@ -119,8 +119,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             if (validator == null) // not supposed to be validated
                 return;
             
-            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Property, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>());
-
+            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Property, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier> { fieldIdentifier });
+            
             var model = _currentEditContext.Model; 
             var allModelFields = fieldIdentifier.Model.GetPropertyNames().Select(p => new FieldIdentifier(fieldIdentifier.Model, p)).ToList();
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
@@ -141,7 +141,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                     continue;
                 validatedFields.Add(fwvr);
             }
-            
+
             var vselector = new MemberNameValidatorSelector(validatedFields.Select(f => f.FieldName));
             var vc = new ValidationContext<object>(fieldIdentifier.Model, new PropertyChain(), vselector);
             var vrs = await validator.ValidateAsync(vc).ConfigureAwait(false);
@@ -161,7 +161,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             _currentEditContext.NotifyValidationStateChanged(
                 MessageStore.HasNoMessages(validatedFields) ? ValidationStatus.Success : ValidationStatus.Failure,
                 ValidationMode.Property,
-                invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields);
+                invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, new List<FieldIdentifier>());
 
             _syncValidation.Release();
         }

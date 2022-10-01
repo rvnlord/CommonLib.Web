@@ -19,7 +19,7 @@ namespace CommonLib.Web.Source.Common.Components.MyMediaQueryComponent
         [Parameter]
         public EventCallback<MyMediaQueryChangedEventArgs> OnChange { get; set; }
         
-        protected override async Task OnAfterFirstRenderAsync()
+        protected override async Task OnAfterFirstRenderAsync() // for reference or when layout is not available, DeeviceSize changeee is now available directly from layout
         {
             var mediaQueryDotNetRef = DotNetObjectReference.Create(this);
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_MediaQuery_AfterFirstRender", Query.V ?? DeviceSize.V?.ToMediaQuery(), DeviceSize.V?.EnumToString().ToLowerInvariant(), _guid, mediaQueryDotNetRef);

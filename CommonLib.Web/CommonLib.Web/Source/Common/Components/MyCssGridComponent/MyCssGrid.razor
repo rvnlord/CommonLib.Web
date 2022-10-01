@@ -2,13 +2,7 @@
 @inherits MyCssGridBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
-
-    <MyMediaQuery DeviceSize="DeviceSizeKind.XS" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-    <MyMediaQuery DeviceSize="DeviceSizeKind.SM" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-    <MyMediaQuery DeviceSize="DeviceSizeKind.MD" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-    <MyMediaQuery DeviceSize="DeviceSizeKind.LG" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-    <MyMediaQuery DeviceSize="DeviceSizeKind.XL" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-
+    
     <div id="@_id" 
          my-guid="@_guid"
          class="@_renderClasses"

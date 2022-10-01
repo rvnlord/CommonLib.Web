@@ -1,15 +1,27 @@
-﻿/// <reference path="../../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
 /// <reference path="../../libs/custom/@types/animejs/index.d.ts" />
 
 import "../extensions.js";
 
 class ValidationMessageInputUtils {
     static hideMessageCol($divValidationMessage) {
-        $divValidationMessage.parent().closest("[class^='my-col'").addClass("my-d-none");
+        const $itemContainer = $divValidationMessage.parent().closest(".my-css-grid-item, .my-col");
+        $itemContainer.addClass("my-d-none");
+        //if ($itemContainer.hasClass("my-col")) {
+           
+        //} else if ($itemContainer.hasClass("my-css-grid-item")) {
+        //    $itemContainer.css({ "max-height": "0", "max-width": "0", "display": "none" });
+        //}
     }
 
     static showMessageCol($divValidationMessage) {
-        $divValidationMessage.parent().closest("[class^='my-col'").removeClass("my-d-none");
+        const $itemContainer = $divValidationMessage.parent().closest(".my-css-grid-item, .my-col");
+        $itemContainer.removeClass("my-d-none");
+        //if ($itemContainer.hasClass("my-col")) {
+      
+        //} else if ($itemContainer.hasClass("my-css-grid-item")) {
+        //    $itemContainer.removeCss([ "max-height", "max-width", "margin-bottom" ]);
+        //}
     }
 }
 

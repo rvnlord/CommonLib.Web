@@ -49,7 +49,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
                 var userById = userByIdResp?.Result;
                 var userByName = userByNameResp.Result;
-
+                
                 return userByName is null || userByName.UserName.EqualsIgnoreCase(userById?.UserName); // if there is no such user with supplied name or if its this user's current name
             }).WithMessage((_, value) => userByNameResp.IsError 
                 ? userByNameResp.Message 

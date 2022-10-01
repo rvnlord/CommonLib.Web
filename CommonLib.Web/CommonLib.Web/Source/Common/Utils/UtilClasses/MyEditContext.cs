@@ -37,10 +37,10 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             OnFieldChangedAsync?.Invoke(this, new FieldChangedEventArgs(fieldIdentifier));
         }
 
-        public void NotifyValidationStateChanged(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields)
+        public void NotifyValidationStateChanged(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields, List<FieldIdentifier> pendingFields)
         {
-            OnValidationStateChanged?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields));
-            OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields));
+            OnValidationStateChanged?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, pendingFields));
+            OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, pendingFields));
         }
 
         public void NotifyValidationStateChanged(in FieldIdentifier? validatedField, MyFluentValidatorBase validator)
@@ -124,8 +124,9 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         public List<FieldIdentifier> FieldsWithValidationRules { get; }
         public List<FieldIdentifier> FieldsWithoutValidationRules { get; }
         public List<FieldIdentifier> AllModelFields { get; }
+        public List<FieldIdentifier> PendingFields { get; }
 
-        public MyValidationStateChangedEventArgs(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields)
+        public MyValidationStateChangedEventArgs(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields, List<FieldIdentifier> pendingFields)
         {
             ValidationStatus = validationStatus;
             ValidationMode = validationMode;
@@ -136,8 +137,9 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             FieldsWithValidationRules = fieldsWithValidationRules;
             FieldsWithoutValidationRules = fieldsWithoutValidationRules;
             AllModelFields = allModelFields;
+            PendingFields = pendingFields;
         }
-
+        
         public MyValidationStateChangedEventArgs(FieldIdentifier? validatedField, MyFluentValidatorBase validator)
         {
             var model = validator.CascadedEditContext.ParameterValue.Model;
@@ -150,6 +152,7 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             FieldsWithoutValidationRules = AllModelFields.Except(FieldsWithValidationRules).ToList();
             ValidationStatus = InvalidFields.Any() ? ValidationStatus.Failure : ValidationStatus.Success;
             ValidationMode = validatedField == null ? ValidationMode.Model : ValidationMode.Property;
+            PendingFields = new List<FieldIdentifier>();
         }
     }
 

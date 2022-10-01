@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
+using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Utils;
@@ -16,15 +18,20 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
 {
     public class MyLayoutComponentBase : MyComponentBase
     {
+        private Task<IJSObjectReference> _mediaQueryModuleAsync;
         protected ElementReference _jsMyPageScrollContainer { get; set; }
         protected BlazorParameter<MyLayoutComponentBase> _bpLayoutToCascade { get; set; }
         public Dictionary<Guid, MyComponentBase> Components { get; set; }
 
         internal const string BodyPropertyName = nameof(Body);
+        public Task<IJSObjectReference> MediaQueryModuleAsync => _mediaQueryModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyMediaQueryBase).BeforeLast("Base"), NavigationManager, HttpClient);
+
         
         [Parameter]
         public RenderFragment Body { get; set; }
-        
+
+        public DeviceSizeKind? DeviceSize { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             _bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(this);
@@ -53,5 +60,16 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
                 Sessionid = sessionid;
             }
         }
+
+        [JSInvokable]
+        public async Task MediaQuery_ChangeAsync(string strDeviceSize)
+        {
+            DeviceSize = strDeviceSize.ToEnum<DeviceSizeKind>();
+            await OnDeviceSizeChangingAsync((DeviceSizeKind)DeviceSize);
+        }
+        
+        public event MyAsyncEventHandler<MyLayoutComponentBase, MyMediaQueryChangedEventArgs> DeviceSizeChanged;
+        private async Task OnDeviceSizeChangingAsync(MyMediaQueryChangedEventArgs e) => await DeviceSizeChanged.InvokeAsync(this, e);
+        private async Task OnDeviceSizeChangingAsync(DeviceSizeKind deviceSize) => await OnDeviceSizeChangingAsync(new MyMediaQueryChangedEventArgs(deviceSize));
     }
 }

@@ -14,7 +14,7 @@ export class CssGridUtils {
     }
 }
 
-export async function blazor_CssGridUtils_GetDeviceSizeAsync(deviceSizes) {
+export async function blazor_CssGrid_GetDeviceSizeAsync(deviceSizes) {
     return await CssGridUtils.getDeviceSizeAsync(deviceSizes);
 }
 

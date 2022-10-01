@@ -19,6 +19,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         public DeviceSizeKind CurrentDeviceSize { get; set; }
         public DeviceSizeKind? HighestDeviceSizeWithArea { get; set; }
         public OrderedDictionary<DeviceSizeKind, CssGridArea> GridAreas { get; set; }
+        public OrderedDictionary<DeviceSizeKind, CssGridAreaGap> GridAreaGaps { get; set; }
 
         [Parameter]
         public BlazorParameter<CssGridArea> Area { get; set; }
@@ -38,22 +39,36 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         [Parameter]
         public BlazorParameter<CssGridAreaHide> Hide { get; set; }
 
+        [Parameter]
+        public BlazorParameter<CssGridAreaGap> Gap { get; set; }
+
+        [Parameter]
+        public BlazorParameter<CssGridAreaGap> SMGap { get; set; }
+        
+        [Parameter]
+        public BlazorParameter<CssGridAreaGap> MDGap { get; set; }
+
+        [Parameter]
+        public BlazorParameter<CssGridAreaGap> LGGap { get; set; }
+
+        [Parameter]
+        public BlazorParameter<CssGridAreaGap> XLGap { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             GridAreas = new OrderedDictionary<DeviceSizeKind, CssGridArea>();
+            GridAreaGaps = new OrderedDictionary<DeviceSizeKind, CssGridAreaGap>();
             await Task.CompletedTask;
         }
 
-        protected override void OnParametersSet()
+        protected override async Task OnParametersSetAsync()
         {
             if (FirstParamSetup)
             {
                 SetMainAndUserDefinedClasses("my-css-grid-item");
-                SetCustomAndUserDefinedStyles(new Dictionary<string, string> { ["opacity"] = "0" });
+                SetUserDefinedStyles();
+                //SetCustomAndUserDefinedStyles(new Dictionary<string, string> { ["opacity"] = "0" });
                 SetUserDefinedAttributes();
-                
-                ((MyCssGridBase)Parent).DeviceSizeChanged -= DeviceSize_Changed;
-                ((MyCssGridBase)Parent).DeviceSizeChanged += DeviceSize_Changed;
             }
 
             if (Area.HasChanged() && Area.HasValue())
@@ -85,11 +100,35 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
                 XLArea.ParameterValue.DeviceSize = DeviceSizeKind.XL;
                 GridAreas[XLArea.V.DeviceSize] = XLArea.V;
             }
+
+            if (Gap.HasChanged() && Gap.HasValue())
+                GridAreaGaps[DeviceSizeKind.XS] = Gap.V;
+            if (SMGap.HasChanged() && SMGap.HasValue())
+                GridAreaGaps[DeviceSizeKind.SM] = SMGap.V;
+            if (MDGap.HasChanged() && MDGap.HasValue())
+                GridAreaGaps[DeviceSizeKind.MD] = MDGap.V;
+            if (LGGap.HasChanged() && LGGap.HasValue())
+                GridAreaGaps[DeviceSizeKind.LG] = LGGap.V;
+            if (XLGap.HasChanged() && XLGap.HasValue())
+                GridAreaGaps[DeviceSizeKind.XL] = XLGap.V;
+
+            if (FirstParamSetup)
+                await SetGridItemStylesAsync(DeviceSizeKind.XL, false);
         }
-        
-        private async Task DeviceSize_Changed(MyCssGridBase sender, MyMediaQueryChangedEventArgs e, CancellationToken token)
+
+        protected override async Task OnLayoutAfterRenderFinishedAsync(Guid sessionId, DeviceSizeKind deviceSize)
         {
-            CurrentDeviceSize = e.DeviceSize;
+            await SetGridItemStylesAsync(deviceSize);
+        }
+
+        protected override async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize)
+        {
+            await SetGridItemStylesAsync(deviceSize);
+        }
+
+        private async Task SetGridItemStylesAsync(DeviceSizeKind deviceSize, bool refresh = true)
+        {
+            CurrentDeviceSize = deviceSize;
             HighestDeviceSizeWithArea = GridAreas.Keys?.Cast<DeviceSizeKind?>().Where(d => d <= CurrentDeviceSize)?.MaxOrDefault();
             if (HighestDeviceSizeWithArea is not null) // area is not defined in any way
             {
@@ -111,14 +150,44 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
             else
                 RemoveStyles(new[] { "grid-area", "grid-row-start", "grid-column-start", "grid-row-end", "grid-column-end" });
 
-            RemoveStyle("opacity");
-            await StateHasChangedAsync(true);
+            var highestDeviceSizeWithAreaGap = GridAreaGaps.Keys?.Cast<DeviceSizeKind?>().Where(d => d <= CurrentDeviceSize)?.MaxOrDefault();
+            if (highestDeviceSizeWithAreaGap is not null)
+            {
+                var highestDefinedGap = GridAreaGaps[(DeviceSizeKind)highestDeviceSizeWithAreaGap];
+
+                if (!highestDefinedGap.Top.IsNullOrWhiteSpace())
+                    AddOrUpdateStyle("margin-top", highestDefinedGap.Top);
+                else
+                    RemoveStyle("margin-top");
+
+                if (!highestDefinedGap.Right.IsNullOrWhiteSpace())
+                    AddOrUpdateStyle("margin-right", highestDefinedGap.Right);
+                else
+                    RemoveStyle("margin-right");
+
+                if (!highestDefinedGap.Bottom.IsNullOrWhiteSpace())
+                    AddOrUpdateStyle("margin-bottom", highestDefinedGap.Bottom);
+                else
+                    RemoveStyle("margin-bottom");
+
+                if (!highestDefinedGap.Left.IsNullOrWhiteSpace())
+                    AddOrUpdateStyle("margin-left", highestDefinedGap.Left);
+                else
+                    RemoveStyle("margin-left");
+            }
+            else
+                RemoveStyles(new[] { "margin-top", "margin-right", "margin-bottom", "margin-left" });
+
+            //RemoveStyle("opacity");
+            if (refresh)
+                await StateHasChangedAsync(true);
         }
     }
 
     public class CssGridArea
     {
         public static CssGridArea Auto => new();
+        public static CssGridArea C1 => new(CGACP.C1);
         public static CssGridArea C1SpanAll => new(CGACP.C1, CGARP.Auto, CGAS.All);
         public DeviceSizeKind DeviceSize { get; set; } = DeviceSizeKind.XS;
         public int? Column { get; set; }
@@ -172,5 +241,30 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
             From = from;
             To = to;
         }
+    }
+
+    public class CssGridAreaGap
+    {
+        public static CssGridAreaGap Auto => new();
+        
+        public string Top { get; set; }
+        public string Right { get; set; }
+        public string Bottom { get; set; }
+        public string Left { get; set; }
+
+        public CssGridAreaGap() { }
+
+        public CssGridAreaGap(string top, string right = null, string bottom = null, string left = null)
+        {
+            Top = top;
+            Right = right;
+            Bottom = bottom;
+            Left = left;
+        }
+
+        public static CssGridAreaGap OnlyTop(string top) => new(top);
+        public static CssGridAreaGap OnlyRight(string right) => new(null, right);
+        public static CssGridAreaGap OnlyBottom(string bottom) => new(null, null, bottom);
+        public static CssGridAreaGap OnlyLeft(string left) => new(null, null, null, left);
     }
 }

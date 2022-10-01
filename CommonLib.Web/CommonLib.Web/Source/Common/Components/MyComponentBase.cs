@@ -32,16 +32,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 using Truncon.Collections;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 using MoreLinq;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
-using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
-using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
+using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -298,6 +296,8 @@ namespace CommonLib.Web.Source.Common.Components
                     IsCached = true;
                     Layout.LayoutSessionIdSet -= Layout_SessionIdSet; // also add an event to layout itself as well so app can trigger Rebuild component cache
                     Layout.LayoutSessionIdSet += Layout_SessionIdSet;
+                    Layout.DeviceSizeChanged -= Layout_DeviceSizeChanged;
+                    Layout.DeviceSizeChanged += Layout_DeviceSizeChanged;
                 }
 
                 await OnFirstParametersSetAsync();
@@ -335,6 +335,11 @@ namespace CommonLib.Web.Source.Common.Components
                         var prompts = await ComponentsByTypeAsync<MyPromptBase>();
                         foreach (var prompt in prompts)
                             await prompt.StateHasChangedAsync();
+
+                        var thisAsLayout = (MyLayoutComponentBase)this;
+                        var mediaQueryDotNetRef = DotNetObjectReference.Create(thisAsLayout);
+                        thisAsLayout.DeviceSize = (await (await thisAsLayout.MediaQueryModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_MediaQuery_SetupForAllDevicesAndGetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries, _guid, mediaQueryDotNetRef)).ToEnum<DeviceSizeKind>();
+                        
                         await ((MyLayoutComponentBase)this).OnLayoutSessionIdSettingAsync(SessionId);
                     }
 
@@ -346,7 +351,7 @@ namespace CommonLib.Web.Source.Common.Components
                 await OnAfterRenderFinishingAsync(isFirstRenderAfterInit);
                 IsRerendered = true;
 
-                if (LayoutParameter.HasValue() && !_isCommonLayout && SessionId != Guid.Empty && isFirstRenderAfterInit)
+                if (LayoutParameter.HasValue() && Layout.DeviceSize is not null && !_isCommonLayout && SessionId != Guid.Empty && isFirstRenderAfterInit) // it means component was loaded some time after layout which means layout couldn't trigger the event for it because it wasn't aavailable at the time
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)
@@ -369,14 +374,14 @@ namespace CommonLib.Web.Source.Common.Components
         {
             await _syncAfterSessionIdSet.WaitAsync();
 
-            if (IsDisposed || _isCommonLayout || Layout is null || _sessionIdAlreadySet)
+            if (IsDisposed || _isCommonLayout || _isLayout || Layout is null || _sessionIdAlreadySet)
             {
                 await _syncAfterSessionIdSet.ReleaseAsync();
                 return;
             }
 
             _sessionIdAlreadySet = true;
-            await OnLayoutSessionIdSetAsync(e.Sessionid);
+            await OnLayoutAfterRenderFinishedAsync(e.Sessionid, Layout.DeviceSize ?? throw new NullReferenceException("Device Size shouldn't be null"));
             
             await _syncAfterSessionIdSet.ReleaseAsync();
         }
@@ -385,7 +390,15 @@ namespace CommonLib.Web.Source.Common.Components
         protected virtual void OnAfterRender(bool firstRender) { }
         protected virtual async Task OnAfterRenderAsync(bool firstRender) => await Task.CompletedTask;
 
-        protected virtual async Task OnLayoutSessionIdSetAsync(Guid sessionId) => await Task.CompletedTask;
+        protected virtual async Task OnLayoutSessionIdSetAsync() => await Task.CompletedTask;
+        protected virtual async Task OnLayoutAfterRenderFinishedAsync(Guid sessionId, DeviceSizeKind deviceSize) => await Task.CompletedTask;
+
+        private async Task Layout_DeviceSizeChanged(MyLayoutComponentBase sender, MyMediaQueryChangedEventArgs e, CancellationToken token)
+        {
+            await OnDeviceSizeChangedAsync(e.DeviceSize);
+        }
+
+        protected virtual async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize) => await Task.CompletedTask;
 
         protected virtual bool ShouldRender() => true;
 

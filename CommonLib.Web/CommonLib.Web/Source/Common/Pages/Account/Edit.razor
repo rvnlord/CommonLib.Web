@@ -5,6 +5,7 @@
 @using CommonLib.Web.Source.ViewModels.Account
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
 
 @inherits EditBase
 
@@ -25,139 +26,93 @@
     }
     else if (HasAuthenticationStatus(AuthStatus.Authenticated))
     {
-        <MyCssGrid 
-            Padding="StylesConfig.Gutter.Px()" 
-            Gap="StylesConfig.Gutter.Px()" 
-            XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", $"repeat(8, minmax({StylesConfig.InputHeight.Px()}, max-content))"))"
-            LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", $"repeat(8, minmax({StylesConfig.InputHeight.Px()}, max-content))"))"
-            SMTemplate="@(new CssGridLayout("6fr 6fr", $"repeat(14, minmax({StylesConfig.InputHeight.Px()}, max-content))"))" 
-            class="my-test-bg-only"
-            style="background: #101010; margin: 0 5px 5px 5px;">
+        <MyEditForm @ref="_editForm" EditContext="_editContext" style="margin: 0 5px 5px 5px;">
+            <MyFluentValidator @ref="_validator" />
+            <MyCssGrid 
+                Padding="Gutter.Px()" Gap="Gutter.Px()" 
+                XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fill, minmax(0, max-content))"))"
+                LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fill, minmax(0, max-content))"))"
+                SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fill, minmax(0, max-content))"))"
+                Template="@(new CssGridLayout("12fr", "repeat(auto-fill, minmax(0, max-content))"))"
+                style="background: #101010;">
 
-            <MyCssGridItem Area="CssGridArea.C1SpanAll"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())">
+                    <h3>Edit</h3>
+                    <hr class="my-mt-10px" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.Id)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.UserName)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyTextInput Icon="IconType.From(LightIconType.Envelope)" For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.Email)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem></MyCssGridItem>
-            <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.ConfirmNewPassword)" />
+                </MyCssGridItem>
 
-            <MyCssGridItem Area="CssGridArea.C1SpanAll"></MyCssGridItem>
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <MyCssGrid Gap="StylesConfig.Gutter.Px()" 
+                        Template="@(new CssGridLayout("1fr", "auto"))"
+                        LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                        <MyCssGridItem>  
+                            <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
+                        </MyCssGridItem>
+                    </MyCssGrid>
+                </MyCssGridItem>
 
-        </MyCssGrid>
-
-        <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-            <MyEditForm @ref="_editForm" EditContext="_editContext">
-                <MyFluentValidator @ref="_validator" />
-                <div class="my-row">
-                    <div class="my-col-12">
-                        <h3>Edit</h3>
-                        <hr class="my-mt-10px" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel">
-                            <MyInputGroupPrepend>
-                                <MyIcon IconType="IconType.From(LightIconType.IdBadge)"></MyIcon>
-                            </MyInputGroupPrepend>
-                        </MyTextInput>
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.Id)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput For="@(() => _editUserVM.UserName)" SyncPaddingGroup="edit-panel">
-                            <MyInputGroupPrepend>
-                                <MyIcon IconType="IconType.From(LightIconType.User)"></MyIcon>
-                            </MyInputGroupPrepend>
-                        </MyTextInput>
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.UserName)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyTextInput For="@(() => _editUserVM.Email)" SyncPaddingGroup="edit-panel">
-                            <MyInputGroupPrepend>
-                                <MyIcon IconType="IconType.From(LightIconType.Envelope)"></MyIcon>
-                            </MyInputGroupPrepend>
-                        </MyTextInput>
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.Email)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.OldPassword)" SyncPaddingGroup="edit-panel" />
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.NewPassword)" SyncPaddingGroup="edit-panel" />
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-2 my-col-lg-3 my-col-sm-6 my-col-12">
-                        <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
-                    </div>
-                    <div class="my-col-xl-3 my-col-lg-4 my-col-sm-6 my-col-12">
-                        <MyPasswordInput For="@(() => _editUserVM.ConfirmNewPassword)" SyncPaddingGroup="edit-panel" />
-                    </div>
-                    <div class="my-col-xl-7 my-col-lg-5 my-col-12 my-d-none-if-empty">
-                        <MyValidationMessage For="@(() => _editUserVM.ConfirmNewPassword)" />
-                    </div>
-                </div>
-                <div class="my-row">
-                    <div class="my-col-xl-10 my-col-lg-9 my-col-sm-6 my-col-12 my-offset-xl-2 my-offset-lg-3 my-offset-sm-6">
-                        <MyButton Value="@("Save Profile".ToBp())" SubmitsForm="true" OnClick="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
-                    </div>
-                </div>
-            </MyEditForm>
-        </div>
+            </MyCssGrid>
+        </MyEditForm>
     }
 
 </CascadingValue>

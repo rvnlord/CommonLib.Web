@@ -46,6 +46,9 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         public string SyncPaddingGroup { get; set; }
 
         [Parameter]
+        public BlazorParameter<IconType> Icon { get; set; }
+        
+        [Parameter]
         public BlazorParameter<InputState> State
         {
             get

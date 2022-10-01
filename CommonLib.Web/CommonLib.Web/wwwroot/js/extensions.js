@@ -868,6 +868,11 @@ jQuery.fn.extend({
         return this.parents().length;
     },
     removeCss: function(css) {
+        if (css instanceof Array) {
+            for (var s of css) {
+                this.css(s, "");
+            }
+        }
         return this.css(css, "");
     },
     backgroundImageSizeAsync: async function() {
