@@ -22,7 +22,7 @@
                     var cssGrid = Descendants.SingleOrDefault(d => d is MyEditForm)?.Descendants.SingleOrDefault(d => d is MyCssGrid) as MyCssGrid; // just for test, normally one can simply use @ref
                 }
                 <MyCssGridItem class="item1">1</MyCssGridItem>
-                <MyCssGridItem class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout.EnumToString() ?? "not defined")</MyCssGridItem>
+                <MyCssGridItem class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout?.EnumToString() ?? "not defined")</MyCssGridItem>
                 <MyCssGridItem class="item3">3</MyCssGridItem>  
                 <MyCssGridItem class="item4">4</MyCssGridItem>
                 <MyCssGridItem class="item5">5</MyCssGridItem>

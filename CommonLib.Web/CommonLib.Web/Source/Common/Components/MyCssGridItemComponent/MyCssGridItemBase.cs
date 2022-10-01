@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Web.Source.Common.Components.MyCssGridComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
@@ -116,12 +118,14 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
 
     public class CssGridArea
     {
+        public static CssGridArea Auto => new();
+        public static CssGridArea C1SpanAll => new(CGACP.C1, CGARP.Auto, CGAS.All);
         public DeviceSizeKind DeviceSize { get; set; } = DeviceSizeKind.XS;
         public int? Column { get; set; }
         public int? Row { get; set; }
         public int ColumnSpan { get; set; }
         public int RowSpan { get; set; }
-
+  
         public CssGridArea()
         {
             Column = null;
@@ -130,15 +134,27 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
             RowSpan = 1;
         }
         
-        public CssGridArea(int? column = null, int? row = null, int columnSpan = 1, int rowSpan = 1)
+        public CssGridArea(int? column, int? row = null, int columnSpan = 1, int rowSpan = 1)
         {
             Column = column;
             Row = row;
             ColumnSpan = columnSpan;
             RowSpan = rowSpan;
         }
+
+        public CssGridArea(CGACP column = CGACP.Auto, CGARP row = CGARP.Auto, CGAS columnSpan = CGAS.Span1, CGAS rowSpan = CGAS.Span1)
+        {
+            Column = column == CGACP.Auto ? null : column.EnumToString().After("C").ToInt();
+            Row = row == CGARP.Auto ? null : row.EnumToString().After("R").ToInt();
+            ColumnSpan = columnSpan == CGAS.All ? -1 : columnSpan.EnumToString().After("Span").ToInt();;
+            RowSpan = rowSpan == CGAS.All ? -1 : rowSpan.EnumToString().After("Span").ToInt();;
+        }
     }
 
+    public enum CGACP { Auto, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12 } // CssGridAreaColumnPlacement
+    public enum CGARP { Auto, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12 } // CssGridAreaRowPlacement
+    public enum CGAS { All, Span1, Span2, Span3, Span4, Span5, Span6, Span7, Span8, Span9, Span10, Span11, Span12 } // CssGridAreaSpan
+   
     public class CssGridAreaHide
     {
         public DeviceSizeKind? From { get; set; }
