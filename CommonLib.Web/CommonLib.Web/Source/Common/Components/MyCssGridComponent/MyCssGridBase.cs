@@ -6,6 +6,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyCssGridItemComponent;
 using CommonLib.Web.Source.Common.Components.MyCssGridTemplateComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Extensions;
@@ -18,7 +19,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
     public class MyCssGridBase : MyComponentBase
     {
         public DeviceSizeKind CurrentDeviceSize { get; set; }
-        public DeviceSizeKind HighestDeviceSizeWithLayout { get; set; }
+        public DeviceSizeKind? HighestDeviceSizeWithLayout { get; set; }
         public OrderedDictionary<DeviceSizeKind, CssGridLayout> GridLayouts { get; set; }
 
         [Parameter]
@@ -132,11 +133,20 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
         private async Task SetGridTemplateStylesAsync(DeviceSizeKind deviceSize)
         {
             CurrentDeviceSize = deviceSize;
-            HighestDeviceSizeWithLayout = GridLayouts.Keys?.Cast<DeviceSizeKind?>().Where(d => d <= CurrentDeviceSize)?.MaxOrDefault() ?? throw new NullReferenceException($"Template for {CurrentDeviceSize.EnumToString()} or smaller device is not defined");
-            var highestDefinedLayout = GridLayouts[HighestDeviceSizeWithLayout];
-            Logger.For<MyCssGridBase>().Info($"deviceSize: {CurrentDeviceSize}, highestDeviceSizeWithDefinedLayout: {HighestDeviceSizeWithLayout}, Cols: {highestDefinedLayout.ColumnsLayout}, Rows: {highestDefinedLayout.RowsLayout}");
-            AddOrUpdateStyle("grid-template-columns", highestDefinedLayout.ColumnsLayout);
-            AddOrUpdateStyle("grid-template-rows", highestDefinedLayout.RowsLayout);
+            HighestDeviceSizeWithLayout = GridLayouts.Keys?.Cast<DeviceSizeKind?>().Where(d => d <= CurrentDeviceSize)?.MaxOrDefault(); // ?? throw new NullReferenceException($"Template for {CurrentDeviceSize.EnumToString()} or smaller device is not defined");
+            if (HighestDeviceSizeWithLayout is not null)
+            {
+                var highestDefinedLayout = GridLayouts[(DeviceSizeKind)HighestDeviceSizeWithLayout];
+                Logger.For<MyCssGridBase>().Info($"deviceSize: {CurrentDeviceSize}, highestDeviceSizeWithDefinedLayout: {HighestDeviceSizeWithLayout}, Cols: {highestDefinedLayout.ColumnsLayout}, Rows: {highestDefinedLayout.RowsLayout}");
+                AddOrUpdateStyle("grid-template-columns", highestDefinedLayout.ColumnsLayout);
+                AddOrUpdateStyle("grid-template-rows", highestDefinedLayout.RowsLayout);
+            }
+            else
+            {
+                AddOrUpdateStyle("grid-template-columns", "auto");
+                AddOrUpdateStyle("grid-template-rows", $"repeat({Children.OfType<MyCssGridItemBase>().Count()}, minmax({StylesConfig.InputHeight.Px()}, max-content))");
+            }
+            
             RemoveStyle("opacity");
             await StateHasChangedAsync(true);
         }
