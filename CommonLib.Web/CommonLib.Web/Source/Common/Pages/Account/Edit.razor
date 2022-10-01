@@ -4,6 +4,7 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.ViewModels.Account
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
+@using CommonLib.Source.Common.Converters
 
 @inherits EditBase
 
@@ -24,8 +25,47 @@
     }
     else if (HasAuthenticationStatus(AuthStatus.Authenticated))
     {
+        <MyCssGrid 
+            Padding="StylesConfig.Gutter.Px()" 
+            Gap="StylesConfig.Gutter.Px()" 
+            XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", $"repeat(8, minmax({StylesConfig.InputHeight.Px()}, max-content))"))"
+            LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", $"repeat(8, minmax({StylesConfig.InputHeight.Px()}, max-content))"))"
+            SMTemplate="@(new CssGridLayout("6fr 6fr", $"repeat(14, minmax({StylesConfig.InputHeight.Px()}, max-content))"))" 
+            class="my-test-bg-only"
+            style="background: #101010; margin: 0 5px 5px 5px;">
+
+            <MyCssGridItem Area="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem></MyCssGridItem>
+            <MyCssGridItem SMArea="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+            <MyCssGridItem Area="@(new CssGridArea(1, null, -1))"></MyCssGridItem>
+
+        </MyCssGrid>
+
         <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-            <MyEditForm @ref="_editForm" EditContext="_editContext" class="my-container">
+            <MyEditForm @ref="_editForm" EditContext="_editContext">
                 <MyFluentValidator @ref="_validator" />
                 <div class="my-row">
                     <div class="my-col-12">

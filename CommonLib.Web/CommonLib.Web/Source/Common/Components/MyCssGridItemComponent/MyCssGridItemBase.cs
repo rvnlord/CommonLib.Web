@@ -92,10 +92,22 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
             if (HighestDeviceSizeWithArea is not null) // area is not defined in any way
             {
                 var highestDefinedArea = GridAreas[(DeviceSizeKind)HighestDeviceSizeWithArea];
-                AddOrUpdateStyle("grid-area", $"{highestDefinedArea.Row} / {highestDefinedArea.Column} / span {highestDefinedArea.RowSpan} / span {highestDefinedArea.ColumnSpan}");
+
+                if (highestDefinedArea.Row is not null)
+                    AddOrUpdateStyle("grid-row-start", highestDefinedArea.Row.ToString());
+                else
+                    RemoveStyle("grid-row-start");
+
+                if (highestDefinedArea.Column is not null)
+                    AddOrUpdateStyle("grid-column-start", highestDefinedArea.Column.ToString());
+                else
+                    RemoveStyle("grid-column-start");
+
+                AddOrUpdateStyle("grid-row-end", highestDefinedArea.RowSpan > 0 ? $"span {highestDefinedArea.RowSpan}" : "-1");
+                AddOrUpdateStyle("grid-column-end", highestDefinedArea.ColumnSpan > 0 ? $"span {highestDefinedArea.ColumnSpan}" : "-1");
             }
             else
-                RemoveStyle("grid-area");
+                RemoveStyles(new[] { "grid-area", "grid-row-start", "grid-column-start", "grid-row-end", "grid-column-end" });
 
             RemoveStyle("opacity");
             await StateHasChangedAsync(true);
@@ -105,14 +117,14 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
     public class CssGridArea
     {
         public DeviceSizeKind DeviceSize { get; set; } = DeviceSizeKind.XS;
-        public int Column { get; set; }
-        public int Row { get; set; }
+        public int? Column { get; set; }
+        public int? Row { get; set; }
         public int ColumnSpan { get; set; }
         public int RowSpan { get; set; }
 
         public CssGridArea() { }
         
-        public CssGridArea(int column, int row, int columnSpan = 1, int rowSpan = 1)
+        public CssGridArea(int? column = null, int? row = null, int columnSpan = 1, int rowSpan = 1)
         {
             Column = column;
             Row = row;
