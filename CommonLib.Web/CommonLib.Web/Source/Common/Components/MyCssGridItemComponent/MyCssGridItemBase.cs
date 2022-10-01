@@ -122,7 +122,13 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         public int ColumnSpan { get; set; }
         public int RowSpan { get; set; }
 
-        public CssGridArea() { }
+        public CssGridArea()
+        {
+            Column = null;
+            Row = null;
+            ColumnSpan = 1;
+            RowSpan = 1;
+        }
         
         public CssGridArea(int? column = null, int? row = null, int columnSpan = 1, int rowSpan = 1)
         {
