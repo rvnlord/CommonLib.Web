@@ -36,6 +36,7 @@ using MoreLinq;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
+using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
@@ -147,8 +148,18 @@ namespace CommonLib.Web.Source.Common.Components
         public BlazorParameter<MyComponentBase> ParentParameter { get; set; }
         
         public MyLayoutComponentBase Layout => LayoutParameter?.ParameterValue;
-        public virtual MyComponentBase Parent => ParentParameter?.ParameterValue;
-        public List<MyComponentBase> Children => Layout.Components.Values.Where(c => c.Parent == this).ToList();
+        public MyComponentBase Parent => ParentParameter?.ParameterValue;
+        public List<MyComponentBase> Children
+        {
+            get
+            {
+                _syncComponentsCache.Wait();
+                var children = Layout.Components.Values.Where(c => c.Parent == this).ToList();
+                _syncComponentsCache.Release();
+                return children;
+            }
+        }
+
         public List<MyComponentBase> Descendants
         {
             get
@@ -170,6 +181,10 @@ namespace CommonLib.Web.Source.Common.Components
                 {
                     ancestors.Add(parent);
                     parent = ancestors.Last().Parent;
+                    if (ancestors.Count > 15)
+                    {
+                        var t = 0;
+                    }
                 }
                 //if (Parent is not null)
                 //{
@@ -955,7 +970,7 @@ namespace CommonLib.Web.Source.Common.Components
             await WaitForControlsToRerenderAsync(arrControlsToChangeState);
         }
 
-        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink or MyCheckBox && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
         
         protected virtual async Task DisposeAsync(bool disposing)
         {

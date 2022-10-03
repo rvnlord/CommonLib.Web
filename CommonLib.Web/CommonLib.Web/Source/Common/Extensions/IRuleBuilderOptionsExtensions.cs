@@ -22,7 +22,10 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<TModel, TProperty> RequiredWithMessage<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb)
         {
-            return rb.Must((_, value, _) => value is not null && value.Equals(default)).WithMessage($"{rb.GetPropertyDisplayName()} is required");
+            return rb.Must((_, value, _) =>
+            {
+                return value is not null;
+            }).WithMessage($"{rb.GetPropertyDisplayName()} is required");
         }
 
         public static IRuleBuilderOptions<T, string> MinLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int minLength)

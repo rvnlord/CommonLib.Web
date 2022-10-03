@@ -36,9 +36,6 @@ namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
             else if (!Value.IsNullOrWhiteSpace())
                 _displayName = Value;
 
-            SetMainAndUserDefinedClasses("my-label");
-
-            _descriptionClasses.ReplaceAll("my-label-description");
             var alignClass = Align switch
             {
                 HorizontalAlignment.Left => "my-left",
@@ -46,7 +43,9 @@ namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
                 HorizontalAlignment.Right => "my-right",
                 _ => ""
             };
-            _descriptionClasses.Add(alignClass);
+            SetMainCustomAndUserDefinedClasses("my-label", new[] { alignClass });
+
+            _descriptionClasses.ReplaceAll("my-label-description");
 
             SetUserDefinedStyles();
 

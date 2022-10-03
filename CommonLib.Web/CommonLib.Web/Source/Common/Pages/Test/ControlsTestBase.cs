@@ -32,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         {
             _allControls = GetInputControls();
             _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
-            //await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
         protected async Task MediaQuery_ChangedAsync(MyMediaQueryChangedEventArgs e)

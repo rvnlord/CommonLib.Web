@@ -36,7 +36,7 @@ export async function blazor_DdlOption_ClickAsync(e, index, ddlGuid) {
 
 $(document).ready(function() {
 
-    $(document).on("mousedown", ".my-dropdown-value-and-icon-container", e => {
+    $(document).on("mousedown", ".my-dropdown:not(.disabled) > .my-dropdown-value-and-icon-container", e => {
         if (e.which !== 1) {
             return;
         }

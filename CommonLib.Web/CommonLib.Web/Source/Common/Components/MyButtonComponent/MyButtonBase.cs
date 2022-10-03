@@ -95,7 +95,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 //await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false); // `false` so the notify won't end up here again, but this is not enough, input has to specify false as well because here I am setting input params indirectly, not this params
             }
 
-            var parentDropDownState = (Parent as MyDropDownBase)?.State?.V;
+            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
             if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentDropDownState != _prevParentDropdownState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
                 //Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");

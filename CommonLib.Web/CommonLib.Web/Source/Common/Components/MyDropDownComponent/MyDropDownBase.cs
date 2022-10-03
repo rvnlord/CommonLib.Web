@@ -30,9 +30,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
         protected List<DdlItem> _ddlItems { get; set; }
         protected ElementReference _jsDropdown { get; set; }
         protected MyInputGroupBase _inputGroup { get; set; }
-
-        public override MyComponentBase Parent => _inputGroup;
-
+        
         [CascadingParameter(Name = "Model")] 
         public BlazorParameter<object> Model { get; set; }
         
@@ -145,7 +143,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
             var notifyParamsChangedTasks = new List<Task>();
             var changeStateTasks = new List<Task>();
-            var inputGroupAppendAndPrepend = (Parent as MyInputGroupBase)?.Children;
+            var inputGroupAppendAndPrepend = _inputGroup?.Children; // don't override parent for it, this component is designed in such a way that InputGroup is defined directly within it so InputGroup Parent would not bee MyDropdown but ratheer MyCssGridItem or sth else. Overriding parent directly would create infinite recursion of ancestors (InputGroup < MyDropdown < ...)
             var inputGroupButtons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyButtonBase>()).ToArray() ?? Array.Empty<MyButtonBase>();
             var inputGroupIcons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyIconBase>()).ToArray() ?? Array.Empty<MyIconBase>();
             foreach (var inputGroupButton in inputGroupButtons)
@@ -170,8 +168,11 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
             await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsDropdown);
         }
 
-        public async Task DdlOption_ClickAsync(MouseEventArgs e, int? index, Guid ddlGuid)
+        protected async Task DdlOption_ClickAsync(MouseEventArgs e, int? index, Guid ddlGuid)
         {
+            if (State.V.IsDisabled)
+                return;
+
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
             var selectedItemWithMappedindex = _ddlItems.SingleOrDefault(i => i.Index == index);
             SelectedItem = selectedItemWithMappedindex ?? EmptyItem;
@@ -203,7 +204,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
         {
-            var fi = new FieldIdentifier(Model, _propName);
+            var fi = new FieldIdentifier(Model.V, _propName);
 
             if (e == null)
                 throw new NullReferenceException(nameof(e));

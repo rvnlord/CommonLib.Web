@@ -84,7 +84,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 return;
             }
 
-            InputState parentDropDownState = null; // Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
+            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
             
             var cascadingInputHasChanged = CascadingInput.HasChanged();
             if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
