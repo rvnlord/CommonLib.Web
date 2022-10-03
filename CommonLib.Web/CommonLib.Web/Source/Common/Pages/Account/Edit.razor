@@ -30,10 +30,10 @@
             <MyFluentValidator @ref="_validator" />
             <MyCssGrid 
                 Padding="Gutter.Px()" Gap="Gutter.Px()" 
-                XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fill, minmax(0, max-content))"))"
-                LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fill, minmax(0, max-content))"))"
-                SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fill, minmax(0, max-content))"))"
-                Template="@(new CssGridLayout("12fr", "repeat(auto-fill, minmax(0, max-content))"))"
+                XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))"
                 style="background: #101010;">
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())">
@@ -102,7 +102,7 @@
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                    <MyCssGrid Gap="StylesConfig.Gutter.Px()" 
+                    <MyCssGrid Gap="Gutter.Px()" 
                         Template="@(new CssGridLayout("1fr", "auto"))"
                         LGTemplate="@(new CssGridLayout("max-content", "auto"))">
                         <MyCssGridItem>  

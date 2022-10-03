@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyCssGridComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.ViewModels;
 
@@ -12,6 +13,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
     {
         private MyComponentBase[] _allControls;
         private MyButtonBase _btnSave;
+
+        protected MyCssGridBase _cssgridTest { get; set; }
 
         protected TestEmployeeVM _employee { get; set; } = new()
         {
@@ -29,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         {
             _allControls = GetInputControls();
             _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            //await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
         protected async Task MediaQuery_ChangedAsync(MyMediaQueryChangedEventArgs e)

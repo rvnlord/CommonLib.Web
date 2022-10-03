@@ -3,7 +3,7 @@
 
 import "../extensions.js";
 
-class TextInputUtils {
+class InputUtils {
     static initPaddings = { // if I stored it as an attribute it might interfere with blazor rendering
         left: {},
         right: {} 
@@ -14,7 +14,7 @@ class TextInputUtils {
             return;
 
         const syncPaddingGroup = $input.attr("my-input-sync-padding-group");
-        const $tiToSetPadding = syncPaddingGroup ? $(`input[my-input-sync-padding-group="${syncPaddingGroup}"]`).$toArray() : [ $input ];
+        const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"]`).$toArray() : [ $input ];
         const leftPaddings = {};
         const rightPaddings = {};
 
@@ -46,8 +46,13 @@ class TextInputUtils {
                 this.initPaddings.right[guid] = parseFloat($ti.css("padding-right")).round();
             }
 
-            $ti.css("padding-left", leftPaddings.values().max().round().px());
-            $ti.css("padding-right", rightPaddings[guid].round().px()); // I don't want to inherit right padding from the sync group, it needs to be taken from the input itself (or it's input group)
+            let $ddlConteiner = null;
+            if ($ti.is(".my-dropdown")) {
+                $ddlConteiner = $ti.children(".my-dropdown-value-and-icon-container").first();
+            }
+
+            ($ddlConteiner || $ti).css("padding-left", leftPaddings.values().max().round().px());
+            ($ddlConteiner || $ti).css("padding-right", rightPaddings[guid].round().px()); // I don't want to inherit right padding from the sync group, it needs to be taken from the input itself (or it's input group)
 
             const $passwordMask = $ti.siblings(".my-password-mask").first();
             if ($passwordMask) {
@@ -59,7 +64,7 @@ class TextInputUtils {
 }
 
 export function blazor_Input_AfterRender(input) {
-    TextInputUtils.fixPaddingForInputGroups($(input));
+    InputUtils.fixPaddingForInputGroups($(input));
 }
 
 $(document).ready(function() {

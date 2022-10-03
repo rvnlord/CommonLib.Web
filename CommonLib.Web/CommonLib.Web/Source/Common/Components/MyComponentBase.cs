@@ -147,7 +147,7 @@ namespace CommonLib.Web.Source.Common.Components
         public BlazorParameter<MyComponentBase> ParentParameter { get; set; }
         
         public MyLayoutComponentBase Layout => LayoutParameter?.ParameterValue;
-        public MyComponentBase Parent => ParentParameter?.ParameterValue;
+        public virtual MyComponentBase Parent => ParentParameter?.ParameterValue;
         public List<MyComponentBase> Children => Layout.Components.Values.Where(c => c.Parent == this).ToList();
         public List<MyComponentBase> Descendants
         {
@@ -171,6 +171,15 @@ namespace CommonLib.Web.Source.Common.Components
                     ancestors.Add(parent);
                     parent = ancestors.Last().Parent;
                 }
+                //if (Parent is not null)
+                //{
+                //    ancestors.Add(Parent);
+                //    ancestors.AddRange(Parent.Ancestors);
+                //    if (ancestors.Count > 10)
+                //    {
+                //        var t = 0;
+                //    }
+                //}
 
                 return ancestors;
             }

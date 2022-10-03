@@ -7,9 +7,11 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
@@ -21,6 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
     public class MyButtonBase : MyComponentBase
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
+        private InputState _prevParentDropdownState;
         //private ButtonState? _buttonStateFromValidation;
         
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
@@ -34,7 +37,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         
         [CascadingParameter] 
         public BlazorParameter<MyInputBase> CascadingInput { get; set; }
-
+        
         [Parameter]
         public BlazorParameter<object> Model { get; set; }
 
@@ -60,7 +63,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; }
-
+        
         protected override async Task OnInitializedAsync()
         {
             OtherIcons ??= new OrderedDictionary<IconType, MyIconBase>();
@@ -92,9 +95,18 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 //await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false); // `false` so the notify won't end up here again, but this is not enough, input has to specify false as well because here I am setting input params indirectly, not this params
             }
 
-            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
+            var parentDropDownState = (Parent as MyDropDownBase)?.State?.V;
+            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentDropDownState != _prevParentDropdownState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
                 //Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
+                
+                ButtonState? parentDropdownStateAsButtonState = parentDropDownState?.State switch
+                {
+                    InputStateKind.Disabled => ButtonState.Disabled,
+                    InputStateKind.Enabled => ButtonState.Enabled,
+                    _ => null
+                };
+                _prevParentDropdownState = parentDropDownState;
 
                 ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue?.State switch
                 {
@@ -102,7 +114,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                     InputStateKind.Enabled => ButtonState.Enabled,
                     _ => null
                 };
-                State.ParameterValue = cascadingInputState ?? State.ParameterValue ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                State.ParameterValue = parentDropdownStateAsButtonState ?? cascadingInputState ?? State.ParameterValue ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
                 //_buttonStateFromValidation = null;
 
                 if (State.ParameterValue == ButtonState.Loading)

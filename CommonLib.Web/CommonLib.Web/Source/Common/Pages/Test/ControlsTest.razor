@@ -3,26 +3,34 @@
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using System.Linq.Expressions
 
 @inherits ControlsTestBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
     <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-        <MyEditForm Model="@_employee" class="my-container" style="background: #101010;">
+        <MyEditForm Model="@_employee" class="my-container">
             <MyFluentValidator />
+
+            <div class="my-row">
+                <div class="my-col-12 my-media-query-test-container">
+                    <MyMediaQuery DeviceSize="DeviceSizeKind.XS" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
+                    <MyMediaQuery DeviceSize="DeviceSizeKind.SM" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
+                    <div>@MediaQueryMessage</div>
+                </div>
+            </div>
+
             <MyCssGrid 
-                Padding="StylesConfig.HalfGutter.Px()" 
-                Gap="StylesConfig.Gutter.Px()" 
+                Padding="HalfGutter.Px()" 
+                Gap="Gutter.Px()" 
                 Template="@(new CssGridLayout("auto", "repeat(12, minmax(80px, auto))"))"
                 SMTemplate="@(new CssGridLayout("60px auto", "repeat(6, minmax(60px, auto))"))"
                 MDTemplate="@(new CssGridLayout("60px auto 200px 100px", "repeat(3, minmax(40px, auto))"))"
-                class="my-test">
-                @{
-                    var cssGrid = Descendants.SingleOrDefault(d => d is MyEditForm)?.Descendants.SingleOrDefault(d => d is MyCssGrid) as MyCssGrid; // just for test, normally one can simply use @ref
-                }
+                class="my-test" @ref="_cssgridTest">
                 <MyCssGridItem class="item1">1</MyCssGridItem>
-                <MyCssGridItem class="item2">2: Device Size: @(cssGrid?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(cssGrid?.HighestDeviceSizeWithLayout?.EnumToString() ?? "not defined")</MyCssGridItem>
+                <MyCssGridItem class="item2">2: Device Size: @(_cssgridTest?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(_cssgridTest?.HighestDeviceSizeWithLayout?.EnumToString() ?? "not defined")</MyCssGridItem>
                 <MyCssGridItem class="item3">3</MyCssGridItem>  
                 <MyCssGridItem class="item4">4</MyCssGridItem>
                 <MyCssGridItem class="item5">5</MyCssGridItem>
@@ -34,51 +42,66 @@
                 <MyCssGridItem class="item11">11</MyCssGridItem>
                 <MyCssGridItem class="item12">12</MyCssGridItem>
             </MyCssGrid>
-            <div class="my-row">
-                <div class="my-col-12 my-media-query-test-container">
-                    <MyMediaQuery DeviceSize="DeviceSizeKind.XS" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-                    <MyMediaQuery DeviceSize="DeviceSizeKind.SM" OnChange="MediaQuery_ChangedAsync"></MyMediaQuery>
-                    <div>@MediaQueryMessage</div>
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-sm-2 my-col-12">
+
+            <MyCssGrid 
+                Padding="HalfGutter.Px()" Gap="Gutter.Px()" 
+                XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))">
+                
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _employee.Name)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-sm-3 my-col-12">
-                    <MyTextInput For="@(() => _employee.Name)" />
-                </div>
-                <div class="my-col-sm-7 my-col-12">
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _employee.Name)" SyncPaddingGroup="controls-test-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Name)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-sm-2 my-col-12">
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _employee.Department)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-sm-3 my-col-12">
-                    <MyDropDown For="@(() => _employee.Department)" />
-                </div>
-                <div class="my-col-sm-7 my-col-12">
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyDropDown Icon="IconType.From(LightIconType.Box)" For="@(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Department)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-sm-2 my-col-12">
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _employee.Domain)" Align="@HorizontalAlignment.Right" />
-                </div>
-                <div class="my-col-sm-3 my-col-12">
-                    <MyDropDown For="@(() => _employee.Domain)" PossibleValues="@(new[] { "test1.com", "test2.com", "test3.com", "test4.com" })" />
-                </div>
-                <div class="my-col-sm-7 my-col-12">
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyDropDown Icon="IconType.From(LightIconType.Dragon)" For="@(() => _employee.Domain)" PossibleValues="@(new[] { "test1.com", "test2.com", "test3.com", "test4.com" })" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Domain)" />
-                </div>
-            </div>
-            <div class="my-row">
-                <div class="my-col-sm-3 my-col-12 my-offset-sm-2">
-                    <MyButton Value="@("Submit".ToBp())" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Auto" IconPlacement="ButtonIconPlacement.Right" />
-                </div>
-            </div>
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _employee.Password)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyPasswordInput For="@(() => _employee.Password)" SyncPaddingGroup="controls-test-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _employee.Password)" />
+                </MyCssGridItem>
+                
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <MyCssGrid Gap="Gutter.Px()" 
+                        Template="@(new CssGridLayout("1fr", "auto"))"
+                        LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                        <MyCssGridItem>  
+                            <MyButton Value="@("Submit".ToBp())" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+                        </MyCssGridItem>
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+            </MyCssGrid>
+            
         </MyEditForm>
     </div>
 

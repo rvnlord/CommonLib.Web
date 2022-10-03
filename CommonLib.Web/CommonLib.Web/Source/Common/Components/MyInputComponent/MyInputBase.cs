@@ -26,10 +26,11 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
     public abstract class MyInputBase : MyComponentBase
     {
-        protected string _propName { get; set; }
-        protected Task<IJSObjectReference> _inputModuleAsync;
         private BlazorParameter<InputState> _bpState;
 
+        protected string _propName { get; set; }
+        protected Task<IJSObjectReference> _inputModuleAsync;
+     
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
         public List<MyButtonBase> InputGroupButtons { get; set; }
         public List<MyIconBase> InputGroupIcons { get; set; }

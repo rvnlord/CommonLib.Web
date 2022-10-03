@@ -1,49 +1,64 @@
-﻿using System.Threading.Tasks;
-using CommonLib.Source.Common.Utils.UtilClasses;
+﻿using System;
+using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Utils;
+using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels;
 using FluentValidation;
+using SimpleInjector;
 
 namespace CommonLib.Web.Source.Validators
 {
-    public class TestEmployeeVMValidator : AbstractValidator<TestEmployeeVM>
+    public class TestEmployeeVMValidator : AbstractValidator<TestEmployeeVM>, IDisposable
     {
+        private readonly Scope _accountClientScope;
+        private readonly Scope _accountManagerScope;
+
         public TestEmployeeVMValidator()
         {
+            (var accountClient, _accountClientScope) = WebUtils.GetScopedServiceOrNull<IAccountClient>();
+            (var accountManager, _accountManagerScope) = WebUtils.GetScopedServiceOrNull<IAccountManager>();
+
             ClassLevelCascadeMode = CascadeMode.Stop;
             RuleLevelCascadeMode = CascadeMode.Stop;
-            var e = new TestEmployeeVM();
-
-            var name = e.GetPropertyDisplayName(() => e.Name);
-            const int nameMin = 3;
+            
             RuleFor(m => m.Name)
-                .NotEmpty().WithMessage($"{name} can't be empty")
-                .MinimumLength(nameMin).WithMessage($"{name} must contain at least {nameMin} characters");
+                .RequiredWithMessage()
+                .MinLengthWithMessage(3)
+                .MaxLengthWithMessage(25)
+                .UserManagerCompliantWithMessage(accountClient, accountManager);
 
-            //var email = typeof(Employee).GetPropertyDisplayName(nameof(Employee.Email));
-            var email = e.GetPropertyDisplayName(() => e.Email);
-            const int emailMax = 255;
             RuleFor(m => m.Email)
-                .NotEmpty().WithMessage($"{email} can't be empty")
-                .Matches(@"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$").WithMessage($"Invalid {email} format")
-                .MaximumLength(255).WithMessage($"{name} must can't contain more than {emailMax} characters");
+                .RequiredWithMessage()
+                .EmailAddressWithMessage();
 
-            //var department = typeof(Employee).GetPropertyDisplayName(nameof(Employee.Department));
-            var department = e.GetPropertyDisplayName(() => e.Department);
             RuleFor(m => m.Department)
-                //.MustAsync(async (dept, _) =>
-                //{
-                //    await Task.Delay(4000, _).ConfigureAwait(false);
-                //    return true;
-                //})
-                //.Must(dept =>
-                //{
-                //    Thread.Sleep(3000);
-                //    return true;
-                //})
-                .NotEmpty().WithMessage($"{department} can't be empty");
+                .RequiredWithMessage();
 
-            var domain = e.GetPropertyDisplayName(() => e.Domain);
-            RuleFor(m => m.Domain).NotEmpty().WithMessage($"{domain} can't be empty");
+            RuleFor(m => m.Domain)
+                .RequiredWithMessage();
+
+            RuleFor(m => m.Password)
+                .RequiredWithMessage()
+                .UserManagerCompliantWithMessage(accountClient, accountManager);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing)
+                return;
+
+            _accountClientScope?.Dispose();
+            _accountManagerScope?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~TestEmployeeVMValidator() {
+            Dispose(false);
         }
     }
 

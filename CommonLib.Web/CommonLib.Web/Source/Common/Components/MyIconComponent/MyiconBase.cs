@@ -22,6 +22,7 @@ using NLog;
 using EnumConverter = CommonLib.Source.Common.Converters.EnumConverter;
 using Logger = CommonLib.Source.Common.Utils.UtilClasses.Logger;
 using StringConverter = CommonLib.Source.Common.Converters.StringConverter;
+using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 {
@@ -82,6 +83,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 _dPath = null;
                 return;
             }
+
+            InputState parentDropDownState = null; // Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
             
             var cascadingInputHasChanged = CascadingInput.HasChanged();
             if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
@@ -104,7 +107,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             //    await CascadingButton.ParameterValue.NotifyParametersChangedAsync(false);
 
             if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
-                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabled == true)
+                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabled == true
+                || parentDropDownState?.IsDisabled == true)
                 _disabled = true;
             else
                 _disabled = false;
