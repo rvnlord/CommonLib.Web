@@ -7,10 +7,8 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Source.Common.Converters;
-using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
-using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
@@ -24,14 +22,12 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
         private InputState _prevParentDropdownState;
-        //private ButtonState? _buttonStateFromValidation;
-        
+
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
         public MyIconBase IconBefore { get; set; }
         public MyIconBase IconAfter { get; set; }
         public OrderedDictionary<IconType, MyIconBase> OtherIcons { get; set; }
-        //public ButtonState? CurrentState { get; set; }
 
         public bool IsValidationStateBeingChanged { get; set; }
         
@@ -69,16 +65,10 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             OtherIcons ??= new OrderedDictionary<IconType, MyIconBase>();
             _bpBtn ??= new BlazorParameter<MyButtonBase>(this);
             await Task.CompletedTask;
-            //await OnParametersSetAsync();
         }
         
         protected override async Task OnParametersSetAsync()
         {
-            //var eq = Icon.ParameterValue?.LightIcon?.Equals(LightIconType.EyeSlash) ?? false;
-            //var eq = OtherIcons.Keys.Any(i => i.Equals(IconType.From(LightIconType.EyeSlash)));
-            //if (eq)
-            //    eq = eq;
-
             if (IsFirstParamSetup())
             {
                 SetMainAndUserDefinedClasses("my-btn");
@@ -92,14 +82,11 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             {
                 CascadingInput.ParameterValue.InputGroupButtons.AddIfNotExists(this);
                 CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
-                //await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false); // `false` so the notify won't end up here again, but this is not enough, input has to specify false as well because here I am setting input params indirectly, not this params
             }
 
             var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
             if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentDropDownState != _prevParentDropdownState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
-                //Logger.For<MyButtonBase>().Info($"[{Icon.ParameterValue}] OnParametersSetAsync(): State.HasChanged() = {State.HasChanged()}, State.HasValue() = {State.HasValue()}, State = {State.ParameterValue}, CascadingState = {CascadingInput.ParameterValue?.State.ParameterValue}");
-                
                 ButtonState? parentDropdownStateAsButtonState = parentDropDownState?.State switch
                 {
                     InputStateKind.Disabled => ButtonState.Disabled,
@@ -115,7 +102,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                     _ => null
                 };
                 State.ParameterValue = parentDropdownStateAsButtonState ?? cascadingInputState ?? State.ParameterValue ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
-                //_buttonStateFromValidation = null;
 
                 if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");
@@ -123,8 +109,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                     RemoveClasses("my-loading");
             }
 
-            //Logger.For<MyButtonBase>().Info($"{nameof(OnParametersSetAsync)}(): {Value.ParameterValue}: {_renderClasses}");
-            //Logger.For<MyButtonBase>().Info($"{nameof(OnParametersSetAsync)}(), Styling.HasChanged() = {Styling.HasChanged()}");
             if (Styling.HasChanged())
             {
                 Styling ??= new BlazorParameter<ButtonStyling?>(ButtonStyling.Secondary);
@@ -132,7 +116,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
                 var stylingClass = $"my-btn-{Styling.ParameterValue.EnumToString().ToLowerInvariant()}";
                 AddClass(stylingClass);
-                //Logger.For<MyButtonBase>().Info($"{nameof(OnParametersSetAsync)}(), Styling.HasChanged(): {Value.ParameterValue}: {_renderClasses}");
             }
 
             if (Sizing.HasChanged())
@@ -162,11 +145,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            // TODO: remove it
-            //var eq = OtherIcons.Keys.Any(i => i.Equals(IconType.From(LightIconType.EyeSlash)));
-            //if (eq)
-            //    eq = eq;
-
             await Task.CompletedTask;
         }
 
