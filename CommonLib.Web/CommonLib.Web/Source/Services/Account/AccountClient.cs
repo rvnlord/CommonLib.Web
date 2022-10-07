@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
 using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Services.Interfaces;
 using Z.Expressions;
 
 namespace CommonLib.Web.Source.Services.Account
@@ -27,6 +28,7 @@ namespace CommonLib.Web.Source.Services.Account
         private readonly IJSRuntime _jsRuntime;
         private readonly ILocalStorageService _localStorage;
         private readonly ISessionStorageService _sessionStorage;
+        private readonly IMyJsRuntime _myJsRuntime;
 
         public HttpClient HttpClient
         {
@@ -39,12 +41,13 @@ namespace CommonLib.Web.Source.Services.Account
             set =>  _httpClient = value;
         }
 
-        public AccountClient(HttpClient httpClient, IJSRuntime jsRuntime, ILocalStorageService localStorage, ISessionStorageService sessionStorage)
+        public AccountClient(HttpClient httpClient, IJSRuntime jsRuntime, ILocalStorageService localStorage, ISessionStorageService sessionStorage, IMyJsRuntime myJsRuntime)
         {
             HttpClient = httpClient;
             _jsRuntime = jsRuntime;
             _localStorage = localStorage;
             _sessionStorage = sessionStorage;
+            _myJsRuntime = myJsRuntime;
         }
 
         public async Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string email)
@@ -72,12 +75,12 @@ namespace CommonLib.Web.Source.Services.Account
             var isInitialized = _jsRuntime.GetProperty<bool>("IsInitialized");
             var cookieTIcket = isInitialized ? await _jsRuntime.InvokeAndCatchCancellationAsync<string>("Cookies.get", "Ticket") : null;
             var localStorageTicket = isInitialized ? await _localStorage.GetItemAsStringAsync("Ticket") : null;
-            var sessionId = isInitialized ? await _sessionStorage.GetSessionIdOrEmptyAsync() : Guid.Empty;
+            //var sessionId = isInitialized ? await _myJsRuntime.GetSessionIdOrEmptyAsync() : Guid.Empty;
             var userToAuthenticate = new AuthenticateUserVM
             {
                 Ticket = cookieTIcket ?? localStorageTicket, 
                 AuthenticationStatus = AuthStatus.NotChecked,
-                SessionId = sessionId
+                //SessionId = sessionId
             };
             return await HttpClient.PostJTokenAsync<ApiResponse<AuthenticateUserVM>>("api/account/authenticateuser", userToAuthenticate);
         }

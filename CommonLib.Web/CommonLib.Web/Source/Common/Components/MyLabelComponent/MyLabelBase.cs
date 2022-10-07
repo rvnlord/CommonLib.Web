@@ -27,6 +27,9 @@ namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
         [Parameter]
         public HorizontalAlignment Align { get; set; }
 
+        [Parameter] 
+        public LabelSizing Sizing { get; set; } = LabelSizing.Default;
+
         protected override async Task OnParametersSetAsync()
         {
             Model ??= CascadedEditContext?.ParameterValue?.Model; // don't do this: CurrentEditContext ??= new EditContext(Model);
@@ -36,14 +39,20 @@ namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
             else if (!Value.IsNullOrWhiteSpace())
                 _displayName = Value;
 
+            var customClasses = new List<string>();
             var alignClass = Align switch
             {
                 HorizontalAlignment.Left => "my-left",
-                HorizontalAlignment.Center => "my-center",
                 HorizontalAlignment.Right => "my-right",
                 _ => ""
             };
-            SetMainCustomAndUserDefinedClasses("my-label", new[] { alignClass });
+
+            customClasses.Add(alignClass);
+
+            if (Sizing == LabelSizing.LineHeight)
+                customClasses.Add("my-p-0");
+
+            SetMainCustomAndUserDefinedClasses("my-label", customClasses);
 
             _descriptionClasses.ReplaceAll("my-label-description");
 
@@ -54,5 +63,11 @@ namespace CommonLib.Web.Source.Common.Components.MyLabelComponent
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask;
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
+    }
+
+    public enum LabelSizing
+    {
+        Default,
+        LineHeight
     }
 }

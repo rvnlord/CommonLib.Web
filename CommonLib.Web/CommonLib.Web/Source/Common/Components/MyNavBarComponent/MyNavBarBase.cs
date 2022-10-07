@@ -116,11 +116,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             await Task.CompletedTask;
         }
 
-        public async Task Setup(ElementReference jsScrollContainer) // call on Layout After First Render After Init
+        public async Task Setup() // call on Layout After First Render After Init
         {
             //var navLinks = ComponentsCache.Components.Where(c => c.Value.GetType() == typeof(MyNavLink)).ToDictionary(k => k.Key, v => (MyNavLink)v.Value);
             //var navLinkDotNetRefs = navLinks.ToDictionary(k => k.Key, v => DotNetObjectReference.Create(v.Value));
-            await (await ModuleAsync).InvokeVoidAsync("blazor_Layout_AfterRender_SetupNavbar", jsScrollContainer).ConfigureAwait(false);
+            await (await ModuleAsync).InvokeVoidAsync("blazor_Layout_AfterRender_SetupNavbar").ConfigureAwait(false);
         }
 
         private async Task NavBar_WindowResized()

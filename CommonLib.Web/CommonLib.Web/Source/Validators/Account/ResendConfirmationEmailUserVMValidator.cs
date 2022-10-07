@@ -18,7 +18,7 @@ namespace CommonLib.Web.Source.Validators.Account
             (var accountClient, _accountClientScope) = WebUtils.GetScopedServiceOrNull<IAccountClient>();
             (var accountManager, _accountManagerScope) = WebUtils.GetScopedServiceOrNull<IAccountManager>();
 
-            ClassLevelCascadeMode = CascadeMode.Stop;
+            ClassLevelCascadeMode = CascadeMode.Continue;
             RuleLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(m => m.Email)

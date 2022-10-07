@@ -35,7 +35,7 @@ namespace CommonLib.Web.Source.Validators.Account
 
             AccountManager = accountManager;
 
-            ClassLevelCascadeMode = CascadeMode.Stop;
+            ClassLevelCascadeMode = CascadeMode.Continue;
             RuleLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(m => m.UserName)

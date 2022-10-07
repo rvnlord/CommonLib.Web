@@ -8,6 +8,7 @@ using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyLabelComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -22,10 +23,10 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
         protected string _validationMessage { get; set; }
         protected IconType _iconType { get; set; }
         protected string _iconColor { get; set; }
-        //protected bool _validating { get; set; }
         protected string _strImageCss { get; set; }
         protected string _alignContainerClass { get; set; }
         protected ElementReference _jsValidationMessage { get; set; }
+        protected string _heightClass { get; set; }
         
         public ValidationMessageStatus Status { get; set; }
 
@@ -37,6 +38,9 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 
         [Parameter] 
         public HorizontalAlignment Align { get; set; }
+
+        [Parameter] 
+        public LabelSizing Sizing { get; set; }
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask;
         
@@ -85,6 +89,9 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
                 ["height"] = StylesConfig.LineHeightRem,
                 ["margin-right"] = StylesConfig.HalfGutter.Px()
             }.CssDictionaryToString();
+
+            if (Sizing == LabelSizing.LineHeight)
+                AddOrUpdateStyle("height", StylesConfig.LineHeight.Px());
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 

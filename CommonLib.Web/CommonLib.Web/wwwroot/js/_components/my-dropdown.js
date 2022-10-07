@@ -36,12 +36,12 @@ export async function blazor_DdlOption_ClickAsync(e, index, ddlGuid) {
 
 $(document).ready(function() {
 
-    $(document).on("mousedown", ".my-dropdown:not(.disabled) > .my-dropdown-value-and-icon-container", e => {
-        if (e.which !== 1) {
+    $(document).on("mousedown", ".my-input-group", e => {
+        const $ddl = $(e.currentTarget).children(".my-dropdown:not(.disabled)").first();
+        if (!$ddl || e.which !== 1) {
             return;
         }
 
-        const $ddl = $(e.target).closest(".my-dropdown");
         const $ulOptionsContainer = $ddl.children(".my-dropdown-options-container").$toArray()[0];
         const $otherOpenedDdls = $(".my-dropdown-options-container").not($ulOptionsContainer).filter(":visible");
 
@@ -66,7 +66,7 @@ $(document).ready(function() {
     });
 
     $(document).on("mousedown", "body", e => {
-        if (e.which !== 1 || $(e.target).parents().add($(e.target)).is(".my-dropdown, .my-dropdown-options-container")) {
+        if (e.which !== 1 || $(e.target).parents().add($(e.target)).is(".my-dropdown-input-group, .my-dropdown, .my-dropdown-options-container")) {
             return;
         }
 

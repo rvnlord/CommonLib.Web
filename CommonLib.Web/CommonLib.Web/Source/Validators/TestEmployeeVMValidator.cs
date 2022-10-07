@@ -18,7 +18,7 @@ namespace CommonLib.Web.Source.Validators
             (var accountClient, _accountClientScope) = WebUtils.GetScopedServiceOrNull<IAccountClient>();
             (var accountManager, _accountManagerScope) = WebUtils.GetScopedServiceOrNull<IAccountManager>();
 
-            ClassLevelCascadeMode = CascadeMode.Stop;
+            ClassLevelCascadeMode = CascadeMode.Continue;
             RuleLevelCascadeMode = CascadeMode.Stop;
             
             RuleFor(m => m.Name)
@@ -40,6 +40,10 @@ namespace CommonLib.Web.Source.Validators
             RuleFor(m => m.Password)
                 .RequiredWithMessage()
                 .UserManagerCompliantWithMessage(accountClient, accountManager);
+
+            RuleFor(m => m.Gender)
+                .RequiredWithMessage()
+                .NotEqualWithMessage(Gender.Male);
         }
 
         protected virtual void Dispose(bool disposing)

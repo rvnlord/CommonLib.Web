@@ -34,7 +34,7 @@ export function blazor_Layout_AfterRender_SetupNavbar(jsScrollPageContainer) { /
 
     // handle scrollbar
 
-    NavBarUtils.ScrollBar = $(jsScrollPageContainer).addClass("os-host-flexbox").overlayScrollbars({
+    NavBarUtils.ScrollBar = $(".my-page-scroll-container").first().addClass("os-host-flexbox").overlayScrollbars({
         className: "os-theme-dark",
         scrollbars : {
             clickScrolling : true

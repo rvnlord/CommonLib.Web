@@ -55,5 +55,60 @@ namespace CommonLib.Web.Source.Common.Extensions
                 return new ValueTask<TValue>();
             }
         }
+
+        public static async ValueTask ForceInvokeVoidAsync(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            var i = 1;
+            while (i <= 30)
+            {
+                try
+                {
+                    if (jsRuntime.GetProperty<bool>("IsInitialized") == false)
+                        return;
+
+                    await jsRuntime.InvokeVoidAsync(identifier, TimeSpan.FromSeconds(1), args).AsTask();
+                    return;
+                }
+                catch (TaskCanceledException ex)
+                {
+                    if (i >= 30)
+                    {
+                        Logger.For(typeof(IJSRuntimeExtensions)).Error("Unable to execute method: " + ex.Message);
+                        throw;
+                    }
+
+                    i++;
+                }
+            }
+            
+            throw new NotSupportedException("Module not imported, error not thrown - it shouldn't happen");
+        }
+
+        public static async ValueTask<TValue> ForceInvokeAsync<TValue>(this IJSRuntime jsRuntime, string identifier, params object[] args)
+        {
+            var i = 1;
+            while (i <= 30)
+            {
+                try
+                {
+                    if (jsRuntime.GetProperty<bool>("IsInitialized") == false)
+                        return (TValue)(object)null;
+
+                    return await jsRuntime.InvokeAsync<TValue>(identifier, TimeSpan.FromSeconds(1), args).AsTask();
+                }
+                catch (TaskCanceledException ex)
+                {
+                    if (i >= 30)
+                    {
+                        Logger.For(typeof(IJSRuntimeExtensions)).Error("Unable to execute method: " + ex.Message);
+                        throw;
+                    }
+
+                    i++;
+                }
+            }
+            
+            throw new NotSupportedException("Module not imported, error not thrown - it shouldn't happen");
+        }
     }
 }

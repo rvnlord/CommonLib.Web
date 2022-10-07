@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -14,5 +15,8 @@ namespace CommonLib.Web.Source.Services.Interfaces
         public Task<IJSObjectReference> ImportModuleAsync(string modulePath);
         public Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName, NavigationManager nav, HttpClient http);
         public Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName);
+        Task<Guid> GetOrCreateSessionIdAsync();
+        Task<Guid> GetSessionIdAsync();
+        Task<Guid> GetSessionIdOrEmptyAsync();
     }
 }

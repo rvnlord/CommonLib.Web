@@ -9,7 +9,7 @@
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
-    <div @ref="@_jsValidationMessage" class="my-validation-message">
+    <div @ref="@_jsValidationMessage" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="@_alignContainerClass">
             @if (Align.In(HorizontalAlignment.Left, HorizontalAlignment.Center))
             {

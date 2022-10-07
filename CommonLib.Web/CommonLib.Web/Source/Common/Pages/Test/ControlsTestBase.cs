@@ -23,15 +23,16 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             Email = "Mike@test.com",
             PhotoPath = null,
             Department = Dept.HR,
-            Domain = "test1.com"
+            Domain = "test1.com",
+            Gender = Gender.Female
         };
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";
-
+        
         protected override async Task OnAfterFirstRenderAsync()
         {
             _allControls = GetInputControls();
-            _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
+            _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 

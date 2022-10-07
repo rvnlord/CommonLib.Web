@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
@@ -19,9 +20,9 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
     public class MyLayoutComponentBase : MyComponentBase
     {
         private Task<IJSObjectReference> _mediaQueryModuleAsync;
-        protected ElementReference _jsMyPageScrollContainer { get; set; }
-        protected BlazorParameter<MyLayoutComponentBase> _bpLayoutToCascade { get; set; }
-        public Dictionary<Guid, MyComponentBase> Components { get; set; }
+        protected internal OrderedSemaphore _syncComponentsCache { get; } = new(1, 1);
+        protected internal BlazorParameter<MyLayoutComponentBase> _bpLayoutToCascade { get; set; }
+        public ConcurrentDictionary<Guid, MyComponentBase> Components { get; set; }
 
         internal const string BodyPropertyName = nameof(Body);
         public Task<IJSObjectReference> MediaQueryModuleAsync => _mediaQueryModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyMediaQueryBase).BeforeLast("Base"), NavigationManager, HttpClient);
@@ -34,15 +35,8 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
 
         protected override async Task OnInitializedAsync()
         {
-            _bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(this);
-            Components ??= new Dictionary<Guid, MyComponentBase>();
+            Components ??= new ConcurrentDictionary<Guid, MyComponentBase>();
             await Task.CompletedTask;
-        }
-        
-        protected override async Task OnAfterFirstRenderAsync()
-        {
-            var navBar = await ComponentByTypeAsync<MyNavBarBase>();
-            await navBar.Setup(_jsMyPageScrollContainer);
         }
         
         [JSInvokable]

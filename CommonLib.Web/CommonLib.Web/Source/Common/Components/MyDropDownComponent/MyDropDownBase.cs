@@ -18,6 +18,7 @@ using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using CommonLib.Web.Source.Models;
 using Microsoft.JSInterop;
+using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 {
@@ -30,7 +31,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
         protected List<DdlItem> _ddlItems { get; set; }
         protected ElementReference _jsDropdown { get; set; }
         protected MyInputGroupBase _inputGroup { get; set; }
-        
+
         [CascadingParameter(Name = "Model")] 
         public BlazorParameter<object> Model { get; set; }
         
@@ -111,13 +112,17 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
             if (EmptyItem.HasChanged())
                 EmptyItem.ParameterValue ??= new DdlItem(null, $"(Select {displayName})");
 
-            if (!SelectedItem.HasValue())
+            if (SelectedItem.HasChanged())
             {
-                if (EnumUtils.IsEnum<TProperty>())
-                    SelectedItem = _ddlItems.SingleOrDefault(item => item.Index == propValue?.ToIntN());
-                else
-                    SelectedItem = _ddlItems.SingleOrDefault(item => item.Text == (PossibleValuesConverter.HasValue() ? PossibleValuesConverter.V(propValue).Text : propValue?.ToString()));
-                SelectedItem = EmptyItem;
+                if (!SelectedItem.HasValue())
+                {
+                    if (EnumUtils.IsEnum<TProperty>())
+                        SelectedItem = _ddlItems.SingleOrDefault(item => item.Index == propValue?.ToIntN());
+                    else
+                        SelectedItem = _ddlItems.SingleOrDefault(item => item.Text == (PossibleValuesConverter.HasValue() ? PossibleValuesConverter.V(propValue).Text : propValue?.ToString()));
+                }
+                if (!SelectedItem.HasValue()) // if it still doesn't havee value
+                    SelectedItem = EmptyItem;
             }
 
             if (State.HasChanged())
@@ -175,7 +180,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
             var selectedItemWithMappedindex = _ddlItems.SingleOrDefault(i => i.Index == index);
-            SelectedItem = selectedItemWithMappedindex ?? EmptyItem;
+            SelectedItem.ParameterValue = selectedItemWithMappedindex ?? EmptyItem.V;
             if (Model != null && For != null)
             {
                 var (_, propName, oldValue, _) = For.GetModelAndProperty();

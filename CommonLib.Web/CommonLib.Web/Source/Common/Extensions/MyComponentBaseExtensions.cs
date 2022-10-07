@@ -10,9 +10,9 @@ namespace CommonLib.Web.Source.Common.Extensions
             return await (await myComponent).StateHasChangedAsync(force);
         }
 
-        public static async Task<MyComponentBase> WaitForRenderAsync(this Task<MyComponentBase> myComponent)
-        {
-            return await (await myComponent).WaitForRenderAsync();
-        }
+        //public static async Task<MyComponentBase> WaitForRenderAsync(this Task<MyComponentBase> myComponent)
+        //{
+        //    return await (await myComponent).WaitForRenderAsync();
+        //}
     }
 }

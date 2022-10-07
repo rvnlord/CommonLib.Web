@@ -1,0 +1,124 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .my-radiobutton-container {
+        display: flex;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    .my-radiobutton:not(.disabled) > .my-radiobutton-container:hover {
+        cursor: pointer
+    }
+
+        /* Hide the browser's default radio button */
+        .my-radiobutton-container input {
+            position: absolute;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+
+    /* Create a custom radio button */
+    .my-radiomark {
+        height: 1.5rem;
+        width: 1.5rem;
+        background: linear-gradient(to bottom, #303030, #000000);
+        border: 1px solid #404040;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        box-sizing: border-box;
+    }
+
+    input[type='radio']:hover:not([disabled]) + .my-radiomark, .input-group-text input[type="radio"]:hover:not([disabled]) + .my-radiomark {
+        box-shadow: 0 0 6px 2px blue;
+    }
+    /* On mouse-over, add a grey background color */
+    .my-radiobutton-container:hover input ~ .my-radiomark {
+        background: linear-gradient(to bottom, darkgreen, #000000);
+    }
+    /* When the radio button is checked, add a blue background */
+    .my-radiobutton-container input:checked ~ .my-radiomark {
+        background-image: radial-gradient(circle at center, white 20%, transparent 50%), linear-gradient(to bottom, yellowgreen, #000000);
+        background-repeat: no-repeat, no-repeat;
+    }
+
+    .my-radiobutton-container input:disabled:checked ~ .my-radiomark {
+        background-image: radial-gradient(circle at center, #404040 20%, transparent 50%), linear-gradient(to bottom, #101010, #000000);
+        background-repeat: no-repeat, no-repeat;
+    }
+
+    .input-group-lg .my-radiobutton-container input:checked ~ .my-radiomark:after {
+        width: 1.45833333rem;
+        height: 1.45833333rem;
+    }
+
+    .input-group-sm .my-radiobutton-container input:checked ~ .my-radiomark:after {
+        width: 0.83333333rem;
+        height: 0.83333333rem;
+    }
+
+    .my-radiobutton-label {
+        margin: 0 0 0 10px;
+    }
+
+    .d-inline-flex > .my-radiobutton-container > .my-radiobutton-label {
+        margin-right: 10px;
+    }
+
+    input[type='radio'], .input-group input[type="radio"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        z-index: 10;
+    }
+
+    .input-group-sm input[type="radio"], .input-group-sm .my-radiomark {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .input-group-lg input[type="radio"], .input-group-lg .my-radiomark {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+
+    /*.my-radiobutton-container input:not([disabled]) ~ .my-radiomark:hover, .my-radiobutton-container input:not([disabled]) ~ .my-radiobutton-label:hover, .my-radiobutton-container input:not([disabled]):hover {
+        cursor: pointer
+    }*/
+    
+    input[type='radio'][disabled] ~ .my-radiomark {
+        border-color: #303030;
+        background: linear-gradient(to bottom, #202020, #000000);
+    }
+
+    .my-radiobutton.disabled input[type='radio'] ~ .my-radiobutton-label,
+    input[type='radio'][disabled] ~ .my-radiobutton-label {
+        color: #404040;
+    }
+    
+    .my-radiobutton.my-valid input[type='radio'] ~ .my-radiobutton-label {
+        color: @SuccessColor;
+    }
+
+    .my-radiobutton.my-invalid input[type='radio'] ~ .my-radiobutton-label {
+        color: @FailureColor;
+    }
+
+    .my-radiobutton.my-valid .my-radiomark {
+        background: @($"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000);");
+    }
+
+    .my-radiobutton.my-invalid .my-radiomark {
+        background: @($"linear-gradient(to bottom, {FailureBackgroundColor}, #000000);");
+    }
+
+</style>

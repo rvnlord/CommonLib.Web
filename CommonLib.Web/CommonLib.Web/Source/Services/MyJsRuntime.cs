@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Utils;
@@ -117,6 +118,46 @@ namespace CommonLib.Web.Source.Services
             
             Logger.For<MyJsRuntime>().Warn($"There is no \"{componentOrPageNormalized}\" page or component");
             return null;
+        }
+
+        public async Task<Guid> GetOrCreateSessionIdAsync()
+        {
+            var sessionId = await ParseSessionIdAsync();
+            if (sessionId == Guid.Empty)
+                sessionId = Guid.NewGuid();
+
+            Logger.For<MyJsRuntime>().Info($"STARTING: _jsRuntime.ForceInvokeVoidAsync(\"sessionStorage.setItem\", \"SessionId\", {sessionId})");
+
+            await _jsRuntime.ForceInvokeVoidAsync("sessionStorage.setItem", "SessionId", sessionId.ToString()).AsTask();
+
+            Logger.For<MyJsRuntime>().Info($"DONE: _jsRuntime.ForceInvokeVoidAsync(\"sessionStorage.setItem\", \"SessionId\", {sessionId})");
+            return sessionId;
+        }
+
+        private async Task<Guid> ParseSessionIdAsync()
+        {
+            var isInitialized = _jsRuntime.GetProperty<bool>("IsInitialized");
+            if (!isInitialized)
+                return Guid.Empty;
+
+            Logger.For<MyJsRuntime>().Info("STARTING: _jsRuntime.ForceInvokeAsync<string>(\"sessionStorage.getItem\", \"SessionId\")");
+
+            var strSessId = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "SessionId").AsTask();
+
+            Logger.For<MyJsRuntime>().Info($"DONE: _jsRuntime.ForceInvokeAsync<string>(\"sessionStorage.getItem\", \"SessionId\") = {strSessId}");
+            var isSessionIdParsable = Guid.TryParse(strSessId, out var sessionId);
+            return isSessionIdParsable ? sessionId : Guid.Empty;
+        }
+
+        public async Task<Guid> GetSessionIdAsync()
+        {
+            var sessionId = await ParseSessionIdAsync();
+            return sessionId == Guid.Empty ? throw new NullReferenceException("\"SessionId\" not present") : sessionId;
+        }
+
+        public async Task<Guid> GetSessionIdOrEmptyAsync()
+        {
+            return await ParseSessionIdAsync();
         }
     }
 }

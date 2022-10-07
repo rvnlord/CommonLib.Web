@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
         private static string _currentWwwRootDir;
         private static bool? _isProduction;
         private static ConcurrentDictionary<string, ImgPaths> _imgPathsCache { get; set; }
-        private static readonly SemaphoreSlim _syncImageLoad = new(1, 1);
+        private readonly SemaphoreSlim _syncImageLoad = new(1, 1);
         
         protected string _originalHeight { get; set; }
         protected string _originalWidth { get; set; }
