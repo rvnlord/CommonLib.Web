@@ -35,7 +35,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
            
             Text = Value.ToStringInvariant();
 
-            Description ??= _propName.AddSpacesToPascalCase();
+            Description ??= Model.GetPropertyDescriptionOrNull(_propName) ?? _propName.AddSpacesToPascalCase();
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace()
                 ? Placeholder

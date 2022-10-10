@@ -25,6 +25,11 @@ namespace CommonLib.Web.Source.Common.Extensions
             return rb.Must((_, value, _) => value is not null).WithMessage($"{rb.GetPropertyDisplayName()} is required");
         }
 
+        public static IRuleBuilderOptions<TModel, TProperty> EqualWithMessage<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, TProperty other)
+        {
+            return rb.Must((_, value, _) => value.Equals(other)).WithMessage($"{rb.GetPropertyDisplayName()} has to equal to \"{other}\"");
+        }
+
         public static IRuleBuilderOptions<TModel, TProperty> NotEqualWithMessage<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, TProperty other)
         {
             return rb.Must((_, value, _) => !value.Equals(other)).WithMessage($"{rb.GetPropertyDisplayName()} can't equal to \"{other}\"");

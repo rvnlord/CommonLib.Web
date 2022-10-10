@@ -133,4 +133,24 @@
         border-width: 0 4px 4px 0;
     }
 
+    input[type='checkbox'][disabled] ~ .my-checkbox-label {
+        color: #404040;
+    }
+
+    .my-checkbox.my-valid input[type='checkbox']:not([disabled]) ~ .my-checkbox-label {
+        color: @SuccessColor;
+    }
+
+    .my-checkbox.my-invalid input[type='checkbox']:not([disabled]) ~ .my-checkbox-label {
+        color: @FailureColor;
+    }
+
+    .my-checkbox.my-valid input[type='checkbox']:not([disabled]) ~ .my-checkmark {
+        background: @($"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000);");
+    }
+
+    .my-checkbox.my-invalid input[type='checkbox']:not([disabled]) ~ .my-checkmark {
+        background: @($"linear-gradient(to bottom, {FailureBackgroundColor}, #000000);");
+    }
+
 </style>

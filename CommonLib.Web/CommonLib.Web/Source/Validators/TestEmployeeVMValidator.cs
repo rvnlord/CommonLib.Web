@@ -44,6 +44,10 @@ namespace CommonLib.Web.Source.Validators
             RuleFor(m => m.Gender)
                 .RequiredWithMessage()
                 .NotEqualWithMessage(Gender.Male);
+
+            RuleFor(m => m.TermsAccepted)
+                .RequiredWithMessage()
+                .EqualWithMessage(true);
         }
 
         protected virtual void Dispose(bool disposing)

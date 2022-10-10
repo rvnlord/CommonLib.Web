@@ -1,4 +1,6 @@
-﻿namespace CommonLib.Web.Source.ViewModels
+﻿using System.ComponentModel;
+
+namespace CommonLib.Web.Source.ViewModels
 {
     public class TestEmployeeVM
     {
@@ -10,6 +12,9 @@
         public string Domain { get; set; }
         public string Password { get; set; }
         public Gender Gender { get; set; }
+        [DisplayName("Terms of Use")]
+        [Description("I accept the Terms of use")]
+        public bool TermsAccepted { get; set; }
     }
 
     public enum Gender
