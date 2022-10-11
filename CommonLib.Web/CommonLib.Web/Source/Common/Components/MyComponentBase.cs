@@ -41,6 +41,7 @@ using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
+using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Components.MyRadioButton;
 using MoreLinq.Experimental;
 
@@ -978,7 +979,7 @@ namespace CommonLib.Web.Source.Common.Components
             await WaitForControlsToRerenderAsync(arrControlsToChangeState);
         }
 
-        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
         
         protected virtual async Task DisposeAsync(bool disposing)
         {

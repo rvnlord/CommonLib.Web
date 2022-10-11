@@ -24,7 +24,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             PhotoPath = null,
             Department = Dept.HR,
             Domain = "test1.com",
-            Gender = Gender.Female
+            Gender = Gender.Female,
+            Progress = 70
         };
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";

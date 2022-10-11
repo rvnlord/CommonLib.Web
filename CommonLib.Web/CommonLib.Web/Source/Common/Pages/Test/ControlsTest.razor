@@ -117,6 +117,16 @@
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.TermsAccepted)" Sizing="LabelSizing.LineHeight" />
                 </MyCssGridItem>
+                    
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _employee.Progress)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyProgressBar For="@(() => _employee.Progress)" Description="@("Test.png")" Sizing="ProgressBarSizing.LineHeight"  />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _employee.Progress)" Sizing="LabelSizing.LineHeight"  />
+                </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
                     <MyCssGrid Gap="Gutter.Px()" 

@@ -1,0 +1,57 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .my-progressbar {
+        height: 34px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-column-gap: 10px;
+        padding: 5px 9px;
+        background: linear-gradient(to bottom, #151515, #000000);
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .my-progressbar.disabled {
+        opacity: 0.3;
+    }
+
+    .my-progressbar > .progress {
+        position: absolute;
+        height: 100%;
+        width: 0;
+    }
+
+    .my-progressbar.success > .progress {
+        background: @SuccessBackgroundGradient;
+    }
+
+    .my-progressbar.warning > .progress {
+        background: @WarningBackgroundGradient;
+    }
+
+    .my-progressbar.error > .progress {
+        background: @ErrorBackgroundGradient;
+    }
+
+    .my-progressbar.primary > .progress {
+        background: @PrimaryBackgroundGradient;
+    }
+
+    .my-progressbar.info > .progress {
+        background: @InfoBackgroundGradient;
+    }
+
+    .my-progressbar > .progress-description {
+        z-index: 1;
+    }
+
+    .my-progressbar > .progress-value {
+        z-index: 1;
+    }
+
+</style>

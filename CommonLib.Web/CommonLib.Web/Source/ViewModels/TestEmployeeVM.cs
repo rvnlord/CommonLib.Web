@@ -15,6 +15,8 @@ namespace CommonLib.Web.Source.ViewModels
         [DisplayName("Terms of Use")]
         [Description("I accept the Terms of use")]
         public bool TermsAccepted { get; set; }
+        public string Avatar { get; set; }
+        public double Progress { get; set; }
     }
 
     public enum Gender
