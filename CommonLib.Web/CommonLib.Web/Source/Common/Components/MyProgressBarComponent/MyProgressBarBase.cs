@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
@@ -102,11 +103,16 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 Sizing.ParameterValue ??= ProgressBarSizing.Default;
                 if (Sizing.V == ProgressBarSizing.LineHeight)
                 {
-                    AddOrUpdateStyle("height", StylesConfig.LineHeight.Px());
-                    AddOrUpdateStyle("padding", "0 9px");
+                    AddOrUpdateStyles(new Dictionary<string, string>
+                    {
+                        ["height"] = StylesConfig.LineHeight.Px(),
+                        ["padding"] = "0 9px", // teecxhnically not needed because of "align-items",
+                        ["font-size"] = "14px"
+                    });
+
                 }
                 else
-                    RemoveStyles(new [] { "height", "padding" });
+                    RemoveStyles(new [] { "height", "padding", "font-size" });
             }
 
             await Task.CompletedTask;

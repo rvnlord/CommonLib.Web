@@ -1,5 +1,6 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Extensions.Collections
 
 @inherits MyComponentStylesBase
 
@@ -14,6 +15,8 @@
         background: linear-gradient(to bottom, #151515, #000000);
         box-sizing: border-box;
         position: relative;
+        align-items: center;
+        text-shadow: @Enumerable.Repeat("0 0 3px black", 20).JoinAsString(", ");
     }
 
     .my-progressbar.disabled {

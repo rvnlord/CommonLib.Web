@@ -1105,7 +1105,8 @@
         const $banner = $(".my-page-main-image").first();
         const bannerHeight = $banner.outerHeight();
         const $promptMain = $("#promptMain");
-        const isLoginModalShown = $(".my-login-modal").is(".shown");
+        const $modals = $(".my-modal");
+        const isAnyModalShown = $modals.is(".shown");
         const windowWidth = $(window).width();
 
         for (let $nb of $stickyNavBars) {
@@ -1129,22 +1130,26 @@
                 $navContainer.insertBefore($pageContainer);
             }
 
-            $promptMain.appendTo($(".my-navbar").first().parent());
-            $promptMain.css("z-index", "9");
-
-            if ($nb.is(".glued") && scrollY <= bannerHeight - brandAdditionalMargin || $nb.outerHeight() > window.innerHeight && window.innerWidth < 768) {
+            if ($nb.is(".glued") && scrollY <= bannerHeight - brandAdditionalMargin && window.innerWidth >= 768) {
                 $nb.removeCss("margin-top");
-                $promptMain.removeClass("glued");
                 $nb.removeClass("glued");
+                $promptMain.removeClass("glued");
                 if (window.innerWidth >= 768) {
                      $nb.removeCss("width");
                 }
 
-                $promptMain.css("top", (isLoginModalShown ? 0 : nbHeight).px());
-            } else if (!$nb.is(".glued") && scrollY > bannerHeight - brandAdditionalMargin || $nb.outerHeight() <= window.innerHeight && window.innerWidth < 768) {
+                if (isAnyModalShown) {
+                    $promptMain.prependTo("body");
+                    $promptMain.css("z-index", "101");
+                    $promptMain.css("top", "0");
+                } else {
+                    $promptMain.appendTo($(".my-navbar").first().parent());
+                    $promptMain.css("z-index", "9");
+                    $promptMain.css("top", nbHeight.px());
+                }
+            } else if (!$nb.is(".glued") && scrollY > bannerHeight - brandAdditionalMargin || window.innerWidth < 768) {
                 $nb.addClass("glued");
                 $promptMain.addClass("glued");
-
                 if (brandAdditionalMargin > 0 || titlebarHeight > 0) {
                     $nb.css("margin-top", (brandAdditionalMargin + titlebarHeight).px());
                 } else {
@@ -1155,7 +1160,15 @@
                     $nb.css("width", $nb.parent().innerWidth() - 20 + "px");
                 }
 
-                $promptMain.css("top", (isLoginModalShown ? 0 : brandAdditionalMargin + titlebarHeight + nbHeight).px());
+                if (isAnyModalShown) {
+                    $promptMain.prependTo("body");
+                    $promptMain.css("z-index", "101");
+                    $promptMain.css("top", "0");
+                } else {
+                    $promptMain.appendTo($(".my-navbar").first().parent());
+                    $promptMain.css("z-index", "9");
+                    $promptMain.css("top", (brandAdditionalMargin + titlebarHeight + nbHeight).px());
+                }
             }
 
         }
