@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using CommonLib.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.ViewModels
 {
@@ -17,6 +19,7 @@ namespace CommonLib.Web.Source.ViewModels
         public bool TermsAccepted { get; set; }
         public string Avatar { get; set; }
         public double Progress { get; set; }
+        public List<FileData> Files { get; set; }
     }
 
     public enum Gender

@@ -1,11 +1,16 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyCssGridComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.ViewModels;
+using MoreLinq;
+using Org.BouncyCastle.Security;
 
 namespace CommonLib.Web.Source.Common.Pages.Test
 {
@@ -25,7 +30,12 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             Department = Dept.HR,
             Domain = "test1.com",
             Gender = Gender.Female,
-            Progress = 70
+            Progress = 70,
+            Files = new List<FileData>
+            {
+                new() { Path = @"C:\Test1.png", Data = RandomUtils.RandomBytes(4), Position = 3 },
+                new() { Path = @"C:\Test2.png", Data = RandomUtils.RandomBytes(5), Position = 3 }
+            }
         };
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";

@@ -128,6 +128,16 @@
                     <MyValidationMessage For="@(() => _employee.Progress)" Sizing="LabelSizing.LineHeight"  />
                 </MyCssGridItem>
 
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyFileUpload For="@(() => _employee.Files)" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight"  />
+                </MyCssGridItem>
+
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
                     <MyCssGrid Gap="Gutter.Px()" 
                         Template="@(new CssGridLayout("1fr", "auto"))"

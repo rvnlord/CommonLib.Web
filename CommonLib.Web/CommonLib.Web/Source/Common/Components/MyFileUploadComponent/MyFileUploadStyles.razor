@@ -1,0 +1,76 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Extensions.Collections
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .my-fileupload {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        grid-template-rows: repeat(auto-fit, minmax(0, max-content));
+        grid-gap: 10px;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .my-fileupload-thumbnail-container {
+        background: @InputBackgroundGradient;
+        box-shadow: inset 0 0 0 1px #404040;
+        box-sizing: border-box;
+        width: 80px;
+        height: 80px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-shadow: @Enumerable.Repeat("0 0 3px black", 20).JoinAsString(", ");
+    }
+
+    .my-fileupload.disabled > .my-fileupload-thumbnail-container {
+        background: linear-gradient(to bottom, #101010, #000000);
+        box-shadow: inset 0 0 0 1px #303030;
+        color: #404040;
+    }
+
+    .my-fileupload-drop-container {
+        background: @InputBackgroundGradient;
+        border: 1px dotted #404040;
+        box-sizing: border-box;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-shadow: @Enumerable.Repeat("0 0 3px black", 20).JoinAsString(", ");
+    }
+
+    .my-fileupload.disabled > .my-fileupload-drop-container {
+        background: linear-gradient(to bottom, #101010, #000000);
+        border: 1px dotted #303030;
+        color: #404040;
+    }
+
+    .my-fileupload-buttons-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(auto-fit, minmax(0, max-content));
+        grid-gap: 10px;
+        box-sizing: border-box;
+        position: relative;
+        grid-column-end: span 2;
+    }
+
+    .my-fileupload-progressbars-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(auto-fit, minmax(0, max-content));
+        grid-gap: 10px;
+        box-sizing: border-box;
+        position: relative;
+        grid-column-end: span 2;
+    }
+    
+</style>
