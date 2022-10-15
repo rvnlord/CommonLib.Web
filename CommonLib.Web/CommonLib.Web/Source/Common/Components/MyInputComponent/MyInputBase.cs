@@ -30,6 +30,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
         protected string _propName { get; set; }
         protected Task<IJSObjectReference> _inputModuleAsync;
+        protected InputState _prevParentState { get; set; }
      
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
         public List<MyButtonBase> InputGroupButtons { get; set; }
@@ -114,8 +115,8 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         public bool IsForced { get; set; }
         public InputStateKind? State { get; set; }
 
-        public bool IsDisabled => State == InputStateKind.Disabled;
-        public bool IsEnabled => State == InputStateKind.Enabled;
+        public bool IsDisabledOrForceDisabled => State == InputStateKind.Disabled;
+        public bool IsEnabledOrForceEnabled => State == InputStateKind.Enabled;
 
         public static InputState Disabled => new(InputStateKind.Disabled);
         public static InputState Enabled => new(InputStateKind.Enabled);

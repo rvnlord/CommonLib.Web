@@ -144,7 +144,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
             if ((wasValidationSuccessful || isCurrentFieldValid) && wasCurrentFieldValidated)
             {
                 _iconColor = StylesConfig.SuccessColor;
-                _iconType = IconType.From(SolidIconType.Check);
+                _iconType = IconType.From(DuotoneIconType.Check);
                 Status = ValidationMessageStatus.Success;
             }
             else if (validationFailed && wasCurrentFieldValidated)

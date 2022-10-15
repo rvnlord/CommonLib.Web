@@ -11,6 +11,9 @@ using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using System.Linq;
+using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
 {
@@ -56,14 +59,18 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
                     ? $"{displayName}..."
                     : null;
 
-            if (State.HasChanged())
+            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
+            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
+            if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = State.ParameterValue ?? InputState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                State.ParameterValue = parentState ?? State.ParameterValue ?? InputState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
 
-                if (State.ParameterValue.IsDisabled) // Disabled or ForceDisabled
+                if (State.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
                     AddAttribute("disabled", string.Empty);
                 else
                     RemoveAttribute("disabled");
+
+                _prevParentState = parentState;
             }
             
             CascadedEditContext?.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);

@@ -117,13 +117,20 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
             validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
             if (validator == null) // not supposed to be validated
+            {
+                _syncValidation.Release();
                 return;
-            
-            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Property, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier> { fieldIdentifier });
+            }
             
             var model = _currentEditContext.Model; 
             var allModelFields = fieldIdentifier.Model.GetPropertyNames().Select(p => new FieldIdentifier(fieldIdentifier.Model, p)).ToList();
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
+            if (!fieldIdentifier.In(fieldsWithValidationRules))
+            {
+                _syncValidation.Release();
+                return;
+            }
+
             var validatedFields = new List<FieldIdentifier>(); // check all not empty fields (to accomodate for 'equal' validator)
             foreach (var fwvr in fieldsWithValidationRules)
             {
@@ -142,6 +149,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                 validatedFields.Add(fwvr);
             }
 
+            _currentEditContext.NotifyValidationStateChanged(ValidationStatus.Pending, ValidationMode.Property, MessageStore.GetInvalidFields(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier>(), new List<FieldIdentifier> { fieldIdentifier });
+            
             var vselector = new MemberNameValidatorSelector(validatedFields.Select(f => f.FieldName));
             var vc = new ValidationContext<object>(fieldIdentifier.Model, new PropertyChain(), vselector);
             var vrs = await validator.ValidateAsync(vc).ConfigureAwait(false);

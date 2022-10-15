@@ -25,6 +25,9 @@
             opacity: 0;
             height: 0;
             width: 0;
+        }
+
+        .my-radiobutton:not(.disabled) > .my-radiobutton-container input {
             cursor: pointer; /* chrome forces default cursor for radio input so I need to override it */
         }
 
@@ -118,19 +121,19 @@
         color: #404040;
     }
     
-    .my-radiobutton.my-valid input[type='radio'] ~ .my-radiobutton-label {
+    .my-radiobutton:not(.disabled).my-valid input[type='radio'] ~ .my-radiobutton-label {
         color: @SuccessColor;
     }
 
-    .my-radiobutton.my-invalid input[type='radio'] ~ .my-radiobutton-label {
+    .my-radiobutton:not(.disabled).my-invalid input[type='radio'] ~ .my-radiobutton-label {
         color: @FailureColor;
     }
 
-    .my-radiobutton.my-valid .my-radiomark {
+    .my-radiobutton:not(.disabled).my-valid .my-radiomark {
         background: @($"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000);");
     }
 
-    .my-radiobutton.my-invalid .my-radiomark {
+    .my-radiobutton:not(.disabled).my-invalid .my-radiomark {
         background: @($"linear-gradient(to bottom, {ErrorBackgroundColor}, #000000);");
     }
 

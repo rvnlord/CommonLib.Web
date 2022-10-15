@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 {
@@ -30,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (State.HasChanged())
             {
                 State.ParameterValue ??= InputState.Disabled;
-                if (State.ParameterValue.IsDisabled)
+                if (State.ParameterValue.IsDisabledOrForceDisabled)
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
@@ -43,8 +45,6 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
-            
-            await Task.CompletedTask;
         }
 
     }

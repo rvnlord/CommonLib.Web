@@ -37,12 +37,14 @@ using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
+using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
-using CommonLib.Web.Source.Common.Components.MyRadioButton;
+using CommonLib.Web.Source.Common.Components.MyRadioButtonComponent;
+using CommonLib.Web.Source.Common.Converters;
 using MoreLinq.Experimental;
 
 namespace CommonLib.Web.Source.Common.Components
@@ -916,7 +918,9 @@ namespace CommonLib.Web.Source.Common.Components
             ClearControlsRerenderingStatus(controls);
         }
 
-        protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null)
+        protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading);
+       
+        protected async Task SetControlStatesAsync(ComponentStateKind state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true)
         {
             var arrControlsToChangeState = controlsToChangeState.ToArray();
             ClearControlsRerenderingStatus(arrControlsToChangeState);
@@ -965,17 +969,24 @@ namespace CommonLib.Web.Source.Common.Components
                 else 
                     control.GetProperty("State").SetProperty("ParameterValue", val);
 
-                changeStateTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
-                notifyParamsChangedTasks.Add((Task<MyComponentBase>) (control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+                if (changeRenderingState)
+                {
+                    notifyParamsChangedTasks.Add((Task<MyComponentBase>)(control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+                    changeStateTasks.Add((Task<MyComponentBase>)(control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
+                }
             }
 
-            await Task.WhenAll(notifyParamsChangedTasks);
-            await Task.WhenAll(changeStateTasks);
-            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
-            await WaitForControlsToRerenderAsync(arrControlsToChangeState);
+            if (changeRenderingState)
+            {
+                await Task.WhenAll(notifyParamsChangedTasks);
+                await Task.WhenAll(changeStateTasks);
+                await NotifyParametersChangedAsync();
+                await StateHasChangedAsync(true);
+                await WaitForControlsToRerenderAsync(arrControlsToChangeState);
+            }
         }
 
-        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload && !c.Ancestors.Any(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrNull() is not null)).ToArray();
         
         protected virtual async Task DisposeAsync(bool disposing)
         {

@@ -160,6 +160,34 @@
             flex: 0 0 48px;
         }
 
+    .my-btn.my-line-height {
+        height: @LineHeight.Px();
+        max-height: @LineHeight.Px();
+        line-height: 18px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-direction: column;
+        font-size: 12px;
+    }
+
+        .my-btn.my-line-height > .my-icon {
+            margin: 3px;
+            width: auto;
+            height: 12px;
+            max-width: none;
+            max-height: 12px;
+            flex: 0 0 auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .my-btn.my-line-height.my-loading > .my-btn-loader {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 18px;
+        }
+
     .my-btn-clear {
         background: transparent;
         box-shadow: none;

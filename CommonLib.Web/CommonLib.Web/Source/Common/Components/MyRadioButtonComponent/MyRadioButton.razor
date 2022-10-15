@@ -3,14 +3,14 @@
 @using CommonLib.Source.Common.Converters
 
 @namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
-@inherits CommonLib.Web.Source.Common.Components.MyRadioButton.MyRadioButtonBase<TProperty>
+@inherits MyRadioButtonBase<TProperty>
 @typeparam TProperty
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
     
     <div id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <label class="my-radiobutton-container">
-            <input disabled="@State.V.IsDisabled" type="radio" name="@_renderRadioGroup" @onclick="RadioButton_ClickAsync" checked="@BoolValue" />
+            <input disabled="@State.V.IsDisabledOrForceDisabled" type="radio" name="@_renderRadioGroup" @onclick="RadioButton_ClickAsync" checked="@BoolValue" />
             <span class="my-radiomark"></span>
             <span class="my-radiobutton-label">@Description.V</span>
         </label>

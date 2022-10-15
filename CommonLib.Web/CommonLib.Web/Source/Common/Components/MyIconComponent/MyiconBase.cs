@@ -107,8 +107,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             //    await CascadingButton.ParameterValue.NotifyParametersChangedAsync(false);
 
             if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
-                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabled == true
-                || parentDropDownState?.IsDisabled == true)
+                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabledOrForceDisabled == true
+                || parentDropDownState?.IsDisabledOrForceDisabled == true)
                 _disabled = true;
             else
                 _disabled = false;

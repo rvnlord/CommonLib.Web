@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -14,6 +18,9 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
     {
         [Parameter]
         public string Description { get; set; }
+
+        [Parameter]
+        public BlazorParameter<bool?> DisplayLabel { get; set; }
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask.ConfigureAwait(false);
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask.ConfigureAwait(false);
@@ -43,16 +50,22 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
                     ? $"{displayName}..."
                     : null;
             
-            if (State.HasChanged())
+            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
+            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
+            if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue ??= InputState.Disabled;
-                if (State.ParameterValue.IsDisabled)
+                State.ParameterValue = parentState ?? State.V ?? InputState.Disabled;
+                if (State.ParameterValue.IsDisabledOrForceDisabled)
                     AddAttribute("disabled", string.Empty);
                 else
                     RemoveAttribute("disabled");
+                _prevParentState = parentState;
             }
 
-            CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
+            if (DisplayLabel.HasChanged())
+                DisplayLabel.ParameterValue ??= true;
+
+            CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync); 
 
             await Task.CompletedTask;
         }

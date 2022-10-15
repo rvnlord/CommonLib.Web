@@ -129,7 +129,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
             {
                 State.ParameterValue ??= InputState.Disabled;
 
-                if (State.ParameterValue.IsDisabled) // Disabled or ForceDisabled
+                if (State.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
@@ -175,7 +175,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
         protected async Task DdlOption_ClickAsync(MouseEventArgs e, int? index, Guid ddlGuid)
         {
-            if (State.V.IsDisabled)
+            if (State.V.IsDisabledOrForceDisabled)
                 return;
 
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);

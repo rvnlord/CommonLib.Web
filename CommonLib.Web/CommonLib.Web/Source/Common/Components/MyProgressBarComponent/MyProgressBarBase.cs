@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
@@ -15,7 +17,8 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
     public class MyProgressBarBase : MyComponentBase
     {
         private BlazorParameter<InputState> _bpState;
-
+        private InputState _prevParentState;
+        
         protected string _propName { get; set; }
 
         public double? Value { get; set; }
@@ -76,11 +79,13 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
             if (Description.HasChanged())
                 Description.ParameterValue ??= Model.V?.GetPropertyDescriptionOrNull(_propName) ?? displayName ?? _propName;
 
-            if (State.HasChanged())
+            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
+            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
+            if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue ??= InputState.Disabled;
+                State.ParameterValue = parentState ?? State.V ?? InputState.Disabled;
 
-                if (State.V.IsDisabled) 
+                if (State.V.IsDisabledOrForceDisabled) 
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
@@ -90,6 +95,8 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                     RemoveAttribute("disabled");
                     RemoveClass("disabled");
                 }
+
+                _prevParentState = parentState;
             }
 
             if (Styling.HasChanged())

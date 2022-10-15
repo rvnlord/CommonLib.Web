@@ -15,13 +15,15 @@ using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
+using CommonLib.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Converters;
 
 namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 {
     public class MyButtonBase : MyComponentBase
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
-        private InputState _prevParentDropdownState;
+        private ButtonState? _prevParentState;
 
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
@@ -84,29 +86,18 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
             }
 
-            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
-            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentDropDownState != _prevParentDropdownState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
+            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
+            var parentState = parentStates.All(s => s.State is null) ? (ButtonState?) null : parentStates.Any(s => s.State == ComponentStateKind.Disabled) ? ButtonState.Disabled : parentStates.Any(s => s.State == ComponentStateKind.Loading) ? ButtonState.Loading : ButtonState.Enabled;
+            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentState != _prevParentState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
             {
-                ButtonState? parentDropdownStateAsButtonState = parentDropDownState?.State switch
-                {
-                    InputStateKind.Disabled => ButtonState.Disabled,
-                    InputStateKind.Enabled => ButtonState.Enabled,
-                    _ => null
-                };
-                _prevParentDropdownState = parentDropDownState;
-
-                ButtonState? cascadingInputState = CascadingInput.ParameterValue?.State?.ParameterValue?.State switch
-                {
-                    InputStateKind.Disabled => ButtonState.Disabled,
-                    InputStateKind.Enabled => ButtonState.Enabled,
-                    _ => null
-                };
-                State.ParameterValue = parentDropdownStateAsButtonState ?? cascadingInputState ?? State.ParameterValue ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                State.ParameterValue = parentState ?? State.V ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
 
                 if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");
                 else
                     RemoveClasses("my-loading");
+
+                _prevParentState = parentState;
             }
 
             if (Styling.HasChanged())
@@ -201,7 +192,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         Fill,
         FillAndDoubleHeight,
         Auto,
-        Quadratic
+        Quadratic,
+        LineHeight
     }
 
     public enum ButtonState
