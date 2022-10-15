@@ -10,7 +10,7 @@ lib/
 *.Designer.cs
 *appsettings*.json
 *launchsettings*.json
-wwwroot/icons
+**/wwwroot/icons
 
 # User-specific files
 *.suo
