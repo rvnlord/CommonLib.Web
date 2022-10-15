@@ -268,9 +268,10 @@
                 easing: "easeOutExpo",
                 autoplay: false,
                 complete: function () {
-                    if ($navMenu.parents(".my-navbar").first().is(".glued")) {
-                        NavBarUtils.ScrollBar.scroll({ y: 0 }); // this will raise the event and call handleScrollBarChange indirectly after scrolling to top
-                    }
+                    NavBarUtils.handleScrollBarChange();
+                    //if ($navMenu.parents(".my-navbar").first().is(".glued")) {
+                    //    NavBarUtils.ScrollBar.scroll({ y: 0 }); // this will raise the event and call handleScrollBarChange indirectly after scrolling to top
+                    //}
                 }
             }) : anime({
                 targets: $navItem[0],
@@ -483,6 +484,7 @@
             NavBarUtils.removeIconsPaddingForNavLinksWithEmptyContent($nb);
             NavBarUtils.setRightBorderForLastLeftAlignedNavItem($nb);
             NavBarUtils.setNavBrandToDeviceSize($nb);
+            NavBarUtils.adjustNavbarMarginTop($nb);
             NavBarUtils.rearrangeNavBarIfWrapping($nb);
             NavBarUtils.setSearchModalToDeviceSize($nb);
         }
@@ -558,9 +560,11 @@
                     $nb.css("height", closedHeight);
                 } 
                 $nb.css("height", "auto");
-                if ($nb.is(".glued")) {
-                    NavBarUtils.ScrollBar.scroll({ y: 0 });
-                }
+
+                NavBarUtils.handleScrollBarChange();
+                //if ($nb.is(".glued")) {
+                //    NavBarUtils.ScrollBar.scroll({ y: 0 });
+                //}
             }
         }) : anime({
             targets: $nb[0],
@@ -920,8 +924,7 @@
         const IsDeviceSizeChanging = !NavBarUtils.PreviousWindowWidth
             || windowWidth < 768 && NavBarUtils.PreviousWindowWidth >= 768
             || windowWidth >= 768 && NavBarUtils.PreviousWindowWidth < 768;
-        NavBarUtils.adjustNavbarDimensions($nb);
-
+      
         if (IsDeviceSizeChanging && NavBarUtils.ScrollBar) {
             NavBarUtils.handleScrollBarChange();
         }
@@ -1095,7 +1098,7 @@
         $(".my-page-container").css("margin-top", nbExpectedHeight.px());
     }
 
-    static handleScrollBarChange() {
+    static handleScrollBarChange(forceReapply = false) {
         if (!NavBarUtils.ScrollBar) {
             NavBarUtils.ScrollBar = $("*").overlayScrollbars().filter(s => s !== undefined).first();
         }
@@ -1130,7 +1133,7 @@
                 $navContainer.insertBefore($pageContainer);
             }
 
-            if ($nb.is(".glued") && scrollY <= bannerHeight - brandAdditionalMargin && window.innerWidth >= 768) {
+            if (($nb.is(".glued") || forceReapply) && scrollY <= bannerHeight - brandAdditionalMargin && window.innerWidth >= 768) {
                 $nb.removeCss("margin-top");
                 $nb.removeClass("glued");
                 $promptMain.removeClass("glued");
@@ -1147,7 +1150,7 @@
                     $promptMain.css("z-index", "9");
                     $promptMain.css("top", nbHeight.px());
                 }
-            } else if (!$nb.is(".glued") && scrollY > bannerHeight - brandAdditionalMargin || window.innerWidth < 768) {
+            } else if ((!$nb.is(".glued") || forceReapply) && scrollY > bannerHeight - brandAdditionalMargin || window.innerWidth < 768) {
                 $nb.addClass("glued");
                 $promptMain.addClass("glued");
                 if (brandAdditionalMargin > 0 || titlebarHeight > 0) {
@@ -1174,7 +1177,7 @@
         }
     }
 
-    static adjustNavbarDimensions($nb) {
+    static adjustNavbarMarginTop($nb) {
         //const $banner = $(".my-page-main-image").first();
         //const bannerWidth = $banner.outerWidth(); // styles with css instead
         //const pageContainerWidth = $nb.parents(".my-nav-container").first().next(".my-page-container").outerWidth();

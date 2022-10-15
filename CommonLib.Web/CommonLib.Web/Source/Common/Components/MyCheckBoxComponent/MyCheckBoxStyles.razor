@@ -109,9 +109,7 @@
         align-items: center;
     }
 
-    .my-checkbox-container input:not([disabled]) ~ .my-checkmark:hover,
-    .my-checkbox-container input:not([disabled]) ~ .my-checkbox-label:hover,
-    .my-checkbox-container input:not([disabled]):hover {
+    .my-checkbox-container:not([disabled]):hover {
         cursor: pointer
     }
 
@@ -151,6 +149,16 @@
 
     .my-checkbox.my-invalid input[type='checkbox']:not([disabled]) ~ .my-checkmark {
         background: @($"linear-gradient(to bottom, {ErrorBackgroundColor}, #000000);");
+    }
+
+    .my-checkbox.my-valid > .my-checkbox-container > input[type='checkbox']:not([disabled]):checked ~ .my-checkmark:after {
+        border: solid @SuccessColor;
+        border-width: 0 4px 4px 0;
+    }
+
+    .my-checkbox.my-invalid > .my-checkbox-container > input[type='checkbox']:not([disabled]):checked ~ .my-checkmark:after {
+        border: solid @FailureColor;
+        border-width: 0 4px 4px 0;
     }
 
 </style>

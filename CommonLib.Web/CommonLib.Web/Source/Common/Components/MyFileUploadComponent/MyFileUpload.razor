@@ -9,23 +9,26 @@
         <div class="my-fileupload-thumbnail-container"><div>No Thumbnail</div></div>
         <div class="my-fileupload-drop-container">Drop File here...</div>
         <div class="my-fileupload-buttons-container">
-            <div class="my-fileupload-btn-select-container">
-                <MyButton Value="@("Select".ToBp())" Icon="IconType.From(LightIconType.File)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-choose-file-container">
+                <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            </div>
+            <div class="my-fileupload-btn-select-all-container">
+                <MyButton Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
             <div class="my-fileupload-btn-upload-container">
-                <MyButton Value="@("Upload".ToBp())" Icon="IconType.From(LightIconType.Upload)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
-            <div class="my-fileupload-btn-pause-selected-container">
-                <MyButton Value="@("Pause Selected".ToBp())" Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-pause-container">
+                <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
-            <div class="my-fileupload-btn-pause-all-container">
-                <MyButton Value="@("Pause All".ToBp())" Icon="IconType.From(LightIconType.PauseCircle)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-resume-container">
+                <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
-            <div class="my-fileupload-btn-clear-selected-container">
-                <MyButton Value="@("Clear Selected".ToBp())" Icon="IconType.From(LightIconType.WindowClose)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-retry-container">
+                <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
-            <div class="my-fileupload-btn-clear-all-container">
-                <MyButton Value="@("Clear All".ToBp())" Icon="IconType.From(LightIconType.WindowClose)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-clear-container">
+                <MyButton Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
             </div>
         </div>
         <div class="my-fileupload-progressbars-container">

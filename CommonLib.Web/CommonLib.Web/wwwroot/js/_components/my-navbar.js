@@ -21,7 +21,7 @@ export async function blazor_NavBar_AfterRender() {
     NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
 }
 
-export function blazor_Layout_AfterRender_SetupNavbar(jsScrollPageContainer) { // navLinkDotNetRefs
+export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs
 
     // hide webassembly spinner
 
@@ -49,7 +49,7 @@ export function blazor_Layout_AfterRender_SetupNavbar(jsScrollPageContainer) { /
     NavBarUtils.adjustToDeviceSize(); // requires overlayscrollbar loaded (otherwise it would take default system scrollbar dimensions)
     const $stickyNavBars = $(".my-navbar.my-sticky").$toArray();
     for (let $nb of $stickyNavBars) {
-        NavBarUtils.adjustNavbarDimensions($nb); // requires overlayscrollbar loaded (otherwise it would take default system scrollbar dimensions)      
+        NavBarUtils.adjustNavbarMarginTop($nb); // requires overlayscrollbar loaded (otherwise it would take default system scrollbar dimensions)      
     }
     
     NavBarUtils.handleScrollBarChange();
@@ -349,6 +349,7 @@ $(document).ready(function () {
         NavBarUtils.finishAndRemoveRunningAnims(); // stop all animations
         NavBarUtils.adjustToDeviceSize();
         NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
+        NavBarUtils.handleScrollBarChange(true);
     });
 
 });

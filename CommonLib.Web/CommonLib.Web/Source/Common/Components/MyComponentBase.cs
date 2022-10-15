@@ -183,10 +183,6 @@ namespace CommonLib.Web.Source.Common.Components
                 {
                     ancestors.Add(parent);
                     parent = ancestors.Last().Parent;
-                    if (ancestors.Count > 15)
-                    {
-                        var t = 0;
-                    }
                 }
                 //if (Parent is not null)
                 //{

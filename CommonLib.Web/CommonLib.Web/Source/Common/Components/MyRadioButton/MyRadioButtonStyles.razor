@@ -13,7 +13,9 @@
         user-select: none;
     }
 
-    .my-radiobutton:not(.disabled) > .my-radiobutton-container:hover {
+    .my-radiobutton:not(.disabled) > .my-radiobutton-container:hover,
+    .my-radiobutton:not(.disabled) > .my-radiomark:hover,
+    .my-radiobutton:not(.disabled) > .my-radiobutton-label:hover {
         cursor: pointer
     }
 
@@ -23,6 +25,7 @@
             opacity: 0;
             height: 0;
             width: 0;
+            cursor: pointer; /* chrome forces default cursor for radio input so I need to override it */
         }
 
     /* Create a custom radio button */
@@ -47,8 +50,18 @@
         background: linear-gradient(to bottom, darkgreen, #000000);
     }
     /* When the radio button is checked, add a blue background */
-    .my-radiobutton-container input:checked ~ .my-radiomark {
+    .my-radiobutton-container input:not(:disabled):checked ~ .my-radiomark {
         background-image: radial-gradient(circle at center, white 20%, transparent 50%), linear-gradient(to bottom, yellowgreen, #000000);
+        background-repeat: no-repeat, no-repeat;
+    }
+
+    .my-radiobutton.my-valid > .my-radiobutton-container > input[type="radio"]:not(:disabled):checked ~ .my-radiomark {
+        background-image: radial-gradient(circle at center, @SuccessColor 20%, transparent 50%), @SuccessBackgroundGradient;
+        background-repeat: no-repeat, no-repeat;
+    }
+
+    .my-radiobutton.my-invalid > .my-radiobutton-container > input[type="radio"]:not(:disabled):checked ~ .my-radiomark {
+        background-image: radial-gradient(circle at center, @FailureColor 20%, transparent 50%), @ErrorBackgroundGradient;
         background-repeat: no-repeat, no-repeat;
     }
 
