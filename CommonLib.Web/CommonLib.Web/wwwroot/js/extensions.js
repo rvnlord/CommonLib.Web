@@ -872,8 +872,9 @@ jQuery.fn.extend({
             for (var s of css) {
                 this.css(s, "");
             }
+        } else {
+            this.css(css, "");
         }
-        return this.css(css, "");
     },
     backgroundImageSizeAsync: async function() {
         const imageUrl = this.css("background-image").match(/^url\("?(.+?)"?\)$/)[1];

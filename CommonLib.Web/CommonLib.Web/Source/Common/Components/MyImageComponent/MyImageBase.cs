@@ -117,7 +117,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                     else
                         imgData = await Image.LoadAsync(imgPath.Physical);
 
-                    AddOrUpdateStyle("background-image", $"url('{imgPath.Virtual}')");
+                    AddStyle("background-image", $"url('{imgPath.Virtual}')");
 
                     _originalHeight = $"{imgData.Height}px";
                     _originalWidth = $"{imgData.Width}px";

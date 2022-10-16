@@ -59,7 +59,7 @@ namespace CommonLib.Web.Source.Services
 
         private static string NormalizeComponentOrPageName(string moduleName)
         {
-            moduleName = moduleName.Replace("NavBar", "Navbar").Replace("DropDown", "Dropdown");
+            moduleName = moduleName.Replace("NavBar", "Navbar").Replace("DropDown", "Dropdown").Replace("FileUpload", "Fileupload");
             if (!moduleName.Contains('-'))
                 moduleName = moduleName.Take(1).ToLowerInvariant() + moduleName.Skip(1).Replace("_", "/").PascalCaseToKebabCase(); // to preserve "_layout.js"
             return moduleName;

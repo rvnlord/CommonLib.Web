@@ -640,7 +640,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string>{ [key] = value });
 
-        protected void AddOrUpdateStyles(Dictionary<string, string> customStyles)
+        protected void AddStyles(Dictionary<string, string> customStyles)
         {
             if (IsDisposed)
                 return;
@@ -657,7 +657,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncStyles.Release();
         }
 
-        protected void AddOrUpdateStyle(string key, string value) => AddOrUpdateStyles(new Dictionary<string, string> { [key] = value });
+        protected void AddStyle(string key, string value) => AddStyles(new Dictionary<string, string> { [key] = value });
 
         protected void RemoveStyles(string[] customStyles)
         {

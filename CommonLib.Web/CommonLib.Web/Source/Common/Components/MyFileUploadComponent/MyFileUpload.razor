@@ -1,6 +1,7 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Utils.UtilClasses
 @inherits CommonLib.Web.Source.Common.Components.MyFileUploadComponent.MyFileUploadBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
@@ -40,15 +41,35 @@
                 <div class="my-fileupload-progressbar-container">
                     <MyProgressBar For="@(() => file.Progress)" Description="file.Name" Sizing="ProgressBarSizing.LineHeight" />
                 </div>
-                <div class="my-fileupload-btn-pause-container">
-                    <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
-                </div>
-                <div class="my-fileupload-btn-resume-container">
-                    <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
-                </div>
-                <div class="my-fileupload-btn-retry-container">
-                    <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
-                </div>
+                @if (file.Status == UploadStatus.NotStarted)
+                {
+                    <div class="my-fileupload-btn-upload-container">
+                        <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
+                    </div>
+                }
+                else if (file.Status == UploadStatus.Uploading)
+                {
+                    <div class="my-fileupload-btn-pause-container">
+                        <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
+                    </div>
+                }
+                else if (file.Status == UploadStatus.Paused)
+                {
+                    <div class="my-fileupload-btn-resume-container">
+                        <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
+                    </div>
+                }
+                else if (file.Status == UploadStatus.Failed)
+                {
+                    <div class="my-fileupload-btn-retry-container">
+                        <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
+                    </div>
+                }
+                else if (file.Status == UploadStatus.Finished)
+                {
+                    <div class="my-fileupload-empty-container">
+                    </div>
+                }
                 <div class="my-fileupload-btn-clear-container">
                     <MyButton Icon="IconType.From(LightIconType.XmarkLarge)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeight" IconPlacement="ButtonIconPlacement.Right" />
                 </div>

@@ -110,7 +110,7 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 Sizing.ParameterValue ??= ProgressBarSizing.Default;
                 if (Sizing.V == ProgressBarSizing.LineHeight)
                 {
-                    AddOrUpdateStyles(new Dictionary<string, string>
+                    AddStyles(new Dictionary<string, string>
                     {
                         ["height"] = StylesConfig.LineHeight.Px(),
                         ["padding"] = "0 9px", // teecxhnically not needed because of "align-items",

@@ -68,7 +68,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
             if (Padding.HasChanged())
             {
                 Padding.ParameterValue = Padding.V.NullifyIfNullOrWhiteSpace();
-                AddOrUpdateStyle("padding", Padding.V);
+                AddStyle("padding", Padding.V);
             }
 
             if (Gap.HasChanged() || ColumnsGap.HasChanged() || RowsGap.HasChanged())
@@ -80,8 +80,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
                 var columnsGap = ColumnsGap.V ?? Gap.V;
                 var rowsGap = RowsGap.V ?? Gap.V;
 
-                AddOrUpdateStyle("column-gap", columnsGap);
-                AddOrUpdateStyle("row-gap", rowsGap);
+                AddStyle("column-gap", columnsGap);
+                AddStyle("row-gap", rowsGap);
             }
 
             if (Template.HasChanged() && Template.HasValue())
@@ -140,13 +140,13 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
             {
                 var highestDefinedLayout = GridLayouts[(DeviceSizeKind)HighestDeviceSizeWithLayout];
                 Logger.For<MyCssGridBase>().Info($"deviceSize: {CurrentDeviceSize}, highestDeviceSizeWithDefinedLayout: {HighestDeviceSizeWithLayout}, Cols: {highestDefinedLayout.ColumnsLayout}, Rows: {highestDefinedLayout.RowsLayout}");
-                AddOrUpdateStyle("grid-template-columns", highestDefinedLayout.ColumnsLayout);
-                AddOrUpdateStyle("grid-template-rows", highestDefinedLayout.RowsLayout);
+                AddStyle("grid-template-columns", highestDefinedLayout.ColumnsLayout);
+                AddStyle("grid-template-rows", highestDefinedLayout.RowsLayout);
             }
             else
             {
-                AddOrUpdateStyle("grid-template-columns", "auto");
-                AddOrUpdateStyle("grid-template-rows", $"repeat({Children.OfType<MyCssGridItemBase>().Count()}, minmax({StylesConfig.InputHeight.Px()}, max-content))");
+                AddStyle("grid-template-columns", "auto");
+                AddStyle("grid-template-rows", $"repeat({Children.OfType<MyCssGridItemBase>().Count()}, minmax({StylesConfig.InputHeight.Px()}, max-content))");
             }
             
             //RemoveStyle("opacity");

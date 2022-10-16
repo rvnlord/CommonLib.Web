@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
-using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
-using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
-using CommonLib.Web.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 {
@@ -45,7 +42,12 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
+            await Task.CompletedTask;
         }
 
+        protected override async Task OnAfterFirstRenderAsync()
+        {
+            await ModuleAsync;
+        }
     }
 }

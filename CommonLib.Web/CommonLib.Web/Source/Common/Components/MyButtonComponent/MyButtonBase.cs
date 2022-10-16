@@ -112,9 +112,16 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             if (Sizing.HasChanged())
             {
                 Sizing.ParameterValue ??= ButtonSizing.Fill;
-                
                 var sizingClass = $"my-{Sizing.ParameterValue.EnumToString().PascalCaseToKebabCase()}";
                 AddClass(sizingClass);
+
+                if (Value.V.IsNullOrWhiteSpace()) // remove margins if there is no value (presumably icon only)
+                {
+                    AddStyles(new Dictionary<string, string> { 
+                        ["margin-left"] = "0",
+                        ["margin-right"] = "0"
+                    });
+                }
             }
             
             if (IconPlacement.HasChanged())

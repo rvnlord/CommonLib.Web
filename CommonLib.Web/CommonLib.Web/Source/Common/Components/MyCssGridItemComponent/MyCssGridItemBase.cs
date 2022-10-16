@@ -135,17 +135,17 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
                 var highestDefinedArea = GridAreas[(DeviceSizeKind)HighestDeviceSizeWithArea];
 
                 if (highestDefinedArea.Row is not null)
-                    AddOrUpdateStyle("grid-row-start", highestDefinedArea.Row.ToString());
+                    AddStyle("grid-row-start", highestDefinedArea.Row.ToString());
                 else
                     RemoveStyle("grid-row-start");
 
                 if (highestDefinedArea.Column is not null)
-                    AddOrUpdateStyle("grid-column-start", highestDefinedArea.Column.ToString());
+                    AddStyle("grid-column-start", highestDefinedArea.Column.ToString());
                 else
                     RemoveStyle("grid-column-start");
 
-                AddOrUpdateStyle("grid-row-end", highestDefinedArea.RowSpan > 0 ? $"span {highestDefinedArea.RowSpan}" : "-1");
-                AddOrUpdateStyle("grid-column-end", highestDefinedArea.ColumnSpan > 0 ? $"span {highestDefinedArea.ColumnSpan}" : "-1");
+                AddStyle("grid-row-end", highestDefinedArea.RowSpan > 0 ? $"span {highestDefinedArea.RowSpan}" : "-1");
+                AddStyle("grid-column-end", highestDefinedArea.ColumnSpan > 0 ? $"span {highestDefinedArea.ColumnSpan}" : "-1");
             }
             else
                 RemoveStyles(new[] { "grid-area", "grid-row-start", "grid-column-start", "grid-row-end", "grid-column-end" });
@@ -156,22 +156,22 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
                 var highestDefinedGap = GridAreaGaps[(DeviceSizeKind)highestDeviceSizeWithAreaGap];
 
                 if (!highestDefinedGap.Top.IsNullOrWhiteSpace())
-                    AddOrUpdateStyle("margin-top", highestDefinedGap.Top);
+                    AddStyle("margin-top", highestDefinedGap.Top);
                 else
                     RemoveStyle("margin-top");
 
                 if (!highestDefinedGap.Right.IsNullOrWhiteSpace())
-                    AddOrUpdateStyle("margin-right", highestDefinedGap.Right);
+                    AddStyle("margin-right", highestDefinedGap.Right);
                 else
                     RemoveStyle("margin-right");
 
                 if (!highestDefinedGap.Bottom.IsNullOrWhiteSpace())
-                    AddOrUpdateStyle("margin-bottom", highestDefinedGap.Bottom);
+                    AddStyle("margin-bottom", highestDefinedGap.Bottom);
                 else
                     RemoveStyle("margin-bottom");
 
                 if (!highestDefinedGap.Left.IsNullOrWhiteSpace())
-                    AddOrUpdateStyle("margin-left", highestDefinedGap.Left);
+                    AddStyle("margin-left", highestDefinedGap.Left);
                 else
                     RemoveStyle("margin-left");
             }
