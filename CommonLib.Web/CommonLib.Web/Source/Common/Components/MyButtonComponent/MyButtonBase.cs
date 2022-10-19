@@ -200,7 +200,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         FillAndDoubleHeight,
         Auto,
         Quadratic,
-        LineHeight
+        LineHeight,
+        LineHeightQuadratic
     }
 
     public enum ButtonState

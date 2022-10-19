@@ -5,6 +5,8 @@
 @using CommonLib.Source.Common.Converters
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
 @using System.Linq.Expressions
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
 
 @inherits ControlsTestBase
@@ -132,7 +134,7 @@
                     <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyFileUpload For="@(() => _employee.Files)" />
+                    <MyFileUpload For="@(() => _employee.Files)" PreviewFor="@(new BlazorParameter<Func<ExtendedImage>>(() => _employee.Avatar))" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight"  />

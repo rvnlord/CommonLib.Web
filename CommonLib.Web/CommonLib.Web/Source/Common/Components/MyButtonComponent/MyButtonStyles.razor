@@ -130,6 +130,28 @@
         width: @FontSize.Px();
     }
 
+    .my-btn.my-line-height-quadratic {
+        width: @LineHeight.Px();
+        max-width: @LineHeight.Px();
+        height: @LineHeight.Px();
+        max-height: @LineHeight.Px();
+        line-height: 18px;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+    }
+
+    .my-btn.my-line-height-quadratic > .my-icon {
+        margin: 0;
+        width: auto;
+        height: 12px;
+        max-width: none;
+        max-height: 12px;
+        flex: 0 0 auto;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
         .my-btn.my-auto {
             width: auto;
         }

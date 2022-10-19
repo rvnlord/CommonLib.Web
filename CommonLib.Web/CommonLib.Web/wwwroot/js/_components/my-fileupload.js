@@ -44,10 +44,10 @@ export class FileUploadUtils {
         const $fileUploadThumbnailContainer = $fileUploadDropContainer.siblings(".my-fileupload-thumbnail-container").first();
         const $fileUpload = $fileUploadThumbnailContainer.closest(".my-fileupload");
         const guid = $fileUpload.guid();
-        const file = files.last();
         let fileAsDataUrl = null;
 
-        for (let file of files) {
+        for (let i = files.length - 1; i >= 0; i--) { // reversed iteration due to removing files
+            const file = files[i];
             const sessionDataForFile = this.getPreviewDataFromSession(guid, file);
             const sessionFileNameWithExtension = (sessionDataForFile.name || "").toLowerCase() + (sessionDataForFile.extension ? "." : "") + (sessionDataForFile.extension || "").toLowerCase();
             if (sessionDataForFile && sessionFileNameWithExtension === file.name.toLowerCase() && sessionDataForFile.size === file.size) {
@@ -56,6 +56,7 @@ export class FileUploadUtils {
         }
 
         for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             if (i === files.length - 1) {
                 $fileUploadThumbnailContainer.empty();
                 $fileUploadThumbnailContainer.removeCss("background-image");
@@ -120,6 +121,18 @@ $(document).ready(function () {
         const $fileUploadDropContainer = $(e.currentTarget);
         $fileUploadDropContainer.removeCss("border");
 
+        await FileUploadUtils.addFilesToUploadAsync($fileUploadDropContainer, files);
+    });
+
+    $(document).on("click", ".my-fileupload-btn-choose-file-container > button", async function (e) {
+        const $fileUpload = $(e.currentTarget).closest(".my-fileupload");
+        const $hiddenFileInput = $fileUpload.find("input[type='file'].my-fileupload-hidden-file-input").first();
+        $hiddenFileInput.click();
+    });
+
+    $(document).on("change", "input[type='file'].my-fileupload-hidden-file-input", async function (e) {
+        let files = Array.from($(e.currentTarget)[0].files);
+        const $fileUploadDropContainer = $(e.currentTarget).closest(".my-fileupload-drop-container:not([disabled])");
         await FileUploadUtils.addFilesToUploadAsync($fileUploadDropContainer, files);
     });
 });

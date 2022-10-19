@@ -34,6 +34,7 @@
 
     .my-fileupload.disabled > .my-fileupload-thumbnail-container {
         background: linear-gradient(to bottom, #101010, #000000);
+        background-size: contain;
         box-shadow: inset 0 0 0 1px #303030;
         color: #404040;
     }
@@ -78,7 +79,7 @@
 
     .my-fileupload-buttons-container {
         display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-columns: 1fr repeat(6, minmax(0, max-content));
         grid-template-rows: repeat(auto-fit, minmax(0, max-content));
         grid-gap: 10px;
         box-sizing: border-box;
@@ -88,7 +89,7 @@
 
     .my-fileupload-progressbars-container {
         display: grid;
-        grid-template-columns: minmax(0, max-content) 5fr repeat(2, minmax(0, 1fr)); 
+        grid-template-columns: minmax(0, max-content) 5fr repeat(2, minmax(0, max-content)); 
         grid-template-rows: repeat(auto-fit, minmax(0, max-content));
         grid-gap: 10px;
         box-sizing: border-box;

@@ -14,6 +14,7 @@ using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace CommonLib.Web.Source.Common.Components.MyImageComponent
 {
@@ -73,7 +74,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
 
                     Image imgData;
                     var imgName = Path.ParameterValue.AfterLastOrWhole("/");
-
+                   
                     var imgPath = _imgPathsCache.VorN(imgName);
                     if (imgPath is null)
                     {

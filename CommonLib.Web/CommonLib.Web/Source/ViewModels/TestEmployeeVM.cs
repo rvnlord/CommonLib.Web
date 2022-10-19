@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyImageComponent;
 
 namespace CommonLib.Web.Source.ViewModels
 {
     public class TestEmployeeVM
     {
+        private ExtendedImage _avatar;
+
         public int Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -17,7 +21,8 @@ namespace CommonLib.Web.Source.ViewModels
         [DisplayName("Terms of Use")]
         [Description("I accept the Terms of use")]
         public bool TermsAccepted { get; set; }
-        public string Avatar { get; set; }
+        public ExtendedImage Avatar => _avatar ??= ExtendedImage.Load(PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png"));
+
         public double Progress { get; set; }
         public List<FileData> Files { get; set; }
     }
