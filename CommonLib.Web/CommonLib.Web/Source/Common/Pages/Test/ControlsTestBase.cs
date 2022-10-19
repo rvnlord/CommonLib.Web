@@ -33,8 +33,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             Progress = 70,
             Files = new List<FileData>
             {
-                new() { Path = @"C:\Test1.png", Data = RandomUtils.RandomBytes(4), Position = 3 },
-                new() { Path = @"C:\Test2.png", Data = RandomUtils.RandomBytes(5), Position = 3 }
+                new() { Name = @"Test1", Extension = "png", Data = RandomUtils.RandomBytes(4), Position = 3 },
+                new() { Name = @"Test2", Extension = "png", Data = RandomUtils.RandomBytes(5), Position = 3 }
             }
         };
 

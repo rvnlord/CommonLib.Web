@@ -8,7 +8,7 @@
     
     <div id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="my-fileupload-thumbnail-container"><div>No Thumbnail</div></div>
-        <div class="my-fileupload-drop-container">Drop File here...</div>
+        <div class="my-fileupload-drop-container">Drop File here...<input type="file" class="my-fileupload-hidden-file-input" /></div>
         <div class="my-fileupload-buttons-container">
             <div class="my-fileupload-btn-choose-file-container">
                 <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
@@ -39,7 +39,7 @@
                     <MyCheckBox For="@(() => file.IsSelected)" DisplayLabel="false"></MyCheckBox>
                 </div>
                 <div class="my-fileupload-progressbar-container">
-                    <MyProgressBar For="@(() => file.Progress)" Description="file.Name" Sizing="ProgressBarSizing.LineHeight" />
+                    <MyProgressBar For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" />
                 </div>
                 @if (file.Status == UploadStatus.NotStarted)
                 {

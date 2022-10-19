@@ -770,6 +770,40 @@ Object.defineProperty(Array.prototype, "orderByWithDirection", {
 
 // #endregion
 
+// #region FileListExtensions
+
+FileList.prototype.last = function last() {
+    return this[this.length - 1];
+};
+
+// #endregion
+
+// #region FileReaderExtensions
+
+FileReader.prototype.readAsDataURLAsync = function readAsDataURLAsync(file) {
+    return new Promise((resolve, reject) => {
+        const fr = this;
+        fr.onload = () => {
+            resolve(fr.result);
+        };
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+    });
+};
+
+FileReader.prototype.readAsByteArrayAsync = function readAsByteArrayAsync(file) {
+    return new Promise((resolve, reject) => {
+        const fr = this;
+        fr.onload = () => {
+            resolve([...new Uint8Array(fr.result)]);
+        };
+        fr.onerror = reject;
+        fr.readAsArrayBuffer(file);
+    });
+};
+
+// #endregion
+
 // #region JQueryExtensions
 
 function jQueryArray($selectors) {
@@ -875,6 +909,7 @@ jQuery.fn.extend({
         } else {
             this.css(css, "");
         }
+        return this;
     },
     backgroundImageSizeAsync: async function() {
         const imageUrl = this.css("background-image").match(/^url\("?(.+?)"?\)$/)[1];

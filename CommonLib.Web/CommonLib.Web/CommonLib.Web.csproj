@@ -33,6 +33,12 @@
 
   <ItemGroup>
     <Content Remove="libman.json" />
+    <Content Remove="wwwroot\js\base58converter.js" />
+    <Content Remove="wwwroot\js\converters\utf8Converter.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\js\base58converter.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -97,6 +103,8 @@
 
   <ItemGroup>
     <None Include="libman.json" />
+    <None Include="wwwroot\js\converters\utf8Converter.js" />
+    <None Include="wwwroot\js\converters\base58Converter.js" />
   </ItemGroup>
 
   <ItemGroup>

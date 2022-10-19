@@ -1,9 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Utils;
+using CommonLib.Web.Source.Services.Interfaces;
+using Microsoft.JSInterop;
+using Newtonsoft.Json.Linq;
+using OpenQA.Selenium;
 
 namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 {
@@ -48,6 +56,14 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             await ModuleAsync;
+        }
+
+        [JSInvokable]
+        public static async Task AddFilesToUploadAsync(Guid sessionId, Guid guid, List<FileData> filesData)
+        {
+            var fileUpload = await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyFileUploadBase>(guid);
+            fileUpload.Value.AddRange(filesData);
+            await fileUpload.StateHasChangedAsync(true);
         }
     }
 }

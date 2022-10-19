@@ -5,7 +5,7 @@
             const v = c === "x" ? r : r & 0x3 | 0x8;
             return v.toString(16);
         });
-    }
+    };
 
     static startsWithAny = (str, substrs) => {
         for (let substr of substrs) {
@@ -14,7 +14,7 @@
             }
         }
         return false;
-    }
+    };
 
     static endsWithAny = (str, substrs) => {
         for (let substr of substrs) {
@@ -23,7 +23,7 @@
             }
         }
         return false;
-    }
+    };
 
     static iif = (condition, functions) => {
         for (let func of functions) {
@@ -33,14 +33,14 @@
                 return;
             }
         }
-    }
+    };
 
     static wait = (ms) => {
         const start = Date.now();
         let now = start;
         while (now - start < ms)
             now = Date.now();
-    }
+    };
 
     static waitAsync = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -53,13 +53,13 @@
 
     static origin = () => {
         return window.location.protocol + "//" + window.location.hostname + (window.location.port ? `:${window.location.port}` : "");
-    }
+    };
     
     static getRandomInt = (min, max) => {
         min = Math.ceil(min);
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
-    }
+    };
 
     static getIconAsync = async (iconSet, iconName) => {
         const icon = await $.ajax({
@@ -68,11 +68,11 @@
             type: "GET"
         });
         return icon;
-    }
+    };
 
     static $getIconAsync = async (iconSet, iconName) => {
         return await $(this.getIconAsync(iconSet, iconName));
-    }
+    };
 
     static toTimeDateString(date) {
         if (date instanceof Date === false && utils.isNumber(date)) {
@@ -127,7 +127,7 @@
             }
             return result;
         });
-    }
+    };
 
     static orderByProps(array, descending, ...selectors) {
         let newArray = [...array];
@@ -175,5 +175,16 @@
             keys = keys.filter((el) => toRemove.indexOf(el) < 0);
         }
         return result;
+    }
+
+    static readAsDataURLAsync(file) {
+        return new Promise((resolve, reject) => {
+            var fr = new FileReader();  
+            fr.onload = () => {
+                resolve(fr.result);
+            };
+            fr.onerror = reject;
+            fr.readAsDataURL(file);
+        });
     }
 }

@@ -8,7 +8,10 @@
 
     .my-progressbar {
         height: 34px;
+        max-height: 34px;
         display: grid;
+        overflow: hidden;
+        white-space: nowrap;
         grid-template-columns: 1fr auto;
         grid-column-gap: 10px;
         padding: 5px 9px;
@@ -51,6 +54,9 @@
 
     .my-progressbar > .progress-description {
         z-index: 1;
+        text-overflow: ellipsis;
+        font-weight: 100;
+        overflow: hidden;
     }
 
     .my-progressbar > .progress-value {
