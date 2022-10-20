@@ -200,6 +200,8 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
+        public List<MyComponentBase> Siblings => Parent.Children;
+
         public AuthenticateUserVM AuthenticatedUser { get; set; }
 
         [Inject]
@@ -524,7 +526,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             if (classes != null)
-                Classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace()));
+                Classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace() && !c.In(Classes)));
             _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();

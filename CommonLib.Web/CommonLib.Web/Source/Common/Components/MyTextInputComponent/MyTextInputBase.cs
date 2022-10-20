@@ -68,7 +68,7 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
             var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
             if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = parentState ?? State.ParameterValue ?? InputState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
 
                 if (State.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
                     AddAttribute("disabled", string.Empty);

@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Truncon.Collections;
 
@@ -81,5 +86,24 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             fileUpload.Value.AddRange(filesData);
             await fileUpload.StateHasChangedAsync(true);
         }
+
+        protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            if (e.Button != 0)
+                return;
+
+            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
+            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b != sender && b.Classes.Contains(fileCssClass)).ToArray();
+            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
+
+            await Task.CompletedTask;
+        }
+
+        protected Task BtnClear_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected string GetFileCssClass(FileData fd) => $"my-file-{fd.Name.ToLower()}-{fd.Extension}-{fd.TotalSize.SizeInBytes}";
     }
 }

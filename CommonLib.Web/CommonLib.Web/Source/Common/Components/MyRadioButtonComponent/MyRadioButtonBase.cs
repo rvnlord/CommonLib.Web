@@ -96,7 +96,7 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
             if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = parentState ?? State.V ?? InputState.Disabled;
+                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
 
                 if (State.V.In(InputState.Disabled, InputState.ForceDisabled))
                 {

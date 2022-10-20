@@ -11,6 +11,7 @@ using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
 {
@@ -54,7 +55,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
             if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = parentState ?? State.V ?? InputState.Disabled;
+                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
+
                 if (State.ParameterValue.IsDisabledOrForceDisabled)
                     AddAttribute("disabled", string.Empty);
                 else

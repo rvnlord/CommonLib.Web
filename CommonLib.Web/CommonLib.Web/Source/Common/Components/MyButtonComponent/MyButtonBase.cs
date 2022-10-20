@@ -3,20 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
-using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
-using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
-using CommonLib.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.Common.Pages.Shared;
+using Telerik.Blazor.Components.Map.EventArgs.Internal;
 
 namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 {
@@ -62,6 +65,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; }
         
+        [Parameter]
+        public MyAsyncEventHandler<MyButtonBase, MouseEventArgs> Click { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             OtherIcons ??= new OrderedDictionary<IconType, MyIconBase>();
@@ -88,9 +94,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
             var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
             var parentState = parentStates.All(s => s.State is null) ? (ButtonState?) null : parentStates.Any(s => s.State == ComponentStateKind.Disabled) ? ButtonState.Disabled : parentStates.Any(s => s.State == ComponentStateKind.Loading) ? ButtonState.Loading : ButtonState.Enabled;
-            if (State.HasChanged() || CascadingInput.ParameterValue?.State?.HasChanged() == true || parentState != _prevParentState) // || _buttonStateFromValidation != null && State.ParameterValue != _buttonStateFromValidation)
+            if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = parentState ?? State.V ?? ButtonState.Disabled; // It has to be overriden at all times by whatever is set to it directly (during the validation)
+                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? ButtonState.Disabled;
 
                 if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");
@@ -149,6 +155,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         protected async void Button_ClickAsync(MouseEventArgs e)
         {
             await OnClick.InvokeAsync(e).ConfigureAwait(false);
+            await Click.InvokeAsync(this, e).ConfigureAwait(false);
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
