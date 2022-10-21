@@ -1,29 +1,42 @@
-﻿import "../extensions.js";
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
+
+import "../extensions.js";
 import utils from "../utils.js";
 import "../converters/base58converter.js";
 
 export class FileUploadUtils {
     static _previewDataCache = {};
 
+    static getFileIdFromFile(file) {
+        return `${file.name.pathToName()}|${file.name.pathToExtension()}|${file.size}`;
+    }
+
+    static createFileId(name, extension, size) {
+        return `${name}|${extension}|${size}`;
+    }
+
     static cachePreviewDataForFile(guid, file, fileAsDataUrl) {
+        const fileId = this.getFileIdFromFile(file);
         const fileUploads = this._previewDataCache;
         if (!fileUploads[guid]) { fileUploads[guid] = { guid: guid }; }
         if (!fileUploads[guid].files) { fileUploads[guid].files = {}; }
-        if (!fileUploads[guid].files[`${file.name}|${file.size}`]) { fileUploads[guid].files[`${file.name}|${file.size}`] = {}; }
+        if (!fileUploads[guid].files[fileId]) { fileUploads[guid].files[`${file.name}|${file.size}`] = {}; }
 
-        fileUploads[guid].files[`${file.name}|${file.size}`].thumbnail = fileAsDataUrl;
-        fileUploads[guid].files[`${file.name}|${file.size}`].name = file.name.split(".").first();
-        fileUploads[guid].files[`${file.name}|${file.size}`].extension = file.name.contains(".") ? file.name.split(".").last() : "";
-        fileUploads[guid].files[`${file.name}|${file.size}`].size = file.size;
+        fileUploads[guid].files[fileId].thumbnail = fileAsDataUrl;
+        fileUploads[guid].files[fileId].name = file.name.split(".").first();
+        fileUploads[guid].files[fileId].extension = file.name.contains(".") ? file.name.split(".").last() : "";
+        fileUploads[guid].files[fileId].size = file.size;
+        fileUploads[guid].files[fileId].file = file;
     }
 
     static getCachedPreviewDataForFile(guid, file) {
+        const fileId = this.getFileIdFromFile(file);
         const fileUploads = this._previewDataCache;
         if (!fileUploads[guid]) { fileUploads[guid] = { guid: guid }; }
         if (!fileUploads[guid].files) { fileUploads[guid].files = {}; }
-        if (!fileUploads[guid].files[`${file.name}|${file.size}`]) { fileUploads[guid].files[`${file.name}|${file.size}`] = {}; }
+        if (!fileUploads[guid].files[fileId]) { fileUploads[guid].files[fileId] = {}; }
 
-        return fileUploads[guid].files[`${file.name}|${file.size}`];
+        return fileUploads[guid].files[fileId];
     }
 
     static async addFilesToUploadAsync($fileUploadDropContainer, files) {
@@ -73,10 +86,17 @@ export class FileUploadUtils {
 
         await DotNet.invokeMethodAsync("CommonLib.Web", "AddFilesToUploadAsync", sessionStorage.getItem("SessionId"), guid, filesData);
     }
+
+    static async getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize) {
+        const fileUploads = this._previewDataCache;
+        const fileId = this.createFileId(name, extension, totalSize);
+        const file = fileUploads[guid].files[fileId].file;
+        return [...new Uint8Array(await file.slice(position, Math.min(position + chunkSize, totalSize)).arrayBuffer())];
+    }
 }
 
-export async function blazor_FileeUpload_AfterRenderAsync() {
-    return await FileUploadUtils.TestAsync();
+export async function blazor_FileUpload_GetFileChunk(guid, name, extension, totalSize, position, chunkSize) {
+    return await FileUploadUtils.getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize);
 }
 
 $(document).ready(function () {

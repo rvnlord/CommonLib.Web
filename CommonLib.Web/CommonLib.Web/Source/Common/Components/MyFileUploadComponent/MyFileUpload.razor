@@ -42,7 +42,7 @@
         <div class="my-fileupload-progressbars-container">
             @foreach (var file in Value)
             {
-                var fileCssClass = GetFileCssClass(file);
+                var fileCssClass = FileDataToCssClass(file);
                 <div class="my-fileupload-progressbar-checkbox-container">
                     <MyCheckBox For="@(() => file.IsSelected)" DisplayLabel="false" class="@fileCssClass"></MyCheckBox>
                 </div>

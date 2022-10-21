@@ -421,6 +421,36 @@ Object.defineProperty(String.prototype, "toBool", {
     configurable: true
 });
 
+Object.defineProperty(String.prototype, "pathToExtension", {
+    value: function () {
+        const path = this;
+        const nameWithExtension = path.pathToNameWithExtension();
+        return nameWithExtension.slice((nameWithExtension.lastIndexOf(".") - 1 >>> 0) + 2);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "pathToName", {
+    value: function () {
+        const path = this;
+        const nameWithExtension = path.pathToNameWithExtension();
+        const extIndex = nameWithExtension.lastIndexOf(nameWithExtension.pathToExtension());
+        return extIndex === nameWithExtension.length ? nameWithExtension : nameWithExtension.substring(0, extIndex - 1);
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "pathToNameWithExtension", {
+    value: function () {
+        const path = this;
+        return path.split("\\").pop().split("/").pop();
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region ArrayExtensions
