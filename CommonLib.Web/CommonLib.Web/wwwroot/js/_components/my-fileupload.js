@@ -5,7 +5,11 @@ import utils from "../utils.js";
 import "../converters/base58converter.js";
 
 export class FileUploadUtils {
-    static _previewDataCache = {};
+    static _fileUploadsCache = {};
+
+    static cacheFileUploadDotNetRef(guid, dotNetRefFileUpload) {
+        this._fileUploadsCache.addIfNotExists(guid, {})[guid].dotNetRef = dotNetRefFileUpload;
+    }
 
     static getFileIdFromFile(file) {
         return `${file.name.pathToName()}|${file.name.pathToExtension()}|${file.size}`;
@@ -17,24 +21,20 @@ export class FileUploadUtils {
 
     static cachePreviewDataForFile(guid, file, fileAsDataUrl) {
         const fileId = this.getFileIdFromFile(file);
-        const fileUploads = this._previewDataCache;
-        if (!fileUploads[guid]) { fileUploads[guid] = { guid: guid }; }
-        if (!fileUploads[guid].files) { fileUploads[guid].files = {}; }
-        if (!fileUploads[guid].files[fileId]) { fileUploads[guid].files[`${file.name}|${file.size}`] = {}; }
+        const fileUploads = this._fileUploadsCache;
+        fileUploads.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).addIfNotExistsAndGet(fileId, {});
 
         fileUploads[guid].files[fileId].thumbnail = fileAsDataUrl;
-        fileUploads[guid].files[fileId].name = file.name.split(".").first();
-        fileUploads[guid].files[fileId].extension = file.name.contains(".") ? file.name.split(".").last() : "";
+        fileUploads[guid].files[fileId].name = file.name.pathToName();
+        fileUploads[guid].files[fileId].extension = file.name.pathToExtension();
         fileUploads[guid].files[fileId].size = file.size;
         fileUploads[guid].files[fileId].file = file;
     }
 
     static getCachedPreviewDataForFile(guid, file) {
         const fileId = this.getFileIdFromFile(file);
-        const fileUploads = this._previewDataCache;
-        if (!fileUploads[guid]) { fileUploads[guid] = { guid: guid }; }
-        if (!fileUploads[guid].files) { fileUploads[guid].files = {}; }
-        if (!fileUploads[guid].files[fileId]) { fileUploads[guid].files[fileId] = {}; }
+        const fileUploads = this._fileUploadsCache;
+        fileUploads.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).addIfNotExistsAndGet(fileId, {});
 
         return fileUploads[guid].files[fileId];
     }
@@ -48,8 +48,7 @@ export class FileUploadUtils {
         for (let i = files.length - 1; i >= 0; i--) { // reversed iteration due to removing files
             const file = files[i];
             const previewDataForFile = this.getCachedPreviewDataForFile(guid, file);
-            const cachedFileNameWithExtension = (previewDataForFile.name || "").toLowerCase() + (previewDataForFile.extension ? "." : "") + (previewDataForFile.extension || "").toLowerCase();
-            if (previewDataForFile && cachedFileNameWithExtension === file.name.toLowerCase() && previewDataForFile.size === file.size) {
+            if (previewDataForFile && previewDataForFile.name === file.name.pathToName() && previewDataForFile.extension === file.name.pathToExtension() && previewDataForFile.size === file.size) {
                 files.remove(file);
             }
         }
@@ -79,16 +78,16 @@ export class FileUploadUtils {
         }
 
         const filesData = files.map(f => ({ 
-            Name: f.name.split(".").first(), 
-            Extension: f.name.contains(".") ? f.name.split(".").last() : "", 
+            Name: f.name.pathToName(), 
+            Extension: f.name.pathToExtension(), 
             TotalSizeInBytes: f.size 
         }));
 
-        await DotNet.invokeMethodAsync("CommonLib.Web", "AddFilesToUploadAsync", sessionStorage.getItem("SessionId"), guid, filesData);
+        await this._fileUploadsCache[guid].dotNetRef.invokeMethodAsync("AddFilesToUploadAsync", filesData);
     }
 
     static async getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize) {
-        const fileUploads = this._previewDataCache;
+        const fileUploads = this._fileUploadsCache;
         const fileId = this.createFileId(name, extension, totalSize);
         const file = fileUploads[guid].files[fileId].file;
         return [...new Uint8Array(await file.slice(position, Math.min(position + chunkSize, totalSize)).arrayBuffer())];
@@ -97,6 +96,10 @@ export class FileUploadUtils {
 
 export async function blazor_FileUpload_GetFileChunk(guid, name, extension, totalSize, position, chunkSize) {
     return await FileUploadUtils.getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize);
+}
+
+export async function blazor_FileUpload_AfterFirstRender(guid, dotNetRefFileUpload) {
+    FileUploadUtils.cacheFileUploadDotNetRef(guid, dotNetRefFileUpload);
 }
 
 $(document).ready(function () {
@@ -123,7 +126,7 @@ $(document).ready(function () {
     });
 
     $(document).on("drop", ".my-fileupload-drop-container:not([disabled])", async function (e) {
-        let files = Array.from(e.originalEvent.dataTransfer.files); // FileRTeader appears to beee changing 'e' data
+        const files = Array.from(e.originalEvent.dataTransfer.files); // FileRTeader appears to beee changing 'e' data
         const $fileUploadDropContainer = $(e.currentTarget);
         $fileUploadDropContainer.removeCss("border");
 
@@ -137,7 +140,7 @@ $(document).ready(function () {
     });
 
     $(document).on("change", "input[type='file'].my-fileupload-hidden-file-input", async function (e) {
-        let files = Array.from($(e.currentTarget)[0].files);
+        const files = Array.from($(e.currentTarget)[0].files);
         const $fileUploadDropContainer = $(e.currentTarget).closest(".my-fileupload-drop-container:not([disabled])");
         await FileUploadUtils.addFilesToUploadAsync($fileUploadDropContainer, files);
     });

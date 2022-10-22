@@ -91,6 +91,26 @@ Object.defineProperty(Object.prototype, "mapTo", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "addIfNotExists", {
+    value: function (key, value) {
+        const dict = this;
+        if (!dict[key])
+            dict[key] = value;
+        return dict;
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Object.prototype, "addIfNotExistsAndGet", {
+    value: function (key, value) {
+        const dict = this;
+        return dict.addIfNotExists(key, value)[key];
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region NumberExtensions

@@ -39,8 +39,8 @@ namespace CommonLib.Web.Source.Common.Pages.Shared
             await Task.CompletedTask;
         }
         
-        [JSInvokable]
-        public static async Task UseNavLinkByGuidAsync(Guid sessionId, Guid navLinkGuid) => (await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyNavLinkBase>(navLinkGuid)).NavLink_Click();
+        //[JSInvokable]
+        //public static async Task UseNavLinkByGuidAsync(Guid sessionId, Guid navLinkGuid) => (await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyNavLinkBase>(navLinkGuid)).NavLink_Click(); // used directly to avoid storing data in Singleton service and wasting server memory
 
         public event MyAsyncEventHandler<MyComponentBase, LayoutSessionIdSetEventArgs> LayoutSessionIdSet;
         private async Task OnLayoutSessionIdSettingAsync(LayoutSessionIdSetEventArgs e) => await LayoutSessionIdSet.InvokeAsync(this, e);

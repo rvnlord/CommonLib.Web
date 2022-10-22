@@ -235,8 +235,8 @@ namespace CommonLib.Web.Source.Common.Components
         [Inject]
         public ISessionStorageService SessionStorage { get; set; }
 
-        [Inject]
-        public ISessionCacheService SessionCache { get; set; }
+        //[Inject]
+        //public ISessionCacheService SessionCache { get; set; }
 
         [Inject]
         public IHttpContextAccessor HttpContextAccessor { get; set; }
@@ -358,7 +358,7 @@ namespace CommonLib.Web.Source.Common.Components
                     if (_isCommonLayout)
                     {
                         await SetSessionIdAsync();
-                        SessionCache.AddIfNotExistAndGet(SessionId, new SessionCacheData()).CurrentLayout = (MyLayoutComponentBase)this;
+                        //SessionCache.AddIfNotExistsAndGet(SessionId, new SessionCacheData()).CurrentLayout = (MyLayoutComponentBase)this;
                         await PromptModuleAsync; // this makes prompt js available within any component
                         var prompts = await ComponentsByTypeAsync<MyPromptBase>();
                         foreach (var prompt in prompts)
@@ -1007,7 +1007,7 @@ namespace CommonLib.Web.Source.Common.Components
 
                 if (_isCommonLayout && SessionId != Guid.Empty)
                 {
-                    SessionCache[SessionId].CurrentLayout = null;
+                    //SessionCache[SessionId].CurrentLayout = null;
                     //if (_syncComponentsCache.CurrentCount == 0)
                     //    await _syncComponentsCache.ReleaseAsync();
                     //_syncComponentsCache.Dispose();

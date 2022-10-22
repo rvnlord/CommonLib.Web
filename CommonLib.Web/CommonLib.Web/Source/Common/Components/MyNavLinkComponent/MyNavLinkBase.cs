@@ -112,9 +112,10 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         
         protected override async Task OnAfterFirstRenderAsync() // this is executed before outer component after render but the outer component won't wait until this is finished unless forced
         {
-            await Task.CompletedTask;
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
         }
         
+        [JSInvokable]
         public void NavLink_Click()
         {
             NavigationManager.NavigateTo(_absoluteVirtualLink);

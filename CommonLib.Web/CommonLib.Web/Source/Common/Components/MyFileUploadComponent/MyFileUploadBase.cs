@@ -32,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         [Parameter]
         public BlazorParameter<FileSize?> ChunkSize { get; set; }
 
-        public List<FileData> Files { get; set; }
+        public List<FileData> Files { get => Value; set => Value = value; }
 
         protected override async Task OnParametersSetAsync()
         {
@@ -44,7 +44,6 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             Model ??= CascadedEditContext?.ParameterValue?.Model;
-            Files = Value;
 
             string displayName = null;
             if (For != null && Model != null)
@@ -85,42 +84,17 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            var path1 = "IMG-342435.png";
-            var name1 = path1.PathToName();
-            var ext1 = path1.PathToExtension();
-
-            var path2 = "/home/user/test.t";
-            var name2 = path2.PathToName();
-            var ext2 = path2.PathToExtension();
-
-            var path3 = "C:\\Users\\Desktop\\My Awesomee Things\\test.t";
-            var name3 = path3.PathToName();
-            var ext3 = path3.PathToExtension();
-
-            var path4 = "C:\\Users\\Desktop\\My Awesomee Things\\test";
-            var name4 = path4.PathToName();
-            var ext4 = path4.PathToExtension();
-
-            var path5 = "C:\\Users\\Desktop\\My Awesomee Things\\.htacceess";
-            var name5 = path5.PathToName();
-            var ext5 = path5.PathToExtension();
-
-            var path6 = "";
-            var name6 = path6.PathToName();
-            var ext6 = path6.PathToExtension();
-
-            await ModuleAsync;
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
         }
 
         [JSInvokable]
-        public static async Task AddFilesToUploadAsync(Guid sessionId, Guid guid, List<FileData> filesData)
+        public async Task AddFilesToUploadAsync(List<FileData> filesData)
         {
-            var fileUpload = await WebUtils.GetService<ISessionCacheService>()[sessionId].CurrentLayout.ComponentByGuidAsync<MyFileUploadBase>(guid);
-            fileUpload.Value.AddRange(filesData);
-            await fileUpload.StateHasChangedAsync(true);
+            Files.AddRange(filesData);
+            await StateHasChangedAsync(true);
         }
 
-        protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
             if (e.Button != 0)
                 return;
