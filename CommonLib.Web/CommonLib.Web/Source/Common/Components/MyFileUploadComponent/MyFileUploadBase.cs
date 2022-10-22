@@ -7,13 +7,13 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Source.Models.Interfaces;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Extensions;
-using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
-using CommonLib.Web.Source.Services.Interfaces;
+using CommonLib.Web.Source.Services.Upload.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -26,13 +26,22 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
 
+        public List<FileData> Files { get => Value; set => Value = value; }
+
         [Parameter]
         public BlazorParameter<Func<ExtendedImage>> PreviewFor { get; set; }
 
         [Parameter]
         public BlazorParameter<FileSize?> ChunkSize { get; set; }
+        
+        [Parameter]
+        public BlazorParameter<string> SaveUrl { get; set; }
 
-        public List<FileData> Files { get => Value; set => Value = value; }
+        [Parameter]
+        public BlazorParameter<PredefinedSaveUrlKind?> PredefinedSaveUrl { get; set; }
+
+        [Inject]
+        public IUploadClient UploadClient { get; set; }
 
         protected override async Task OnParametersSetAsync()
         {
@@ -77,6 +86,12 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             if (ChunkSize.HasChanged())
                 ChunkSize.ParameterValue ??= new FileSize(32, FileSizeSuffix.KB);
+
+            if (PredefinedSaveUrl.HasChanged() || SaveUrl.HasChanged())
+            {
+                if (PredefinedSaveUrl.HasValue() && SaveUrl.HasValue() || !PredefinedSaveUrl.HasValue() && !SaveUrl.HasValue())
+                    throw new ArgumentException("Upload controller should be either predefined or have a defined upload url but not both");
+            }
             
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
             await Task.CompletedTask;
@@ -100,10 +115,12 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 return;
 
             var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
-            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b != sender && b.Classes.Contains(fileCssClass)).ToArray();
+            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b.Classes.Contains(fileCssClass)).ToArray();
             await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
 
             await UploadFileAsync(CssClassToFileData(fileCssClass));
+
+            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
         }
 
         protected Task BtnClear_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
@@ -122,12 +139,27 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         private async Task UploadFileAsync(FileData fd)
         {
+            fd.Status = UploadStatus.Uploading;
             while (!fd.Status.In(UploadStatus.Paused, UploadStatus.Finished, UploadStatus.Failed))
             {
                 var chunk = await (await ModuleAsync).InvokeAndCatchCancellationAsync<List<byte>>("blazor_FileUpload_GetFileChunk", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, fd.Position, ChunkSize.V?.SizeInBytes);
-                // use chosen server method to upload chunk
-                var t = 0;
+                fd.Data = chunk;
+                IApiResponse uploadChunkResponse = null;
+                if (PredefinedSaveUrl.V == PredefinedSaveUrlKind.SaveFileInUserFolder)
+                    uploadChunkResponse = await UploadClient.UploadChunkToUserFolderAsync(fd);
+                if (uploadChunkResponse is null)
+                    throw new ArgumentException("Upload method wasn't provided");
+
+                fd.Position += Math.Min(fd.ChunkSize.SizeInBytes, fd.TotalSizeInBytes.ToLong() - 1);
+                if (fd.Position >= fd.TotalSizeInBytes)
+                    fd.Status = UploadStatus.Finished;
+                await StateHasChangedAsync(true);
             }
         }
+    }
+
+    public enum PredefinedSaveUrlKind
+    {
+        SaveFileInUserFolder
     }
 }

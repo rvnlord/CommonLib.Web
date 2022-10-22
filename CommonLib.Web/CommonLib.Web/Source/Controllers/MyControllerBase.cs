@@ -33,5 +33,17 @@ namespace CommonLib.Web.Source.Controllers
                 return (new ApiResponse(StatusCodeType.Status500InternalServerError, "Server Logic threw an Exception - check API code for issues", null, null, ex)).ToJToken();
             }
         }
+
+        protected async Task<JToken> EnsureVoidResponseAsync(Func<Task<IApiResponse>> actionAsync)
+        {
+            try
+            {
+                return (ModelState.IsValid ? await actionAsync() : _defaultInvalidResponse).ToJToken();
+            }
+            catch (Exception ex)
+            {
+                return (new ApiResponse(StatusCodeType.Status500InternalServerError, "Server Logic threw an Exception - check API code for issues", null, null, ex)).ToJToken();
+            }
+        }
     }
 }

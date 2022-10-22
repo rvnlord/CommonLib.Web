@@ -134,7 +134,9 @@
                     <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyFileUpload For="@(() => _employee.Files)" PreviewFor="@(new BlazorParameter<Func<ExtendedImage>>(() => _employee.Avatar))" />
+                    <MyFileUpload For="@(() => _employee.Files)" 
+                        PreviewFor="@(new BlazorParameter<Func<ExtendedImage>>(() => _employee.Avatar))" 
+                        PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight"  />

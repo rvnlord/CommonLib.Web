@@ -543,6 +543,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
         {
+            authUser = (await GetAuthenticatedUserAsync(null, null, authUser))?.Result;
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
             if (!(await new EditUserVMValidator(this).ValidateAsync(userToEdit)).IsValid)

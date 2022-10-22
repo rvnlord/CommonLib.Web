@@ -1,4 +1,5 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
+@using CommonLib.Source.Common.Extensions
 @inherits CommonLib.Web.Source.Common.Components.MyProgressBarComponent.MyProgressBarBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
@@ -6,7 +7,7 @@
     <div id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="progress" style="width: @Value%"></div>
         <div class="progress-description">@Description.V</div>
-        <div class="progress-value">@Value%</div>
+        <div class="progress-value">@(Value?.Round())%</div>
     </div>
 
 </CascadingValue>
