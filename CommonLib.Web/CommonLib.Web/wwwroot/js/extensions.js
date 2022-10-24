@@ -111,6 +111,16 @@ Object.defineProperty(Object.prototype, "addIfNotExistsAndGet", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "remove", {
+    value: function (key) {
+        const dict = this;
+        delete dict[key];
+        return dict;
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region NumberExtensions
@@ -853,6 +863,35 @@ FileReader.prototype.readAsByteArrayAsync = function readAsByteArrayAsync(file) 
 };
 
 // #endregion
+
+// #region BlobExtensions
+
+Blob.prototype.toArrayAsync = async function toArrayAsync() {
+    return await new Promise(async (resolve, reject) => { 
+        try {
+            const blob = this;
+            return resolve([...new Uint8Array(await blob.arrayBuffer())]);
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+Blob.prototype.sliceToArrayAsync = async function sliceToArrayAsync(start, end) {
+    return await new Promise(async (resolve, reject) => { 
+        try {
+            const blob = this;
+            const slicedBlob = blob.slice(start, end);
+            return resolve(await slicedBlob.toArrayAsync());
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+// #endregion
+
+
 
 // #region JQueryExtensions
 

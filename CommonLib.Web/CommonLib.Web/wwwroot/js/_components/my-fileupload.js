@@ -90,12 +90,22 @@ export class FileUploadUtils {
         const fileUploads = this._fileUploadsCache;
         const fileId = this.createFileId(name, extension, totalSize);
         const file = fileUploads[guid].files[fileId].file;
-        return [...new Uint8Array(await file.slice(position, Math.min(position + chunkSize, totalSize)).arrayBuffer())];
+        const chunk = await file.sliceToArrayAsync(position, Math.min(position + chunkSize, totalSize));
+        return chunk;
+    }
+
+    static removeCachedFileUpload(guid, name, extension, totalSize) {
+        const fileId = this.createFileId(name, extension, totalSize);
+        this._fileUploadsCache[guid].files.remove(fileId);
     }
 }
 
 export async function blazor_FileUpload_GetFileChunk(guid, name, extension, totalSize, position, chunkSize) {
     return await FileUploadUtils.getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize);
+}
+
+export async function blazor_FileUpload_RemoveCachedFileUpload(guid, name, extension, totalSize) {
+    return FileUploadUtils.removeCachedFileUpload(guid, name, extension, totalSize);
 }
 
 export async function blazor_FileUpload_AfterFirstRender(guid, dotNetRefFileUpload) {

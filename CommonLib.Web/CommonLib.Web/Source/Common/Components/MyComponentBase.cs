@@ -989,7 +989,19 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload && !c.Ancestors.Any(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrNull() is not null)).ToArray();
-        
+
+        protected async Task CatchAllExceptionsAsync(Func<Task> action)
+        {
+            try
+            {
+                await action();
+            }
+            catch (Exception ex)
+            {
+                await PromptMessageAsync(NotificationType.Error, ex.Message);
+            }
+        }
+
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)

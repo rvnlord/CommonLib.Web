@@ -58,13 +58,13 @@
                 else if (file.Status == UploadStatus.Uploading)
                 {
                     <div class="my-fileupload-btn-pause-container">
-                        <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" IconPlacement="ButtonIconPlacement.Right" />
+                        <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnPause_ClickAsync" class="@($"my-btn-pause-file {fileCssClass}")" />
                     </div>
                 }
                 else if (file.Status == UploadStatus.Paused)
                 {
                     <div class="my-fileupload-btn-resume-container">
-                        <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" IconPlacement="ButtonIconPlacement.Right" />
+                        <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnResume_ClickAsync" class="@($"my-btn-resume-file {fileCssClass}")" />
                     </div>
                 }
                 else if (file.Status == UploadStatus.Failed)

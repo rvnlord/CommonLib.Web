@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
+using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models.Interfaces;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
@@ -85,7 +89,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             if (ChunkSize.HasChanged())
-                ChunkSize.ParameterValue ??= new FileSize(32, FileSizeSuffix.KB);
+                ChunkSize.ParameterValue ??= new FileSize(10, FileSizeSuffix.MB);
 
             if (PredefinedSaveUrl.HasChanged() || SaveUrl.HasChanged())
             {
@@ -111,6 +115,33 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
+            await CatchAllExceptionsAsync(async () =>
+            {
+                if (e.Button != 0)
+                    return;
+
+                var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
+                var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b.Classes.Contains(fileCssClass)).ToArray();
+                await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
+
+                await UploadFileAsync(CssClassToFileData(fileCssClass));
+
+                await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
+            });
+        }
+
+        protected async Task BtnPause_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            if (e.Button != 0)
+                return;
+
+            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
+            CssClassToFileData(fileCssClass).Status = UploadStatus.Paused;
+            await SetControlStatesAsync(ComponentStateKind.Loading, new [] { sender });
+        }
+
+        protected async Task BtnResume_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
+        {
             if (e.Button != 0)
                 return;
 
@@ -123,9 +154,16 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
         }
 
-        protected Task BtnClear_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        protected async Task BtnClear_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            throw new NotImplementedException();
+            if (e.Button != 0)
+                return;
+
+            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
+            var fd = CssClassToFileData(fileCssClass);
+            Files.Remove(fd);
+            await SetControlStatesAsync(ComponentStateKind.Loading, new [] { sender });
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUpload", token, _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes);
         }
 
         protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";
@@ -140,19 +178,47 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         private async Task UploadFileAsync(FileData fd)
         {
             fd.Status = UploadStatus.Uploading;
+            var jsChunkSize = new FileSize(512, FileSizeSuffix.KB);
+            var jsChunkPosition = fd.Position;
             while (!fd.Status.In(UploadStatus.Paused, UploadStatus.Finished, UploadStatus.Failed))
             {
-                var chunk = await (await ModuleAsync).InvokeAndCatchCancellationAsync<List<byte>>("blazor_FileUpload_GetFileChunk", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, fd.Position, ChunkSize.V?.SizeInBytes);
-                fd.Data = chunk;
-                IApiResponse uploadChunkResponse = null;
-                if (PredefinedSaveUrl.V == PredefinedSaveUrlKind.SaveFileInUserFolder)
-                    uploadChunkResponse = await UploadClient.UploadChunkToUserFolderAsync(fd);
-                if (uploadChunkResponse is null)
-                    throw new ArgumentException("Upload method wasn't provided");
+                var chunk = await (await ModuleAsync).InvokeAndCatchCancellationAsync<List<byte>>("blazor_FileUpload_GetFileChunk", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, jsChunkPosition, jsChunkSize.SizeInBytes);
+                if (chunk is null || chunk.Count == 0)
+                    throw new ArgumentException("File chunk seems to be empty");
+                fd.Data.AddRange(chunk);
+                jsChunkPosition += chunk.Count;
 
-                fd.Position += Math.Min(fd.ChunkSize.SizeInBytes, fd.TotalSizeInBytes.ToLong() - 1);
-                if (fd.Position >= fd.TotalSizeInBytes)
-                    fd.Status = UploadStatus.Finished;
+                if (fd.ChunkSize.SizeInBytes >= ChunkSize.V?.SizeInBytes || fd.Position + fd.ChunkSize.SizeInBytes >= fd.TotalSizeInBytes)
+                {
+                    if (fd.Position + fd.ChunkSize.SizeInBytes > fd.TotalSizeInBytes)
+                        throw new ArgumentException("Chunk exceeeds filee, it shouldn't happen");
+                    
+                    IApiResponse uploadChunkResponse = null;
+                    if (PredefinedSaveUrl.V == PredefinedSaveUrlKind.SaveFileInUserFolder)
+                        uploadChunkResponse = await UploadClient.UploadChunkToUserFolderAsync(fd);
+                    if (uploadChunkResponse is null)
+                        throw new ArgumentException("Upload method wasn't provided");
+
+                    if (uploadChunkResponse.IsError)
+                    {
+                        await PromptMessageAsync(NotificationType.Error, "File upload has failed");
+                        fd.Status = UploadStatus.Failed;
+                    }
+                    else
+                    {
+                        fd.Position += fd.ChunkSize.SizeInBytes;
+                        if (fd.Position >= fd.TotalSizeInBytes)
+                            fd.Status = UploadStatus.Finished;
+                        fd.Data.Clear();
+                        await StateHasChangedAsync(true); 
+                    }
+                }
+                
+            }
+
+            if (fd.Status.In(UploadStatus.Paused, UploadStatus.Failed))
+            {
+                fd.Data.Clear();
                 await StateHasChangedAsync(true);
             }
         }

@@ -35,8 +35,7 @@ export async function blazor_DdlOption_ClickAsync(e, index, ddlGuid) {
 }
 
 $(document).ready(function() {
-
-    $(document).on("mousedown", ".my-input-group", e => {
+    $(document).on("mousedown", ".my-input-group.my-dropdown-input-group", e => {
         const $ddl = $(e.currentTarget).children(".my-dropdown:not(.disabled)").first();
         if (!$ddl || e.which !== 1) {
             return;
