@@ -14,7 +14,7 @@
         <CascadingValue Value="_bpBtn">
             @if (State.ParameterValue == ButtonState.Enabled)
             {
-                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
+                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
                         <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
@@ -32,7 +32,7 @@
             }
             else if (State.ParameterValue == ButtonState.Disabled)
             {
-                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
                         <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
@@ -50,7 +50,7 @@
             }
             else if (State.ParameterValue == ButtonState.Loading)
             {
-                <button class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
                         <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>

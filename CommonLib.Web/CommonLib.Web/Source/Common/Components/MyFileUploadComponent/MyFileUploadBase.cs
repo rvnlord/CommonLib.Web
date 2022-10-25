@@ -19,6 +19,7 @@ using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Truncon.Collections;
@@ -30,7 +31,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
 
-        public List<FileData> Files { get => Value; set => Value = value; }
+        public IReadOnlyList<FileData> Files => Value.ToList();
 
         [Parameter]
         public BlazorParameter<Func<ExtendedImage>> PreviewFor { get; set; }
@@ -89,7 +90,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             if (ChunkSize.HasChanged())
-                ChunkSize.ParameterValue ??= new FileSize(10, FileSizeSuffix.MB);
+                ChunkSize.ParameterValue ??= new FileSize(2, FileSizeSuffix.MB);
 
             if (PredefinedSaveUrl.HasChanged() || SaveUrl.HasChanged())
             {
@@ -109,22 +110,18 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         [JSInvokable]
         public async Task AddFilesToUploadAsync(List<FileData> filesData)
         {
-            Files.AddRange(filesData);
+            Value.AddRange(filesData);
             await StateHasChangedAsync(true);
         }
-
+        
         protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
             await CatchAllExceptionsAsync(async () =>
             {
-                if (e.Button != 0)
-                    return;
-
-                var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
-                var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b.Classes.Contains(fileCssClass)).ToArray();
+                var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => (b.Model?.V as FileData)?.Equals((FileData) sender.Model.V) == true).ToArray();
                 await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
 
-                await UploadFileAsync(CssClassToFileData(fileCssClass));
+                await UploadFileAsync((FileData) sender.Model.V);
 
                 await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
             });
@@ -132,53 +129,57 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         protected async Task BtnPause_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            if (e.Button != 0)
-                return;
-
-            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
-            CssClassToFileData(fileCssClass).Status = UploadStatus.Paused;
+            ((FileData) sender.Model.V).Status = UploadStatus.Paused;
             await SetControlStatesAsync(ComponentStateKind.Loading, new [] { sender });
         }
 
         protected async Task BtnResume_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
-            if (e.Button != 0)
-                return;
-
-            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
-            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => b.Classes.Contains(fileCssClass)).ToArray();
+            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => (b.Model?.V as FileData)?.Equals((FileData) sender.Model.V) == true).ToArray();
             await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
 
-            await UploadFileAsync(CssClassToFileData(fileCssClass));
+            await UploadFileAsync((FileData) sender.Model.V);
+
+            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
+        }
+
+        protected async Task BtnRetry_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
+        {
+            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => (b.Model?.V as FileData)?.Equals((FileData) sender.Model.V) == true).ToArray();
+            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
+
+            await UploadFileAsync((FileData) sender.Model.V);
 
             await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);
         }
 
         protected async Task BtnClear_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            if (e.Button != 0)
-                return;
+            var fd = (FileData) sender.Model.V;
+            var btnsToDisable = sender.Siblings.OfType<MyButtonBase>().Where(b => (b.Model?.V as FileData)?.Equals(fd) == true).ToArray();
+            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsToDisable, sender);
 
-            var fileCssClass = sender.Classes.Single(c => c.StartsWith("my-file"));
-            var fd = CssClassToFileData(fileCssClass);
-            Files.Remove(fd);
-            await SetControlStatesAsync(ComponentStateKind.Loading, new [] { sender });
+            Value.Remove(fd);
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+
+            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsToDisable);  // for some reason blazor is filling the same button with new parameters instead of creating a new one
+            
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUpload", token, _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes);
         }
 
-        protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";
+        //protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";
 
-        protected FileData CssClassToFileData(string cssClass)
-        {
-            var (name, extension, strSizeInBytes) = cssClass.AfterFirst("my-file-").Base58ToUTF8().Split("|").ToTupleOf3();
-            var sizeInBytes = strSizeInBytes.ToLong();
-            return Files.Single(f => f.Name.EqualsInvariant(name) && f.Extension.EqualsInvariant(extension) && f.TotalSize.SizeInBytes == sizeInBytes);
-        }
+        //protected FileData CssClassToFileData(string cssClass)
+        //{
+        //    var (name, extension, strSizeInBytes) = cssClass.AfterFirst("my-file-").Base58ToUTF8().Split("|").ToTupleOf3();
+        //    var sizeInBytes = strSizeInBytes.ToLong();
+        //    return Value.Single(f => f.Name.EqualsInvariant(name) && f.Extension.EqualsInvariant(extension) && f.TotalSize.SizeInBytes == sizeInBytes);
+        //}
 
         private async Task UploadFileAsync(FileData fd)
         {
             fd.Status = UploadStatus.Uploading;
-            var jsChunkSize = new FileSize(512, FileSizeSuffix.KB);
+            var jsChunkSize = new FileSize(256, FileSizeSuffix.KB);
             var jsChunkPosition = fd.Position;
             while (!fd.Status.In(UploadStatus.Paused, UploadStatus.Finished, UploadStatus.Failed))
             {

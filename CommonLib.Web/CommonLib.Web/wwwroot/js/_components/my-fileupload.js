@@ -136,7 +136,7 @@ $(document).ready(function () {
     });
 
     $(document).on("drop", ".my-fileupload-drop-container:not([disabled])", async function (e) {
-        const files = Array.from(e.originalEvent.dataTransfer.files); // FileRTeader appears to beee changing 'e' data
+        const files = Array.from(e.originalEvent.dataTransfer.files).filter(f => f.type); // FileReader appears to be changing 'e' data
         const $fileUploadDropContainer = $(e.currentTarget);
         $fileUploadDropContainer.removeCss("border");
 

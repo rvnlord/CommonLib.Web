@@ -83,6 +83,10 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
+            
+            //if (AdditionalAttributesHaveChanged) // if class changes but it is not first render then component wouldn't pick up that class by itself (i.e.: in FileUpload 'fileCssClass')
+            //    AddAttributes(AdditionalAttributes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString()));
+            // not like this, class and style shouldn't be changed in attrs and changing class would override classes set on other Params changee
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
             
@@ -152,8 +156,11 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             await Task.CompletedTask;
         }
 
-        protected async void Button_ClickAsync(MouseEventArgs e)
+        protected async Task Button_ClickAsync(MouseEventArgs e)
         {
+            if (e.Button != 0 || e.Detail > 1)
+                return;
+
             await OnClick.InvokeAsync(e).ConfigureAwait(false);
             await Click.InvokeAsync(this, e).ConfigureAwait(false);
         }

@@ -76,6 +76,7 @@ namespace CommonLib.Web.Source.Common.Components
         private MyPromptBase _prompt;
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
+        protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
 
         protected Guid _guid { get; set; }
         protected string _id { get; set; }
@@ -200,9 +201,11 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public List<MyComponentBase> Siblings => Parent.Children;
+        public List<MyComponentBase> Siblings => Parent.Children.Except(this).ToList();
 
         public AuthenticateUserVM AuthenticatedUser { get; set; }
+
+        public bool AdditionalAttributesHaveChanged { get; private set; }
 
         [Inject]
         public HttpClient HttpClient { get; set; }
@@ -333,7 +336,10 @@ namespace CommonLib.Web.Source.Common.Components
 
                 await OnFirstParametersSetAsync();
             }
-                
+
+            AdditionalAttributesHaveChanged = !AdditionalAttributes.Keys.CollectionEqual(_prevAdditionalAttributes.Keys) || !AdditionalAttributes.Values.CollectionEqual(_prevAdditionalAttributes.Values);
+            _prevAdditionalAttributes = AdditionalAttributes.ToOrderedDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+
             OnParametersSet();
             await OnParametersSetAsync();
             _firstParamSetup = false;

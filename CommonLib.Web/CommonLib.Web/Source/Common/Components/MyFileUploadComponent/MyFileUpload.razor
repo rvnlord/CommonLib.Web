@@ -4,10 +4,11 @@
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Extensions.Collections
 @using System.Threading
+@using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 @inherits CommonLib.Web.Source.Common.Components.MyFileUploadComponent.MyFileUploadBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
-    
+
     <div id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="my-fileupload-thumbnail-container" style="@_thumbnailContainerRenderStyle">
             @if (_thumbnailContainerStyle.VorN("background-image") is null)
@@ -39,50 +40,52 @@
                 <MyButton Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
             </div>
         </div>
-        <div class="my-fileupload-progressbars-container">
-            @foreach (var file in Files)
-            {
-                var fileCssClass = FileDataToCssClass(file);
-                <div class="my-fileupload-progressbar-checkbox-container">
-                    <MyCheckBox For="@(() => file.IsSelected)" DisplayLabel="false" class="@fileCssClass"></MyCheckBox>
-                </div>
-                <div class="my-fileupload-progressbar-container">
-                    <MyProgressBar For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" />
-                </div>
-                @if (file.Status == UploadStatus.NotStarted)
+        @if (Value?.Any() == true)
+        {
+            <div class="my-fileupload-progressbars-container">
+                @foreach (var file in Value) @* use `@key=file` to make sure rendering knows which list element is which (it prevents restoring parameters to wrong components, i.e.: disabling `x` button in element `n` and then removing element `n` would make old element `n + 1` (now `n`) disabled after render) - ref: https://blazor-university.com/components/render-trees/optimising-using-key/ *@
                 {
-                    <div class="my-fileupload-btn-upload-container">
-                        <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnUpload_ClickAsync" class="@($"my-btn-upload-file {fileCssClass}")" />
+                    <div class="my-fileupload-progressbar-checkbox-container">
+                        <MyCheckBox For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>
+                    </div>
+                    <div class="my-fileupload-progressbar-container">
+                        <MyProgressBar For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" @key=file />
+                    </div>
+                    @if (file.Status == UploadStatus.NotStarted)
+                    {
+                        <div class="my-fileupload-btn-upload-container">
+                            <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnUpload_ClickAsync" class="my-btn-upload-file" Model="@file" @key=file />
+                        </div>
+                    }
+                    else if (file.Status == UploadStatus.Uploading)
+                    {
+                        <div class="my-fileupload-btn-pause-container">
+                            <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnPause_ClickAsync" class="my-btn-pause-file" Model="@file" @key=file />
+                        </div>
+                    }
+                    else if (file.Status == UploadStatus.Paused)
+                    {
+                        <div class="my-fileupload-btn-resume-container">
+                            <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnResume_ClickAsync" class="my-btn-resume-file" Model="@file" @key=file />
+                        </div>
+                    }
+                    else if (file.Status == UploadStatus.Failed)
+                    {
+                        <div class="my-fileupload-btn-retry-container">
+                            <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnRetry_ClickAsync" class="my-btn-retry-file" Model="@file" @key=file />
+                        </div>
+                    }
+                    else if (file.Status == UploadStatus.Finished)
+                    {
+                        <div class="my-fileupload-empty-container">
+                        </div>
+                    }
+                    <div class="my-fileupload-btn-clear-container">
+                        <MyButton Icon="IconType.From(LightIconType.XmarkLarge)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnClear_ClickAsync" class="my-btn-remove-file" Model="@file" @key=file />
                     </div>
                 }
-                else if (file.Status == UploadStatus.Uploading)
-                {
-                    <div class="my-fileupload-btn-pause-container">
-                        <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnPause_ClickAsync" class="@($"my-btn-pause-file {fileCssClass}")" />
-                    </div>
-                }
-                else if (file.Status == UploadStatus.Paused)
-                {
-                    <div class="my-fileupload-btn-resume-container">
-                        <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnResume_ClickAsync" class="@($"my-btn-resume-file {fileCssClass}")" />
-                    </div>
-                }
-                else if (file.Status == UploadStatus.Failed)
-                {
-                    <div class="my-fileupload-btn-retry-container">
-                        <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" IconPlacement="ButtonIconPlacement.Right" />
-                    </div>
-                }
-                else if (file.Status == UploadStatus.Finished)
-                {
-                    <div class="my-fileupload-empty-container">
-                    </div>
-                }
-                <div class="my-fileupload-btn-clear-container">
-                    <MyButton Icon="IconType.From(LightIconType.XmarkLarge)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnClear_ClickAsync" class="@($"my-btn-remove-file {fileCssClass}")" />
-                </div>
-            }
-        </div>
+            </div>
+        }
     </div>
 
 </CascadingValue>
