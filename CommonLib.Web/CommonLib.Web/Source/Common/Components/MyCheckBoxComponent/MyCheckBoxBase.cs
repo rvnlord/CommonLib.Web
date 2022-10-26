@@ -77,7 +77,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             if (e == null)
                 throw new NullReferenceException(nameof(e));
 
-            if (Model != null)
+            if (Model is not null)
             {
                 Model.SetProperty(_propName, e.Value);
                 CascadedEditContext.ParameterValue?.NotifyFieldChanged(new FieldIdentifier(Model, _propName));

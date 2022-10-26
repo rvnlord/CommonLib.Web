@@ -876,7 +876,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentsByClass = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().OfType<TComponent>().Where(c => cssClass.In(c.Classes)).ToList();
             //await _syncComponentsCache.ReleaseAsync();
-            return componentsByClass;
+            return await Task.FromResult(componentsByClass);
         }
 
         public async Task<TComponent> ComponentByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
@@ -889,7 +889,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentById = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
             //await _syncComponentsCache.ReleaseAsync();
-            return componentById;
+            return  await Task.FromResult(componentById);
         }
 
         public async Task<TComponent> ComponentByGuidAsync<TComponent>(Guid guid) where TComponent : MyComponentBase
@@ -897,7 +897,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentByGuid = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => guid.Equals(c._guid));
             //await _syncComponentsCache.ReleaseAsync();
-            return componentByGuid;
+            return  await Task.FromResult(componentByGuid);
         }
 
         public async Task<List<TComponent>> ComponentsByTypeAsync<TComponent>() where TComponent : MyComponentBase
@@ -905,7 +905,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentsByType = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().ToList();
             //await _syncComponentsCache.ReleaseAsync();
-            return componentsByType;
+            return  await Task.FromResult(componentsByType);
         }
 
         public async Task<TComponent> ComponentByTypeAsync<TComponent>() where TComponent : MyComponentBase
@@ -993,6 +993,8 @@ namespace CommonLib.Web.Source.Common.Components
                 await WaitForControlsToRerenderAsync(arrControlsToChangeState);
             }
         }
+
+        protected Task SetControlStateAsync(ComponentStateKind state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState);
 
         protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload && !c.Ancestors.Any(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrNull() is not null)).ToArray();
 

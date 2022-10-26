@@ -63,7 +63,10 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         public BlazorParameter<bool?> SubmitsForm { get; set; }
 
         [Parameter]
-        public EventCallback<MouseEventArgs> OnClick { get; set; }
+        public BlazorParameter<bool?> PreventMultiClicks { get; set; }
+
+        [Parameter]
+        public EventCallback<MouseEventArgs> OnClick { get; set; } // for backwards compatibility
         
         [Parameter]
         public MyAsyncEventHandler<MyButtonBase, MouseEventArgs> Click { get; set; }
@@ -133,6 +136,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                     });
                 }
             }
+
+            if (PreventMultiClicks.HasChanged())
+                PreventMultiClicks.ParameterValue ??= true;
             
             if (IconPlacement.HasChanged())
                 IconPlacement.ParameterValue ??= ButtonIconPlacement.Left;
@@ -158,7 +164,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         protected async Task Button_ClickAsync(MouseEventArgs e)
         {
-            if (e.Button != 0 || e.Detail > 1)
+            if (e.Button != 0 || (PreventMultiClicks.V == true && e.Detail > 1))
                 return;
 
             await OnClick.InvokeAsync(e).ConfigureAwait(false);

@@ -19,13 +19,13 @@
         <div class="my-fileupload-drop-container">Drop File here...<input type="file" class="my-fileupload-hidden-file-input" multiple="multiple" /></div>
         <div class="my-fileupload-buttons-container">
             <div class="my-fileupload-btn-choose-file-container">
-                <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" />
             </div>
             <div class="my-fileupload-btn-select-all-container">
-                <MyButton Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnSelectAll_ClickAsync" PreventMultiClicks="false" />
             </div>
-            <div class="my-fileupload-btn-upload-container">
-                <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+            <div class="my-fileupload-btn-upload-many-container">
+                <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnUploadMany_ClickAsync" />
             </div>
             <div class="my-fileupload-btn-pause-many-container">
                 <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
@@ -42,14 +42,14 @@
         </div>
         @if (Value?.Any() == true)
         {
-            <div class="my-fileupload-progressbars-container">
-                @foreach (var file in Value) @* use `@key=file` to make sure rendering knows which list element is which (it prevents restoring parameters to wrong components, i.e.: disabling `x` button in element `n` and then removing element `n` would make old element `n + 1` (now `n`) disabled after render) - ref: https://blazor-university.com/components/render-trees/optimising-using-key/ *@
+            <div class="my-fileupload-progressbars-container"> @* use `@key=file` to make sure rendering knows which list element is which (it prevents restoring parameters to wrong components, i.e.: disabling `x` button in element `n` and then removing element `n` would make old element `n + 1` (now `n`) disabled after render) - ref: https://blazor-university.com/components/render-trees/optimising-using-key/ *@
+                @foreach (var file in Value) 
                 {
                     <div class="my-fileupload-progressbar-checkbox-container">
-                        <MyCheckBox For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>
+                        <MyCheckBox Model="file" For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>
                     </div>
                     <div class="my-fileupload-progressbar-container">
-                        <MyProgressBar For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" @key=file />
+                        <MyProgressBar Model="file" For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" @key=file />
                     </div>
                     @if (file.Status == UploadStatus.NotStarted)
                     {
