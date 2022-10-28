@@ -89,11 +89,15 @@ export class FileUploadUtils {
     static async getFileChunkAsync(guid, name, extension, totalSize, position, chunkSize) {
         const fileUploads = this._fileUploadsCache;
         const fileId = this.createFileId(name, extension, totalSize);
-        const file = fileUploads[guid].files[fileId].file;
+        const file = fileUploads.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).addIfNotExistsAndGet(fileId, {}).file || null;
+        if (!file) {
+            return null;
+        }
+          
         const chunk = await file.sliceToArrayAsync(position, Math.min(position + chunkSize, totalSize));
         return chunk;
     }
-
+    
     static removeCachedFileUpload(guid, name, extension, totalSize) {
         const fileId = this.createFileId(name, extension, totalSize);
         this._fileUploadsCache[guid].files.remove(fileId);

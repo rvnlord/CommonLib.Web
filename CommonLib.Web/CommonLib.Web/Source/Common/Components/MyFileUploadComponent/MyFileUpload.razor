@@ -19,25 +19,25 @@
         <div class="my-fileupload-drop-container">Drop File here...<input type="file" class="my-fileupload-hidden-file-input" multiple="multiple" /></div>
         <div class="my-fileupload-buttons-container">
             <div class="my-fileupload-btn-choose-file-container">
-                <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" />
+                <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" class="my-btn-choose-file" />
             </div>
             <div class="my-fileupload-btn-select-all-container">
-                <MyButton Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnSelectAll_ClickAsync" PreventMultiClicks="false" />
+                <MyButton Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnSelectAll_ClickAsync" PreventMultiClicks="false" class="my-btn-select-all-files" />
             </div>
             <div class="my-fileupload-btn-upload-many-container">
-                <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnUploadMany_ClickAsync" />
+                <MyButton Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnUploadMany_ClickAsync" class="my-btn-upload-many-files" />
             </div>
             <div class="my-fileupload-btn-pause-many-container">
-                <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnPauseMany_ClickAsync" class="my-btn-pause-many-files" />
             </div>
             <div class="my-fileupload-btn-resume-many-container">
-                <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnResumeMany_ClickAsync" class="my-btn-resume-many-files" />
             </div>
             <div class="my-fileupload-btn-retry-many-container">
-                <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnRetryMany_ClickAsync"  class="my-btn-retry-many-files" />
             </div>
             <div class="my-fileupload-btn-clear-many-container">
-                <MyButton Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" IconPlacement="ButtonIconPlacement.Right" />
+                <MyButton Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnClearMany_ClickAsync"  class="my-btn-clear-many-files" />
             </div>
         </div>
         @if (Value?.Any() == true)

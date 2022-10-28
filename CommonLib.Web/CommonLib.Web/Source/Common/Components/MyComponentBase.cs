@@ -1010,6 +1010,8 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
+        public bool HasClass(string cls) => Classes.Contains(cls);
+
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)
