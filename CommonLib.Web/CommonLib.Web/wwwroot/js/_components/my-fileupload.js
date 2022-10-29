@@ -39,6 +39,28 @@ export class FileUploadUtils {
         return fileUploads[guid].files[fileId];
     }
 
+    static async renderThumbnailAsync($fileUploadThumbnailContainer, file, thumbnail = null) {
+        let fileAsDataUrl;
+        $fileUploadThumbnailContainer.empty();
+        $fileUploadThumbnailContainer.removeCss("background-image");
+
+        if (file.type.startsWith("image/") && file.size <= 52428800) {
+            fileAsDataUrl = thumbnail || await new FileReader().readAsDataURLAsync(file);
+            $fileUploadThumbnailContainer.css("background-image", `url('${fileAsDataUrl}#t=${new Date().getTime()}')`);
+        } else {
+            const fileIcon = await utils.getIconAsync("light", "file");
+            const $fileIcon = $(`<div class="my-icon">${fileIcon}</div>`);
+            const $svgMyIcon = $fileIcon.find("svg");
+            const vbDims = $svgMyIcon.attr("viewBox").split(" ");
+            const [, , vbWidth, vbHeight] = vbDims;
+            if (vbWidth >= vbHeight) { $svgMyIcon.css({ "width": "100%", "height": "auto" }); } else { $svgMyIcon.css({ "width": "auto", "height": "100%" }); }
+
+            $fileUploadThumbnailContainer.html($fileIcon);
+        }
+
+        return fileAsDataUrl;
+    }
+
     static async addFilesToUploadAsync($fileUploadDropContainer, files) {
         const $fileUploadThumbnailContainer = $fileUploadDropContainer.siblings(".my-fileupload-thumbnail-container").first();
         const $fileUpload = $fileUploadThumbnailContainer.closest(".my-fileupload");
@@ -56,31 +78,16 @@ export class FileUploadUtils {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (i === files.length - 1) {
-                $fileUploadThumbnailContainer.empty();
-                $fileUploadThumbnailContainer.removeCss("background-image");
-
-                if (file.type.startsWith("image/") && file.size <= 52428800) {
-                    fileAsDataUrl = await new FileReader().readAsDataURLAsync(file);
-                    $fileUploadThumbnailContainer.css("background-image", `url('${fileAsDataUrl}#t=${new Date().getTime()}')`);           
-                } else {
-                    const fileIcon = await utils.getIconAsync("light", "file");
-                    const $fileIcon = $(`<div class="my-icon">${fileIcon}</div>`);
-                    const $svgMyIcon = $fileIcon.find("svg");
-                    const vbDims = $svgMyIcon.attr("viewBox").split(" ");
-                    const [,, vbWidth, vbHeight] = vbDims;
-                    if (vbWidth >= vbHeight) { $svgMyIcon.css({"width": "100%", "height": "auto"}); } else { $svgMyIcon.css({"width": "auto", "height": "100%"}); }
-
-                    $fileUploadThumbnailContainer.html($fileIcon);
-                }
+                fileAsDataUrl = this.renderThumbnailAsync($fileUploadThumbnailContainer, file);
             }
 
             this.cachePreviewDataForFile(guid, file, fileAsDataUrl);
         }
 
-        const filesData = files.map(f => ({ 
-            Name: f.name.pathToName(), 
-            Extension: f.name.pathToExtension(), 
-            TotalSizeInBytes: f.size 
+        const filesData = files.map(f => ({
+            Name: f.name.pathToName(),
+            Extension: f.name.pathToExtension(),
+            TotalSizeInBytes: f.size
         }));
 
         await this._fileUploadsCache[guid].dotNetRef.invokeMethodAsync("AddFilesToUploadAsync", filesData);
@@ -93,15 +100,19 @@ export class FileUploadUtils {
         if (!file) {
             return null;
         }
-          
+
         const chunk = await file.sliceToArrayAsync(position, Math.min(position + chunkSize, totalSize));
         return chunk;
     }
-    
+
     static removeCachedFileUpload(guid, name, extension, totalSize) {
         const fileId = this.createFileId(name, extension, totalSize);
-        this._fileUploadsCache[guid].files.remove(fileId);
+        this._fileUploadsCache.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).remove(fileId);
     }
+}
+
+export async function blazor_FileUpload_AfterFirstRender(guid, dotNetRefFileUpload) {
+    FileUploadUtils.cacheFileUploadDotNetRef(guid, dotNetRefFileUpload);
 }
 
 export async function blazor_FileUpload_GetFileChunk(guid, name, extension, totalSize, position, chunkSize) {
@@ -112,8 +123,24 @@ export async function blazor_FileUpload_RemoveCachedFileUpload(guid, name, exten
     return FileUploadUtils.removeCachedFileUpload(guid, name, extension, totalSize);
 }
 
-export async function blazor_FileUpload_AfterFirstRender(guid, dotNetRefFileUpload) {
-    FileUploadUtils.cacheFileUploadDotNetRef(guid, dotNetRefFileUpload);
+export async function blazor_FileUpload_SetThumbnail(guid, name, extension, totalSize, noThumbnailImage) {
+    const $fileUploadThumbnailContainer = $(guid.guidToSelector()).children(".my-fileupload-thumbnail-container").first();
+    const fileId = FileUploadUtils.createFileId(name, extension, totalSize);
+    const thumbnail = FileUploadUtils._fileUploadsCache.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).addIfNotExistsAndGet(fileId, {}).thumbnail || null;
+    const file = FileUploadUtils._fileUploadsCache[guid]["files"][fileId].file || null;
+    if (!file) {
+        if (noThumbnailImage) {
+            $fileUploadThumbnailContainer.css("background-image", `url('${noThumbnailImage}#t=${new Date().getTime()}')`);
+            $fileUploadThumbnailContainer.empty();
+        } else {
+            $fileUploadThumbnailContainer.removeCss("background-image");
+            $fileUploadThumbnailContainer.html("<div>No Thumbnail</div>");
+        }
+
+        return;
+    }
+    const fileAsDataUrl = await FileUploadUtils.renderThumbnailAsync($fileUploadThumbnailContainer, file, thumbnail);
+    FileUploadUtils._fileUploadsCache[guid].files[fileId].thumbnail = fileAsDataUrl;
 }
 
 $(document).ready(function () {
