@@ -77,7 +77,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var editResponse = await AccountClient.EditAsync(_editUserVM);
             if (editResponse.IsError)
             {
-                _validator.AddValidationMessages(editResponse.ValidationMessages).NotifyValidationStateChanged(_validator);
+                await _validator.AddValidationMessages(editResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, editResponse.Message);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;

@@ -1,4 +1,5 @@
 ﻿using System;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services.Account.Interfaces;
@@ -48,6 +49,10 @@ namespace CommonLib.Web.Source.Validators
             RuleFor(m => m.TermsAccepted)
                 .RequiredWithMessage()
                 .EqualWithMessage(true);
+
+            RuleFor(m => m.Files)
+                .FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
+                .FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif", ".mkv");
         }
 
         protected virtual void Dispose(bool disposing)

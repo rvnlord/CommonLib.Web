@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -7,9 +9,11 @@ using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using FluentValidation;
+using WebSocketSharp;
 
 namespace CommonLib.Web.Source.Common.Extensions
 {
@@ -295,6 +299,59 @@ namespace CommonLib.Web.Source.Common.Extensions
                 var hasPassword = model.GetProperty<bool>("HasPassword");
                 return hasPassword && !value.IsNullOrWhiteSpace() || !hasPassword;
             }).WithMessage((_, _) => $"{validationContext.DisplayName} is required");
+        }
+
+        public static IRuleBuilderOptions<TModel, List<FileData>> FileSizeWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, Expression<Func<FileSize, bool>> fdCondition)
+        {
+            ValidationContext<TModel> validationContext = null;
+            var conditionString = "match the condition";
+            return rb.Must((_, value, vc) =>
+            {
+                validationContext = vc;
+                var op = (fdCondition.Body as BinaryExpression)?.NodeType;
+                var exprSizeCtor = (fdCondition.Body as BinaryExpression)?.Right as NewExpression;
+
+                var exprSizeParam = Expression.Parameter(typeof(double), "size");
+                var exprSuffixParam = Expression.Parameter(typeof(FileSizeSuffix), "suffix");
+                FileSize? size = null;
+                if (exprSizeCtor is not null)
+                {
+                    var sizeD = (exprSizeCtor.Arguments[0] as ConstantExpression)?.Value?.ToDoubleN();
+                    var suffix = (exprSizeCtor.Arguments[1] as ConstantExpression)?.Value?.ToEnumN<FileSizeSuffix>();
+                    var exprSizeCompiled = Expression.Lambda<Func<double, FileSizeSuffix, FileSize>>(exprSizeCtor, exprSizeParam, exprSuffixParam).Compile();
+                    if (sizeD is not null && suffix is not null)
+                        size = exprSizeCompiled((double)sizeD, (FileSizeSuffix)suffix);
+                }
+
+                if (op is not null && size is not null)
+                {
+                    if (op == ExpressionType.LessThan)
+                        conditionString = $"be < {size}";
+                    else if (op == ExpressionType.LessThanOrEqual)
+                        conditionString = $"be <= {size}";
+                    else if (op == ExpressionType.GreaterThan)
+                        conditionString = $"be > {size}";
+                    else if (op == ExpressionType.GreaterThanOrEqual)
+                        conditionString = $"be >= {size}";
+                }
+           
+                var fdConditionCompiled = fdCondition.Compile();
+                value.ForEach(fd => fd.IsFileSizeValid = fdConditionCompiled.Invoke(fd.TotalSize));
+                return value.All(fd => fd.IsFileSizeValid);
+            }).WithMessage((_, _) => $"Each of the {validationContext.DisplayName}' size must {conditionString}");
+        }
+
+        public static IRuleBuilderOptions<TModel, List<FileData>> FileExtensionWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, params string[] extensions)
+        {
+            ValidationContext<TModel> validationContext = null;
+            string[] expectedExtensions = null;
+            return rb.Must((_, value, vc) =>
+            {
+                validationContext = vc;
+                expectedExtensions = extensions.Select(ext => ext.AfterFirstOrWhole(".")).ToArray();
+                value.ForEach(fd => fd.IsExtensionValid = fd.Extension.In(expectedExtensions));
+                return value.All(fd => fd.IsExtensionValid);
+            }).WithMessage((_, _) => $"{validationContext.DisplayName} must have one of the following extensions: {expectedExtensions?.Select(ext => $"\".{ext}\"").JoinAsString(", ")}");
         }
         
     }

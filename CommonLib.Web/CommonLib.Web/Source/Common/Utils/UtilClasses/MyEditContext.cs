@@ -14,12 +14,12 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
     {
         private readonly Dictionary<FieldIdentifier, MyFieldState> _fieldStates;
 
-        public event EventHandler<FieldChangedEventArgs> OnFieldChanged;
-        public event EventHandler<ValidationRequestedEventArgs> OnValidationRequested;
-        public event EventHandler<MyValidationStateChangedEventArgs> OnValidationStateChanged;
-        public event Func<object, FieldChangedEventArgs, Task> OnFieldChangedAsync;
-        public event Func<object, ValidationRequestedEventArgs, Task> OnValidationRequestedAsync;
-        public event Func<object, MyValidationStateChangedEventArgs, Task> OnValidationStateChangedAsync;
+        public event MyEventHandler<MyEditContext, FieldChangedEventArgs> OnFieldChanged;
+        public event MyEventHandler<MyEditContext, ValidationRequestedEventArgs> OnValidationRequested;
+        public event MyEventHandler<MyEditContext, MyValidationStateChangedEventArgs> OnValidationStateChanged;
+        public event MyAsyncEventHandler<MyEditContext, FieldChangedEventArgs> OnFieldChangedAsync;
+        public event MyAsyncEventHandler<MyEditContext, ValidationRequestedEventArgs> OnValidationRequestedAsync;
+        public event MyAsyncEventHandler<MyEditContext, MyValidationStateChangedEventArgs> OnValidationStateChangedAsync;
         public FieldIdentifier Field(string fieldName) => new(Model, fieldName);
         public object Model { get; }
         public bool IsValid => !GetValidationMessages().Any();
@@ -30,26 +30,26 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             _fieldStates = new();
         }
 
-        public void NotifyFieldChanged(in FieldIdentifier fieldIdentifier)
+        public async Task NotifyFieldChangedAsync(FieldIdentifier fieldIdentifier)
         {
             GetFieldState(fieldIdentifier, true).IsModified = true;
             OnFieldChanged?.Invoke(this, new FieldChangedEventArgs(fieldIdentifier));
-            OnFieldChangedAsync?.Invoke(this, new FieldChangedEventArgs(fieldIdentifier));
+            await OnFieldChangedAsync.InvokeAsync(this, new FieldChangedEventArgs(fieldIdentifier));
         }
 
-        public void NotifyValidationStateChanged(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields, List<FieldIdentifier> pendingFields)
+        public async Task NotifyValidationStateChangedAsync(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields, List<FieldIdentifier> pendingFields)
         {
             OnValidationStateChanged?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, pendingFields));
-            OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, pendingFields));
+            await OnValidationStateChangedAsync.InvokeAsync(this, new MyValidationStateChangedEventArgs(validationStatus, validationMode, invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, pendingFields));
         }
 
-        public void NotifyValidationStateChanged(in FieldIdentifier? validatedField, MyFluentValidatorBase validator)
+        public async Task NotifyValidationStateChangedAsync(FieldIdentifier? validatedField, MyFluentValidatorBase validator)
         {
             OnValidationStateChanged?.Invoke(this, new MyValidationStateChangedEventArgs(validatedField, validator));
-            OnValidationStateChangedAsync?.Invoke(this, new MyValidationStateChangedEventArgs(validatedField, validator));
+            await OnValidationStateChangedAsync.InvokeAsync(this, new MyValidationStateChangedEventArgs(validatedField, validator));
         }
 
-        public void NotifyValidationStateChanged(MyFluentValidatorBase validator) => NotifyValidationStateChanged(null, validator);
+        public Task NotifyValidationStateChangedAsync(MyFluentValidatorBase validator) => NotifyValidationStateChangedAsync(null, validator);
 
         public void MarkAsUnmodified(in FieldIdentifier fieldIdentifier)
         {
@@ -82,7 +82,7 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         public async Task<bool> ValidateAsync() 
         {
             OnValidationRequested?.Invoke(this, ValidationRequestedEventArgs.Empty);
-            await (OnValidationRequestedAsync?.Invoke(this, ValidationRequestedEventArgs.Empty) ?? Task.CompletedTask);
+            await (OnValidationRequestedAsync?.InvokeAsync(this, ValidationRequestedEventArgs.Empty) ?? Task.CompletedTask);
             return !GetValidationMessages().Any();
         }
 
@@ -91,7 +91,7 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             var propertyname = propertyAccessor.GetPropertyName();
             var fi = Field(propertyname);
             OnFieldChanged?.Invoke(this, new FieldChangedEventArgs(fi));
-            await (OnFieldChangedAsync?.Invoke(this, new FieldChangedEventArgs(fi)) ?? Task.CompletedTask);
+            await (OnFieldChangedAsync?.InvokeAsync(this, new FieldChangedEventArgs(fi)) ?? Task.CompletedTask);
             return !GetValidationMessages(fi).Any();
         }
 
@@ -106,14 +106,14 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             return state;
         }
 
-        public void ReBindValidationStateChanged(Func<object, MyValidationStateChangedEventArgs, Task> _handleValidationStateChanged)
+        public void ReBindValidationStateChanged(MyAsyncEventHandler<MyEditContext, MyValidationStateChangedEventArgs> handleValidationStateChanged)
         {
-            OnValidationStateChangedAsync -= _handleValidationStateChanged;
-            OnValidationStateChangedAsync += _handleValidationStateChanged;
+            OnValidationStateChangedAsync -= handleValidationStateChanged;
+            OnValidationStateChangedAsync += handleValidationStateChanged;
         }
     }
 
-    public class MyValidationStateChangedEventArgs
+    public class MyValidationStateChangedEventArgs : EventArgs
     {
         public ValidationStatus ValidationStatus { get; }
         public ValidationMode ValidationMode { get; }

@@ -16,18 +16,15 @@ using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
-using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Converters;
-using CommonLib.Web.Source.Common.Pages.Shared;
-using Telerik.Blazor.Components.Map.EventArgs.Internal;
 
 namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 {
     public class MyButtonBase : MyComponentBase
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
-        private ButtonState? _prevParentState;
 
+        protected internal ButtonState? _prevParentState { get; set; }
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
         public MyIconBase IconBefore { get; set; }
@@ -171,7 +168,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             await Click.InvokeAsync(this, e).ConfigureAwait(false);
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));

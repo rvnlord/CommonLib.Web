@@ -10,6 +10,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System.Threading;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 {
@@ -121,7 +122,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             NavigationManager.NavigateTo(_absoluteVirtualLink);
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));

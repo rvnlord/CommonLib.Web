@@ -19,6 +19,7 @@ using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using CommonLib.Web.Source.Models;
 using Microsoft.JSInterop;
 using Truncon.Collections;
+using System.Threading;
 
 namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 {
@@ -202,12 +203,12 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                 if (!Equals(oldValue, newValue))
                 {
                     For.SetPropertyValue(newValue);
-                    CascadedEditContext.ParameterValue.NotifyFieldChanged(new FieldIdentifier(Model.V, propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, propName));
                 }
             }
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             var fi = new FieldIdentifier(Model.V, _propName);
 

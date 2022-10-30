@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -125,12 +126,13 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             var radioButtons = await GetRadioButtonsFromThisGroupAsync();
             var refreshTasks = radioButtons.Select(rb => rb.NotifyParametersChangedAsync().StateHasChangedAsync(true)).ToList();
             await Task.WhenAll(refreshTasks);
-            CascadedEditContext.ParameterValue?.NotifyFieldChanged(new FieldIdentifier(Model.V, _propName));
+            if (CascadedEditContext?.V is not null)
+                await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, _propName));
         }
 
         private async Task<MyRadioButtonBase[]> GetRadioButtonsFromThisGroupAsync() => (await ComponentsByTypeAsync<MyRadioButtonBase>()).Where(rb => rb.RadioGroup.V.EqualsIgnoreCase(RadioGroup.V)).ToArray();
         
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             var fi = new FieldIdentifier(Model.V, _propName);
            

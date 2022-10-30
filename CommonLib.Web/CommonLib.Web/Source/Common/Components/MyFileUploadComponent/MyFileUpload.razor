@@ -40,10 +40,10 @@
                 <MyButton Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnClearMany_ClickAsync"  class="my-btn-clear-many-files" />
             </div>
         </div>
-        @if (Value?.Any() == true)
+        @if (ValidFiles.Any())
         {
             <div class="my-fileupload-progressbars-container"> @* use `@key=file` to make sure rendering knows which list element is which (it prevents restoring parameters to wrong components, i.e.: disabling `x` button in element `n` and then removing element `n` would make old element `n + 1` (now `n`) disabled after render) - ref: https://blazor-university.com/components/render-trees/optimising-using-key/ *@
-                @foreach (var file in Value) 
+                @foreach (var file in ValidFiles) 
                 {
                     <div class="my-fileupload-progressbar-checkbox-container">
                         <MyCheckBox Model="file" For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>

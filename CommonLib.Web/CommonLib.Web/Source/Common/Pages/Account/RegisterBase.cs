@@ -55,7 +55,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 if (registrationResult.Result?.ReturnUrl != null && _registerUserVM.ReturnUrl != registrationResult.Result.ReturnUrl)
                     NavigationManager.NavigateTo(registrationResult.Result.ReturnUrl); // redirect to `ResendEmailConfirmation` on successful registration but when email couldn't be deployed
 
-                _validator.AddValidationMessages(registrationResult.ValidationMessages).NotifyValidationStateChanged(_validator);
+                await _validator.AddValidationMessages(registrationResult.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, registrationResult.Message);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;

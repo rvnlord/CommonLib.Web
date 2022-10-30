@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -75,7 +76,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var resetPasswordResponse = await AccountClient.ResetPasswordAsync(_resetPasswordUserVM);
             if (resetPasswordResponse.IsError)
             {
-                _validator.AddValidationMessages(resetPasswordResponse.ValidationMessages).NotifyValidationStateChanged(_validator);
+                await _validator.AddValidationMessages(resetPasswordResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, resetPasswordResponse.Message);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
@@ -87,7 +88,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await SetControlStatesAsync(ButtonState.Disabled, _allControls);
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));

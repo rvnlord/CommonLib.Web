@@ -12,6 +12,7 @@ using CommonLib.Web.Source.Common.Components.MyLabelComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using System.Threading;
 
 namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 {
@@ -107,7 +108,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
                 await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_ValidationMessage_ShowCol", _jsValidationMessage);
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             var fi = new FieldIdentifier(Model, _propName);
             

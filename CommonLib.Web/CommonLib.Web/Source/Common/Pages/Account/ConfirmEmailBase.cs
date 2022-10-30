@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -85,7 +86,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(confirmUserToSend);
             if (emailConfirmationResponse.IsError)
             {
-                _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChanged(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
+                await _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
                 await PromptMessageAsync(NotificationType.Error, emailConfirmationResponse.Message);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
@@ -99,7 +100,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         } // https://localhost:44396/Account/ConfirmEmail?email=rvnlord@gmail.com&code=xxx
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));

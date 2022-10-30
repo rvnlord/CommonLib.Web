@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 
@@ -28,14 +29,14 @@ namespace CommonLib.Web.Source.Common.Extensions
         //    return blazorParam.HasPreviousValue();
         //}
 
-        public static void BindValidationStateChanged(this BlazorParameter<MyEditContext> editContextParam, Func<object, MyValidationStateChangedEventArgs, Task> _handleValidationStateChanged)
+        public static void BindValidationStateChanged(this BlazorParameter<MyEditContext> editContextParam, MyAsyncEventHandler<MyEditContext, MyValidationStateChangedEventArgs> handleValidationStateChanged)
         {
             if (editContextParam.HasChanged())
             {
                 if (editContextParam.HasPreviousValue())
-                    editContextParam.PreviousParameterValue.OnValidationStateChangedAsync -= _handleValidationStateChanged;
+                    editContextParam.PreviousParameterValue.OnValidationStateChangedAsync -= handleValidationStateChanged;
                 if (editContextParam.HasValue())
-                    editContextParam.ParameterValue.ReBindValidationStateChanged(_handleValidationStateChanged);
+                    editContextParam.ParameterValue.ReBindValidationStateChanged(handleValidationStateChanged);
             }
         }
     }

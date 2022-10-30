@@ -72,7 +72,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             await Task.CompletedTask;
         }
         
-        protected virtual void CheckBox_Checked(ChangeEventArgs e)
+        protected async Task CheckBox_Checked(ChangeEventArgs e)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
@@ -80,7 +80,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             if (Model is not null)
             {
                 Model.SetProperty(_propName, e.Value);
-                CascadedEditContext.ParameterValue?.NotifyFieldChanged(new FieldIdentifier(Model, _propName));
+                if (CascadedEditContext?.V is not null)
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
             }
 
             Value = e.Value.ToBool();

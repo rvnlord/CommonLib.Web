@@ -109,6 +109,12 @@ export class FileUploadUtils {
         const fileId = this.createFileId(name, extension, totalSize);
         this._fileUploadsCache.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).remove(fileId);
     }
+
+    static removeCachedFileUploads(guid, fileUploads) {
+        for (let file of fileUploads) {
+            this.removeCachedFileUpload(guid, file.Name, file.Extension, file.TotalSizeInBytes);
+        }
+    }
 }
 
 export async function blazor_FileUpload_AfterFirstRender(guid, dotNetRefFileUpload) {
@@ -121,6 +127,11 @@ export async function blazor_FileUpload_GetFileChunk(guid, name, extension, tota
 
 export async function blazor_FileUpload_RemoveCachedFileUpload(guid, name, extension, totalSize) {
     return FileUploadUtils.removeCachedFileUpload(guid, name, extension, totalSize);
+}
+
+export async function blazor_FileUpload_RemoveCachedFileUploads(guid, strFileUploads) {
+    const fileUploads = strFileUploads.jsonDeserialize();
+    return FileUploadUtils.removeCachedFileUploads(guid, fileUploads);
 }
 
 export async function blazor_FileUpload_SetThumbnail(guid, name, extension, totalSize, noThumbnailImage) {

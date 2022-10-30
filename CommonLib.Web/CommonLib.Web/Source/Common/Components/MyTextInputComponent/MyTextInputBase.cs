@@ -101,7 +101,7 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
             await Task.WhenAll(changeStateTasks);
         }
         
-        protected void InputText_Input(ChangeEventArgs e)
+        protected async Task InputText_Input(ChangeEventArgs e)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
@@ -109,7 +109,8 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
             if (Model != null)
             {
                 Model.SetProperty(_propName, e.Value);
-                CascadedEditContext.ParameterValue?.NotifyFieldChanged(new FieldIdentifier(Model, _propName));
+                if (CascadedEditContext?.V is not null)
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
             }
 
             Value = e.Value?.ToString();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
@@ -66,7 +67,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             }
         }
 
-        protected async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        protected async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             var fi = new FieldIdentifier(Model, _propName);
 

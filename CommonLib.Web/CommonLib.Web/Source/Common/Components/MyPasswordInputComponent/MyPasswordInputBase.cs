@@ -117,7 +117,8 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
             if (Model != null)
             {
                 Model.SetProperty(_propName, value);
-                CascadedEditContext.ParameterValue?.NotifyFieldChanged(new FieldIdentifier(Model, _propName));
+                if (CascadedEditContext?.V is not null)
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
             }
 
             Value = value;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -64,7 +65,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (forgotPasswordResponse.IsError)
             {
                 _btnForgotPassword.State.ParameterValue = ButtonState.Enabled;
-                _validator.AddValidationMessages(forgotPasswordResponse.ValidationMessages).NotifyValidationStateChanged(_validator); ;
+                await _validator.AddValidationMessages(forgotPasswordResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator); ;
                 await PromptMessageAsync(NotificationType.Error, forgotPasswordResponse.Message);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
                 return;
@@ -75,7 +76,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             NavigationManager.NavigateTo($"/Account/ResetPassword?{GetNavQueryStrings()}");
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(object sender, MyValidationStateChangedEventArgs e)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
