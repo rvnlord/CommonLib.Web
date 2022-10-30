@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
@@ -13,6 +14,7 @@ using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using MoreLinq;
 
 namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 {
@@ -75,6 +77,8 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
             if (State.ParameterValue?.IsForced == true)
                 return;
 
@@ -95,7 +99,19 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             }
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
+            {
                 State.ParameterValue = InputState.Enabled;
+                if (this is MyFileUploadBase fileUpload)
+                {
+                    var btnsForManyFiles = fileUpload.Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
+                    btnsForManyFiles?.ForEach(b =>
+                    {
+                        b.State.SetAsChanged();
+                        b._prevParentState = ButtonState.Enabled;
+                    });
+                    await fileUpload.SetMultipleFileBtnsStateAsync(null);
+                }
+            }
 
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
             var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));

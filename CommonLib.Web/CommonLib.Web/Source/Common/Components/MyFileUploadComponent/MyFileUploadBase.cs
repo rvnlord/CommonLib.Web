@@ -17,6 +17,7 @@ using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
+using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -32,12 +33,13 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
     {
         private readonly OrderedSemaphore _syncFileDataState = new(1, 1);
         private int _multipleFileBtnRenders;
+        private bool _tempThumbnailSet;
 
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
 
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
-        public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsValid || f.IsPreAdded).ToList() ?? new List<FileData>();
+        public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
 
         [Parameter]
         public BlazorParameter<Func<ExtendedImage>> PreviewFor { get; set; }
@@ -53,6 +55,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         [Inject]
         public IUploadClient UploadClient { get; set; }
+
+        [Inject]
+        public IJQueryService JQuery { get; set; }
 
         protected override async Task OnParametersSetAsync()
         {
@@ -72,33 +77,50 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace() ? Placeholder : !displayName.IsNullOrWhiteSpace() ? $"{displayName}..." : null;
 
-            if (PreviewFor.HasChanged())
-            {
-                var previewImage = PreviewFor.V();
-                _thumbnailContainerStyle.AddOrUpdate("background-image", $"url('{previewImage.ToBase64DataUrl()}')");
-            }
+            //if (PreviewFor.HasChanged())
+            //{
+            //    if (!_tempThumbnailSet)
+            //        _thumbnailContainerStyle.AddOrUpdate("background-image", $"url('{PreviewFor.V().ToBase64DataUrl()}')");
+            //    else
+            //        _thumbnailContainerStyle.Remove("background-image");
+            //}
 
             if (State.HasChanged())
             {
                 State.ParameterValue ??= InputState.Disabled;
+                var thumbnailContainerSelector = $"div.my-fileupload[my-guid='{_guid}'] > .my-fileupload-thumbnail-container";
                 if (State.ParameterValue.IsDisabledOrForceDisabled)
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
-                    if (_thumbnailContainerStyle.VorN("background-image") is not null)
-                        _thumbnailContainerStyle.AddOrUpdate("opacity", "0.3");
+                    if (PreviewFor.HasValue() || _tempThumbnailSet)
+                    {
+                        if (!IsRendered)
+                            _thumbnailContainerStyle.AddOrUpdate("opacity", "0.3");
+                        else
+                            await JQuery.QueryOneAsync(thumbnailContainerSelector).CssAsync("opacity", "0.3");
+                    }
                 }
                 else
                 {
                     RemoveAttribute("disabled");
                     RemoveClass("disabled");
-                    _thumbnailContainerStyle.RemoveIfExists("opacity");
-                    var btnsForManyFiles = Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
-                    btnsForManyFiles?.ForEach(b => // this prevent buittons controlling multiple files from flickering to enabled on render
+
+                    if (!IsRendered)
+                        _thumbnailContainerStyle.RemoveIfExists("opacity");
+                    else
+                        await JQuery.QueryOneAsync(thumbnailContainerSelector).RemoveCssAsync("opacity");
+
+                    if (!IsRendered)
                     {
-                        b._prevParentState = ButtonState.Enabled;
-                        b.State.ParameterValue = ButtonState.Disabled;
-                    });
+                        var btnsForManyFiles = Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
+                        btnsForManyFiles?.ForEach(b => // this prevent buittons controlling multiple files from flickering to enabled on render
+                        {
+                            b.State.SetAsChanged();
+                            b._prevParentState = ButtonState.Enabled;
+                            b.State.ParameterValue = ButtonState.Disabled;
+                        });
+                    }
                 }
             }
 
@@ -124,13 +146,22 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 file.StateChanged -= FileData_StateChanged;
                 file.StateChanged += FileData_StateChanged;
             }
-            await SetMultipleFileBtnsStateAsync(null);
+            await SetMultipleFileBtnsStateAsync(FileData.Empty); // null if set server side
         }
+
+        //protected override async Task OnAfterRenderAsync(bool firstRender)
+        //{
+        //    if (firstRender)
+        //        return;
+
+        //    await SetThumbnailAsync(GetSelectedOrAllFiles().Any() ? GetSelectedOrAllFiles()[^1] : FileData.Empty);
+        //}
 
         [JSInvokable]
         public async Task AddFilesToUploadAsync(List<FileData> files)
         {
             Value.AddRange(files);
+            Value.ForEach(fd => fd.ValidateUploadStatus = false);
             var validator = Ancestors.OfType<MyEditFormBase>().FirstOrDefault()?.Children.OfType<MyFluentValidatorBase>()?.FirstOrDefault();
             var isValid = validator is null || await validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName), false);
             var addedFiles = files.Where(f => f.IsValid).ToArray();
@@ -162,6 +193,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
             }
 
+            Value.ForEach(fd => fd.ValidateUploadStatus = true);
+
             if (addedFiles.Any())
             {
                 foreach (var file in addedFiles)
@@ -175,7 +208,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         
         protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
-            await UploadAndManageStateAsync(GetBtnFileN(sender));
+            var fileToUpload = GetBtnFileN(sender);
+            await SetThumbnailAsync(fileToUpload);
+            await UploadAndManageStateAsync(fileToUpload);
         }
 
         protected async Task BtnPause_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
@@ -341,8 +376,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         private MyButtonBase[] BtnsForFile(FileData fd) => Children.OfType<MyButtonBase>().Where(b => IsBtnFileEq(b, fd)).ToArray();
         private MyButtonBase BtnForFileByClass(FileData fd, string cls) =>  BtnsForFile(fd).Single(b => b.Classes.Contains(cls));
         private IReadOnlyList<FileData> GetSelectedOrAllFiles() => Files.Any(f => f.IsSelected) ? Files.Where(f => f.IsSelected).ToArray() : Files;
-        
-        private async Task SetMultipleFileBtnsStateAsync(FileData fileToPreview)
+
+        internal async Task SetMultipleFileBtnsStateAsync(FileData fileToPreview)
         {
             _multipleFileBtnRenders++;
             await _syncFileDataState.WaitAsync();
@@ -402,13 +437,19 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             await SetControlStatesAsync(ButtonState.Disabled, btnsToDisable, null, false);
             if (_multipleFileBtnRenders == 0)
                 await StateHasChangedAsync(true);
-
             if (fileToPreview is not null)
-                await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fileToPreview.Name, fileToPreview.Extension, fileToPreview.TotalSizeInBytes, PreviewFor?.V()?.ToBase64DataUrl());
+                await SetThumbnailAsync(fileToPreview);
 
             await _syncFileDataState.ReleaseAsync();
         }
-        
+
+        private async Task SetThumbnailAsync(FileData fd)
+        {
+            _tempThumbnailSet = true;
+            var noThumbnailImage = PreviewFor?.V()?.ToBase64DataUrl();
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
+        }
+
         //protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";
 
         //protected FileData CssClassToFileData(string cssClass)

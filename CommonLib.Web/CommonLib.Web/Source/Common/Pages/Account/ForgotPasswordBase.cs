@@ -84,6 +84,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 throw new NullReferenceException(nameof(e.ValidatedFields));
             if (e.ValidationStatus == ValidationStatus.Pending)
                 return;
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
 
             if (new FieldIdentifier(_forgotPasswordUserVM, nameof(_forgotPasswordUserVM.Email)).In(e.ValidatedFields))
                 await SetUserNameAsync();

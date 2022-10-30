@@ -83,7 +83,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
                     inputGroupButton.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
                 notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
                 changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
-                Logger.For<MyPasswordInputBase>().Info($"OnParametersSetAsync(): State = {State.ParameterValue}, notified {inputGroupButton.Icon.ParameterValue} about params change");
+                //Logger.For<MyPasswordInputBase>().Info($"OnParametersSetAsync(): State = {State.ParameterValue}, notified {inputGroupButton.Icon.ParameterValue} about params change");
             }
 
             foreach (var inputGroupIcon in InputGroupIcons)

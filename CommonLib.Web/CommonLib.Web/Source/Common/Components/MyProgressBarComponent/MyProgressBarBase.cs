@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
@@ -18,6 +21,7 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
     {
         private BlazorParameter<InputState> _bpState;
         private InputState _prevParentState;
+        private readonly OrderedSemaphore _syncValidationStateBeingChanged = new (1, 1);
         
         protected string _propName { get; set; }
 
@@ -63,6 +67,8 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 SetUserDefinedAttributes();
             }
             
+            CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
+
             if (Model.HasChanged() || CascadedEditContext.HasChanged())
             {
                 Model.ParameterValue ??= CascadedEditContext.ParameterValue.Model;
@@ -121,10 +127,44 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 else
                     RemoveStyles(new [] { "height", "padding", "font-size" });
             }
-
+            
             await Task.CompletedTask;
         }
 
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
+        {
+            if (e == null)
+                throw new NullReferenceException(nameof(e));
+            if (e.ValidationMode != ValidationMode.Model)
+                return;
+            if (State.ParameterValue?.IsForced == true)
+                return;
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
+
+            await _syncValidationStateBeingChanged.WaitAsync();
+            IsValidationStateBeingChanged = true;
+            
+            if (CascadedEditContext == null)
+                State.ParameterValue = InputState.Enabled;
+            else
+            {
+                State.ParameterValue = e.ValidationStatus switch
+                {
+                    ValidationStatus.Pending => InputState.Disabled,
+                    ValidationStatus.Failure => InputState.Enabled,
+                    ValidationStatus.Success => InputState.Disabled, 
+                    _ => InputState.Enabled
+                };
+            }
+            
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+
+            IsValidationStateBeingChanged = false;
+            await _syncValidationStateBeingChanged.ReleaseAsync();
+        }
+
+        public bool IsValidationStateBeingChanged { get; set; }
     }
 
     public enum ProgressBarStyling

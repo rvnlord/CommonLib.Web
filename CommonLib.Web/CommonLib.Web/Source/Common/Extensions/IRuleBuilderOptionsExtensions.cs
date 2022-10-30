@@ -348,11 +348,24 @@ namespace CommonLib.Web.Source.Common.Extensions
             return rb.Must((_, value, vc) =>
             {
                 validationContext = vc;
-                expectedExtensions = extensions.Select(ext => ext.AfterFirstOrWhole(".")).ToArray();
-                value.ForEach(fd => fd.IsExtensionValid = fd.Extension.In(expectedExtensions));
+                expectedExtensions = extensions.Select(ext => ext.AfterFirstOrWhole(".").ToLowerInvariant()).ToArray();
+                value.ForEach(fd => fd.IsExtensionValid = fd.Extension.ToLowerInvariant().In(expectedExtensions));
                 return value.All(fd => fd.IsExtensionValid);
             }).WithMessage((_, _) => $"{validationContext.DisplayName} must have one of the following extensions: {expectedExtensions?.Select(ext => $"\".{ext}\"").JoinAsString(", ")}");
         }
         
+        public static IRuleBuilderOptions<TModel, List<FileData>> FilesUploadedWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, int? numberOfFilesThatShouldBeUploaded = null)
+        {
+            ValidationContext<TModel> validationContext = null;
+            return rb.Must((_, value, vc) =>
+            {
+                validationContext = vc;
+                var actualUploadedFilesCount = value.Count(fd => fd.Status == UploadStatus.Finished || !fd.ValidateUploadStatus);
+                var expectedUploadedFilesCount = numberOfFilesThatShouldBeUploaded ?? value.Count;
+                return actualUploadedFilesCount == expectedUploadedFilesCount;
+            }).WithMessage((_, _) => numberOfFilesThatShouldBeUploaded is null 
+                ? $"All \"{validationContext.DisplayName}\" have to be uploaded"
+                : $"At least {numberOfFilesThatShouldBeUploaded} of the \"{validationContext.DisplayName}\" have to be uploaded");
+        }
     }
 }

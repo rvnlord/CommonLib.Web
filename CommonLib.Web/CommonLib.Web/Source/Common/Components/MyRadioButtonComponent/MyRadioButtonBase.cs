@@ -142,6 +142,8 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
                 throw new NullReferenceException(nameof(e.ValidatedFields));
             if (State.ParameterValue?.IsForced == true)
                 return;
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
 
             if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
                 RemoveClasses("my-valid", "my-invalid");

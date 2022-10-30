@@ -87,6 +87,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 throw new NullReferenceException(nameof(e.ValidatedFields));
             if (e.ValidationStatus == ValidationStatus.Pending)
                 return;
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
 
             if (new FieldIdentifier(_resendConfirmationEmailUserVM, nameof(_resendConfirmationEmailUserVM.Email)).In(e.ValidatedFields)) // as long as user tried to validate email
                 await SetUserNameAsync();

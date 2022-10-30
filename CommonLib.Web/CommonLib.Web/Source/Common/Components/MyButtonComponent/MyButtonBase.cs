@@ -168,14 +168,16 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             await Click.InvokeAsync(this, e).ConfigureAwait(false);
         }
 
-        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
+        private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken token)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
             if (e.ValidationMode != ValidationMode.Model)
                 return;
 
-            await _syncValidationStateBeingChanged.WaitAsync();
+            await _syncValidationStateBeingChanged.WaitAsync(token);
             IsValidationStateBeingChanged = true;
             
             if (CascadedEditContext == null)
@@ -186,7 +188,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 {
                     ValidationStatus.Pending => SubmitsForm.ParameterValue == true ? ButtonState.Loading : ButtonState.Disabled,
                     ValidationStatus.Failure => ButtonState.Enabled,
-                    ValidationStatus.Success => ButtonState.Disabled, // disabled regardless because the one thats submtting should not be reenabled between validation and submit so the user has no chance to fuck up the async feature of the whole thing, alt: SubmitsForm.ParameterValue == true ? ButtonState.Disabled : ButtonState.Enabled,
+                    ValidationStatus.Success => SubmitsForm.ParameterValue == true ? ButtonState.Loading : ButtonState.Disabled, // disabled regardless because the one thats submtting should not be reenabled between validation and submit so the user has no chance to fuck up the async feature of the whole thing, alt: SubmitsForm.ParameterValue == true ? ButtonState.Disabled : ButtonState.Enabled,
                     _ => ButtonState.Enabled
                 };
             }

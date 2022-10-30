@@ -78,7 +78,7 @@ export class FileUploadUtils {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (i === files.length - 1) {
-                fileAsDataUrl = this.renderThumbnailAsync($fileUploadThumbnailContainer, file);
+                fileAsDataUrl = await this.renderThumbnailAsync($fileUploadThumbnailContainer, file);
             }
 
             this.cachePreviewDataForFile(guid, file, fileAsDataUrl);

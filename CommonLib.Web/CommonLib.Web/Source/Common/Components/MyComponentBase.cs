@@ -1023,17 +1023,17 @@ namespace CommonLib.Web.Source.Common.Components
                 IsCached = false;
                 if (LayoutParameter.HasValue())
                 {
-                    Layout.Components.TryRemove(_guid, out _);
+                    //Layout.Components.TryRemove(_guid, out _);
                     Layout.LayoutSessionIdSet -= Layout_SessionIdSet;
                 }
 
-                if (_isCommonLayout && SessionId != Guid.Empty)
-                {
-                    //SessionCache[SessionId].CurrentLayout = null;
-                    //if (_syncComponentsCache.CurrentCount == 0)
-                    //    await _syncComponentsCache.ReleaseAsync();
-                    //_syncComponentsCache.Dispose();
-                }
+                //if (_isCommonLayout && SessionId != Guid.Empty)
+                //{
+                //    SessionCache[SessionId].CurrentLayout = null;
+                //    if (_syncComponentsCache.CurrentCount == 0)
+                //        await _syncComponentsCache.ReleaseAsync();
+                //    _syncComponentsCache.Dispose();
+                //}
                 
                 _syncClasses?.Dispose();
                 _syncStyles?.Dispose();

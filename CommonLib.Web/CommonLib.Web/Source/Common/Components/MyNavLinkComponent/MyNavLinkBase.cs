@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Components.MyNavItemComponent;
@@ -11,6 +12,7 @@ using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Threading;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 {
@@ -128,6 +130,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
             
             if (e.ValidationMode == ValidationMode.Model)
             {

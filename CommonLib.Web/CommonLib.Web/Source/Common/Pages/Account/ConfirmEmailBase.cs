@@ -108,6 +108,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 throw new NullReferenceException(nameof(e.ValidatedFields));
             if (e.ValidationStatus == ValidationStatus.Pending)
                 return;
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
 
             if (new FieldIdentifier(_confirmEmailUserVM, nameof(_confirmEmailUserVM.Email)).In(e.ValidFields)) // doesn't matter if we are validating model or property - as long as email is valid
                 await SetUserNameAsync();

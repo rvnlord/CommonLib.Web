@@ -11,12 +11,8 @@
 
     <div id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="my-fileupload-thumbnail-container" style="@_thumbnailContainerRenderStyle">
-            @if (_thumbnailContainerStyle.VorN("background-image") is null)
-            {
-                <div>No Thumbnail</div>
-            }
         </div>
-        <div class="my-fileupload-drop-container">Drop File here...<input type="file" class="my-fileupload-hidden-file-input" multiple="multiple" /></div>
+        <div class="my-fileupload-drop-container">Drop Files here...<input type="file" class="my-fileupload-hidden-file-input" multiple="multiple" /></div>
         <div class="my-fileupload-buttons-container">
             <div class="my-fileupload-btn-choose-file-container">
                 <MyButton Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" class="my-btn-choose-file" />

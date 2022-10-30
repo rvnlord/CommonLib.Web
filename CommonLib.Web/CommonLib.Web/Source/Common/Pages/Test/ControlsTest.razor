@@ -14,8 +14,8 @@
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
     <div class="my-col-sm-auto my-col-12" style="background: #101010;">
-        <MyEditForm Model="@_employee" class="my-container">
-            <MyFluentValidator />
+        <MyEditForm @ref="_editForm" EditContext="_editContext" class="my-container">
+            <MyFluentValidator @ref="_validator" />
 
             <div class="my-row">
                 <div class="my-col-12 my-media-query-test-container">
@@ -147,7 +147,7 @@
                         Template="@(new CssGridLayout("1fr", "auto"))"
                         LGTemplate="@(new CssGridLayout("max-content", "auto"))">
                         <MyCssGridItem>  
-                            <MyButton Value="@("Submit".ToBp())" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+                            <MyButton Value="@("Submit".ToBp())" Click="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
                         </MyCssGridItem>
                     </MyCssGrid>
                 </MyCssGridItem>

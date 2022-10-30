@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.Threading;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
 
 namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 {
@@ -116,6 +117,8 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
+            if (Ancestors.Any(a => a is MyInputBase))
+                return;
 
             if (fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
             {

@@ -67,6 +67,14 @@
         text-shadow: @Enumerable.Repeat("0 0 3px black", 20).JoinAsString(", ");
     }
 
+    .my-fileupload:not(.disabled).my-valid > .my-fileupload-drop-container {
+        background: @SuccessBackgroundGradient;
+    }
+
+    .my-fileupload:not(.disabled).my-invalid > .my-fileupload-drop-container {
+        background: @ErrorBackgroundGradient;
+    }
+
     .my-fileupload-hidden-file-input {
         display: none;
     }
