@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq.Expressions;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services.Account;
 using CommonLib.Web.Source.Services.Account.Interfaces;
+using CommonLib.Web.Source.Validators.Upload;
 using CommonLib.Web.Source.ViewModels.Account;
 using FluentValidation;
 using SimpleInjector;
@@ -36,7 +39,7 @@ namespace CommonLib.Web.Source.Validators.Account
             AccountManager = accountManager;
 
             ClassLevelCascadeMode = CascadeMode.Continue;
-            RuleLevelCascadeMode = CascadeMode.Stop;
+            RuleLevelCascadeMode = CascadeMode.Continue;
 
             RuleFor(m => m.UserName)
                 .RequiredWithMessage()
@@ -44,6 +47,10 @@ namespace CommonLib.Web.Source.Validators.Account
                 .MaxLengthWithMessage(25)
                 .UserManagerCompliantWithMessage(AccountClient, AccountManager)
                 .NameNotInUseWithMessage(AccountClient, AccountManager);
+
+            RuleFor(m => m.PotentialAvatars)
+                .SetValidator(new AvatarValidator());
+                //.WithDisplayName(m => m.PotentialAvatars); // not really needed
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()

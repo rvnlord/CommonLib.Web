@@ -31,7 +31,7 @@ namespace CommonLib.Web.Source.DbContext
             mb.Entity<CryptographyKey>().ToTable("CryptographyKeys").HasKey(e => e.Name);
         }
 
-        //protected void IdentityDbContextOnModelCreeating(ModelBuilder mb) => base.OnModelCreating(mb);
+        //protected void IdentityDbContextOnModelCreating(ModelBuilder mb) => base.OnModelCreating(mb);
 
         public static AccountDbContext Create()
         {

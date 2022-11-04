@@ -29,7 +29,7 @@ using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 {
-    public class MyFileUploadBase : MyInputBase<List<FileData>>
+    public class MyFileUploadBase : MyInputBase<FileDataList>
     {
         private readonly OrderedSemaphore _syncFileDataState = new(1, 1);
         private int _multipleFileBtnRenders;
@@ -71,9 +71,13 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             Model ??= CascadedEditContext?.ParameterValue?.Model;
 
             string displayName = null;
-            if (For != null && Model != null)
+            if (For is not null && Model is not null)
                 (_, _propName, Value, displayName) = For.GetModelAndProperty();
-            Value ??= new List<FileData>();
+            if (Value is null)
+            {
+                Model.SetPropertyValue(_propName, new FileDataList());
+                Value = Model.GetPropertyValue<FileDataList>(_propName);
+            }
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace() ? Placeholder : !displayName.IsNullOrWhiteSpace() ? $"{displayName}..." : null;
 
@@ -114,7 +118,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     if (!IsRendered)
                     {
                         var btnsForManyFiles = Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
-                        btnsForManyFiles?.ForEach(b => // this prevent buittons controlling multiple files from flickering to enabled on render
+                        btnsForManyFiles?.ForEach(b => // this prevents buttons controlling multiple files from flickering to enabled on render
                         {
                             b.State.SetAsChanged();
                             b._prevParentState = ButtonState.Enabled;
@@ -486,6 +490,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     IApiResponse uploadChunkResponse = null;
                     if (PredefinedSaveUrl.V == PredefinedSaveUrlKind.SaveFileInUserFolder)
                         uploadChunkResponse = await UploadClient.UploadChunkToUserFolderAsync(fd);
+                    if (PredefinedSaveUrl.V == PredefinedSaveUrlKind.SaveTemporaryAvatar)
+                        uploadChunkResponse = await UploadClient.UploadChunkOfTemporaryAvatarAsync(fd);
                     if (uploadChunkResponse is null)
                         throw new ArgumentException("Upload method wasn't provided");
 
@@ -516,6 +522,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
     public enum PredefinedSaveUrlKind
     {
-        SaveFileInUserFolder
+        SaveFileInUserFolder,
+        SaveTemporaryAvatar
     }
 }

@@ -3,6 +3,7 @@ using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services.Account.Interfaces;
+using CommonLib.Web.Source.Validators.Upload;
 using CommonLib.Web.Source.ViewModels;
 using FluentValidation;
 using SimpleInjector;
@@ -51,9 +52,10 @@ namespace CommonLib.Web.Source.Validators
                 .EqualWithMessage(true);
 
             RuleFor(m => m.Files)
-                .FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
-                .FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif", ".mkv")
-                .FilesUploadedWithMessage();
+                .SetValidator(new FileSavedToUserFolderValidator());
+                //.FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
+                //.FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif", ".mkv")
+                //.FilesUploadedWithMessage();
         }
 
         protected virtual void Dispose(bool disposing)

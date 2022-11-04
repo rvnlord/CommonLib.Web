@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             Domain = "test1.com",
             Gender = Gender.Female,
             Progress = 70,
-            Files = new List<FileData>
+            Files = new FileDataList
             {
                 new() { Name = @"Test1", Extension = "png", Data = RandomUtils.RandomBytes(4), Position = 3 },
                 new() { Name = @"Test2", Extension = "png", Data = RandomUtils.RandomBytes(5), Position = 3 }

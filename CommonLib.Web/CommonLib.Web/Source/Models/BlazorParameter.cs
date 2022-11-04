@@ -1,6 +1,13 @@
-﻿namespace CommonLib.Web.Source.Models
+﻿using Microsoft.AspNetCore.Components;
+
+namespace CommonLib.Web.Source.Models
 {
-    public class BlazorParameter<T>
+    public abstract class BlazorParameter
+    {
+        public static BlazorParameter<TParameter> BP<TParameter>(TParameter parameterValue) => new(parameterValue);
+    }
+
+    public class BlazorParameter<T> : BlazorParameter   
     {
         private T _parameterValue;
         private T _previousParameterValue;

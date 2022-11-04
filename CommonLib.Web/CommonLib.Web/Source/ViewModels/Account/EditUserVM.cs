@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using CommonLib.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.ViewModels.Account
 {
@@ -20,7 +22,9 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string ConfirmNewPassword { get; set; }
         public string Ticket { get; set; }
         public string ReturnUrl { get; set; }
-        public string Avatar { get; set; }
+        public ExtendedImage Avatar { get; set; }
         public bool ShouldLogout { get; set; }
+        [DisplayName("Potential Avatars")]
+        public FileDataList PotentialAvatars { get; set; }
     }
 }

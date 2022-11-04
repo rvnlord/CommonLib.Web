@@ -24,7 +24,7 @@ namespace CommonLib.Web.Source.ViewModels
         public ExtendedImage Avatar => _avatar ??= ExtendedImage.Load(PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png"));
 
         public double Progress { get; set; }
-        public List<FileData> Files { get; set; }
+        public FileDataList Files { get; set; }
     }
 
     public enum Gender

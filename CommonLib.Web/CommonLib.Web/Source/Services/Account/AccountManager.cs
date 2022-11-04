@@ -554,9 +554,12 @@ namespace CommonLib.Web.Source.Services.Account
             if (user is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no User with the supplied Id") }.ToLookup());
 
+            //var avatar = ;
+
             var userNameChanged = !userToEdit.UserName.EqualsIgnoreCase(user.UserName);
             var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
             var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsInvariant(userToEdit.NewPassword);
+            var avatarChanged = false;
             var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
             if (!userNameChanged && !emailChanged && !passwordChanged)
@@ -596,6 +599,11 @@ namespace CommonLib.Web.Source.Services.Account
                 userToEdit.HasPassword = true;
 
                 propsToChange.Add("Password");
+            }
+
+            if (avatarChanged)
+            {
+
             }
             
             await _db.SaveChangesAsync();

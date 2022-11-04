@@ -13,6 +13,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using FluentValidation;
+using MoreLinq.Extensions;
 using WebSocketSharp;
 
 namespace CommonLib.Web.Source.Common.Extensions
@@ -301,13 +302,15 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, _) => $"{validationContext.DisplayName} is required");
         }
 
-        public static IRuleBuilderOptions<TModel, List<FileData>> FileSizeWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, Expression<Func<FileSize, bool>> fdCondition)
+        public static IRuleBuilderOptions<TModel, FileDataList> FileSizeWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, Expression<Func<FileSize, bool>> fdCondition)
         {
             ValidationContext<TModel> validationContext = null;
+            string displayName = null;
             var conditionString = "match the condition";
             return rb.Must((_, value, vc) =>
             {
                 validationContext = vc;
+                displayName = validationContext.DisplayName ?? validationContext.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 var op = (fdCondition.Body as BinaryExpression)?.NodeType;
                 var exprSizeCtor = (fdCondition.Body as BinaryExpression)?.Right as NewExpression;
 
@@ -338,34 +341,44 @@ namespace CommonLib.Web.Source.Common.Extensions
                 var fdConditionCompiled = fdCondition.Compile();
                 value.ForEach(fd => fd.IsFileSizeValid = fdConditionCompiled.Invoke(fd.TotalSize));
                 return value.All(fd => fd.IsFileSizeValid);
-            }).WithMessage((_, _) => $"Each of the {validationContext.DisplayName}' size must {conditionString}");
+            }).WithMessage((_, _) => $"Each of the {displayName}' size must {conditionString}");
         }
 
-        public static IRuleBuilderOptions<TModel, List<FileData>> FileExtensionWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, params string[] extensions)
+        public static IRuleBuilderOptions<TModel, FileDataList> FileExtensionWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, params string[] extensions)
         {
             ValidationContext<TModel> validationContext = null;
+            string displayName = null;
             string[] expectedExtensions = null;
             return rb.Must((_, value, vc) =>
             {
                 validationContext = vc;
+                displayName = validationContext.DisplayName ?? validationContext.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 expectedExtensions = extensions.Select(ext => ext.AfterFirstOrWhole(".").ToLowerInvariant()).ToArray();
                 value.ForEach(fd => fd.IsExtensionValid = fd.Extension.ToLowerInvariant().In(expectedExtensions));
                 return value.All(fd => fd.IsExtensionValid);
-            }).WithMessage((_, _) => $"{validationContext.DisplayName} must have one of the following extensions: {expectedExtensions?.Select(ext => $"\".{ext}\"").JoinAsString(", ")}");
+            }).WithMessage((_, _) => $"{displayName} must have one of the following extensions: {expectedExtensions?.Select(ext => $"\".{ext}\"").JoinAsString(", ")}");
         }
         
-        public static IRuleBuilderOptions<TModel, List<FileData>> FilesUploadedWithMessage<TModel>(this IRuleBuilder<TModel, List<FileData>> rb, int? numberOfFilesThatShouldBeUploaded = null)
+        public static IRuleBuilderOptions<TModel, FileDataList> FilesUploadedWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, int? numberOfFilesThatShouldBeUploaded = null)
         {
             ValidationContext<TModel> validationContext = null;
+            string displayName = null;
             return rb.Must((_, value, vc) =>
             {
                 validationContext = vc;
+                displayName = validationContext.DisplayName ?? validationContext.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 var actualUploadedFilesCount = value.Count(fd => fd.Status == UploadStatus.Finished || !fd.ValidateUploadStatus);
                 var expectedUploadedFilesCount = numberOfFilesThatShouldBeUploaded ?? value.Count;
                 return actualUploadedFilesCount == expectedUploadedFilesCount;
             }).WithMessage((_, _) => numberOfFilesThatShouldBeUploaded is null 
-                ? $"All \"{validationContext.DisplayName}\" have to be uploaded"
-                : $"At least {numberOfFilesThatShouldBeUploaded} of the \"{validationContext.DisplayName}\" have to be uploaded");
+                ? $"All \"{displayName}\" have to be uploaded"
+                : $"At least {numberOfFilesThatShouldBeUploaded} of the \"{displayName}\" have to be uploaded");
+        }
+
+        public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()
+        {
+            DefaultValidatorOptions.Configurable(rb).SetDisplayName(new TModel().GetPropertyDisplayName(propertySelector));
+            return (IRuleBuilderOptions<TModel, TProperty>)rb;
         }
     }
 }

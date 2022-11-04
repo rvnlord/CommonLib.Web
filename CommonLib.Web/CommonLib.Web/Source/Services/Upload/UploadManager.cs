@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
@@ -21,24 +23,49 @@ namespace CommonLib.Web.Source.Services.Upload
             _accountManager = accountManager;
         }
 
-        public async Task<IApiResponse> UploadChunkToUserFolderAsync(AuthenticateUserVM authUser, FileData fileData)
+        public async Task<IApiResponse> UploadChunkToUserFolderAsync(AuthenticateUserVM authUser, FileData chunk)
         {
             authUser = (await _accountManager.GetAuthenticatedUserAsync(null, null, authUser))?.Result;
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
-            if (!(await new FileChunkSavedToUserFolderValidator(_accountManager).ValidateAsync(fileData)).IsValid)
+            var status = chunk.Status;
+            chunk.Status = UploadStatus.Finished;
+            if (!(await new FileSavedToUserFolderValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
                 return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+            chunk.Status = status;
 
-            var dirToSaveFiles = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryProjectDir(), "UserFiles", authUser.UserName);
-            var filePath = PathUtils.Combine(PathSeparator.BSlash, dirToSaveFiles, fileData.NameWithExtension) ?? throw new NullReferenceException();
+            var dirToSaveFiles = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName);
+            var filePath = PathUtils.Combine(PathSeparator.BSlash, dirToSaveFiles, chunk.NameWithExtension) ?? throw new NullReferenceException();
             var fileExists = File.Exists(filePath);
-            if (fileData.Position == 0 && fileExists)
+            if (chunk.Position == 0 && fileExists)
                 File.Delete(filePath);
             var storedFileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
-            if (fileData.Position != 0 && storedFileSize != fileData.Position)
+            if (chunk.Position != 0 && storedFileSize != chunk.Position)
                 throw new ArgumentOutOfRangeException(null, "This is not the next part of the file");
 
-            await FileUtils.AppendAllBytesAsync(filePath, fileData.Data.ToArray());
+            await FileUtils.AppendAllBytesAsync(filePath, chunk.Data.ToArray());
+            
+            return new ApiResponse(StatusCodeType.Status200OK, "File chunk added to the file", null);
+        }
+
+        public async Task<IApiResponse> UploadChunkOfTemporaryAvatarAsync(AuthenticateUserVM authUser, FileData chunk)
+        {
+            authUser = (await _accountManager.GetAuthenticatedUserAsync(null, null, authUser))?.Result;
+            if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
+            if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
+                return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+
+            var dirToSaveFiles = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
+            var filePath = PathUtils.Combine(PathSeparator.BSlash, dirToSaveFiles, chunk.NameWithExtension) ?? throw new NullReferenceException();
+            var fileExists = File.Exists(filePath);
+            if (chunk.Position == 0 && fileExists)
+                File.Delete(filePath);
+            var storedFileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
+            if (chunk.Position != 0 && storedFileSize != chunk.Position)
+                throw new ArgumentOutOfRangeException(null, "This is not the next part of the file");
+
+            await FileUtils.AppendAllBytesAsync(filePath, chunk.Data.ToArray());
             
             return new ApiResponse(StatusCodeType.Status200OK, "File chunk added to the file", null);
         }

@@ -21,5 +21,7 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost(nameof(UploadChunkToUserFolderAsync))] // POST: api/upload/UploadChunkToUserFolder
         public async Task<JToken> UploadChunkToUserFolderAsync(JToken JAuthUserAndChunk) => await EnsureVoidResponseAsync(async () => await _uploadManager.UploadChunkToUserFolderAsync(JAuthUserAndChunk["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndChunk["Chunk"].To<FileData>()));
         
+        [HttpPost(nameof(UploadChunkOfTemporaryAvatarAsync))] // POST: api/upload/UploadChunkOfTemporaryAvatar
+        public async Task<JToken> UploadChunkOfTemporaryAvatarAsync(JToken JAuthUserAndChunk) => await EnsureVoidResponseAsync(async () => await _uploadManager.UploadChunkOfTemporaryAvatarAsync(JAuthUserAndChunk["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndChunk["Chunk"].To<FileData>()));
     }
 }

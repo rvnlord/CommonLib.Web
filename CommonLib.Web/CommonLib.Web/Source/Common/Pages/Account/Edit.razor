@@ -5,7 +5,10 @@
 @using CommonLib.Web.Source.ViewModels.Account
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Models
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using static CommonLib.Web.Source.Models.BlazorParameter;
 
 @inherits EditBase
 
@@ -59,6 +62,18 @@
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _editUserVM.UserName)" />
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _editUserVM.Avatar)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyFileUpload For="@(() => _editUserVM.PotentialAvatars)" 
+                                  PreviewFor="@BP(() => _editUserVM.Avatar)" 
+                                  PredefinedSaveUrl="PredefinedSaveUrlKind.SaveTemporaryAvatar" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _editUserVM.PotentialAvatars)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">

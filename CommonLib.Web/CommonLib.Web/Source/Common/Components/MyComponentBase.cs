@@ -159,7 +159,7 @@ namespace CommonLib.Web.Source.Common.Components
             get
             {
                 //_syncComponentsCache.Wait();
-                var children = Layout.Components.SafelyGetValues().Where(c => c.Parent == this).ToList();
+                var children = Layout.Components.SafelyGetValues().Where(c => c.Parent == this && !c.IsDisposed).ToList();
                 //_syncComponentsCache.Release();
                 return children;
             }
@@ -1023,7 +1023,7 @@ namespace CommonLib.Web.Source.Common.Components
                 IsCached = false;
                 if (LayoutParameter.HasValue())
                 {
-                    //Layout.Components.TryRemove(_guid, out _);
+                    Layout.Components.TryRemove(_guid, out _);
                     Layout.LayoutSessionIdSet -= Layout_SessionIdSet;
                 }
 

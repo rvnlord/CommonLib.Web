@@ -121,7 +121,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
             validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
-            if (validator == null) // not supposed to be validated
+            validator.SetProperty("RuleLevelCascadeMode", CascadeMode.Continue);
+            if (validator is null) // not supposed to be validated
             {
                 _syncValidation.Release();
                 return true;
@@ -145,11 +146,11 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                     continue;
                 }
                 var fwvrVal = model.GetType().GetProperty(fwvr.FieldName)?.GetValue(model);
-                if (fwvrVal == null)
+                if (fwvrVal is null)
                     continue;
                 if (fwvrVal is string && fwvrVal.ToString().IsNullOrWhiteSpace())
                     continue;
-                if (fwvrVal.ToDoubleN() != null && fwvrVal.ToDouble().Eq(0))
+                if (fwvrVal.ToDoubleN() is not null && fwvrVal.ToDouble().Eq(0))
                     continue;
                 validatedFields.Add(fwvr);
             }

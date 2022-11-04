@@ -31,7 +31,7 @@ namespace CommonLib.Web.Source.Services.Upload
                     _httpClient.BaseAddress = new Uri(ConfigUtils.BackendBaseUrl);
                 return _httpClient;
             }
-            set =>  _httpClient = value;
+            init =>  _httpClient = value;
         }
 
         public UploadClient(HttpClient httpClient, IAccountClient accountClient, ILocalStorageService localStorage, ISessionStorageService sessionStorage, IMyJsRuntime myJsRuntime)
@@ -47,6 +47,16 @@ namespace CommonLib.Web.Source.Services.Upload
         {
             var authUser = (await _accountClient.GetAuthenticatedUserAsync())?.Result;
             return await HttpClient.PostJTokenAsync<ApiResponse>($"api/upload/{nameof(UploadApiController.UploadChunkToUserFolderAsync)}", new
+            {
+                AuthenticatedUser = authUser, 
+                Chunk = chunk
+            });
+        }
+
+        public async Task<IApiResponse> UploadChunkOfTemporaryAvatarAsync(FileData chunk)
+        {
+            var authUser = (await _accountClient.GetAuthenticatedUserAsync())?.Result;
+            return await HttpClient.PostJTokenAsync<ApiResponse>($"api/upload/{nameof(UploadApiController.UploadChunkOfTemporaryAvatarAsync)}", new
             {
                 AuthenticatedUser = authUser, 
                 Chunk = chunk

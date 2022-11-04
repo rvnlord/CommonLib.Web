@@ -7,5 +7,6 @@ namespace CommonLib.Web.Source.Services.Upload.Interfaces
     public interface IUploadClient
     {
         Task<IApiResponse> UploadChunkToUserFolderAsync(FileData chunk);
+        Task<IApiResponse> UploadChunkOfTemporaryAvatarAsync(FileData chunk);
     }
 }
