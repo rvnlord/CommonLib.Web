@@ -28,11 +28,10 @@ namespace CommonLib.Web.Source.Services.Upload
             authUser = (await _accountManager.GetAuthenticatedUserAsync(null, null, authUser))?.Result;
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
-            var status = chunk.Status;
-            chunk.Status = UploadStatus.Finished;
+            chunk.ValidateUploadStatus = false;
             if (!(await new FileSavedToUserFolderValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
                 return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
-            chunk.Status = status;
+            chunk.ValidateUploadStatus = true;
 
             var dirToSaveFiles = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName);
             var filePath = PathUtils.Combine(PathSeparator.BSlash, dirToSaveFiles, chunk.NameWithExtension) ?? throw new NullReferenceException();
