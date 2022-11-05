@@ -10,7 +10,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public Guid Id { get; set; }
         [DisplayName("Id")]
         public string IdString => Id != Guid.Empty ? Id.ToString() : null;
-        [DisplayName("User Name")]
+        [DisplayName("DbUser Name")]
         public string UserName { get; set; }
         public string Email { get; set; }
         [DisplayName("Old Password")]

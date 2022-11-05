@@ -55,8 +55,8 @@ namespace CommonLib.Web.Source.Services.Upload
             if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
                 return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
-            var dirToSaveFiles = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
-            var filePath = PathUtils.Combine(PathSeparator.BSlash, dirToSaveFiles, chunk.NameWithExtension) ?? throw new NullReferenceException();
+            var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
+            var filePath = PathUtils.Combine(PathSeparator.BSlash, tempAvatarDir, chunk.NameWithExtension) ?? throw new NullReferenceException();
             var fileExists = File.Exists(filePath);
             if (chunk.Position == 0 && fileExists)
                 File.Delete(filePath);

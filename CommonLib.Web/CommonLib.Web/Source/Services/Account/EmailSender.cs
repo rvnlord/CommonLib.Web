@@ -4,10 +4,8 @@ using System.Net.Mail;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.Models;
-using CommonLib.Web.Source.Models.Account;
 using CommonLib.Web.Source.Models.Interfaces;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Source.Common.Converters;
@@ -15,6 +13,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Models;
 using CommonLib.Source.Models.Interfaces;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,11 +22,11 @@ namespace CommonLib.Web.Source.Services.Account
 {
     public class EmailSender : IEmailSender
     {
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<DbUser> _userManager;
         private readonly IConfiguration _config;
         private readonly AccountDbContext _db;
 
-        public EmailSender(UserManager<User> userManager, IConfiguration config, AccountDbContext db)
+        public EmailSender(UserManager<DbUser> userManager, IConfiguration config, AccountDbContext db)
         {
             _userManager = userManager;
             _config = config;
@@ -82,7 +81,7 @@ namespace CommonLib.Web.Source.Services.Account
             return await SendEmailAsync(user, "Crimson Relays - Reset Password", sbEmailBody.ToString());
         }
 
-        private async Task<IApiResponse> SendEmailAsync(User user, string subject, string content)
+        private async Task<IApiResponse> SendEmailAsync(DbUser user, string subject, string content)
         {
             try
             {
@@ -101,7 +100,7 @@ namespace CommonLib.Web.Source.Services.Account
 
                 var key = CryptoUtils.GenerateCamelliaKey();
                 var encryptedPassword = decryptedPassword.UTF8ToByteArray().EncryptCamellia(key).ToBase58String();
-                _db.CryptographyKeys.AddOrUpdate(new CryptographyKey { Name = "EmailPassword", Value = key.ToBase58String() }, e => e.Name);
+                _db.CryptographyKeys.AddOrUpdate(new DbCryptographyKey { Name = "EmailPassword", Value = key.ToBase58String() }, e => e.Name);
                 await _db.SaveChangesAsync();
                 await ConfigUtils.SetAppSettingValueAsync("Email:Password", encryptedPassword);
 

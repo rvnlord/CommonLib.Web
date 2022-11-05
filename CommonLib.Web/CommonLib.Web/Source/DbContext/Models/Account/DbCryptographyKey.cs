@@ -1,6 +1,6 @@
-﻿namespace BlazorDemo.Common.Models.Account
+﻿namespace CommonLib.Web.Source.DbContext.Models.Account
 {
-    public class CryptographyKey
+    public class DbCryptographyKey
     {
         public string Name { get; set; }
         public string Value { get; set; }

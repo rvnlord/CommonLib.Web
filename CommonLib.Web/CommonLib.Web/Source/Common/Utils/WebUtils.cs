@@ -1,18 +1,22 @@
 ﻿using System;
 using SimpleInjector;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Services;
 using CommonLib.Web.Source.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using NLog.Fluent;
 using SimpleInjector.Lifestyles;
 
 namespace CommonLib.Web.Source.Common.Utils
@@ -23,7 +27,8 @@ namespace CommonLib.Web.Source.Common.Utils
         public static WebAssemblyHostBuilder HostBuilder { get; set; }
         public static dynamic ServerHostBuilder { get; set; }
         public static dynamic ServerHostEnvironment => ServerHostBuilder.Environment; // IWebHostEnvironment
-        public static IConfiguration Configuration => HostBuilder.Configuration;
+        public static IConfiguration Configuration => HostBuilder?.Configuration;// ?? ConfigUtils.GetFromAppSettings(); // it should technically be null only while executing migration from within VS so Getting Proj Path should be safe | handled in DbContextFactory |  //Logger.For(typeof(WebUtils)).Info("Configuration Path Is: " + FileUtils.GetProjectDir<MyComponentBase>());
+
         public static HttpClient HttpClient => GetService<HttpClient>();
         public static HtmlEncoder HtmlEncoder => GetService<HtmlEncoder>();
         public static UrlEncoder UrlEncoder => GetService<UrlEncoder>();
@@ -99,17 +104,7 @@ namespace CommonLib.Web.Source.Common.Utils
             var scope = AsyncScopedLifestyle.BeginScope(ServiceProvider);
             return (ServiceProvider.GetInstance(serviceType), scope);
         }
-
-        public static DbContextOptions<TContext> GetMSSQLDbContextOptions<TContext>() where TContext : Microsoft.EntityFrameworkCore.DbContext
-        {
-            return new DbContextOptionsBuilder<TContext>().UseSqlServer(Configuration.GetConnectionString("DBCS")).Options;
-        }
-
-        public static DbContextOptions<TContext> GetSQLiteDbContextOptions<TContext>(string csConfigName = "DBCS") where TContext : Microsoft.EntityFrameworkCore.DbContext
-        {
-            return new DbContextOptionsBuilder<TContext>().UseSqlite(Configuration.GetConnectionString(csConfigName)).Options;
-        }
-
+        
         public static void ConfigureBackendUrl(Action postAction)
         {
             Task.Run(async () =>

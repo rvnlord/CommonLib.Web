@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace CommonLib.Web.Source.Common.Extensions
 {
     public static class IdentityBuilderExtensions
-    {//.AddCustomTokenProvider<CustomEmailConfirmationTokenProvider<User>>("CustomEmailConfirmationTokenProvider");
+    {//.AddCustomTokenProvider<CustomEmailConfirmationTokenProvider<DbUser>>("CustomEmailConfirmationTokenProvider");
         public static IdentityBuilder AddCustomTokenProvider<T>(this IdentityBuilder ib) where T : class
         {
             ib.Services.Configure<IdentityOptions>(options =>

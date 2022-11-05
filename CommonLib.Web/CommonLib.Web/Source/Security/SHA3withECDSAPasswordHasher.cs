@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
-using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.DbContext;
-using CommonLib.Web.Source.Models.Account;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.AspNetCore.Identity;
 using Org.BouncyCastle.Security;
 
 namespace CommonLib.Web.Source.Security
 {
-public class SHA3withECDSAPasswordHasher<TUser> : IPasswordHasher<TUser> where TUser : User
+public class SHA3withECDSAPasswordHasher<TUser> : IPasswordHasher<TUser> where TUser : DbUser
     {
         private readonly AccountDbContext _db;
 
@@ -27,13 +26,13 @@ public class SHA3withECDSAPasswordHasher<TUser> : IPasswordHasher<TUser> where T
             {
                 var keys = CryptoUtils.GenerateECKeyPair();
                 keyStr = keys.Private.ToECPrivateKeyByteArray().ToBase64SafeUrlString();
-                _db.CryptographyKeys.Add(new CryptographyKey { Name = "PasswordHasher", Value = keyStr });
+                _db.CryptographyKeys.Add(new DbCryptographyKey { Name = "PasswordHasher", Value = keyStr });
                 _db.SaveChanges();
             }
 
             var ecPrivKey = keyStr?.Base64SafeUrlToByteArray().ECPrivateKeyByteArrayToECPrivateKey();
             var salt = new SecureRandom().GenerateSeed(6);
-            var sha3Hash = password.UTF8ToByteArray().Concat(salt).ToArray().Sha3().Concat(salt).ToArray();
+            var sha3Hash = password.UTF8ToByteArray().Concat(salt).ToArray().Keccak256().Concat(salt).ToArray();
             return $"{sha3Hash.ToBase64SafeUrlString()}|{sha3Hash.SignECDSA(ecPrivKey).ToBase64SafeUrlString()}".UTF8ToBase64SafeUrl(); // not meant to increase security as you can see, just foir demonstration purposes that custom cryptography can be used
         }
 
@@ -53,7 +52,7 @@ public class SHA3withECDSAPasswordHasher<TUser> : IPasswordHasher<TUser> where T
             var ecdsaSignature = hashedPassword.Base64SafeUrlToUTF8().After("|").Base64SafeUrlToByteArray();
 
             var salt = sha3Hash.TakeLast(6).ToArray();
-            var providedPasswordSha3Hash = providedPassword.UTF8ToByteArray().Concat(salt).ToArray().Sha3().Concat(salt).ToArray();
+            var providedPasswordSha3Hash = providedPassword.UTF8ToByteArray().Concat(salt).ToArray().Keccak256().Concat(salt).ToArray();
 
             return providedPasswordSha3Hash.SequenceEqual(sha3Hash) && providedPasswordSha3Hash.VerifyECDSA(ecdsaSignature, pubKey)
                 ? PasswordVerificationResult.Success

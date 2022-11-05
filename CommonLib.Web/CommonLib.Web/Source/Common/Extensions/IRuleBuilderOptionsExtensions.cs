@@ -151,7 +151,7 @@ namespace CommonLib.Web.Source.Common.Extensions
                 return userByEmailAsync.Result != null;
             }).WithMessage((_, value) => userByEmailAsync.IsError 
                 ? userByEmailAsync.Message 
-                : $"There is no User with {validationContext.DisplayName} \"{value}\" registered");
+                : $"There is no DbUser with {validationContext.DisplayName} \"{value}\" registered");
         }
 
         public static IRuleBuilderOptions<T, string> EqualWithMessage<T>(this IRuleBuilder<T, string> rb, Expression<Func<T, string>> predicate)

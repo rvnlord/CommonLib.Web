@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
-using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.DbContext;
-using CommonLib.Web.Source.Models.Account;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Converters;
@@ -15,6 +14,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.Security;
 using CommonLib.Web.Source.Validators.Account;
 using FluentValidation;
@@ -22,30 +22,31 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CommonLib.Web.Source.Common.Converters;
 
 namespace CommonLib.Web.Source.Services.Account
 {
     public class AccountManager : IAccountManager
     {
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<DbUser> _userManager;
         private readonly IEmailSender _emailSender;
-        private readonly SignInManager<User> _signInManager;
+        private readonly SignInManager<DbUser> _signInManager;
         private readonly AccountDbContext _db;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _http;
-        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IPasswordHasher<DbUser> _passwordHasher;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
-        private readonly CustomPasswordResetTokenProvider<User> _passwordResetTokenProvider;
+        private readonly CustomPasswordResetTokenProvider<DbUser> _passwordResetTokenProvider;
 
-        public AccountManager(UserManager<User> userManager,
-            SignInManager<User> signInManager,
+        public AccountManager(UserManager<DbUser> userManager,
+            SignInManager<DbUser> signInManager,
             IEmailSender emailSender,
             AccountDbContext db,
             IMapper autoMapper,
             IHttpContextAccessor http,
-            IPasswordHasher<User> passwordHasher,
+            IPasswordHasher<DbUser> passwordHasher,
             RoleManager<IdentityRole<Guid>> roleManager,
-            CustomPasswordResetTokenProvider<User> passwordResetTokenProvider)
+            CustomPasswordResetTokenProvider<DbUser> passwordResetTokenProvider)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -62,26 +63,26 @@ namespace CommonLib.Web.Source.Services.Account
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.UserName.ToLower() == name.ToLower());
             if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no DbUser with the given Name", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
             foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
 
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", null, foundUser);
+            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding DbUser by Name has been Successful", null, foundUser);
         }
 
         public async Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email)
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.Email.ToLower() == email.ToLower());
             if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Email", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no DbUser with the given Email", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
             foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
 
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Email has been Successful", null, foundUser);
+            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding DbUser by Email has been Successful", null, foundUser);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
@@ -93,7 +94,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             if (userPropertyName.ContainsIgnoreCase("UserName"))
             {
-                if (!userPropertyValue.All(c => c.In(_userManager.Options.User.AllowedUserNameCharacters))) // we are skipping unique email check here because we are already checking email in other attrbiute and because email is not part of username property despite the fact that usermanager have email option under User category for some reason
+                if (!userPropertyValue.All(c => c.In(_userManager.Options.User.AllowedUserNameCharacters))) // we are skipping unique email check here because we are already checking email in other attrbiute and because email is not part of username property despite the fact that usermanager have email option under DbUser category for some reason
                     return new ApiResponse<bool>(StatusCodeType.Status400BadRequest, $"{userPropertyDisplayName} contains disallowed characters, allowed characters are: [{_userManager.Options.User.AllowedUserNameCharacters.Select(c => $"\'{c}\'").JoinAsString(", ")}]", null, false);
             }
 
@@ -136,7 +137,7 @@ namespace CommonLib.Web.Source.Services.Account
             var passwordHash = decryptedTicket[2].NullifyIf(ph => ph.IsNullOrWhiteSpace()); // we need to nullify the empty string that comes from a decrypted ticket because otherwise we would get passwordHash ("") == user.PasswordHash (null) = false
             var rememberMe = decryptedTicket[3].ToBool();
 
-            User user = null;
+            DbUser user = null;
             if (claimsPrincipal?.Identity?.Name != null)
                 user = await _userManager.FindByNameAsync(claimsPrincipal.Identity.Name);
             if (user == null)
@@ -163,7 +164,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister)
         {
-            var user = new User { UserName = userToRegister.UserName, Email = userToRegister.Email };
+            var user = new DbUser { UserName = userToRegister.UserName, Email = userToRegister.Email };
             var result = userToRegister.Password is not null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
             if (!result.Succeeded) // new List<IdentityError> { new() { Code = "Password", Description = "Password Error TEST" } }
             {
@@ -187,10 +188,10 @@ namespace CommonLib.Web.Source.Services.Account
 
             await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
 
-            if (!await _roleManager.RoleExistsAsync("User"))
-                await _roleManager.CreateAsync(new IdentityRole<Guid>("User"));
+            if (!await _roleManager.RoleExistsAsync("DbUser"))
+                await _roleManager.CreateAsync(new IdentityRole<Guid>("DbUser"));
 
-            await _userManager.AddToRoleAsync(user, "User");
+            await _userManager.AddToRoleAsync(user, "DbUser");
 
             if (_userManager.Options.SignIn.RequireConfirmedEmail)
             {
@@ -243,7 +244,7 @@ namespace CommonLib.Web.Source.Services.Account
             if (key == null)
             {
                 key = CryptoUtils.GenerateCamelliaKey().ToBase58String();
-                await _db.CryptographyKeys.AddAsync(new CryptographyKey { Name = "LoginTicket", Value = key });
+                await _db.CryptographyKeys.AddAsync(new DbCryptographyKey { Name = "LoginTicket", Value = key });
                 await _db.SaveChangesAsync();
             }
 
@@ -290,11 +291,11 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<LoginUserVM>> LoginAsync(LoginUserVM userToLogin)
         {
             if (userToLogin.UserName.IsNullOrWhiteSpace())
-                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name can't be empty", new[] { new KeyValuePair<string, string>("UserName", "User Name is required") }.ToLookup());
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name can't be empty", new[] { new KeyValuePair<string, string>("UserName", "DbUser Name is required") }.ToLookup());
 
             var user = await _userManager.FindByNameAsync(userToLogin.UserName);
             if (user == null)
-                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name not found, please Register first", new[] { new KeyValuePair<string, string>("UserName", "There is no User with this UserName") }.ToLookup());
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name not found, please Register first", new[] { new KeyValuePair<string, string>("UserName", "There is no DbUser with this UserName") }.ToLookup());
 
             userToLogin.Email = user.Email; // userName if we are sedarching by email but here we are searching for name
             if (!user.EmailConfirmed && await _userManager.CheckPasswordAsync(user, userToLogin.Password) && _userManager.Options.SignIn.RequireConfirmedEmail)
@@ -550,19 +551,20 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
             userToEdit.Id = authUser.Id; // to fix the case when malicious user edited the Id manually
-            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
+            var user = await _db.Users.Include(u => u.Avatar).SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
             if (user is null)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no User with the supplied Id") }.ToLookup());
-
-            //var avatar = ;
-
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no DbUser with the supplied Id") }.ToLookup());
+            
+            var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
+            var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
+            
             var userNameChanged = !userToEdit.UserName.EqualsIgnoreCase(user.UserName);
             var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
             var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsInvariant(userToEdit.NewPassword);
-            var avatarChanged = false;
+            var avatarChanged = newAvatar is not null && user.Avatar?.Hash?.EqualsInvariant(newAvatar.Hash) != true;
             var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
-            if (!userNameChanged && !emailChanged && !passwordChanged)
+            if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
             
             var propsToChange = new List<string>();
@@ -603,9 +605,11 @@ namespace CommonLib.Web.Source.Services.Account
 
             if (avatarChanged)
             {
-
+                user.Avatar = newAvatar.ToDbFile(user.Id, user.Id);
+                //_db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
+                propsToChange.Add(nameof(user.Avatar));
             }
-            
+
             await _db.SaveChangesAsync();
             
             if (isConfirmationRequired)

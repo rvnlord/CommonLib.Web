@@ -1,5 +1,5 @@
 ﻿using System;
-using CommonLib.Web.Source.Models.Account;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,7 +20,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static void RenameIdentityTables(this ModelBuilder mb)
         {
-            mb.Entity<User>().ToTable("Users");
+            mb.Entity<DbUser>().ToTable("Users");
             mb.Entity<IdentityRole<Guid>>().ToTable("Roles");
             mb.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
             mb.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");

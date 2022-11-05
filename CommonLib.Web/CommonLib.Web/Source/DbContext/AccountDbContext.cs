@@ -1,38 +1,55 @@
 ﻿using System;
-using System.Linq;
-using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
-using CommonLib.Web.Source.Models.Account;
-using CommonLib.Source.Common.Extensions;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace CommonLib.Web.Source.DbContext
 {
-    public class AccountDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
+    public class AccountDbContext : IdentityDbContext<DbUser, IdentityRole<Guid>, Guid>
     {
-        //public StoreOptions StoreOptions { get; set; }
-        //public IPersonalDataProtector PersonalDataProtector { get; set; }
-
-        public DbSet<CryptographyKey> CryptographyKeys { get; set; }
+        public DbSet<DbCryptographyKey> CryptographyKeys { get; set; }
+        public DbSet<DbFile> Files { get; set; }
         
         public AccountDbContext(DbContextOptions<AccountDbContext> options) : base(options) { }
         
         protected override void OnModelCreating(ModelBuilder mb)
         {
+            if (mb == null)
+                throw new ArgumentNullException(nameof(mb));
+            
             base.OnModelCreating(mb);
             mb.RenameIdentityTables();
-            mb.Entity<CryptographyKey>().ToTable("CryptographyKeys").HasKey(e => e.Name);
+
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Files)
+                .WithOne(e => e.UserOwningFile)
+                .HasForeignKey(e => e.UserOwningFileId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
+            mb.Entity<DbUser>()
+                .HasOne(e => e.Avatar)
+                .WithOne(e => e.UserHavingFileAsAvatar)
+                .HasForeignKey<DbFile>(e => e.UserHavingFileAsAvatarId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            //mb.Entity<DbFile>().Property(e => e.UserHavingFileAsAvatarId).IsRequired(false);
+            //mb.Entity<DbUser>(b => b.Navigation(e => e.Avatar).IsRequired());
+
+            mb.Entity<DbCryptographyKey>()
+                .ToTable("CryptographyKeys")
+                .HasKey(e => e.Name);
+
+            mb.Entity<DbFile>()
+                .ToTable("Files")
+                .HasKey(e => e.Hash);
         }
-
-        //protected void IdentityDbContextOnModelCreating(ModelBuilder mb) => base.OnModelCreating(mb);
-
+        
         public static AccountDbContext Create()
         {
             var o = new DbContextOptionsBuilder<AccountDbContext>();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BlazorDemo.Common.Models.Account;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Models.Interfaces;
@@ -11,6 +10,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
@@ -74,7 +74,7 @@ namespace CommonLib.Web.Source.Services
                 if (key == null)
                 {
                     key = CryptoUtils.GenerateCamelliaKey().ToBase58String();
-                    await _db.CryptographyKeys.AddAsync(new CryptographyKey { Name = "DBCS", Value = key });
+                    await _db.CryptographyKeys.AddAsync(new DbCryptographyKey { Name = "DBCS", Value = key });
                     await _db.SaveChangesAsync();
                 }
 

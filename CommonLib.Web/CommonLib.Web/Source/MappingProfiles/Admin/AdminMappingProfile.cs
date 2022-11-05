@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using CommonLib.Web.Source.Models.Account;
 using CommonLib.Web.Source.ViewModels.Account;
 
 namespace CommonLib.Web.Source.MappingProfiles.Admin
@@ -8,7 +7,7 @@ namespace CommonLib.Web.Source.MappingProfiles.Admin
     {
         public AdminMappingProfile()
         {
-            //CreateMap<User, AdminEditUserVM>();
+            //CreateMap<DbUser, AdminEditUserVM>();
             //CreateMap<FindUserVM, AdminEditUserVM>();
         }
     }

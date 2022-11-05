@@ -6,7 +6,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
     public class RegisterUserVM : BaseVM
     {
         public Guid? Id { get; set; }
-        [DisplayName("User Name")]
+        [DisplayName("DbUser Name")]
         public string UserName { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }

@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.DbContext;
-using CommonLib.Web.Source.Models.Account;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Web.Source.DbContext.Models.Account;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
 namespace CommonLib.Web.Source.Security
 {
-    public class CustomPasswordResetTokenProvider<TUser> : IUserTwoFactorTokenProvider<TUser> where TUser : User
+    public class CustomPasswordResetTokenProvider<TUser> : IUserTwoFactorTokenProvider<TUser> where TUser : DbUser
     {
         private readonly AccountDbContext _db;
         public DataProtectionTokenProviderOptions Options { get; }
