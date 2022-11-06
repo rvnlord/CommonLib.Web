@@ -14,6 +14,8 @@ using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Services.Interfaces;
+using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Controllers;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -53,6 +55,11 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyemail", email);
+        }
+
+        public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FileData>>($"api/account/{nameof(AccountApiController.GetUserAvatarByNameAsync).BeforeLast("Async")}", name);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)

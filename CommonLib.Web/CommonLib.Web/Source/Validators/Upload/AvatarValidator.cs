@@ -10,7 +10,8 @@ namespace CommonLib.Web.Source.Validators.Upload
         {
             RuleFor(m => m)
                 .FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
-                .FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif");
+                .FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif")
+                .NoFileIsUploadingWithMessage();
         }
     }
 }

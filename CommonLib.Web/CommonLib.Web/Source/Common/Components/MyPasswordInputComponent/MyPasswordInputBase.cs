@@ -73,6 +73,9 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
                 _prevParentState = parentState;
             }
             
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true;
+
             CascadedEditContext?.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
             var notifyParamsChangedTasks = new List<Task>();
@@ -118,7 +121,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
             {
                 Model.SetProperty(_propName, value);
                 if (CascadedEditContext?.V is not null)
-                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), Validate.V == true);
             }
 
             Value = value;

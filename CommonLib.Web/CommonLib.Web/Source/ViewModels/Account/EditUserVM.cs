@@ -22,7 +22,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string ConfirmNewPassword { get; set; }
         public string Ticket { get; set; }
         public string ReturnUrl { get; set; }
-        public ExtendedImage Avatar { get; set; }
+        public FileData Avatar { get; set; }
         public bool ShouldLogout { get; set; }
         [DisplayName("Potential Avatars")]
         public FileDataList PotentialAvatars { get; set; }

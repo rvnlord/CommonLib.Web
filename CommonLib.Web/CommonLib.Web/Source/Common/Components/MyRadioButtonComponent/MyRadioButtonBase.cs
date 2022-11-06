@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -127,7 +128,7 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             var refreshTasks = radioButtons.Select(rb => rb.NotifyParametersChangedAsync().StateHasChangedAsync(true)).ToList();
             await Task.WhenAll(refreshTasks);
             if (CascadedEditContext?.V is not null)
-                await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, _propName));
+                await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, _propName), true);
         }
 
         private async Task<MyRadioButtonBase[]> GetRadioButtonsFromThisGroupAsync() => (await ComponentsByTypeAsync<MyRadioButtonBase>()).Where(rb => rb.RadioGroup.V.EqualsIgnoreCase(RadioGroup.V)).ToArray();

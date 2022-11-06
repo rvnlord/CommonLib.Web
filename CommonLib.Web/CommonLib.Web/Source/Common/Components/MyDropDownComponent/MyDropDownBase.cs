@@ -203,7 +203,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                 if (!Equals(oldValue, newValue))
                 {
                     For.SetPropertyValue(newValue);
-                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, propName), true);
                 }
             }
         }

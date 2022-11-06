@@ -14,10 +14,10 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
     {
         private readonly Dictionary<FieldIdentifier, MyFieldState> _fieldStates;
 
-        public event MyEventHandler<MyEditContext, FieldChangedEventArgs> OnFieldChanged;
+        public event MyEventHandler<MyEditContext, MyFieldChangedEventArgs> OnFieldChanged;
         public event MyEventHandler<MyEditContext, ValidationRequestedEventArgs> OnValidationRequested;
         public event MyEventHandler<MyEditContext, MyValidationStateChangedEventArgs> OnValidationStateChanged;
-        public event MyAsyncEventHandler<MyEditContext, FieldChangedEventArgs> OnFieldChangedAsync;
+        public event MyAsyncEventHandler<MyEditContext, MyFieldChangedEventArgs> OnFieldChangedAsync;
         public event MyAsyncEventHandler<MyEditContext, ValidationRequestedEventArgs> OnValidationRequestedAsync;
         public event MyAsyncEventHandler<MyEditContext, MyValidationStateChangedEventArgs> OnValidationStateChangedAsync;
         public FieldIdentifier Field(string fieldName) => new(Model, fieldName);
@@ -30,11 +30,11 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
             _fieldStates = new();
         }
 
-        public async Task NotifyFieldChangedAsync(FieldIdentifier fieldIdentifier)
+        public async Task NotifyFieldChangedAsync(FieldIdentifier fieldIdentifier, bool shouldValidate)
         {
             GetFieldState(fieldIdentifier, true).IsModified = true;
-            OnFieldChanged?.Invoke(this, new FieldChangedEventArgs(fieldIdentifier));
-            await OnFieldChangedAsync.InvokeAsync(this, new FieldChangedEventArgs(fieldIdentifier));
+            OnFieldChanged?.Invoke(this, new MyFieldChangedEventArgs(fieldIdentifier, shouldValidate));
+            await OnFieldChangedAsync.InvokeAsync(this, new MyFieldChangedEventArgs(fieldIdentifier, shouldValidate));
         }
 
         public async Task NotifyValidationStateChangedAsync(ValidationStatus validationStatus, ValidationMode validationMode, List<FieldIdentifier> invalidFields, List<FieldIdentifier> validFields, List<FieldIdentifier> validatedFields, List<FieldIdentifier> notValidatedFields, List<FieldIdentifier> fieldsWithValidationRules, List<FieldIdentifier> fieldsWithoutValidationRules, List<FieldIdentifier> allModelFields, List<FieldIdentifier> pendingFields)
@@ -90,8 +90,8 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         {
             var propertyname = propertyAccessor.GetPropertyName();
             var fi = Field(propertyname);
-            OnFieldChanged?.Invoke(this, new FieldChangedEventArgs(fi));
-            await (OnFieldChangedAsync?.InvokeAsync(this, new FieldChangedEventArgs(fi)) ?? Task.CompletedTask);
+            OnFieldChanged?.Invoke(this, new MyFieldChangedEventArgs(fi, true));
+            await (OnFieldChangedAsync?.InvokeAsync(this, new MyFieldChangedEventArgs(fi, true)) ?? Task.CompletedTask);
             return !GetValidationMessages(fi).Any();
         }
 
@@ -110,6 +110,18 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         {
             OnValidationStateChangedAsync -= handleValidationStateChanged;
             OnValidationStateChangedAsync += handleValidationStateChanged;
+        }
+    }
+
+    public class MyFieldChangedEventArgs : EventArgs
+    {
+        public FieldIdentifier FieldIdentifier { get; }
+        public bool ShouldValidate { get; }
+
+        public MyFieldChangedEventArgs(FieldIdentifier fieldIdentifier, bool shouldValidate)
+        {
+            FieldIdentifier = fieldIdentifier;
+            ShouldValidate = shouldValidate;
         }
     }
 

@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         private MyEditContext _explicitEditContext;
         private IServiceProvider _serviceProvider;
         private MyEditContext _currentEditContext;
-        private readonly SemaphoreSlim _syncValidation = new(1, 1);
+        private readonly OrderedSemaphore _syncValidation = new(1, 1);
 
         public MyValidationMessageStore MessageStore { get; set; }
 
@@ -75,7 +75,11 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
 
         private async Task CurrentEditContext_ValidationRequestedAsync(object sender, ValidationRequestedEventArgs e, CancellationToken token) => await ValidateModelAsync().ConfigureAwait(false);
-        private async Task CurrentEditContext_FieldChangedAsync(object sender, FieldChangedEventArgs e, CancellationToken token) => await ValidateFieldAsync(e.FieldIdentifier).ConfigureAwait(false);
+        private async Task CurrentEditContext_FieldChangedAsync(object sender, MyFieldChangedEventArgs e, CancellationToken token)
+        {
+            if (e.ShouldValidate)
+                await ValidateFieldAsync(e.FieldIdentifier).ConfigureAwait(false);
+        }
 
         public async Task<bool> ValidateModelAsync(bool changeValidationState = true)
         {
@@ -124,7 +128,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             validator.SetProperty("RuleLevelCascadeMode", CascadeMode.Continue);
             if (validator is null) // not supposed to be validated
             {
-                _syncValidation.Release();
+                await _syncValidation.ReleaseAsync();
                 return true;
             }
             
@@ -133,7 +137,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             var fieldsWithValidationRules = GetFieldsWithValidationRules();
             if (!fieldIdentifier.In(fieldsWithValidationRules))
             {
-                _syncValidation.Release();
+                await _syncValidation.ReleaseAsync();
                 return true;
             }
 
@@ -181,7 +185,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
                     ValidationMode.Property,
                     invalidFields, validFields, validatedFields, notValidatedFields, fieldsWithValidationRules, fieldsWithoutValidationRules, allModelFields, new List<FieldIdentifier>());
 
-            _syncValidation.Release();
+            await _syncValidation.ReleaseAsync();
 
             return isValid;
         }
@@ -203,7 +207,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
 
         private IValidator GetModelValidator<TModel>() => GetModelValidator(typeof(TModel));
 
-        private IValidator GetFieldValidator(MyEditContext editContext, in FieldIdentifier fieldIdentifier)
+        private IValidator GetFieldValidator(MyEditContext editContext, FieldIdentifier fieldIdentifier)
         {
             if (fieldIdentifier.Model == editContext.Model)
                 return Validator;
@@ -211,7 +215,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             var modelType = fieldIdentifier.Model.GetType();
             if (ChildValidators.ContainsKey(modelType))
                 return ChildValidators[modelType];
-
+            
             var validator = GetModelValidator(modelType);
             ChildValidators[modelType] = validator;
             return validator;

@@ -11,6 +11,7 @@ using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using CommonLib.Web.Source.Validators.Upload;
 using CommonLib.Web.Source.ViewModels.Account;
+using FluentValidation;
 
 namespace CommonLib.Web.Source.Services.Upload
 {
@@ -38,7 +39,16 @@ namespace CommonLib.Web.Source.Services.Upload
             var fileExists = File.Exists(filePath);
             if (chunk.Position == 0 && fileExists)
                 File.Delete(filePath);
-            var storedFileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
+            FileData storedFile = null;
+            if (File.Exists(filePath))
+            {
+                storedFile = filePath.PathToFileData(false);
+                storedFile.ValidateUploadStatus = false;
+                if (!(await new AvatarValidator().ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
+                    return new ApiResponse(StatusCodeType.Status401Unauthorized, "The part of the File stored on server is not valid", null);
+            }
+
+            var storedFileSize = storedFile?.TotalSizeInBytes ?? 0;
             if (chunk.Position != 0 && storedFileSize != chunk.Position)
                 throw new ArgumentOutOfRangeException(null, "This is not the next part of the file");
 
@@ -52,15 +62,26 @@ namespace CommonLib.Web.Source.Services.Upload
             authUser = (await _accountManager.GetAuthenticatedUserAsync(null, null, authUser))?.Result;
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
-            if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
-                return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
-
+            chunk.ValidateUploadStatus = false;
+            //if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
+            //    return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+            chunk.ValidateUploadStatus = true;
+            
             var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
             var filePath = PathUtils.Combine(PathSeparator.BSlash, tempAvatarDir, chunk.NameWithExtension) ?? throw new NullReferenceException();
             var fileExists = File.Exists(filePath);
             if (chunk.Position == 0 && fileExists)
                 File.Delete(filePath);
-            var storedFileSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0;
+            FileData storedFile = null;
+            if (File.Exists(filePath))
+            {
+                storedFile = filePath.PathToFileData(false);
+                storedFile.ValidateUploadStatus = false;
+                //if (!(await new AvatarValidator().ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
+                //    return new ApiResponse(StatusCodeType.Status401Unauthorized, "The part of the Avatar stored on server is not valid", null);
+            }
+            
+            var storedFileSize = storedFile?.TotalSizeInBytes ?? 0;
             if (chunk.Position != 0 && storedFileSize != chunk.Position)
                 throw new ArgumentOutOfRangeException(null, "This is not the next part of the file");
 

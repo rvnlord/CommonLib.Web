@@ -57,6 +57,9 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
         
         [Parameter]
         public BlazorParameter<ProgressBarSizing?> Sizing { get; set; }
+        
+        [Parameter]
+        public BlazorParameter<bool?> Validate { get; set; }
 
         protected override async Task OnParametersSetAsync()
         {
@@ -66,6 +69,9 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
+            
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true; 
             
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
@@ -140,6 +146,8 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
             if (State.ParameterValue?.IsForced == true)
                 return;
             if (Ancestors.Any(a => a is MyInputBase))
+                return;
+            if (Validate.V != true)
                 return;
 
             await _syncValidationStateBeingChanged.WaitAsync();

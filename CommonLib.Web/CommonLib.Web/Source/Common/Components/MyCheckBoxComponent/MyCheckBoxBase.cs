@@ -67,6 +67,9 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             if (DisplayLabel.HasChanged())
                 DisplayLabel.ParameterValue ??= true;
 
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true; 
+            
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync); 
 
             await Task.CompletedTask;
@@ -81,7 +84,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             {
                 Model.SetProperty(_propName, e.Value);
                 if (CascadedEditContext?.V is not null)
-                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), Validate.V == true);
             }
 
             Value = e.Value.ToBool();

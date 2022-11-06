@@ -3,17 +3,18 @@ using System.Threading.Tasks;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
 namespace CommonLib.Web.Source.Controllers
 {
     [Route("api/account"), ApiController]
-    public class AccountController : MyControllerBase
+    public class AccountApiController : MyControllerBase
     {
         private readonly IAccountManager _accountManager;
 
-        public AccountController(IAccountManager accountManager)
+        public AccountApiController(IAccountManager accountManager)
         {
             _accountManager = accountManager;
         }
@@ -53,6 +54,9 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("finduserbyname")] // POST: api/account/finduserbyname
         public async Task<JToken> FindUserByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.FindUserByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
         
+        [HttpPost("getuseravatarbyname")] // POST: api/account/getuseravatarbyname
+        public async Task<JToken> GetUserAvatarByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.GetUserAvatarByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
+
         [HttpPost("finduserbyconfirmationcode")] // POST: api/account/finduserbyconfirmationcode
         public async Task<JToken> FindUserByConfirmationCodeAsync(JToken jConfirmationCode) => await EnsureResponseAsync(async () => await _accountManager.FindUserByConfirmationCodeAsync(jConfirmationCode is JValue ? jConfirmationCode.ToString() : jConfirmationCode["confirmationcode"]?.ToString()));
 

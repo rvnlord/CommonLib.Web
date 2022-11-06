@@ -63,6 +63,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         public BlazorParameter<bool?> PreventMultiClicks { get; set; }
 
         [Parameter]
+        public BlazorParameter<bool?> Validate { get; set; }
+
+        [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; } // for backwards compatibility
         
         [Parameter]
@@ -88,6 +91,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             //    AddAttributes(AdditionalAttributes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString()));
             // not like this, class and style shouldn't be changed in attrs and changing class would override classes set on other Params changee
 
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true; 
+          
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
             
             if (CascadingInput.HasChanged() && CascadingInput.HasValue())
@@ -109,7 +115,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
                 _prevParentState = parentState;
             }
-
+            
             if (Styling.HasChanged())
             {
                 Styling ??= new BlazorParameter<ButtonStyling?>(ButtonStyling.Secondary);
@@ -173,6 +179,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             if (e == null)
                 throw new NullReferenceException(nameof(e));
             if (Ancestors.Any(a => a is MyInputBase))
+                return;
+            if (Validate.V != true)
                 return;
             if (e.ValidationMode != ValidationMode.Model)
                 return;

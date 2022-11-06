@@ -361,18 +361,26 @@ namespace CommonLib.Web.Source.Common.Extensions
         
         public static IRuleBuilderOptions<TModel, FileDataList> FilesUploadedWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, int? numberOfFilesThatShouldBeUploaded = null)
         {
-            ValidationContext<TModel> validationContext = null;
             string displayName = null;
             return rb.Must((_, value, vc) =>
             {
-                validationContext = vc;
-                displayName = validationContext.DisplayName ?? validationContext.GetField("_parentContext")?.GetProperty<string>("DisplayName");
+                displayName = vc.DisplayName ?? vc.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 var actualUploadedFilesCount = value.Count(fd => fd.Status == UploadStatus.Finished || !fd.ValidateUploadStatus);
                 var expectedUploadedFilesCount = numberOfFilesThatShouldBeUploaded ?? value.Count;
                 return actualUploadedFilesCount == expectedUploadedFilesCount;
             }).WithMessage((_, _) => numberOfFilesThatShouldBeUploaded is null 
                 ? $"All \"{displayName}\" have to be uploaded"
                 : $"At least {numberOfFilesThatShouldBeUploaded} of the \"{displayName}\" have to be uploaded");
+        }
+
+        public static IRuleBuilderOptions<TModel, FileDataList> NoFileIsUploadingWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb)
+        {
+            string displayName = null;
+            return rb.Must((_, value, vc) =>
+            {
+                displayName = vc.DisplayName ?? vc.GetField("_parentContext")?.GetProperty<string>("DisplayName");
+                return value.All(fd => fd.Status != UploadStatus.Uploading || !fd.ValidateUploadStatus);
+            }).WithMessage((_, _) => $"\"{displayName}\" can't be still uploading");
         }
 
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()

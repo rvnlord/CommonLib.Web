@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyImageComponent;
@@ -8,7 +9,7 @@ namespace CommonLib.Web.Source.ViewModels
 {
     public class TestEmployeeVM
     {
-        private ExtendedImage _avatar;
+        private FileData _avatar;
 
         public int Id { get; set; }
         public string Name { get; set; }
@@ -21,7 +22,7 @@ namespace CommonLib.Web.Source.ViewModels
         [DisplayName("Terms of Use")]
         [Description("I accept the Terms of use")]
         public bool TermsAccepted { get; set; }
-        public ExtendedImage Avatar => _avatar ??= ExtendedImage.Load(PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png"));
+        public FileData Avatar => _avatar ??= PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png").PathToFileData(true);
 
         public double Progress { get; set; }
         public FileDataList Files { get; set; }

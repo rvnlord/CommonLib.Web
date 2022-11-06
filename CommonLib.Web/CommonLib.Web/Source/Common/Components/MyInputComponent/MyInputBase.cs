@@ -69,6 +69,9 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             }
         }
 
+        [Parameter]
+        public BlazorParameter<bool?> Validate { get; set; }
+
         protected async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
             var fi = new FieldIdentifier(Model, _propName);
@@ -78,6 +81,8 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
             if (Ancestors.Any(a => a is MyInputBase))
+                return;
+            if (Validate.V != true)
                 return;
             if (State.ParameterValue?.IsForced == true)
                 return;

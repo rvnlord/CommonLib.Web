@@ -14,6 +14,7 @@ using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
+using SixLabors.ImageSharp;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
@@ -52,6 +53,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
 
             Mapper.Map(AuthenticatedUser, _editUserVM);
+            _editUserVM.Avatar = (await AccountClient.GetUserAvatarByNameAsync(_editUserVM.UserName)).Result;
             if (!_editUserVM.HasPassword)
                 _pwdOldPassword.State.ParameterValue = InputState.ForceDisabled;
 

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.DbContext.Models.Account;
 
@@ -17,6 +20,26 @@ namespace CommonLib.Web.Source.Common.Converters
                 Data = fd.Data.ToArray(),
                 UserOwningFileId = userOwningFileId,
                 UserHavingFileAsAvatarId = userHavingFileAsAvatarId
+            };
+        }
+
+        public static FileData ToFileData(this DbFile dbFile)
+        {
+            return new FileData
+            {
+                TotalSizeInBytes = dbFile.Data.Length,
+                Data = dbFile.Data.ToList(),
+                Position = 0,
+                Name = dbFile.Name,
+                Extension = dbFile.Extension.TrimStart('.'),
+                DirectoryPath = null,
+                CreationTime = dbFile.CreationTime.ToExtendedTime(),
+                IsSelected = false,
+                Status = UploadStatus.NotStarted,
+                IsPreAdded = false,
+                IsExtensionValid = false,
+                IsFileSizeValid = false,
+                ValidateUploadStatus = false
             };
         }
     }

@@ -12,6 +12,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.DbContext.Models.Account;
@@ -63,13 +64,23 @@ namespace CommonLib.Web.Source.Services.Account
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.UserName.ToLower() == name.ToLower());
             if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no DbUser with the given Name", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
             foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
 
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding DbUser by Name has been Successful", null, foundUser);
+            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", null, foundUser);
+        }
+
+        public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
+        {
+            var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users.Include(u => u.Avatar), u => u.UserName.ToLower() == name.ToLower());
+            if (user is null)
+                return new ApiResponse<FileData>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
+            
+            var avatar = user.Avatar?.ToFileData();
+            return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", null, avatar);
         }
 
         public async Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email)
@@ -606,6 +617,8 @@ namespace CommonLib.Web.Source.Services.Account
             if (avatarChanged)
             {
                 user.Avatar = newAvatar.ToDbFile(user.Id, user.Id);
+                userToEdit.Avatar = newAvatar;
+                FileUtils.EmptyDir(tempAvatarDir);
                 //_db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
                 propsToChange.Add(nameof(user.Avatar));
             }

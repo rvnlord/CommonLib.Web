@@ -34,15 +34,17 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         private readonly OrderedSemaphore _syncFileDataState = new(1, 1);
         private int _multipleFileBtnRenders;
         private bool _tempThumbnailSet;
-
+        private MyFluentValidatorBase _validator => Ancestors.OfType<MyEditFormBase>().FirstOrDefault()?.Children.OfType<MyFluentValidatorBase>()?.FirstOrDefault();
+        
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
 
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
         public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
+        
 
         [Parameter]
-        public BlazorParameter<Func<ExtendedImage>> PreviewFor { get; set; }
+        public BlazorParameter<Func<FileData>> PreviewFor { get; set; }
 
         [Parameter]
         public BlazorParameter<FileSize?> ChunkSize { get; set; }
@@ -137,8 +139,10 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     throw new ArgumentException("Upload controller should be either predefined or have a defined upload url but not both");
             }
 
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true;
+
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
-            await Task.CompletedTask;
         }
 
         protected override async Task OnAfterFirstRenderAsync()
@@ -166,21 +170,20 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         {
             Value.AddRange(files);
             Value.ForEach(fd => fd.ValidateUploadStatus = false);
-            var validator = Ancestors.OfType<MyEditFormBase>().FirstOrDefault()?.Children.OfType<MyFluentValidatorBase>()?.FirstOrDefault();
-            var isValid = validator is null || await validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName), false);
+            var isValid = _validator is null || await _validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName), false);
             var addedFiles = files.Where(f => f.IsValid).ToArray();
             if (!isValid)
             {
                 var invalidFiles = Value.Where(f => !f.IsValid && !f.IsPreAdded).ToArray();
                 if (!addedFiles.Any())
                 {
-                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), true);
                     Value.RemoveRange(invalidFiles);
                 }
                 else
                 {
                     Value.RemoveRange(invalidFiles);
-                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
+                    await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), true);
                     await PromptMessageAsync(NotificationType.Warning, "Some files were invalid and have not been added");
                 }
 
@@ -194,7 +197,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
             else
             {
-                await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName));
+                await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), true);
             }
 
             Value.ForEach(fd => fd.ValidateUploadStatus = true);
@@ -239,6 +242,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             var selectedFiles = GetSelectedOrAllFiles();
             var fileToPreview = selectedFiles.Any() ? selectedFiles[^1] : FileData.Empty;
             await SetMultipleFileBtnsStateAsync(fileToPreview); // if method calls UploadFileAsync(), state of the buttons controlling many files will be taken care of because its change is called on every FileData statee change
+            Value.ForEach(f => f.ValidateUploadStatus = false);
+            await _validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName));
+            Value.ForEach(f => f.ValidateUploadStatus = true);
         }
 
         protected async Task BtnSelectAll_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
@@ -309,6 +315,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             selectedFiles = GetSelectedOrAllFiles();
             var fileToPreview = selectedFiles.Any() ? selectedFiles[^1] : FileData.Empty;
             await SetMultipleFileBtnsStateAsync(fileToPreview);
+            Value.ForEach(fd => fd.ValidateUploadStatus = false);
+            await _validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName));
+            Value.ForEach(fd => fd.ValidateUploadStatus = true);
         }
         
         private async void FileData_StateChanged(FileData sender, FileDataStateChangedEventArgs e)
@@ -450,7 +459,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         private async Task SetThumbnailAsync(FileData fd)
         {
             _tempThumbnailSet = true;
-            var noThumbnailImage = PreviewFor?.V()?.ToBase64DataUrl();
+            var noThumbnailImage = PreviewFor?.V()?.ToBase64ImageString();
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
         }
 

@@ -8,6 +8,7 @@
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
+@using static CommonLib.Web.Source.Models.BlazorParameter;
 
 @inherits ControlsTestBase
 
@@ -135,7 +136,7 @@
                 </MyCssGridItem>
                 <MyCssGridItem>
                     <MyFileUpload For="@(() => _employee.Files)" 
-                        PreviewFor="@(new BlazorParameter<Func<ExtendedImage>>(() => _employee.Avatar))" 
+                        PreviewFor="@BP(() => _employee.Avatar)" 
                         PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
