@@ -1,4 +1,4 @@
-﻿/// <reference path="../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../libs/libman/jquery/dist/jquery.js" />
 import "./extensions.js";
 //import utils from "./utils.js";
 
@@ -33,6 +33,14 @@ window.BlazorJQueryUtils = {
 
     SetAttr: (selector, attr, value) => {
         $(fixSelector(selector)).attr(attr, value);
+    },
+
+    GetProp: (selector, prop) => {
+        return $(fixSelector(selector)).prop(prop);
+    },
+
+    SetProp: (selector, prop, value) => {
+        $(fixSelector(selector)).prop(prop, value);
     },
 
     RemoveAttr: (selector, attr) => {
@@ -134,6 +142,10 @@ window.BlazorJQueryUtils = {
 
     ToggleClass: (selector, className) => {
         return $(fixSelector(selector)).toggleClass(className);
+    },
+
+    CaretPosition: (selector, caretPosition) => {
+        return $(fixSelector(selector)).caretPosition(caretPosition);
     }
 };
 

@@ -44,6 +44,17 @@ namespace CommonLib.Web.Source.Models
             return this;
         }
 
+        public async Task<string> PropAsync(string prop)
+        {
+            return await _jsRuntime.InvokeAsync<string>("BlazorJQueryUtils.GetProp", GetSelector(), prop).ConfigureAwait(false);
+        }
+
+        public async Task<JQuery> PropAsync(string prop, string value)
+        {
+            await _jsRuntime.InvokeVoidAsync("BlazorJQueryUtils.SetProp", GetSelector(), prop, value).ConfigureAwait(false);
+            return this;
+        }
+
         public async Task<JQuery> RemoveAttrAsync(string attr)
         {
             await _jsRuntime.InvokeVoidAsync("BlazorJQueryUtils.RemoveAttr", GetSelector(), attr).ConfigureAwait(false);
@@ -279,6 +290,16 @@ namespace CommonLib.Web.Source.Models
         public async Task<bool> IsAsync(string isSelector)
         {
             return await _jsRuntime.InvokeAsync<bool>("BlazorJQueryUtils.Is", GetSelector(), isSelector).ConfigureAwait(false);
+        }
+
+        public async Task<int> CaretPositionAsync()
+        {
+            return await _jsRuntime.InvokeAsync<int>("BlazorJQueryUtils.CaretPosition", GetSelector()).ConfigureAwait(false);
+        }
+
+        public async Task<int> CaretPositionAsync(int caretPosition)
+        {
+            return await _jsRuntime.InvokeAsync<int>("BlazorJQueryUtils.CaretPosition", GetSelector(), caretPosition).ConfigureAwait(false);
         }
 
         public override string ToString()

@@ -207,6 +207,8 @@ namespace CommonLib.Web.Source.Common.Components
 
         public bool AdditionalAttributesHaveChanged { get; private set; }
 
+        public bool PreventRender { get; set; }
+
         [Inject]
         public HttpClient HttpClient { get; set; }
 
@@ -440,7 +442,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected virtual async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize) => await Task.CompletedTask;
 
-        protected virtual bool ShouldRender() => true;
+        protected virtual bool ShouldRender() => !PreventRender;
 
         protected Task InvokeAsync(Action workItem) => _renderHandle.Dispatcher.InvokeAsync(workItem);
 
@@ -524,10 +526,10 @@ namespace CommonLib.Web.Source.Common.Components
         protected void SetMainAndUserDefinedClasses(string mainClass, bool preserveExistingClasses = false) => SetMainCustomAndUserDefinedClasses(mainClass, null, preserveExistingClasses);
         protected void SetUserDefinedClasses(bool preserveExistingClasses = false) => SetMainCustomAndUserDefinedClasses(null, null, preserveExistingClasses);
 
-        protected void AddClasses(string cls, params string[] classes)
+        protected MyComponentBase AddClasses(string cls, params string[] classes)
         {
             if (IsDisposed)
-                return;
+                return this;
 
             _syncClasses.Wait();
 
@@ -536,12 +538,14 @@ namespace CommonLib.Web.Source.Common.Components
             _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
+
+            return this;
         }
 
-        protected void AddClasses(IEnumerable<string> classes)
+        public MyComponentBase AddClasses(IEnumerable<string> classes)
         {
             if (IsDisposed)
-                return;
+                return this;
 
             _syncClasses.Wait();
 
@@ -550,19 +554,21 @@ namespace CommonLib.Web.Source.Common.Components
             _renderClasses = Classes.Distinct().JoinAsString(" ");
 
             _syncClasses.Release();
+
+            return this;
         }
 
-        protected void AddClass(string cls) => AddClasses(cls);
+        public MyComponentBase AddClass(string cls) => AddClasses(cls);
 
-        protected void RemoveClasses(string cls, params string[] classes)
+        protected MyComponentBase RemoveClasses(string cls, params string[] classes)
         {
-            RemoveClasses(classes.Prepend_(cls).ToArray());
+            return RemoveClasses(classes.Prepend_(cls).ToArray());
         }
 
-        protected void RemoveClasses(string[] classes)
+        protected MyComponentBase RemoveClasses(string[] classes)
         {
             if (IsDisposed)
-                return;
+                return this;
 
             _syncClasses.Wait();
 
@@ -570,9 +576,11 @@ namespace CommonLib.Web.Source.Common.Components
             _renderClasses = Classes.JoinAsString(" ");
 
             _syncClasses.Release();
+
+            return this;
         }
 
-        protected void RemoveClass(string cls) => RemoveClasses(cls);
+        public MyComponentBase RemoveClass(string cls) => RemoveClasses(cls);
 
         protected void SetCustomAndUserDefinedStyles(Dictionary<string, string> customStyles, bool preserveExistingStyles = false)
         {
@@ -795,7 +803,7 @@ namespace CommonLib.Web.Source.Common.Components
         public async Task<MyComponentBase> StateHasChangedAsync(bool force = false)
         {
             if (force)
-                ShouldRender();
+                PreventRender = false;
             
             await InvokeAsync(StateHasChanged);
             

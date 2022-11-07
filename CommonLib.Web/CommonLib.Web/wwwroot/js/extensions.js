@@ -891,8 +891,6 @@ Blob.prototype.sliceToArrayAsync = async function sliceToArrayAsync(start, end) 
 
 // #endregion
 
-
-
 // #region JQueryExtensions
 
 function jQueryArray($selectors) {
@@ -1149,6 +1147,13 @@ jQuery.fn.extend({
     },
     equals: function(that) {
         return this[0] === that[0];
+    },
+    caretPosition(caretPosition) {
+        if (caretPosition) {
+            this[0].setSelectionRange(caretPosition, caretPosition);
+            return caretPosition;
+        }
+        return Math.max(this[0].selectionStart, this[0].selectionEnd);
     }
 });
 

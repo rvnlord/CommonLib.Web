@@ -35,7 +35,7 @@
         const unresolved = this._waiting.length;
 
         for (let i = 0; i < unresolved; i++) {
-            this._waiting[i].err("Task has been purged.");
+            this._waiting[i].err("Task has been purged");
         }
 
         this._counter = 0;

@@ -127,7 +127,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
             Value = value;
             Text = Value;
             
-            await StateHasChangedAsync().ConfigureAwait(false); // Task.CompletedTask.ConfigureAwait(false);
+            //await StateHasChangedAsync().ConfigureAwait(false); // not needed, value set in js, validation has its own state management
         }
     }
 }

@@ -22,7 +22,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
             return await (await jquery.ConfigureAwait(false)).AttrAsync(attr, value).ConfigureAwait(false);
         }
-
+        
         public static async Task<JQuery> RemoveAttrAsync(this Task<JQuery> jquery, string attr)
         {
             if (jquery == null)
@@ -31,6 +31,22 @@ namespace CommonLib.Web.Source.Common.Extensions
             return await (await jquery.ConfigureAwait(false)).RemoveAttrAsync(attr).ConfigureAwait(false);
         }
 
+        public static async Task<string> PropAsync(this Task<JQuery> jquery, string prop)
+        {
+            if (jquery == null)
+                throw new NullReferenceException(nameof(jquery));
+
+            return await (await jquery.ConfigureAwait(false)).PropAsync(prop).ConfigureAwait(false);
+        }
+
+        public static async Task<JQuery> PropAsync(this Task<JQuery> jquery, string prop, string value)
+        {
+            if (jquery == null)
+                throw new NullReferenceException(nameof(jquery));
+
+            return await (await jquery.ConfigureAwait(false)).PropAsync(prop, value).ConfigureAwait(false);
+        }
+        
         public static async Task<string[]> ClassesAsync(this Task<JQuery> jquery)
         {
             if (jquery == null)
@@ -321,7 +337,14 @@ namespace CommonLib.Web.Source.Common.Extensions
             return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false)).IsAsync(isSelector).ConfigureAwait(false);
         }
 
+        public static async Task<int> CaretPositionAsync(this Task<JQuery> jquery)
+        {
+            return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false)).CaretPositionAsync().ConfigureAwait(false);
+        }
 
-
+        public static async Task<int> CaretPositionAsync(this Task<JQuery> jquery, int caretPosition)
+        {
+            return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false)).CaretPositionAsync(caretPosition).ConfigureAwait(false);
+        }
     }
 }
