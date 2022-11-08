@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +19,19 @@ namespace CommonLib.Web.Source.Controllers
             _uploadManager = uploadManager;
         }
 
-        [HttpPost(nameof(UploadChunkToUserFolderAsync))] // POST: api/upload/UploadChunkToUserFolder
+        [HttpPost(nameof(UploadChunkToUserFolderAsync))] // POST: api/upload/UploadChunkToUserFolderAsync
         public async Task<JToken> UploadChunkToUserFolderAsync(JToken JAuthUserAndChunk) => await EnsureVoidResponseAsync(async () => await _uploadManager.UploadChunkToUserFolderAsync(JAuthUserAndChunk["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndChunk["Chunk"].To<FileData>()));
         
-        [HttpPost(nameof(UploadChunkOfTemporaryAvatarAsync))] // POST: api/upload/UploadChunkOfTemporaryAvatar
+        [HttpPost(nameof(UploadChunkOfTemporaryAvatarAsync))] // POST: api/upload/UploadChunkOfTemporaryAvatarAsync
         public async Task<JToken> UploadChunkOfTemporaryAvatarAsync(JToken JAuthUserAndChunk) => await EnsureVoidResponseAsync(async () => await _uploadManager.UploadChunkOfTemporaryAvatarAsync(JAuthUserAndChunk["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndChunk["Chunk"].To<FileData>()));
+
+        [HttpPost(nameof(GetRenderedIconAsync))] // POST: api/upload/GetRenderedIconAsync
+        public async Task<JToken> GetRenderedIconAsync(JToken jIconType)
+        {
+            return await EnsureResponseAsync(async () =>
+            {
+                return await _uploadManager.GetRenderedIconAsync(jIconType?.To<IconType>());
+            });
+        }
     }
 }

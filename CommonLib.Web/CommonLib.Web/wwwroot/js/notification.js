@@ -75,7 +75,7 @@ export class Notification {
         }
 
         const icon = this._type === "loading" ? `
-            <div class="my-image my-line-sized" style="background-image: url('./images/content-loader.gif'); padding-top: 0"></div>
+            <div class="my-image my-line-sized" style="background-image: url('./_content/CommonLib.Web/images/content-loader.gif'); padding-top: 0"></div>
         ` : `
             <div class="my-icon">
                 ${await utils.getIconAsync(this._iconSet, this._icon)}

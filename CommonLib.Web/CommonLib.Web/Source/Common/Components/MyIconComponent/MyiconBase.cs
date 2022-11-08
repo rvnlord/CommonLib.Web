@@ -13,6 +13,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services;
 using HtmlAgilityPack;
@@ -23,14 +24,15 @@ using EnumConverter = CommonLib.Source.Common.Converters.EnumConverter;
 using Logger = CommonLib.Source.Common.Utils.UtilClasses.Logger;
 using StringConverter = CommonLib.Source.Common.Converters.StringConverter;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
+using CommonLib.Web.Source.Services.Upload.Interfaces;
 
 namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 {
     public class MyIconBase : MyComponentBase
     {
-        private static string _commonWwwRootDir;
-        private static string _currentWwwRootDir;
-        private static bool? _isProduction;
+        //private static string _commonWwwRootDir;
+        private static string _rootDir;
+        //private static bool? _isProduction;
         private static ConcurrentDictionary<IconType, HtmlNode> _svgCache { get; set; }
         private Dictionary<string, string> _svgStyle { get; set; }
        
@@ -40,9 +42,9 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         protected string _svgViewBox { get; set; }
         protected string _dPath { get; set; }
 
-        public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
-        public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
-        public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
+        //public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
+        public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir(); // ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("ContentRootPath");
+        //public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
         
         [Parameter] public BlazorParameter<IconType> IconType { get; set; }
         [Parameter] public string Color { get; set; }
@@ -50,6 +52,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
         [CascadingParameter] public BlazorParameter<MyInputBase> CascadingInput { get; set; }
         [CascadingParameter] public BlazorParameter<MyButtonBase> CascadingButton { get; set; }
+
+        [Inject] public IUploadClient UploadClient { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -100,12 +104,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                     CascadingButton.ParameterValue.OtherIcons[IconType.ParameterValue] = this;
                 CascadingButton.SetAsUnchanged(); // so the notify won't end up here again
             }
-
-            //if (cascadingInputHasChanged && CascadingInput.HasValue())
-            //    await CascadingInput.ParameterValue.NotifyParametersChangedAsync(false);
-            //else if (cascadingButtonHasChanged && CascadingButton.HasValue())
-            //    await CascadingButton.ParameterValue.NotifyParametersChangedAsync(false);
-
+            
             if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
                 || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabledOrForceDisabled == true
                 || parentDropDownState?.IsDisabledOrForceDisabled == true)
@@ -131,13 +130,11 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                     {
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
                         {
-                            svg = (await HttpClient.GetStringAsync(new Uri(iconPath))).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                            svg = (await UploadClient.GetRenderedIconAsync(IconType.V)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
                         else
                         {
-                            iconPath = !IsProduction 
-                                ? PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir, $@"Icons\{iconSetDirName}\{iconName}.svg")
-                                : PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, @"_content\CommonLib.Web", $@"Icons\{iconSetDirName}\{iconName}.svg");
+                            iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
                             svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 

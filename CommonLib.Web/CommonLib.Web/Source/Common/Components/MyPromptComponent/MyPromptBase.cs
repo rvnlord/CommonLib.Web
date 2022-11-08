@@ -73,7 +73,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
 
         public async Task AddNotificationAsync(NotificationType type, IconType icon, string message)
         {
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Prompt_AddNotificationAsync", _id, type.EnumToString(), icon?.GetIconSetName.ToLowerInvariant(), icon?.ToString().PascalCaseToKebabCase(), message, _newFor.TotalSeconds, _removeAfter.TotalSeconds, _max);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Prompt_AddNotificationAsync", _id, type.EnumToString(), icon?.SetName.ToLowerInvariant(), icon?.ToString().PascalCaseToKebabCase(), message, _newFor.TotalSeconds, _removeAfter.TotalSeconds, _max);
         }
 
         public Task AddNotificationAsync(NotificationType type, string message) => AddNotificationAsync(type, null, message);

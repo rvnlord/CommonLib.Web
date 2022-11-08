@@ -266,7 +266,7 @@ Object.defineProperty(String.prototype, "trimMultiline", {
 
 Object.defineProperty(Object.prototype, "jsonDeserialize", {
     value: function () {
-        return JSON.parse(this);
+        return utils.isJSON(this) ? JSON.parse(this) : {};
     },
     writable: true,
     configurable: true

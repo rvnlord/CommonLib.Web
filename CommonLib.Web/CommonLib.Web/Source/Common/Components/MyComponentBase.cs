@@ -18,6 +18,7 @@ using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
+using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
@@ -375,7 +376,9 @@ namespace CommonLib.Web.Source.Common.Components
                         var thisAsLayout = (MyLayoutComponentBase)this;
                         var mediaQueryDotNetRef = DotNetObjectReference.Create(thisAsLayout);
                         thisAsLayout.DeviceSize = (await (await thisAsLayout.MediaQueryModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_MediaQuery_SetupForAllDevicesAndGetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries, _guid, mediaQueryDotNetRef)).ToEnum<DeviceSizeKind>();
-                        
+
+                        await SessionStorage.SetItemAsStringAsync("BackendBaseUrl", ConfigUtils.BackendBaseUrl);
+
                         var navBar = await ComponentByTypeAsync<MyNavBarBase>();
                         await navBar.Setup();
 

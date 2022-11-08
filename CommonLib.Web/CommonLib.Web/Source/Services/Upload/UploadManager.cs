@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -11,13 +12,15 @@ using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using CommonLib.Web.Source.Validators.Upload;
 using CommonLib.Web.Source.ViewModels.Account;
-using FluentValidation;
 
 namespace CommonLib.Web.Source.Services.Upload
 {
     public class UploadManager : IUploadManager
     {
+        private static string _rootDir;
         private readonly IAccountManager _accountManager;
+
+        public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir();
 
         public UploadManager(IAccountManager accountManager)
         {
@@ -63,8 +66,8 @@ namespace CommonLib.Web.Source.Services.Upload
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
             chunk.ValidateUploadStatus = false;
-            //if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
-            //    return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+            if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
+                return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
             chunk.ValidateUploadStatus = true;
             
             var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
@@ -77,8 +80,8 @@ namespace CommonLib.Web.Source.Services.Upload
             {
                 storedFile = filePath.PathToFileData(false);
                 storedFile.ValidateUploadStatus = false;
-                //if (!(await new AvatarValidator().ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
-                //    return new ApiResponse(StatusCodeType.Status401Unauthorized, "The part of the Avatar stored on server is not valid", null);
+                if (!(await new AvatarValidator().ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
+                    return new ApiResponse(StatusCodeType.Status401Unauthorized, "The part of the Avatar stored on server is not valid", null);
             }
             
             var storedFileSize = storedFile?.TotalSizeInBytes ?? 0;
@@ -88,6 +91,19 @@ namespace CommonLib.Web.Source.Services.Upload
             await FileUtils.AppendAllBytesAsync(filePath, chunk.Data.ToArray());
             
             return new ApiResponse(StatusCodeType.Status200OK, "File chunk added to the file", null);
+        }
+
+        public async Task<ApiResponse<string>> GetRenderedIconAsync(IconType icon)
+        {
+            var iconEnums = icon.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
+            var iconEnumVals = iconEnums.Select(p => p.GetValue(icon)).ToArray();
+            var iconEnum = iconEnumVals.Single(v => v != null);
+            var iconType = iconEnum.GetType();
+            var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
+            var iconSetDirName = iconType.Name.BeforeFirst("IconType");
+            var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
+            var svg = (await File.ReadAllTextAsync(iconPath)).TrimMultiline();
+            return new ApiResponse<string>(StatusCodeType.Status200OK, "Successfully retrieved icon", null, svg);
         }
     }
 }

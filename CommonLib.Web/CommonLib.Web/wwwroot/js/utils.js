@@ -54,7 +54,7 @@
     static origin = () => {
         return window.location.protocol + "//" + window.location.hostname + (window.location.port ? `:${window.location.port}` : "");
     };
-    
+
     static getRandomInt = (min, max) => {
         min = Math.ceil(min);
         max = Math.floor(max);
@@ -62,12 +62,27 @@
     };
 
     static getIconAsync = async (iconSet, iconName) => {
-        const icon = await $.ajax({
-            url: `${this.origin()}/_content/CommonLib.Web/icons/${iconSet}/${iconName}.svg`,
-            dataType: "html",
-            type: "GET"
-        });
-        return icon;
+        const iconsCache = localStorage.getItem("IconsCache").jsonDeserialize();
+        iconsCache.addIfNotExistsAndGet(iconSet, {}).addIfNotExistsAndGet(iconName, null);
+
+        if (!iconsCache[iconSet][iconName]) {
+            const backendBaseUrl = sessionStorage.getItem("BackendBaseUrl");
+            const icon = await $.ajax({
+                url: `${backendBaseUrl}/api/upload/GetRenderedIconAsync`,
+                contentType: "application/json",
+                dataType: 'text',
+                data: {
+                    SetName: iconSet,
+                    IconName: iconName
+                }.jsonSerialize(),
+                type: "POST"
+            });
+            var jIcon = icon.jsonDeserialize();
+            iconsCache[iconSet][iconName] = jIcon["Result"];
+            localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
+        }
+
+        return iconsCache[iconSet][iconName];
     };
 
     static $getIconAsync = async (iconSet, iconName) => {
@@ -84,11 +99,11 @@
         const minutes = date.getMinutes();
         const seconds = date.getSeconds();
 
-        return date.getHours() + ":" + 
-            (minutes < 10 ? "0" + minutes : minutes) + ":" + 
-            (seconds < 10 ? "0" + seconds : seconds) + " " + 
-            (day < 10 ? "0" + day : day) + "-" + 
-            (month < 10 ? "0" + month : month) + "-" + 
+        return date.getHours() + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+            (seconds < 10 ? "0" + seconds : seconds) + " " +
+            (day < 10 ? "0" + day : day) + "-" +
+            (month < 10 ? "0" + month : month) + "-" +
             date.getFullYear();
     }
 
@@ -102,11 +117,11 @@
         const minutes = date.getMinutes();
         const seconds = date.getSeconds();
 
-        return (day < 10 ? "0" + day : day) + "-" + 
-            (month < 10 ? "0" + month : month) + "-" + 
-            date.getFullYear() + " " + 
-            date.getHours() + ":" + 
-            (minutes < 10 ? "0" + minutes : minutes) + ":" + 
+        return (day < 10 ? "0" + day : day) + "-" +
+            (month < 10 ? "0" + month : month) + "-" +
+            date.getFullYear() + " " +
+            date.getHours() + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
             (seconds < 10 ? "0" + seconds : seconds);
     }
 
@@ -179,7 +194,7 @@
 
     static readAsDataURLAsync(file) {
         return new Promise((resolve, reject) => {
-            var fr = new FileReader();  
+            var fr = new FileReader();
             fr.onload = () => {
                 resolve(fr.result);
             };
@@ -187,4 +202,15 @@
             fr.readAsDataURL(file);
         });
     }
-}
+
+    static isJSON(str) {
+        try {
+            var obj = JSON.parse(str);
+            if (obj && typeof obj === "object" && obj !== null) {
+                return true;
+            }
+        } catch (ex) { 
+            return false;
+        }
+    }
+}56

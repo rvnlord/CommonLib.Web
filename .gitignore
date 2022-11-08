@@ -11,6 +11,7 @@ lib/
 *appsettings*.json
 *launchsettings*.json
 **/wwwroot/icons
+**/Content/icons
 
 # User-specific files
 *.suo

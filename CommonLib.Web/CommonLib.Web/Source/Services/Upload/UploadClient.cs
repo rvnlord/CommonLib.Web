@@ -8,6 +8,7 @@ using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Source.Models.Interfaces;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Controllers;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Services.Interfaces;
@@ -58,9 +59,14 @@ namespace CommonLib.Web.Source.Services.Upload
             var authUser = (await _accountClient.GetAuthenticatedUserAsync())?.Result;
             return await HttpClient.PostJTokenAsync<ApiResponse>($"api/upload/{nameof(UploadApiController.UploadChunkOfTemporaryAvatarAsync)}", new
             {
-                AuthenticatedUser = authUser, 
+                AuthenticatedUser = authUser,
                 Chunk = chunk
             });
+        }
+
+        public async Task<ApiResponse<string>> GetRenderedIconAsync(IconType icon)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<string>>($"api/upload/{nameof(UploadApiController.GetRenderedIconAsync)}", icon);
         }
     }
 }
