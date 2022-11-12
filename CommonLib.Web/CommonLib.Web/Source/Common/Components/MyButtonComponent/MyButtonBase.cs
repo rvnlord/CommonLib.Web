@@ -42,7 +42,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         [Parameter]
         public BlazorParameter<string> Value { get; set; }
 
-        [Parameter] public BlazorParameter<ButtonState?> State { get; set; }
+        [Parameter]
+        public BlazorParameter<ButtonState?> State { get; set; }
 
         [Parameter]
         public BlazorParameter<ButtonStyling?> Styling { get; set; }
@@ -64,6 +65,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         [Parameter]
         public BlazorParameter<bool?> Validate { get; set; }
+
+        [Parameter]
+        public BlazorParameter<bool?> InheritState { get; set; }
 
         [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; } // for backwards compatibility
@@ -102,11 +106,20 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
             }
 
-            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
+            if (InheritState.HasChanged())
+                InheritState.ParameterValue ??= InheritState.V ?? true;
+
+            var parentStates = Array.Empty<ComponentState>();
+            if (InheritState.V == true)
+                parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
             var parentState = parentStates.All(s => s.State is null) ? (ButtonState?) null : parentStates.Any(s => s.State == ComponentStateKind.Disabled) ? ButtonState.Disabled : parentStates.Any(s => s.State == ComponentStateKind.Loading) ? ButtonState.Loading : ButtonState.Enabled;
             if (State.HasChanged() || parentState != _prevParentState)
             {
                 State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? ButtonState.Disabled;
+
+                var t1 = State.V;
+                var t2 = State.HasChanged();
+                var t3 = parentState != _prevParentState;
 
                 if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");

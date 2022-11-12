@@ -42,7 +42,6 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
         public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
         
-
         [Parameter]
         public BlazorParameter<Func<FileData>> PreviewFor { get; set; }
 
@@ -116,19 +115,16 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                         _thumbnailContainerStyle.RemoveIfExists("opacity");
                     else
                         await JQuery.QueryOneAsync(thumbnailContainerSelector).RemoveCssAsync("opacity");
-
-                    if (!IsRendered)
-                    {
-                        var btnsForManyFiles = Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
-                        btnsForManyFiles?.ForEach(b => // this prevents buttons controlling multiple files from flickering to enabled on render
-                        {
-                            b.State.SetAsChanged();
-                            b._prevParentState = ButtonState.Enabled;
-                            b.State.ParameterValue = ButtonState.Disabled;
-                        });
-                    }
                 }
             }
+
+            //var btnsForManyFiles = Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
+            //btnsForManyFiles?.ForEach(b => // this prevents buttons controlling multiple files from flickering to enabled on render
+            //{
+            //    //b.State.SetAsChanged();
+            //    b._prevParentState = ButtonState.Enabled;
+            //    b.State.ParameterValue = ButtonState.Disabled;
+            //});
 
             if (ChunkSize.HasChanged())
                 ChunkSize.ParameterValue ??= new FileSize(2, FileSizeSuffix.MB);
@@ -154,8 +150,8 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 file.StateChanged -= FileData_StateChanged;
                 file.StateChanged += FileData_StateChanged;
             }
-            
-            await SetMultipleFileBtnsStateAsync(FileData.Empty);
+
+            // can't enable some buttons directly here because every control should wait for being explicitly enabled after page render
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -163,7 +159,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (firstRender)
                 return;
 
-            if (!_tempThumbnailSet)
+            if (!_tempThumbnailSet && State.V == InputState.Enabled)
             {
                 await SetMultipleFileBtnsStateAsync(FileData.Empty);
                 _tempThumbnailSet = true;
