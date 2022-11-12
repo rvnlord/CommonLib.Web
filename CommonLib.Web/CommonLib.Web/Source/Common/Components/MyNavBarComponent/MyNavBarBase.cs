@@ -19,6 +19,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -72,7 +73,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             if (RunPureJavascriptVersion)
             {
                 //await MyJsRuntime.JsVoidFromComponent(nameof(MyNavBar), "blazor_NavBar_AfterRender");
-                await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterRender");
+                await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterFirstRender");
+                var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent  
+                AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
+                if (!AuthenticatedUser.Equals(prevAuthUser))
+                    await StateHasChangedAsync();
                 //Logger.For<MyNavBarBase>().Info("JS 'blazor_NavBar_AfterRender' executed");
             }
             else
@@ -114,6 +119,14 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             }
             
             await Task.CompletedTask;
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+                return;
+
+            await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterRender");
         }
 
         public async Task Setup() // call on Layout After First Render After Init

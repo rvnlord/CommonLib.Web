@@ -10,7 +10,7 @@ import utils from "../utils.js";
 import { NavLinkUtils } from "./my-nav-link.js";
 import { NavBarUtils } from "../navbar-utils.js";
 
-export async function blazor_NavBar_AfterRender() {
+export async function blazor_NavBar_AfterFirstRender() {
     NavBarUtils.finishAndRemoveRunningAnims();
     
     var currentUrl = window.location.href.skipLastWhile(c => c === "/");
@@ -18,6 +18,11 @@ export async function blazor_NavBar_AfterRender() {
         currentUrl = currentUrl + "/Home/Index";
     }
     NavBarUtils.$ActiveNavLink = $(".my-navbar").first().find(".my-nav-link").$toArray().filter($nl => $nl.attr("href") && $nl.attr("href").equalsIgnoreCase(currentUrl)).first();
+    NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
+}
+
+export async function blazor_NavBar_AfterRender() {
+    NavBarUtils.adjustToDeviceSize();
     NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
 }
 

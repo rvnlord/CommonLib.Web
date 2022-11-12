@@ -10,11 +10,9 @@ using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
-using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
-using SixLabors.ImageSharp;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
@@ -37,17 +35,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _editContext = new MyEditContext(_editUserVM);
             await Task.CompletedTask;
         }
-
-        protected override async Task OnParametersSetAsync() 
-        {
-            await Task.CompletedTask;
-        }
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!await EnsureAuthenticatedAsync(true))
+            if (!await EnsureAuthenticatedAsync(true, true))
                 return;
-
+            
             _allControls = GetInputControls();
             _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
             _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
@@ -59,12 +52,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
-        
+
         protected async Task BtnSubmit_ClickAsync()
         {
             await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnSave);
 
-            if (!await EnsureAuthenticatedAsync(true))
+            if (!await EnsureAuthenticatedAsync(true, false))
             {
                 await SetControlStatesAsync(ButtonState.Disabled, _allControls);
                 await ShowLoginModalAsync();
@@ -88,7 +81,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             Mapper.Map(editResponse.Result, _editUserVM);
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
 
-            await EnsureAuthenticationPerformedAsync(false);
+            await EnsureAuthenticationPerformedAsync(false, false);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
             {
                 if (_editUserVM.HasPassword && _pwdOldPassword.State.V == InputState.ForceDisabled)

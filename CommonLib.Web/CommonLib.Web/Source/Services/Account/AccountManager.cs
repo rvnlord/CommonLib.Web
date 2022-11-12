@@ -302,7 +302,7 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<LoginUserVM>> LoginAsync(LoginUserVM userToLogin)
         {
             if (userToLogin.UserName.IsNullOrWhiteSpace())
-                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name can't be empty", new[] { new KeyValuePair<string, string>("UserName", "DbUser Name is required") }.ToLookup());
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name can't be empty", new[] { new KeyValuePair<string, string>("UserName", "User Name is required") }.ToLookup());
 
             var user = await _userManager.FindByNameAsync(userToLogin.UserName);
             if (user == null)

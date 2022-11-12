@@ -131,7 +131,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 var sizingClass = $"my-{Sizing.ParameterValue.EnumToString().PascalCaseToKebabCase()}";
                 AddClass(sizingClass);
 
-                if (Value.V.IsNullOrWhiteSpace()) // remove margins if there is no value (presumably icon only)
+                if (Value.V.IsNullOrWhiteSpace() && !Classes.ContainsAny("my-btn-clear")) // remove margins if there is no value (presumably icon only)
                 {
                     AddStyles(new Dictionary<string, string> { 
                         ["margin-left"] = "0",

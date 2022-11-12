@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.ViewModels.Account
@@ -59,6 +61,8 @@ namespace CommonLib.Web.Source.ViewModels.Account
         {
             return !Equals(left, right);
         }
+
+        public override string ToString() => $"[{AuthenticationStatus.EnumToString()}] {(UserName.IsNullOrWhiteSpace() ? "Guest" : UserName)} ({(Roles?.Any() == true ? Roles.JoinAsString(", ") : "<No Roles>")})";
     }
 
     public enum AuthStatus

@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
-using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyCssGridItemComponent;
 using CommonLib.Web.Source.Common.Components.MyCssGridTemplateComponent;
-using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
-using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Truncon.Collections;
@@ -139,7 +135,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
             if (HighestDeviceSizeWithLayout is not null)
             {
                 var highestDefinedLayout = GridLayouts[(DeviceSizeKind)HighestDeviceSizeWithLayout];
-                Logger.For<MyCssGridBase>().Info($"deviceSize: {CurrentDeviceSize}, highestDeviceSizeWithDefinedLayout: {HighestDeviceSizeWithLayout}, Cols: {highestDefinedLayout.ColumnsLayout}, Rows: {highestDefinedLayout.RowsLayout}");
+                //Logger.For<MyCssGridBase>().Info($"deviceSize: {CurrentDeviceSize}, highestDeviceSizeWithDefinedLayout: {HighestDeviceSizeWithLayout}, Cols: {highestDefinedLayout.ColumnsLayout}, Rows: {highestDefinedLayout.RowsLayout}");
                 AddStyle("grid-template-columns", highestDefinedLayout.ColumnsLayout);
                 AddStyle("grid-template-rows", highestDefinedLayout.RowsLayout);
             }

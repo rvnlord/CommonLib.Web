@@ -20,5 +20,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         }
 
         public override int GetHashCode() => Name.GetHashCode() ^ 3 * Id.GetHashCode() ^ 5 * UserNames.GetHashCode() ^ 7;
+
+        public override string ToString() => Name;
     }
 }

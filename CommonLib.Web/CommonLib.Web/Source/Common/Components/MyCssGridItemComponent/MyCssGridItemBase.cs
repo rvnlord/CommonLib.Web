@@ -253,6 +253,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         public string Bottom { get; set; }
         public string Left { get; set; }
 
+        public static CssGridAreaGap OnlyNegatedDefaultBottom => new(null, null, (-StylesConfig.Gutter).Px());
+
         public CssGridAreaGap() { }
 
         public CssGridAreaGap(string top, string right = null, string bottom = null, string left = null)

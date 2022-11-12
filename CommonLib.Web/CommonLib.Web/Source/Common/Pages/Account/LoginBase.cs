@@ -63,7 +63,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!await EnsureAuthenticationPerformedAsync(true))
+            if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
 
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
@@ -114,7 +114,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (isFirstRender || IsDisposed)
                 return;
 
-            if (await EnsureAuthenticationChangedAsync(false))
+            if (await EnsureAuthenticationChangedAsync(false, false))
             {
                 SetControls();
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
@@ -136,7 +136,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, externalLoginResponse.Message);
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
-            await EnsureAuthenticationPerformedAsync(false);
+            await EnsureAuthenticationPerformedAsync(false, false);
             SetControls();
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
             if (!_loginUserVM.IsConfirmed)
@@ -161,7 +161,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
 
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            if (await EnsureAuthenticationChangedAsync(true))
+            if (await EnsureAuthenticationChangedAsync(true, false))
             {
                 SetControls();
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
@@ -204,7 +204,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.UserName = null;
             _loginUserVM.Password = null;
 
-            if (await EnsureAuthenticationChangedAsync(true))
+            if (await EnsureAuthenticationChangedAsync(true, false))
             {
                 SetControls();
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);

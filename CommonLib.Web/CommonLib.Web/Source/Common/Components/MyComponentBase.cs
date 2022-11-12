@@ -77,8 +77,9 @@ namespace CommonLib.Web.Source.Common.Components
         private MyPromptBase _prompt;
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
+        private AuthenticateUserVM _authenticatedUser;
         protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
-
+   
         protected Guid _guid { get; set; }
         protected string _id { get; set; }
         protected string _renderClasses { get; set; } // these properties prevents async component rendering from throwing if clicking sth fast would change the collection before it is iterated properly within the razor file
@@ -97,15 +98,15 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        //protected bool _isLayout
-        //{
-        //    get
-        //    {
-        //        var type = GetType();
-        //        return type.IsSubclassOf(typeof(MyLayoutComponentBase)) && type.Name.In("_Layout", "MainLayout");
-        //    }
-        //}
-        
+        protected bool _isLayout
+        {
+            get
+            {
+                var type = GetType();
+                return type.IsSubclassOf(typeof(MyLayoutComponentBase)) && type.Name.In("_Layout", "MainLayout");
+            }
+        }
+
         public List<string> Classes { get; } = new();
 
         public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
@@ -204,7 +205,17 @@ namespace CommonLib.Web.Source.Common.Components
 
         public List<MyComponentBase> Siblings => Parent.Children.Except(this).ToList();
 
-        public AuthenticateUserVM AuthenticatedUser { get; set; }
+        public AuthenticateUserVM AuthenticatedUser
+        {
+            get => !_isCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
+            set
+            {
+                if (!_isCommonLayout)
+                    Layout.AuthenticatedUser = value;
+                else
+                    _authenticatedUser = value;
+            }
+        }
 
         public bool AdditionalAttributesHaveChanged { get; private set; }
 
@@ -456,12 +467,13 @@ namespace CommonLib.Web.Source.Common.Components
         protected bool HasAuthenticationStatus(AuthStatus authStatus) => AuthenticatedUser == null && authStatus == AuthStatus.NotChecked || AuthenticatedUser != null && AuthenticatedUser.HasAuthenticationStatus(authStatus);
         
         protected bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticatedUser == null && AuthStatus.NotChecked.In(authStatuses) || AuthenticatedUser != null && AuthenticatedUser.HasAnyAuthenticationStatus(authStatuses);
-
-        protected async Task<ComponentAuthenticationStatus> AuthenticateAsync()
+        
+        protected async Task<ComponentAuthenticationStatus> AuthenticateAsync(bool changeStateEvenIfAuthUserIsTheSame)
         {
             var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
             var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
+            Logger.For(GetType()).Info($"Setting Auth user to {authResponse.Result}");
             AuthenticatedUser = authResponse.Result;
 
             var authStatus = new ComponentAuthenticationStatus
@@ -472,34 +484,41 @@ namespace CommonLib.Web.Source.Common.Components
                 ResponseMessage = authResponse.Message
             };
             
-            if (!AuthenticatedUser.Equals(prevAuthUser))
+            if (!AuthenticatedUser.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
+                //await Layout.Components.Values.Single(c => c._isLayout).StateHasChangedAsync(true);
+                if (!changeStateEvenIfAuthUserIsTheSame)
+                    Logger.For(GetType()).Info("Auth User changed, updating this control and navbar state");
+                else
+                    Logger.For(GetType()).Info("Auth User didn't change but state will be force changed, updating this control and navbar state");
             }
-
+            else
+                Logger.For(GetType()).Info("Auth User didn't change, doing nothing");
+            
             return authStatus;
         }
 
-        protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage) // true if user authenticated
+        protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if user authenticated
         {
-            var authStatus = await AuthenticateAsync();
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
             if (authStatus.AuthenticationFailed && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, "You are not Authenticated");
             return authStatus.AuthenticationSuccessful;
         }
 
-        protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage) // true if authentication didn't throw, regardless if user is authenticated
+        protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication didn't throw, regardless if user is authenticated
         {
-            var authStatus = await AuthenticateAsync();
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
             if (authStatus.AuthenticationNotPerformed && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
             return authStatus.AuthenticationPerformed;
         }
 
-        protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage) // true if authentication didn't throw, regardless if user is authenticated
+        protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication state changed, regardless if user is authenticated
         {
-            var authStatus = await AuthenticateAsync();
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
             if (authStatus.AuthenticationNotChanged && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
             return authStatus.AuthenticationChanged;
@@ -928,14 +947,22 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static void ClearControlsRerenderingStatus(IEnumerable<MyComponentBase> controls) => controls.ForEach(c => c.IsRerendered = false);
 
+        protected static void ClearControlRerenderingStatus(MyComponentBase control) => ClearControlsRerenderingStatus(new[] { control });
+
+        protected void ClearControlRerenderingStatus() => ClearControlRerenderingStatus(this);
+
         protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
         {
             await TaskUtils.WaitUntil(() =>
             {
                 return controls.All(c => c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced));
-            });
+            }, 25, 10000);
             ClearControlsRerenderingStatus(controls);
         }
+
+        protected static Task WaitForControlToRerenderAsync(MyComponentBase control) => WaitForControlsToRerenderAsync(new[] { control });
+
+        protected Task WaitForControlToRerenderAsync() => WaitForControlToRerenderAsync(this);
 
         protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading);
        

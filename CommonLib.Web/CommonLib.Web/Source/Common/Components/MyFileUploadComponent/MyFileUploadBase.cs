@@ -154,16 +154,21 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 file.StateChanged -= FileData_StateChanged;
                 file.StateChanged += FileData_StateChanged;
             }
-            await SetMultipleFileBtnsStateAsync(FileData.Empty); // null if set server side
+            
+            await SetMultipleFileBtnsStateAsync(FileData.Empty);
         }
 
-        //protected override async Task OnAfterRenderAsync(bool firstRender)
-        //{
-        //    if (firstRender)
-        //        return;
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+                return;
 
-        //    await SetThumbnailAsync(GetSelectedOrAllFiles().Any() ? GetSelectedOrAllFiles()[^1] : FileData.Empty);
-        //}
+            if (!_tempThumbnailSet)
+            {
+                await SetMultipleFileBtnsStateAsync(FileData.Empty);
+                _tempThumbnailSet = true;
+            }
+        }
 
         [JSInvokable]
         public async Task AddFilesToUploadAsync(List<FileData> files)
@@ -395,6 +400,11 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             _multipleFileBtnRenders++;
             await _syncFileDataState.WaitAsync();
             _multipleFileBtnRenders--;
+            if (IsDisposed)
+            {
+                await _syncFileDataState.ReleaseAsync();
+                return;
+            }
 
             var btnsForManyFiles = Children.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
             var btnChooseFile = btnsForManyFiles.Single(b => b.HasClass("my-btn-choose-file"));
@@ -458,9 +468,12 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         private async Task SetThumbnailAsync(FileData fd)
         {
-            _tempThumbnailSet = true;
-            var noThumbnailImage = PreviewFor?.V()?.ToBase64ImageString();
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
+            var noThumbnailImage = _tempThumbnailSet ? null : PreviewFor?.V()?.ToBase64ImageString();
+            //if (noThumbnailImage is not null)
+            //    _tempThumbnailSet = true;
+
+            if (fd != FileData.Empty || noThumbnailImage is not null)
+                await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
         }
 
         //protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";

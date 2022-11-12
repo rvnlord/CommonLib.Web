@@ -1,0 +1,74 @@
+﻿@page "/Admin/Users/"
+
+@using CommonLib.Web.Source.ViewModels.Account
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Components.MyInputComponent
+@using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using static CommonLib.Web.Source.Models.BlazorParameter;
+
+@inherits ListUsersBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (HasAuthenticationStatus(AuthStatus.NotChecked))
+    {
+        <div class="no-page-error">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-message">Authorizing...</div>
+            </div>
+        </div>
+    }
+    else if (!IsAuthorized) // show nothing if null, not checked
+    {
+        <div class="no-page-error">You are not authorized to access this page</div>
+    }
+    else if (IsAuthorized)
+    {
+        <MyEditForm @ref="_editForm" EditContext="_editContext" style="margin: 0 5px 5px 5px;">
+            <MyCssGrid Padding="Gutter.Px()" Gap="Gutter.Px()"
+                   XLTemplate="@(new CssGridLayout("repeat(4, 3fr)", "repeat(auto-fit, minmax(0, max-content))"))"
+                   LGTemplate="@(new CssGridLayout("repeat(3, 4fr)", "repeat(auto-fit, minmax(0, max-content))"))"
+                   SMTemplate="@(new CssGridLayout("repeat(2, 6fr)", "repeat(auto-fit, minmax(0, max-content))"))"
+                   Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   style="background: #101010;">
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())">
+                    <h3>Administrate Users</h3>
+                    <hr class="my-mt-10px" />
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <MyCssGrid Gap="Gutter.Px()"
+                           Template="@(new CssGridLayout("1fr", "auto"))"
+                           LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                        <MyCssGridItem>
+                            <MyButton Value="@BP("Add User")" SubmitsForm="true" Click="BtnAddUser_ClickAsync" Icon="IconType.From(LightIconType.PlusLarge)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-add-user" />
+                        </MyCssGridItem>
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+                @if (!_users.Any())
+                {
+                    <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                        <div class="no-page-error">&lt; No Users &gt;</div>
+                    </MyCssGridItem>
+                }
+                else
+                {
+                    foreach (var user in _users.OrderBy(r => r.UserName)) // use @key
+                    {
+                        <MyCssGridItem>
+
+                        </MyCssGridItem>
+                    }
+                }
+                
+            </MyCssGrid>
+        </MyEditForm>
+    }
+
+</CascadingValue>

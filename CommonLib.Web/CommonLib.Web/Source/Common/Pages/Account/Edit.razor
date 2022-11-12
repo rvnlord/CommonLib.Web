@@ -6,7 +6,6 @@
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Source.Common.Converters
 @using CommonLib.Source.Common.Utils.UtilClasses
-@using CommonLib.Web.Source.Models
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
 @using static CommonLib.Web.Source.Models.BlazorParameter;
 
@@ -39,12 +38,12 @@
                    Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))"
                 style="background: #101010;">
 
-                <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())">
+                <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom">
                     <h3>Edit</h3>
                     <hr class="my-mt-10px" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -54,7 +53,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.Id)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -64,7 +63,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.UserName)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.Avatar)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -76,7 +75,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.PotentialAvatars)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.Email)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -86,7 +85,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.Email)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.OldPassword)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -96,7 +95,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.OldPassword)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.NewPassword)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
@@ -106,7 +105,7 @@
                     <MyValidationMessage For="@(() => _editUserVM.NewPassword)" />
                 </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
                     <MyLabel For="@(() => _editUserVM.ConfirmNewPassword)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
