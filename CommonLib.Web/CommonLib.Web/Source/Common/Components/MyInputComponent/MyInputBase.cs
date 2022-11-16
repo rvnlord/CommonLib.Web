@@ -107,16 +107,16 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
             {
                 State.ParameterValue = InputState.Enabled;
-                if (this is MyFileUploadBase fileUpload)
-                {
-                    var btnsForManyFiles = fileUpload.Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
-                    btnsForManyFiles?.ForEach(b =>
-                    {
-                        b.State.SetAsChanged();
-                        b._prevParentState = ButtonState.Enabled;
-                    });
-                    await fileUpload.SetMultipleFileBtnsStateAsync(null);
-                }
+                //if (this is MyFileUploadBase fileUpload)
+                //{
+                //    var btnsForManyFiles = fileUpload.Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
+                //    btnsForManyFiles?.ForEach(b =>
+                //    {
+                //        b.State.SetAsChanged();
+                //        b._prevParentState = ButtonState.Enabled;
+                //    });
+                //    await fileUpload.SetMultipleFileBtnsStateAsync(null);
+                //}
             }
 
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));

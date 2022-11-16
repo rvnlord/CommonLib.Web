@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
@@ -33,18 +34,18 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
     {
         private readonly OrderedSemaphore _syncFileDataState = new(1, 1);
         private int _multipleFileBtnRenders;
-        private bool _tempThumbnailSet;
+        private FileData _prevNoThumbnailImage;
         private MyFluentValidatorBase _validator => Ancestors.OfType<MyEditFormBase>().FirstOrDefault()?.Children.OfType<MyFluentValidatorBase>()?.FirstOrDefault();
-        
+
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
         protected BlazorParameter<bool?> _inheritState { get; set; }
 
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
         public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
-        
+
         [Parameter]
-        public BlazorParameter<Func<FileData>> PreviewFor { get; set; }
+        public BlazorParameter<Expression<Func<FileData>>> PreviewFor { get; set; }
 
         [Parameter]
         public BlazorParameter<FileSize?> ChunkSize { get; set; }
@@ -88,7 +89,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             }
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace() ? Placeholder : !displayName.IsNullOrWhiteSpace() ? $"{displayName}..." : null;
-            
+
             if (State.HasChanged())
             {
                 State.ParameterValue ??= InputState.Disabled;
@@ -97,7 +98,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
-                    if (PreviewFor.HasValue() || _tempThumbnailSet)
+                    if (PreviewFor.HasValue() || PreviewFor?.V?.Compile()?.Invoke() == _prevNoThumbnailImage)
                     {
                         if (!IsRendered)
                             _thumbnailContainerStyle.AddOrUpdate("opacity", "0.3");
@@ -116,7 +117,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                         await JQuery.QueryOneAsync(thumbnailContainerSelector).RemoveCssAsync("opacity");
                 }
             }
-            
+
             if (ChunkSize.HasChanged())
                 ChunkSize.ParameterValue ??= new FileSize(2, FileSizeSuffix.MB);
 
@@ -150,14 +151,11 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (firstRender)
                 return;
 
-            if (State.V == InputState.Enabled)
-            {
-                if (!_tempThumbnailSet)
-                {
-                    await SetMultipleFileBtnsStateAsync(FileData.Empty);
-                    _tempThumbnailSet = true;
-                }
-            }
+            var noThumbnailFd = PreviewFor?.V?.Compile().Invoke();
+            if (noThumbnailFd != _prevNoThumbnailImage)
+                await SetMultipleFileBtnsStateAsync(FileData.Empty);
+            else
+                await SetMultipleFileBtnsStateAsync(null, true);
         }
 
         [JSInvokable]
@@ -207,7 +205,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 await SetMultipleFileBtnsStateAsync(null);
             }
         }
-        
+
         protected async Task BtnUpload_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
             var fileToUpload = GetBtnFileN(sender);
@@ -314,7 +312,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             await _validator.ValidateFieldAsync(new FieldIdentifier(Model, _propName));
             Value.ForEach(fd => fd.ValidateUploadStatus = true);
         }
-        
+
         private async void FileData_StateChanged(FileData sender, FileDataStateChangedEventArgs e)
         {
             FileData fileToPreview = null;
@@ -331,7 +329,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             await SetMultipleFileBtnsStateAsync(fileToPreview);
         }
-        
+
         private async Task UploadAndManageStateAsync(FileData fd)
         {
             var btnsForTheSameFile = BtnsForFile(fd);
@@ -382,86 +380,100 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         private bool IsBtnFileIn(MyButtonBase btn, IEnumerable<FileData> fds) => GetBtnFileN(btn)?.In(fds) == true;
         private bool IsBtnFileEq(MyButtonBase btn, FileData fd) => GetBtnFileN(btn)?.Equals(fd) == true;
         private MyButtonBase[] BtnsForFile(FileData fd) => Children.OfType<MyButtonBase>().Where(b => IsBtnFileEq(b, fd)).ToArray();
-        private MyButtonBase BtnForFileByClass(FileData fd, string cls) =>  BtnsForFile(fd).Single(b => b.Classes.Contains(cls));
+        private MyButtonBase BtnForFileByClass(FileData fd, string cls) => BtnsForFile(fd).Single(b => b.Classes.Contains(cls));
         private IReadOnlyList<FileData> GetSelectedOrAllFiles() => Files.Any(f => f.IsSelected) ? Files.Where(f => f.IsSelected).ToArray() : Files;
 
-        internal async Task SetMultipleFileBtnsStateAsync(FileData fileToPreview)
+        internal async Task SetMultipleFileBtnsStateAsync(FileData fileToPreview, bool changeOnlyBtnsState = false)
         {
-            _multipleFileBtnRenders++;
+            if (!changeOnlyBtnsState)
+                _multipleFileBtnRenders++;
             await _syncFileDataState.WaitAsync();
-            _multipleFileBtnRenders--;
-            if (IsDisposed)
+            if (!changeOnlyBtnsState)
+                _multipleFileBtnRenders--;
+
+            try
+            {
+                if (IsDisposed)
+                    return;
+
+                var btnsForManyFiles = Children.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
+                var btnChooseFile = btnsForManyFiles.Single(b => b.HasClass("my-btn-choose-file"));
+                var btnSelectAllFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-select-all-files"));
+                var btnUploadManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-upload-many-files"));
+                var btnPauseManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-pause-many-files"));
+                var btnResumeManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-resume-many-files"));
+                var btnRetryManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-retry-many-files"));
+                var btnClearManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-clear-many-files"));
+
+                var selectedFiles = GetSelectedOrAllFiles();
+                var btnsToEnable = new List<MyButtonBase>();
+                var btnsToDisable = new List<MyButtonBase>();
+
+                if (State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnChooseFile);
+                else
+                    btnsToDisable.Add(btnChooseFile);
+
+                if (selectedFiles.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnSelectAllFiles);
+                else
+                    btnsToDisable.Add(btnSelectAllFiles);
+
+                var filesToUpload = selectedFiles.Where(f => f.Status == UploadStatus.NotStarted).ToArray();
+                if (filesToUpload.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnUploadManyFiles);
+                else
+                    btnsToDisable.Add(btnUploadManyFiles);
+
+                var filesUploading = selectedFiles.Where(f => f.Status == UploadStatus.Uploading).ToArray();
+                if (filesUploading.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnPauseManyFiles);
+                else
+                    btnsToDisable.Add(btnPauseManyFiles);
+
+                var filesPaused = selectedFiles.Where(f => f.Status == UploadStatus.Paused).ToArray();
+                if (filesPaused.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnResumeManyFiles);
+                else
+                    btnsToDisable.Add(btnResumeManyFiles);
+
+                var filesFailed = selectedFiles.Where(f => f.Status == UploadStatus.Failed).ToArray();
+                if (filesFailed.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnRetryManyFiles);
+                else
+                    btnsToDisable.Add(btnRetryManyFiles);
+
+                var filesToClear = selectedFiles.Where(f => f.Status.In(UploadStatus.Failed, UploadStatus.Paused, UploadStatus.NotStarted, UploadStatus.Finished)).ToArray();
+                if (filesToClear.Any() && State.V != InputState.Disabled)
+                    btnsToEnable.Add(btnClearManyFiles);
+                else
+                    btnsToDisable.Add(btnClearManyFiles);
+
+                await SetControlStatesAsync(ButtonState.Enabled, btnsToEnable, null, false);
+                await SetControlStatesAsync(ButtonState.Disabled, btnsToDisable, null, false);
+                if (changeOnlyBtnsState)
+                {
+                    var tasksBtnsChangeState = btnsToEnable.Concat(btnsToDisable).Select(btn => btn.StateHasChangedAsync(true)).ToArray();
+                    await Task.WhenAll(tasksBtnsChangeState);
+                }
+                else if (_multipleFileBtnRenders == 0)
+                    await StateHasChangedAsync(true);
+                if (fileToPreview is not null)
+                    await SetThumbnailAsync(fileToPreview);
+            }
+            finally
             {
                 await _syncFileDataState.ReleaseAsync();
-                return;
             }
-
-            var btnsForManyFiles = Children.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
-            var btnChooseFile = btnsForManyFiles.Single(b => b.HasClass("my-btn-choose-file"));
-            var btnSelectAllFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-select-all-files"));
-            var btnUploadManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-upload-many-files"));
-            var btnPauseManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-pause-many-files"));
-            var btnResumeManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-resume-many-files"));
-            var btnRetryManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-retry-many-files"));
-            var btnClearManyFiles = btnsForManyFiles.Single(b => b.HasClass("my-btn-clear-many-files"));
-
-            var selectedFiles = GetSelectedOrAllFiles();
-            var btnsToEnable = new List<MyButtonBase>();
-            var btnsToDisable = new List<MyButtonBase>();
-
-            if (State.V != InputState.Disabled)
-                btnsToEnable.Add(btnChooseFile);
-            else
-                btnsToDisable.Add(btnChooseFile);
-
-            if (selectedFiles.Any() && State.V != InputState.Disabled) 
-                btnsToEnable.Add(btnSelectAllFiles); 
-            else 
-                btnsToDisable.Add(btnSelectAllFiles);
-
-            var filesToUpload = selectedFiles.Where(f => f.Status == UploadStatus.NotStarted).ToArray();
-            if (filesToUpload.Any() && State.V != InputState.Disabled)
-                btnsToEnable.Add(btnUploadManyFiles); 
-            else 
-                btnsToDisable.Add(btnUploadManyFiles);
-
-            var filesUploading = selectedFiles.Where(f => f.Status == UploadStatus.Uploading).ToArray();
-            if (filesUploading.Any() && State.V != InputState.Disabled)
-                btnsToEnable.Add(btnPauseManyFiles); 
-            else 
-                btnsToDisable.Add(btnPauseManyFiles);
-
-            var filesPaused = selectedFiles.Where(f => f.Status == UploadStatus.Paused).ToArray();
-            if (filesPaused.Any() && State.V != InputState.Disabled)
-                btnsToEnable.Add(btnResumeManyFiles); 
-            else 
-                btnsToDisable.Add(btnResumeManyFiles);
-
-            var filesFailed = selectedFiles.Where(f => f.Status == UploadStatus.Failed).ToArray();
-            if (filesFailed.Any() && State.V != InputState.Disabled)
-                btnsToEnable.Add(btnRetryManyFiles); 
-            else 
-                btnsToDisable.Add(btnRetryManyFiles);
-
-            var filesToClear = selectedFiles.Where(f => f.Status.In(UploadStatus.Failed, UploadStatus.Paused, UploadStatus.NotStarted, UploadStatus.Finished)).ToArray();
-            if (filesToClear.Any() && State.V != InputState.Disabled)
-                btnsToEnable.Add(btnClearManyFiles); 
-            else 
-                btnsToDisable.Add(btnClearManyFiles);
-
-            await SetControlStatesAsync(ButtonState.Enabled, btnsToEnable, null, false);
-            await SetControlStatesAsync(ButtonState.Disabled, btnsToDisable, null, false);
-            if (_multipleFileBtnRenders == 0)
-                await StateHasChangedAsync(true);
-            if (fileToPreview is not null)
-                await SetThumbnailAsync(fileToPreview);
-
-            await _syncFileDataState.ReleaseAsync();
         }
 
         private async Task SetThumbnailAsync(FileData fd)
         {
-            var noThumbnailImage = PreviewFor?.V()?.ToBase64ImageString();
+            var noThumbnailFd = PreviewFor?.V?.Compile().Invoke();
+            var noThumbnailImage = noThumbnailFd?.ToBase64ImageString();
+            if (noThumbnailImage is not null)
+                _prevNoThumbnailImage = noThumbnailFd;
+            
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
         }
 
@@ -473,7 +485,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         //    var sizeInBytes = strSizeInBytes.ToLong();
         //    return Value.Single(f => f.Name.EqualsInvariant(name) && f.Extension.EqualsInvariant(extension) && f.TotalSize.SizeInBytes == sizeInBytes);
         //}
-        
+
         private async Task UploadFileAsync(FileData fd)
         {
             fd.Status = UploadStatus.Uploading;

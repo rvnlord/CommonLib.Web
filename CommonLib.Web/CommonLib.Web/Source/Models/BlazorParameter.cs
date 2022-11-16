@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Components;
 
 namespace CommonLib.Web.Source.Models
 {
     public abstract class BlazorParameter
     {
+        public static BlazorParameter<Expression<Func<TParameter>>> BP<TParameter>(Expression<Func<TParameter>> parameterValue) => new BlazorParameter<Expression<Func<TParameter>>>(parameterValue);
         public static BlazorParameter<TParameter> BP<TParameter>(TParameter parameterValue) => new(parameterValue);
     }
 
