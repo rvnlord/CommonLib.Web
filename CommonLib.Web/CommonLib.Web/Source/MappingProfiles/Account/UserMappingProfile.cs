@@ -17,6 +17,12 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<LoginUserVM, LoginUserVM>()
                 .ForMember(d => d.ExternalLogins, o => o.Condition(s => s.ExternalLogins?.Any() == true))
                 .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()));
+            CreateMap<AuthenticateUserVM, AuthenticateUserVM>()
+                .ForMember(d => d.Avatar, o => o.Condition(s => s.Avatar is not null))
+                .ForMember(d => d.Roles, o => o.Condition(s => s.Roles?.Any() == true))
+                .ForMember(d => d.Roles, o => o.MapFrom(s => s.Roles.ToList()))
+                .ForMember(d => d.Claims, o => o.Condition(s => s.Claims?.Any() == true))
+                .ForMember(d => d.Claims, o => o.MapFrom(s => s.Claims.ToList()));
             CreateMap<AuthenticateUserVM, LoginUserVM>();
             CreateMap<DbUser, AuthenticateUserVM>();
             CreateMap<DbUser, ForgotPasswordUserVM>();

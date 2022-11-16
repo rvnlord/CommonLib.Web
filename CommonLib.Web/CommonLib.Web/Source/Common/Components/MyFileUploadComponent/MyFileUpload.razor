@@ -15,25 +15,25 @@
         <div class="my-fileupload-drop-container">Drop Files here...<input type="file" class="my-fileupload-hidden-file-input" multiple="multiple" /></div>
         <div class="my-fileupload-buttons-container">
             <div class="my-fileupload-btn-choose-file-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" class="my-btn-choose-file" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.FileCirclePlus)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" class="my-btn-choose-file" />
             </div>
             <div class="my-fileupload-btn-select-all-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnSelectAll_ClickAsync" PreventMultiClicks="false" class="my-btn-select-all-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.BoxCheck)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnSelectAll_ClickAsync" PreventMultiClicks="false" class="my-btn-select-all-files" />
             </div>
             <div class="my-fileupload-btn-upload-many-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnUploadMany_ClickAsync" class="my-btn-upload-many-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnUploadMany_ClickAsync" class="my-btn-upload-many-files" />
             </div>
             <div class="my-fileupload-btn-pause-many-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnPauseMany_ClickAsync" class="my-btn-pause-many-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnPauseMany_ClickAsync" class="my-btn-pause-many-files" />
             </div>
             <div class="my-fileupload-btn-resume-many-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnResumeMany_ClickAsync" class="my-btn-resume-many-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnResumeMany_ClickAsync" class="my-btn-resume-many-files" />
             </div>
             <div class="my-fileupload-btn-retry-many-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnRetryMany_ClickAsync"  class="my-btn-retry-many-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnRetryMany_ClickAsync"  class="my-btn-retry-many-files" />
             </div>
             <div class="my-fileupload-btn-clear-many-container">
-                <MyButton InheritState="false" Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnClearMany_ClickAsync"  class="my-btn-clear-many-files" />
+                <MyButton InheritState="_inheritState" Icon="IconType.From(LightIconType.TrashXmark)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Quadratic" Click="BtnClearMany_ClickAsync" class="my-btn-clear-many-files" />
             </div>
         </div>
         @if (ValidFiles.Any())
@@ -50,25 +50,25 @@
                     @if (file.Status == UploadStatus.NotStarted)
                     {
                         <div class="my-fileupload-btn-upload-container">
-                            <MyButton InheritState="false" Validate="false" Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnUpload_ClickAsync" class="my-btn-upload-file" Model="@file" @key=file />
+                            <MyButton DisabledByDefault="false" InheritState="_inheritState" Validate="false" Icon="IconType.From(LightIconType.CloudArrowUp)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnUpload_ClickAsync" class="my-btn-upload-file" Model="@file" @key=file />
                         </div>
                     }
                     else if (file.Status == UploadStatus.Uploading)
                     {
                         <div class="my-fileupload-btn-pause-container">
-                            <MyButton InheritState="false" Validate="false" Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnPause_ClickAsync" class="my-btn-pause-file" Model="@file" @key=file />
+                            <MyButton DisabledByDefault="false" InheritState="_inheritState" Validate="false" Icon="IconType.From(LightIconType.Pause)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnPause_ClickAsync" class="my-btn-pause-file" Model="@file" @key=file />
                         </div>
                     }
                     else if (file.Status == UploadStatus.Paused)
                     {
                         <div class="my-fileupload-btn-resume-container">
-                            <MyButton InheritState="false" Validate="false" Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnResume_ClickAsync" class="my-btn-resume-file" Model="@file" @key=file />
+                            <MyButton DisabledByDefault="false" InheritState="_inheritState" Validate="false" Icon="IconType.From(LightIconType.Play)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnResume_ClickAsync" class="my-btn-resume-file" Model="@file" @key=file />
                         </div>
                     }
                     else if (file.Status == UploadStatus.Failed)
                     {
                         <div class="my-fileupload-btn-retry-container">
-                            <MyButton InheritState="false" Validate="false" Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnRetry_ClickAsync" class="my-btn-retry-file" Model="@file" @key=file />
+                            <MyButton DisabledByDefault="false" InheritState="_inheritState" Validate="false" Icon="IconType.From(LightIconType.RotateRight)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnRetry_ClickAsync" class="my-btn-retry-file" Model="@file" @key=file />
                         </div>
                     }
                     else if (file.Status == UploadStatus.Finished)
@@ -77,7 +77,7 @@
                         </div>
                     }
                     <div class="my-fileupload-btn-clear-container">
-                        <MyButton InheritState="false" Validate="false" Icon="IconType.From(LightIconType.XmarkLarge)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnClear_ClickAsync" class="my-btn-remove-file" Model="@file" @key=file />
+                        <MyButton DisabledByDefault="false" InheritState="_inheritState" Validate="false" Icon="IconType.From(LightIconType.XmarkLarge)" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.LineHeightQuadratic" Click="BtnClear_ClickAsync" class="my-btn-remove-file" Model="@file" @key=file />
                     </div>
                 }
             </div>

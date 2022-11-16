@@ -616,10 +616,16 @@ namespace CommonLib.Web.Source.Services.Account
 
             if (avatarChanged)
             {
-                user.Avatar = newAvatar.ToDbFile(user.Id, user.Id);
+                //user.Avatar = newAvatar.ToDbFile(user.Id, user.Id);
+                var dbAvatar = _db.Files.SingleOrDefault(f => f.UserHavingFileAsAvatarId == user.Id);
+                if (dbAvatar is not null)
+                {
+                    dbAvatar.UserHavingFileAsAvatarId = null;
+                    await _db.SaveChangesAsync();
+                }
+                _db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
                 userToEdit.Avatar = newAvatar;
                 FileUtils.EmptyDir(tempAvatarDir);
-                //_db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
                 propsToChange.Add(nameof(user.Avatar));
             }
 

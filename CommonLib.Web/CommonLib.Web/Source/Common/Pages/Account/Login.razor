@@ -118,8 +118,15 @@
             Template="@(new CssGridLayout("150px auto", "repeat(2, auto)"))">
             <MyCssGridItem>
                 <div>
-                    <div class="logged-user-no-avatar-container">
-                        <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
+                    <div class="logged-user-avatar-container">
+                        @if (AuthenticatedUser.Avatar is null)
+                        {
+                            <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
+                        }
+                        else 
+                        {
+                            <MyImage Path="AuthenticatedUser.Avatar"></MyImage>
+                        }
                     </div>
                 </div>
             </MyCssGridItem>

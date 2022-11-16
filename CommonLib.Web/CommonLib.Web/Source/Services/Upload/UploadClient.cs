@@ -68,5 +68,10 @@ namespace CommonLib.Web.Source.Services.Upload
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<string>>($"api/upload/{nameof(UploadApiController.GetRenderedIconAsync)}", icon);
         }
+
+        public async Task<ApiResponse<FileData>> GetRenderedImage(string path)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FileData>>($"api/upload/{nameof(UploadApiController.GetRenderedImageAsync)}", path);
+        }
     }
 }

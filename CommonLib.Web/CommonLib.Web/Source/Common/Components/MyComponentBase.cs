@@ -210,10 +210,12 @@ namespace CommonLib.Web.Source.Common.Components
             get => !_isCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
             set
             {
+                var authUser = (!_isCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
+                authUser = Mapper.Map(value, authUser);
                 if (!_isCommonLayout)
-                    Layout.AuthenticatedUser = value;
+                    Layout.AuthenticatedUser = authUser;
                 else
-                    _authenticatedUser = value;
+                    _authenticatedUser = authUser;
             }
         }
 

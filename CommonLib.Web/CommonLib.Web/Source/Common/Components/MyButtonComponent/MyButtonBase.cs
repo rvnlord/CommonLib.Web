@@ -70,6 +70,9 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         public BlazorParameter<bool?> InheritState { get; set; }
 
         [Parameter]
+        public BlazorParameter<bool?> DisabledByDefault { get; set; }
+
+        [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; } // for backwards compatibility
         
         [Parameter]
@@ -109,18 +112,17 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             if (InheritState.HasChanged())
                 InheritState.ParameterValue ??= InheritState.V ?? true;
 
+            if (DisabledByDefault.HasChanged())
+                DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
+
             var parentStates = Array.Empty<ComponentState>();
             if (InheritState.V == true)
                 parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
             var parentState = parentStates.All(s => s.State is null) ? (ButtonState?) null : parentStates.Any(s => s.State == ComponentStateKind.Disabled) ? ButtonState.Disabled : parentStates.Any(s => s.State == ComponentStateKind.Loading) ? ButtonState.Loading : ButtonState.Enabled;
             if (State.HasChanged() || parentState != _prevParentState)
             {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? ButtonState.Disabled;
-
-                var t1 = State.V;
-                var t2 = State.HasChanged();
-                var t3 = parentState != _prevParentState;
-
+                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? (DisabledByDefault.V == true ? ButtonState.Disabled : ButtonState.Enabled);
+                
                 if (State.ParameterValue == ButtonState.Loading)
                     AddClasses("my-loading");
                 else
@@ -172,7 +174,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             }
             await Task.WhenAll(changeStateTasks);
         }
-
+        
         protected override async Task OnAfterFirstRenderAsync()
         {
             await Task.CompletedTask;

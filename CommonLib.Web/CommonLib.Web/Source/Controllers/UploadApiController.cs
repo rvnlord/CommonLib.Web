@@ -26,12 +26,10 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> UploadChunkOfTemporaryAvatarAsync(JToken JAuthUserAndChunk) => await EnsureVoidResponseAsync(async () => await _uploadManager.UploadChunkOfTemporaryAvatarAsync(JAuthUserAndChunk["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndChunk["Chunk"].To<FileData>()));
 
         [HttpPost(nameof(GetRenderedIconAsync))] // POST: api/upload/GetRenderedIconAsync
-        public async Task<JToken> GetRenderedIconAsync(JToken jIconType)
-        {
-            return await EnsureResponseAsync(async () =>
-            {
-                return await _uploadManager.GetRenderedIconAsync(jIconType?.To<IconType>());
-            });
-        }
+        public async Task<JToken> GetRenderedIconAsync(JToken jIconType) => await EnsureResponseAsync(async () => await _uploadManager.GetRenderedIconAsync(jIconType?.To<IconType>()));
+
+        [HttpPost(nameof(GetRenderedImageAsync))] // POST: api/upload/GetRenderedImageAsync
+        public async Task<JToken> GetRenderedImageAsync(JToken jImagePath) => await EnsureResponseAsync(async () => await _uploadManager.GetRenderedImageAsync(jImagePath is JValue ? jImagePath.ToString() : jImagePath["ImagePath"]?.ToString()));
+
     }
 }

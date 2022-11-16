@@ -8,19 +8,28 @@ using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Source.Models.Interfaces;
+using CommonLib.Web.Source.Common.Components.MyImageComponent;
+using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using CommonLib.Web.Source.Validators.Upload;
 using CommonLib.Web.Source.ViewModels.Account;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace CommonLib.Web.Source.Services.Upload
 {
     public class UploadManager : IUploadManager
     {
         private static string _rootDir;
+        private static string _wwwRootDir;
+        private static string _commonWwwRootDir;
+        private static bool? _isProduction;
         private readonly IAccountManager _accountManager;
 
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir();
+        public static string WwwRootDir => _wwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
+        public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyImageBase>();
+        public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, WwwRootDir, "_content"));
 
         public UploadManager(IAccountManager accountManager)
         {
@@ -104,6 +113,33 @@ namespace CommonLib.Web.Source.Services.Upload
             var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
             var svg = (await File.ReadAllTextAsync(iconPath)).TrimMultiline();
             return new ApiResponse<string>(StatusCodeType.Status200OK, "Successfully retrieved icon", null, svg);
+        }
+
+        public async Task<ApiResponse<FileData>> GetRenderedImageAsync(string imagePath)
+        {
+            FileData imgData = null;
+            var productionLocalAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir);
+            var productionCommonAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir, @"_content\CommonLib.Web");
+            var devLocalAbsolutePhysicalDir = productionLocalAbsolutePhysicalDir;
+            var devCommonAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir);
+            var sourceFilesMatcher = new Matcher().AddInclude(imagePath);
+
+            if (!IsProduction)
+            {
+                if (Directory.Exists(devCommonAbsolutePhysicalDir))
+                    imgData = sourceFilesMatcher.GetResultsInFullPath(devCommonAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
+                if (Directory.Exists(devLocalAbsolutePhysicalDir) && imgData is null)
+                    imgData = sourceFilesMatcher.GetResultsInFullPath(devLocalAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
+            }
+            else
+            {
+                if (Directory.Exists(productionCommonAbsolutePhysicalDir))
+                    imgData = sourceFilesMatcher.GetResultsInFullPath(productionCommonAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
+                if (Directory.Exists(productionLocalAbsolutePhysicalDir) && imgData is null)
+                    imgData = sourceFilesMatcher.GetResultsInFullPath(productionLocalAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
+            }
+
+            return await Task.FromResult(new ApiResponse<FileData>(StatusCodeType.Status200OK, "Successfully retrieved image", null, imgData));
         }
     }
 }

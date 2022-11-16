@@ -104,6 +104,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
             else
             {
+                AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 Mapper.Map(AuthenticatedUser, _loginUserVM);
                 await SetControlStatesAsync(ButtonState.Enabled, _allControls);
             }

@@ -11,5 +11,6 @@ namespace CommonLib.Web.Source.Services.Upload.Interfaces
         Task<IApiResponse> UploadChunkToUserFolderAsync(FileData chunk);
         Task<IApiResponse> UploadChunkOfTemporaryAvatarAsync(FileData chunk);
         Task<ApiResponse<string>> GetRenderedIconAsync(IconType icon);
+        Task<ApiResponse<FileData>> GetRenderedImage(string path);
     }
 }

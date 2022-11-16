@@ -34,6 +34,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsInvariant(claim));
 
         public static AuthenticateUserVM NotAuthenticated => new() { AuthenticationStatus = AuthStatus.NotAuthenticated };
+        public FileData Avatar { get; set; }
 
         public override bool Equals(object o)
         {

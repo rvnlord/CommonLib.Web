@@ -8,6 +8,7 @@ using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
@@ -80,8 +81,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             Mapper.Map(editResponse.Result, _editUserVM);
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
-
-            await EnsureAuthenticationPerformedAsync(false, false);
+            
+            AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
+            await EnsureAuthenticationPerformedAsync(false, true);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
             {
                 if (_editUserVM.HasPassword && _pwdOldPassword.State.V == InputState.ForceDisabled)

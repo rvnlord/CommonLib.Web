@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System;
+using Microsoft.AspNetCore.Components;
 
 namespace CommonLib.Web.Source.Models
 {
@@ -51,6 +52,14 @@ namespace CommonLib.Web.Source.Models
             return _parameterValue;
         }
 
-        public static implicit operator BlazorParameter<T>(T parameterValue) => new(parameterValue);
+        public static implicit operator BlazorParameter<T>(T parameterValue)
+        {
+            return new(parameterValue);
+        }
+
+        public static implicit operator BlazorParameter<object>(BlazorParameter<T> parameterValue)
+        {
+            return new(parameterValue.V);
+        }
     }
 }

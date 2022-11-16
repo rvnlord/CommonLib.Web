@@ -121,7 +121,6 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 var iconType = iconEnum.GetType();
                 var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
                 var iconSetDirName = iconType.Name.BeforeFirst("IconType");
-                var iconPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $@"_content/{GetType().Assembly.FullName.Before(",")}/icons/{iconSetDirName}/{iconName}.svg");
 
                 try
                 {
@@ -134,7 +133,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                         }
                         else
                         {
-                            iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
+                            var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
                             svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 
