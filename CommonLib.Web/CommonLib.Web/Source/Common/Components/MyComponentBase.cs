@@ -584,12 +584,12 @@ namespace CommonLib.Web.Source.Common.Components
 
         public MyComponentBase AddClass(string cls) => AddClasses(cls);
 
-        protected MyComponentBase RemoveClasses(string cls, params string[] classes)
+        public MyComponentBase RemoveClasses(string cls, params string[] classes)
         {
             return RemoveClasses(classes.Prepend_(cls).ToArray());
         }
 
-        protected MyComponentBase RemoveClasses(string[] classes)
+        public MyComponentBase RemoveClasses(string[] classes)
         {
             if (IsDisposed)
                 return this;

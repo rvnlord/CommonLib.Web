@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
@@ -186,7 +187,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 return;
 
             await OnClick.InvokeAsync(e).ConfigureAwait(false);
-            await Click.InvokeAsync(this, e).ConfigureAwait(false);
+            await Click.InvokeAsync(this, e);
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken token)

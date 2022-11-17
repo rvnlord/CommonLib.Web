@@ -11,6 +11,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models.Interfaces;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyCssGridItemComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
@@ -34,12 +35,15 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
     {
         private readonly OrderedSemaphore _syncFileDataState = new(1, 1);
         private int _multipleFileBtnRenders;
-        private FileData _prevNoThumbnailImage;
+        private FileData _prevDefaultPreviewFile;
         private MyFluentValidatorBase _validator => Ancestors.OfType<MyEditFormBase>().FirstOrDefault()?.Children.OfType<MyFluentValidatorBase>()?.FirstOrDefault();
 
+        protected FileData _previewedFile { get; set; }
+        protected MyButtonBase _btnPreviewControls { get; set; }
         protected OrderedDictionary<string, string> _thumbnailContainerStyle { get; } = new();
         protected string _thumbnailContainerRenderStyle => _thumbnailContainerStyle.CssDictionaryToString();
         protected BlazorParameter<bool?> _inheritState { get; set; }
+        protected MyAsyncEventHandler<MyButtonBase, MouseEventArgs> _btnPreviewControls_Click { get; set; }
 
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
         public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
@@ -56,6 +60,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         [Parameter]
         public BlazorParameter<PredefinedSaveUrlKind?> PredefinedSaveUrl { get; set; }
 
+        [Parameter]
+        public MyAsyncEventHandler<MyFileUploadBase, MouseEventArgs> RemovePreviewedFile { get; set; }
+
         [Inject]
         public IUploadClient UploadClient { get; set; }
 
@@ -64,6 +71,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         protected override Task OnInitializedAsync()
         {
+            _previewedFile = null;
             _inheritState = false;
             return Task.CompletedTask;
         }
@@ -98,7 +106,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 {
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
-                    if (PreviewFor.HasValue() || PreviewFor?.V?.Compile()?.Invoke() == _prevNoThumbnailImage)
+                    if (PreviewFor.HasValue() || PreviewFor?.V?.Compile()?.Invoke() == _prevDefaultPreviewFile)
                     {
                         if (!IsRendered)
                             _thumbnailContainerStyle.AddOrUpdate("opacity", "0.3");
@@ -143,6 +151,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 file.StateChanged += FileData_StateChanged;
             }
 
+            if (GetDefaultPreviewFile() is null)
+                _prevDefaultPreviewFile = FileData.Empty;
+
             // can't enable some buttons directly here because every control should wait for being explicitly enabled after page render
         }
 
@@ -150,12 +161,14 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         {
             if (firstRender)
                 return;
-
-            var noThumbnailFd = PreviewFor?.V?.Compile().Invoke();
-            if (noThumbnailFd != _prevNoThumbnailImage)
+            
+            if (GetDefaultPreviewFile() != _prevDefaultPreviewFile)
                 await SetMultipleFileBtnsStateAsync(FileData.Empty);
             else
+            {
                 await SetMultipleFileBtnsStateAsync(null, true);
+                await SetPreviewControlsAsync();
+            }
         }
 
         [JSInvokable]
@@ -202,7 +215,9 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     file.StateChanged -= FileData_StateChanged;
                     file.StateChanged += FileData_StateChanged;
                 }
-                await SetMultipleFileBtnsStateAsync(null);
+                await SetMultipleFileBtnsStateAsync(null); // null, not calling SetThumbnail() because thumbnail is set in js call directly so I need to updated previewedFile directly
+                _previewedFile = addedFiles.Last();
+                await SetPreviewControlsAsync();
             }
         }
 
@@ -313,6 +328,21 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             Value.ForEach(fd => fd.ValidateUploadStatus = true);
         }
 
+        protected Task BtnPreviewControls_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token) => sender.Classes.Contains("btn-clear-preview") ? BtnClearPreview_ClickAsync(sender, e, token) : BtnRemovePreviewedFile_ClickAsync(sender, e, token);
+
+        private async Task BtnClearPreview_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            _prevDefaultPreviewFile = FileData.Empty;
+            await StateHasChangedAsync(true);
+        }
+
+        private async Task BtnRemovePreviewedFile_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            Model.SetPropertyValue(PreviewFor.V.GetPropertyName(), FileData.Empty);
+            await RemovePreviewedFile.InvokeAsync(this, e, token);
+            await StateHasChangedAsync(true);
+        }
+
         private async void FileData_StateChanged(FileData sender, FileDataStateChangedEventArgs e)
         {
             FileData fileToPreview = null;
@@ -375,7 +405,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUpload", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes);
             //await SetControlStatesAsync(ComponentStateKind.Enabled, btnClear);  // for some reason blazor is filling the same button with new parameters instead of creating a new one
         }
-
+        
         private FileData GetBtnFileN(MyButtonBase btn) => btn.Model?.V as FileData;
         private bool IsBtnFileIn(MyButtonBase btn, IEnumerable<FileData> fds) => GetBtnFileN(btn)?.In(fds) == true;
         private bool IsBtnFileEq(MyButtonBase btn, FileData fd) => GetBtnFileN(btn)?.Equals(fd) == true;
@@ -469,14 +499,40 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         private async Task SetThumbnailAsync(FileData fd)
         {
-            var noThumbnailFd = PreviewFor?.V?.Compile().Invoke();
-            var noThumbnailImage = noThumbnailFd?.ToBase64ImageString();
-            if (noThumbnailImage is not null)
-                _prevNoThumbnailImage = noThumbnailFd;
-            
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, noThumbnailImage);
+            var defaultPreviewFile = GetDefaultPreviewFile();
+            var defaultPreviewImage = defaultPreviewFile.NullifyIf(f => f == FileData.Empty)?.ToBase64ImageString();
+            _prevDefaultPreviewFile = defaultPreviewFile;
+            _previewedFile = fd.NullifyIf(f => f == FileData.Empty);
+
+            await SetPreviewControlsAsync();
+
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, defaultPreviewImage);
         }
 
+        private async Task SetPreviewControlsAsync()
+        {
+            if (!_previewedFile.In(null, FileData.Empty)) 
+            {
+                _btnPreviewControls.Icon.ParameterValue = IconType.From(LightIconType.XmarkLarge);
+                _btnPreviewControls.Styling.ParameterValue = ButtonStyling.Secondary;
+                _btnPreviewControls.RemoveClasses(new[] { "my-d-none", "btn-remove-previewed-file" });
+                _btnPreviewControls.AddClass("btn-clear-preview");
+            }
+            else if (!GetDefaultPreviewFile().In(null, FileData.Empty))
+            {
+                _btnPreviewControls.Icon.ParameterValue = IconType.From(LightIconType.TrashCan);
+                _btnPreviewControls.Styling.ParameterValue = ButtonStyling.Danger;
+                _btnPreviewControls.RemoveClasses(new[] { "my-d-none", "btn-clear-preview" });
+                _btnPreviewControls.AddClass("btn-remove-previewed-file");
+            }
+            else
+                _btnPreviewControls.AddClass("my-d-none");
+
+            await _btnPreviewControls.NotifyParametersChangedAsync().StateHasChangedAsync(true);
+        }
+
+        private FileData GetDefaultPreviewFile() => PreviewFor?.V?.Compile().Invoke();
+        
         //protected string FileDataToCssClass(FileData fd) => $"my-file-{$"{fd.Name}|{fd.Extension}|{fd.TotalSize.SizeInBytes}".UTF8ToBase58()}";
 
         //protected FileData CssClassToFileData(string cssClass)

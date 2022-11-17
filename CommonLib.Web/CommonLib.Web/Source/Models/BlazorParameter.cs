@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace CommonLib.Web.Source.Models
 {
     public abstract class BlazorParameter
     {
-        public static BlazorParameter<Expression<Func<TParameter>>> BP<TParameter>(Expression<Func<TParameter>> parameterValue) => new BlazorParameter<Expression<Func<TParameter>>>(parameterValue);
+        public static BlazorParameter<Expression<Func<TValue>>> BP<TValue>(Expression<Func<TValue>> parameterValue) => new(parameterValue);
         public static BlazorParameter<TParameter> BP<TParameter>(TParameter parameterValue) => new(parameterValue);
+        public static BlazorParameter<MyAsyncEventHandler<TSender, TEventArgs>> BP<TSender, TEventArgs>(Expression<Func<TSender, TEventArgs, CancellationToken, Task>> parameterValue) where TSender : MyComponentBase where TEventArgs : EventArgs => new(new MyAsyncEventHandler<TSender, TEventArgs>(parameterValue.Compile()));
     }
 
     public class BlazorParameter<T> : BlazorParameter   

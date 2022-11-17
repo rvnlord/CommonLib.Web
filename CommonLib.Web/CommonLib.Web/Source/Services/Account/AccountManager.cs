@@ -573,9 +573,10 @@ namespace CommonLib.Web.Source.Services.Account
             var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
             var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsInvariant(userToEdit.NewPassword);
             var avatarChanged = newAvatar is not null && user.Avatar?.Hash?.EqualsInvariant(newAvatar.Hash) != true;
+            var avatarShouldBeRemoved = userToEdit.Avatar == FileData.Empty;
             var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
-            if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged)
+            if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
             
             var propsToChange = new List<string>();
@@ -614,7 +615,7 @@ namespace CommonLib.Web.Source.Services.Account
                 propsToChange.Add("Password");
             }
 
-            if (avatarChanged)
+            if (avatarChanged || avatarShouldBeRemoved)
             {
                 //user.Avatar = newAvatar.ToDbFile(user.Id, user.Id);
                 var dbAvatar = _db.Files.SingleOrDefault(f => f.UserHavingFileAsAvatarId == user.Id);
@@ -623,7 +624,10 @@ namespace CommonLib.Web.Source.Services.Account
                     dbAvatar.UserHavingFileAsAvatarId = null;
                     await _db.SaveChangesAsync();
                 }
-                _db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
+
+                if (avatarChanged)
+                    _db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
+
                 userToEdit.Avatar = newAvatar;
                 FileUtils.EmptyDir(tempAvatarDir);
                 propsToChange.Add(nameof(user.Avatar));

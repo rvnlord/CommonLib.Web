@@ -135,6 +135,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Pending || fi.In(e.PendingFields))
             {
+                _validationMessage = null;
                 Status = ValidationMessageStatus.Validating;
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
