@@ -39,14 +39,14 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
                 return;
             }
 
-            //var foundUsersResp = await AdminService.GetAllUsersAsync();
-            //if (foundUsersResp.IsError)
-            //{
-            //    await PromptMessageAsync(NotificationType.Error, foundUsersResp.Message);
-            //    return;
-            //}
+            var foundUsersResp = await AdminClient.GetAllUsersAsync();
+            if (foundUsersResp.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, foundUsersResp.Message);
+                return;
+            }
 
-            //_users = foundUsersResp.Result;
+            _users = foundUsersResp.Result;
 
             _allControls = GetInputControls();
 

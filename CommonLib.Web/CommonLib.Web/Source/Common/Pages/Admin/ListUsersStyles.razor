@@ -1,0 +1,50 @@
+﻿@namespace CommonLib.Web.Source.Common.Pages.Account
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .admin-users-list-user-avatar-container {
+        width: 150px;
+        height: 150px;
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px white, 0 0 6px 2px blue;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        margin-left: auto;
+        margin-right: auto;
+        grid-column: 1 / span 2;
+    }
+
+    .admin-users-list-user-no-avatar {
+        width: 100px;
+        height: 100px;
+        max-width: 100px;
+        max-height: 100px;
+        flex: 0 0 100px;
+    }
+
+    .admin-users-list-user-properties-container {
+        grid-column: 1 / span 2;
+    }
+
+    .admin-users-list-user-roles-container {
+        grid-column: 1;
+    }
+
+    .admin-users-list-user-claims-container {
+        grid-column: 2;
+    }
+
+    .admin-users-list-card-body {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+</style>

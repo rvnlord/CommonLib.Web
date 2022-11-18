@@ -12,6 +12,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.Services.Admin.Interfaces;
 using FluentValidation;
 using MoreLinq.Extensions;
 using WebSocketSharp;
@@ -48,6 +49,11 @@ namespace CommonLib.Web.Source.Common.Extensions
         public static IRuleBuilderOptions<T, string> MaxLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int maxLength)
         {
             return rb.Must((_, value, _) => value.Length <= maxLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at most {maxLength} characters");
+        }
+
+        public static IRuleBuilderOptions<T, string> AlphaNumericWithMessage<T>(this IRuleBuilder<T, string> rb)
+        {
+            return rb.Must((_, value, _) => Regex.IsMatch(value, "^[a-zA-Z0-9 ]*$")).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must only contain alphanumeric characters");
         }
 
         public static IRuleBuilderOptions<T, string> NameNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
@@ -381,6 +387,38 @@ namespace CommonLib.Web.Source.Common.Extensions
                 displayName = vc.DisplayName ?? vc.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 return value.All(fd => fd.Status != UploadStatus.Uploading || !fd.ValidateUploadStatus);
             }).WithMessage((_, _) => $"\"{displayName}\" can't be still uploading");
+        }
+
+        public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAdminClient adminClient, IAdminManager adminManager)
+        {
+            ApiResponse<FindRoleVM> roleByNameResp = null;
+            return rb.MustAsync(async (model, value, _, _) =>
+            {
+                roleByNameResp = adminClient is not null ? await adminClient.FindRoleByNameAsync(value) : await adminManager.FindRoleByNameAsync(value);
+                if (roleByNameResp.IsError)
+                    return false;
+                
+                var roleByName = roleByNameResp.Result;
+                return roleByName is null;
+            }).WithMessage((_, value) => roleByNameResp.IsError 
+                ? roleByNameResp.Message 
+                : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
+        }
+
+        public static IRuleBuilderOptions<T, string> ClaimNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAdminClient adminClient, IAdminManager adminManager)
+        {
+            ApiResponse<FindClaimVM> claimByNameResp = null;
+            return rb.MustAsync(async (model, value, _, _) =>
+            {
+                claimByNameResp = adminClient is not null ? await adminClient.FindClaimByNameAsync(value) : await adminManager.FindClaimByNameAsync(value);
+                if (claimByNameResp.IsError)
+                    return false;
+                
+                var claimByName = claimByNameResp.Result;
+                return claimByName is null;
+            }).WithMessage((_, value) => claimByNameResp.IsError 
+                ? claimByNameResp.Message 
+                : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
         }
 
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()

@@ -162,7 +162,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
             }
 
             if (Path.V is FileData fd)
-                return "fd-" + fd.NameExtensionAndSize.UTF8ToBase64().Take(40).Keccak256().HexToBase64().Take(20); // I specifically don't want to waste time for calculating hashes | beginning of the string is the same for all files
+                return "fd-" + fd.NameExtensionAndSize.UTF8ToBase64().Take(40).Keccak256().HexToBase64().Take(20); // I specifically don't want to waste time for calculating hashes | beginning of the base64 string is the same for all files
 
             throw new FormatException("Image Path should be absolute, virtual or point to FileData");
         }

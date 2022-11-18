@@ -61,8 +61,62 @@
                 {
                     foreach (var user in _users.OrderBy(r => r.UserName)) // use @key
                     {
-                        <MyCssGridItem>
-
+                        <MyCssGridItem @key=user>
+                            <MyCard>
+                                <MyCardHeader>@user.UserName</MyCardHeader>
+                                <MyCardBody class="admin-users-list-card-body">
+                                    <div class="admin-users-list-user-avatar-container">
+                                        @if (user.Avatar is null)
+                                        {
+                                            <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="admin-users-list-user-no-avatar"></MyIcon>
+                                        }
+                                        else 
+                                        {
+                                            <MyImage Path="user.Avatar"></MyImage>
+                                        }
+                                    </div>
+                                    <div class="admin-users-list-user-properties-container">
+                                        <h5 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">
+                                            <span style="color: orange">Id:</span> @user.Id
+                                        </h5>
+                                        <h5 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">
+                                            <span style="color: orange">Email:</span> @user.Email
+                                        </h5>
+                                    </div>
+                                    <div class="admin-users-list-user-roles-container">
+                                        <h4 class="my-mb-5px" style="color: blue; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">Roles:</h4>
+                                        @if (!user.Roles.Any())
+                                        {
+                                            <h6 class="my-ml-10px" style="color: #ff3333; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">&lt; No Roles &gt;</h6>
+                                        }
+                                        else
+                                        {
+                                            foreach (var role in user.Roles.OrderBy(r => r.Name))
+                                            {
+                                                <h6 class="my-ml-10px" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">@role.Name</h6>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="admin-users-list-user-claims-container">
+                                        <h4 class="my-mb-5px" style="color: green; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">Claims:</h4>
+                                        @if (!user.Claims.Any())
+                                        {
+                                            <h6 class="my-ml-10px" style="color: #ff3333; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">&lt; No Claims &gt;</h6>
+                                        }
+                                        else
+                                        {
+                                            foreach (var claim in user.Claims.OrderBy(c => c.Name))
+                                            {
+                                                <h6 class="my-ml-10px" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">@claim.Name</h6>
+                                            }
+                                        }
+                                    </div>
+                                </MyCardBody>
+                                <MyCardActions>
+                                    <MyButton Value="@BP("Edit")" Click="@((s, e, t) => BtnEditUser_ClickAsync(s, e, t, user))" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-edit-user" />
+                                    <MyButton Value="@BP("Delete")" Click="@((s, e, t) => BtnDeleteUser_ClickAsync(s, e, t, user))" Icon="IconType.From(LightIconType.TrashCan)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-delete-user" />
+                                </MyCardActions>
+                            </MyCard>
                         </MyCssGridItem>
                     }
                 }

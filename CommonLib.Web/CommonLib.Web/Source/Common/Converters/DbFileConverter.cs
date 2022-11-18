@@ -42,5 +42,7 @@ namespace CommonLib.Web.Source.Common.Converters
                 ValidateUploadStatus = false
             };
         }
+
+        public static FileData ToFileDataOrNull(this DbFile dbFile) => dbFile?.ToFileData();
     }
 }

@@ -1,0 +1,17 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyCardComponent
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .my-card-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: auto;
+    }
+
+</style>
+

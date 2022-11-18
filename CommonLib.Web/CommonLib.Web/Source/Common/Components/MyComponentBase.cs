@@ -46,7 +46,7 @@ using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Components.MyRadioButtonComponent;
 using CommonLib.Web.Source.Common.Converters;
-using MoreLinq.Experimental;
+using CommonLib.Web.Source.Services.Admin.Interfaces;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -240,6 +240,9 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Inject]
         public IAccountClient AccountClient { get; set; }
+
+        [Inject]
+        public IAdminClient AdminClient { get; set; }
 
         [Inject]
         public IBackendInfoClient BackendInfoClient { get; set; }

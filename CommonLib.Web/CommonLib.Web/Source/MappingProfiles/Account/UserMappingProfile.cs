@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using AutoMapper;
+using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.ViewModels.Account;
+using CommonLib.Web.Source.ViewModels.Admin;
 
 namespace CommonLib.Web.Source.MappingProfiles.Account
 {
@@ -36,16 +38,15 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<EditUserVM, DbUser>();
             CreateMap<AuthenticateUserVM, EditUserVM>();
             CreateMap<EditUserVM, EditUserVM>(); // if this is not set the mapping for same objects will work but will not update the existing dest object only create a new one
-            //CreateMap<DbUser, AdminEditUserVM>()
-            //    .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
-            //CreateMap<AdminEditUserVM, DbUser>()
-            //    .ForMember(d => d.Id, o => o.Ignore())
-            //    .ForMember(d => d.EmailConfirmed, o => o.MapFrom(s => s.IsConfirmed));
-            CreateMap<DbUser, FindUserVM>()
+            CreateMap<DbUser, AdminEditUserVM>()
                 .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
-            //CreateMap<FindUserVM, AdminEditUserVM>();
+            CreateMap<AdminEditUserVM, DbUser>()
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.EmailConfirmed, o => o.MapFrom(s => s.IsConfirmed));
             CreateMap<DbUser, FindUserVM>()
-                .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
+                .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed))
+                .ForMember(d => d.Avatar, o => o.MapFrom(s => s.Avatar.ToFileDataOrNull()));
+            CreateMap<FindUserVM, AdminEditUserVM>();
         }
     }
 }

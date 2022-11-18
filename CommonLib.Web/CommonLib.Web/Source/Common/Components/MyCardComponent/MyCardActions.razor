@@ -1,0 +1,14 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.MyCardComponent
+@inherits MyCardActionsBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <div id="@_id" 
+         my-guid="@_guid"
+         class="@_renderClasses"
+         style="@_renderStyle"
+         @attributes="@_renderAttributes">
+         @ChildContent
+    </div>
+
+</CascadingValue>
