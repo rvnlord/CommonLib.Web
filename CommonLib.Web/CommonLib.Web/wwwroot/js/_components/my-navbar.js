@@ -11,6 +11,8 @@ import { NavLinkUtils } from "./my-nav-link.js";
 import { NavBarUtils } from "../navbar-utils.js";
 
 export async function blazor_NavBar_AfterFirstRender() {
+    console.log("navbar first render");
+
     NavBarUtils.finishAndRemoveRunningAnims();
     
     var currentUrl = window.location.href.skipLastWhile(c => c === "/");
@@ -22,11 +24,18 @@ export async function blazor_NavBar_AfterFirstRender() {
 }
 
 export async function blazor_NavBar_AfterRender() {
+    //NavBarUtils.finishAndRemoveRunningAnims();
     NavBarUtils.adjustToDeviceSize();
     NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
+
+    const $navLinksToSetAsRendered = $(".my-navbar").find(".my-nav-item > .my-nav-link:not([rendered='true'])");
+    $navLinksToSetAsRendered.attr("rendered", "true");
+    console.log(`navbar subsequent render, set ${$navLinksToSetAsRendered.length} nav-links as rendered`);
 }
 
 export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs
+    console.log("navbar after layout render");
+    //NavBarUtils.finishAndRemoveRunningAnims();
 
     // hide webassembly spinner
 
@@ -75,10 +84,16 @@ $(document).ready(function () {
         const $nb = $navLink.parents(".my-navbar").first();
         const $searchContainer = $nb.find(".my-nav-search-container").first();
         const $modals = $(".my-modal");
+        const isRendered = ($navLink.attr("rendered") || "false").toBool();
+
         if (e.which !== 1 || !$nb.is(".shown")) { // prevents clicking on ddl if navbar is hiding
             return;
         }
-        if ($searchContainer.is(".shown") || $modals.is(".shown")) {// is implies any
+        if ($searchContainer.is(".shown") || $modals.is(".shown")) { // is implies any
+            return;
+        }
+        if (!isRendered) {
+            console.log("nav-link is not rendered yet");
             return;
         }
 
@@ -106,8 +121,14 @@ $(document).ready(function () {
         e.preventDefault();
         const $clickedNavLink = $(this);
         const $clickedNavItem = $clickedNavLink.parents(".my-nav-item").first();
+        const isRendered = ($clickedNavLink.attr("rendered") || "false").toBool();
 
         if (e.which !== 1 || $clickedNavLink.parents(`.my-nav-item`).first().classes().some(c => c.startsWith("my-drop"))) {
+            return;
+        }
+
+        if (!isRendered) {
+            console.log("nav-link is not rendered yet");
             return;
         }
 
