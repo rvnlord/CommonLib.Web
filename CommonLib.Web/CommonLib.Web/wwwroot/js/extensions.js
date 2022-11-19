@@ -445,7 +445,7 @@ Object.defineProperty(String.prototype, "toFloat", {
 
 Object.defineProperty(String.prototype, "toBool", {
     value: function () {
-        return ["true", "false", true, false].contains(this) && JSON.parse(this) || null;
+        return ["true", "false", true, false].contains(this) && JSON.parse(this) || false;
     },
     writable: true,
     configurable: true

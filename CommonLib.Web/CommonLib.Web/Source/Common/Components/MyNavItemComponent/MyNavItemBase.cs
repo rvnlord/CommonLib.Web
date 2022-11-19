@@ -7,6 +7,8 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 
@@ -45,7 +47,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
 
             await Task.CompletedTask;
         }
-
+        
         protected override async Task OnAfterRenderAsync(bool _)
         {
             if (Type == NavItemType.Login)

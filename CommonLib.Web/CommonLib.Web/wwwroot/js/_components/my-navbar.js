@@ -24,13 +24,14 @@ export async function blazor_NavBar_AfterFirstRender() {
 }
 
 export async function blazor_NavBar_AfterRender() {
+    //const $navLinksToSetAsRendered = $(".my-navbar").find(".my-nav-item > .my-nav-link:not([rendered='true'])");
+    //console.log(`navbar subsequent render, ${$navLinksToSetAsRendered.length} nav-links to be as rendered`);
     //NavBarUtils.finishAndRemoveRunningAnims();
     NavBarUtils.adjustToDeviceSize();
     NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
 
-    const $navLinksToSetAsRendered = $(".my-navbar").find(".my-nav-item > .my-nav-link:not([rendered='true'])");
-    $navLinksToSetAsRendered.attr("rendered", "true");
-    console.log(`navbar subsequent render, set ${$navLinksToSetAsRendered.length} nav-links as rendered`);
+    //$navLinksToSetAsRendered.attr("rendered", "true");
+    //console.log(`navbar subsequent render, set ${$navLinksToSetAsRendered.length} nav-links as rendered`);
 }
 
 export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs

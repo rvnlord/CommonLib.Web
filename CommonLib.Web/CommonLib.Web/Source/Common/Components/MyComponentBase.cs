@@ -78,8 +78,9 @@ namespace CommonLib.Web.Source.Common.Components
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
         private AuthenticateUserVM _authenticatedUser;
+        private bool _isFirstRenderAfterAuthorization = true;
+
         protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
-   
         protected Guid _guid { get; set; }
         protected string _id { get; set; }
         protected string _renderClasses { get; set; } // these properties prevents async component rendering from throwing if clicking sth fast would change the collection before it is iterated properly within the razor file
@@ -222,6 +223,8 @@ namespace CommonLib.Web.Source.Common.Components
         public bool AdditionalAttributesHaveChanged { get; private set; }
 
         public bool PreventRender { get; set; }
+
+        public virtual bool IsAuthorized => false;
 
         [Inject]
         public HttpClient HttpClient { get; set; }
@@ -404,6 +407,11 @@ namespace CommonLib.Web.Source.Common.Components
                     await OnAfterFirstRenderAsync();
                 }
 
+                if (IsAuthorized && _isFirstRenderAfterAuthorization)
+                {
+                    _isFirstRenderAfterAuthorization = false;
+                    await OnAfterFirstRenderAfterAutthorizationAsync();
+                }
                 OnAfterRender(_firstRenderAfterInit);
                 await OnAfterRenderAsync(_firstRenderAfterInit);
                 await OnAfterRenderFinishingAsync(_firstRenderAfterInit);
@@ -450,6 +458,7 @@ namespace CommonLib.Web.Source.Common.Components
         protected virtual async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
         protected virtual void OnAfterRender(bool firstRender) { }
         protected virtual async Task OnAfterRenderAsync(bool firstRender) => await Task.CompletedTask;
+        protected virtual async Task OnAfterFirstRenderAfterAutthorizationAsync() => await Task.CompletedTask;
 
         protected virtual async Task OnLayoutSessionIdSetAsync() => await Task.CompletedTask;
         protected virtual async Task OnLayoutAfterRenderFinishedAsync(Guid sessionId, DeviceSizeKind deviceSize) => await Task.CompletedTask;

@@ -32,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         protected string _absoluteVirtualLink { get; set; }
 
         [Inject]
-        public IJQueryService IjQueryServiceService { get; set; }
+        public IJQueryService JQuery { get; set; }
 
         [CascadingParameter]
         public IconType CascadedIcon { get; set; }
@@ -118,7 +118,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         {
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
         }
-        
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await JQuery.QueryOneAsync(_guid).AttrAsync("rendered", "true");
+        }
+
         [JSInvokable]
         public void NavLink_Click()
         {

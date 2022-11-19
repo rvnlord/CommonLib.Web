@@ -14,12 +14,12 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
     public class ListUsersBase : MyComponentBase
     {
         private MyComponentBase[] _allControls;
-
+      
         protected List<FindUserVM> _users { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         
-        public bool IsAuthorized => AuthenticatedUser?.IsAuthenticated == true && AuthenticatedUser?.HasRole("Admin") == true;
+        public override bool IsAuthorized => AuthenticatedUser?.IsAuthenticated == true && AuthenticatedUser?.HasRole("Admin") == true;
         
         protected override async Task OnInitializedAsync()
         {
@@ -48,11 +48,15 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
 
             _users = foundUsersResp.Result;
 
-            _allControls = GetInputControls();
+            await StateHasChangedAsync(true);
+        }
 
+        protected override async Task OnAfterFirstRenderAfterAutthorizationAsync()
+        {
+            _allControls = GetInputControls();
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
-        
+
         protected async Task BtnDeleteUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToDelete)
         {
             //SetButtonStates(ButtonState.Disabled);
