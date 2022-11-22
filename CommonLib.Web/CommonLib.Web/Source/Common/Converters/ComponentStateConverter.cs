@@ -10,8 +10,10 @@ namespace CommonLib.Web.Source.Common.Converters
     {
         public static ComponentState ToComponentState(this InputState inputState) => (ComponentState) inputState;
         public static ComponentState ToComponentState(this ButtonState buttonState) => (ComponentState) buttonState;
-        public static ComponentState ToComponentStateOrNull(this object state) 
+        public static ComponentState ToComponentStateOrNull(this object state)
         {
+            if (state is ComponentState componentState)
+                return componentState;
             if (state is InputState inputState)
                 return inputState.ToComponentState();
             if (state is ButtonState buttonState)

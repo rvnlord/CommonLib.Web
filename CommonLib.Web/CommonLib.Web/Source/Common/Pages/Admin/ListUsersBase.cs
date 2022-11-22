@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
+using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
+using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
+using CommonLib.Web.Source.ViewModels.Admin;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace CommonLib.Web.Source.Common.Pages.Admin
@@ -14,7 +17,10 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
     public class ListUsersBase : MyComponentBase
     {
         private MyComponentBase[] _allControls;
-      
+
+        protected string _deleteMessage => $"Are you sure you want to delete user \"{_userWaitingForDeleteConfirmation?.UserName}\"?";
+        protected AdminEditUserVM _userWaitingForDeleteConfirmation { get; set; }
+        protected MyModalBase _modalConfirmDeletingUser { get; set; }
         protected List<FindUserVM> _users { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
@@ -59,13 +65,14 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
 
         protected async Task BtnDeleteUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToDelete)
         {
-            //SetButtonStates(ButtonState.Disabled);
-            //_btnDeleteUserStates[userToDelete.Id] = ButtonState.Loading;
-            //ConfirmationDialog_DeleteUser.Show($"Are you sure you want to delete User \"{userToDelete.UserName}\"?");
-            //_userWaitingForDeleteConfirmation = Mapper.Map(userToDelete, new AdminEditUserVM());
+            await SetControlStatesAsync(ComponentStateKind.Disabled, _allControls, sender);
+            _userWaitingForDeleteConfirmation = Mapper.Map(userToDelete, new AdminEditUserVM());
+            _modalConfirmDeletingUser.State.ParameterValue = ComponentState.Enabled;
+            await _modalConfirmDeletingUser.NotifyParametersChangedAsync().StateHasChangedAsync(true);
+            await _modalConfirmDeletingUser.ShowModalAsync();
         }
 
-        protected async Task BtnConfirmUserDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, bool isDeleteConfirmed)
+        protected async Task BtnConfirmUserDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
             //if (!isDeleteConfirmed)
             //{

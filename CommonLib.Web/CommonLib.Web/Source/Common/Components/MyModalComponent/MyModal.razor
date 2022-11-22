@@ -9,7 +9,7 @@
     @if (ChildContent != null)
     {
         <div class="my-modal-background">
-            <div @ref="@JsModal" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
+            <div @ref="@JsModal" my-guid="@_guid" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
                 <div class="my-modal-titlebar">
                     <MyButton @ref="_btnCloseModal" Styling="@ButtonStyling.Clear" Sizing="ButtonSizing.Quadratic" class="my-close my-font-sized my-mt-10px my-mr-10px">
                         <MyIcon Color="none" IconType="@IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.EnforceQuadraticAndCover"></MyIcon>
