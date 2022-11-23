@@ -374,7 +374,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         async Task IHandleAfterRender.OnAfterRenderAsync()
         {
-            if (IsDisposed || JsRuntime == null)
+            if (IsDisposed || JsRuntime is null)
                 return;
 
             try
@@ -406,6 +406,9 @@ namespace CommonLib.Web.Source.Common.Components
 
                     await OnAfterFirstRenderAsync();
                 }
+
+                if (IsDisposed)
+                    return;
 
                 if (IsAuthorized && _isFirstRenderAfterAuthorization)
                 {

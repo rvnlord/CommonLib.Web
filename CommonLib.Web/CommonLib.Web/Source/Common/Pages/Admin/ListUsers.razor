@@ -8,6 +8,7 @@
 @using CommonLib.Source.Common.Converters
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
 @using static CommonLib.Web.Source.Models.BlazorParameter;
+@using System.Threading
 
 @inherits ListUsersBase
 
@@ -37,7 +38,7 @@
     }
     else if (IsAuthorized)
     {
-        <MyModal @ref="_modalConfirmDeletingUser" class="my-modal-delete-user">
+        <MyModal @ref="_modalConfirmDeletingUser" Hide="Modal_HideAsync" class="my-modal-delete-user">
             <MyModalBody>
                 <MyCssGrid Padding="Gutter.Px()" Gap="Gutter.Px()" Template="@(new CssGridLayout("repeat(4, 3fr)", "repeat(auto-fit, minmax(0, max-content))"))">
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">

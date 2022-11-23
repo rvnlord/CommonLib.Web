@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components;
@@ -17,6 +19,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
     public class ListUsersBase : MyComponentBase
     {
         private MyComponentBase[] _allControls;
+        private MyButtonBase[] _modalBtns;
 
         protected string _deleteMessage => $"Are you sure you want to delete user \"{_userWaitingForDeleteConfirmation?.UserName}\"?";
         protected AdminEditUserVM _userWaitingForDeleteConfirmation { get; set; }
@@ -60,6 +63,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
         protected override async Task OnAfterFirstRenderAfterAutthorizationAsync()
         {
             _allControls = GetInputControls();
+            _modalBtns = _modalConfirmDeletingUser.Descendants.OfType<MyButtonBase>().ToArray();
             await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
@@ -67,37 +71,34 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
         {
             await SetControlStatesAsync(ComponentStateKind.Disabled, _allControls, sender);
             _userWaitingForDeleteConfirmation = Mapper.Map(userToDelete, new AdminEditUserVM());
-            _modalConfirmDeletingUser.State.ParameterValue = ComponentState.Enabled;
+            await SetControlStatesAsync(ComponentStateKind.Enabled, _modalBtns, null, false);
             await _modalConfirmDeletingUser.NotifyParametersChangedAsync().StateHasChangedAsync(true);
             await _modalConfirmDeletingUser.ShowModalAsync();
         }
 
         protected async Task BtnConfirmUserDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
-            //if (!isDeleteConfirmed)
-            //{
-            //    SetButtonStates(ButtonState.Enabled);
-            //    _userWaitingForDeleteConfirmation = null;
-            //    StateHasChanged();
-            //    return;
-            //}
+            await SetControlStatesAsync(ComponentStateKind.Disabled, _modalBtns, sender, false);
+            await _modalConfirmDeletingUser.StateHasChangedAsync(true);
+            var editResponse = await AdminClient.DeleteUserAsync(_userWaitingForDeleteConfirmation);
+            if (editResponse.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, editResponse.Message);
+                _userWaitingForDeleteConfirmation = null;
+                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                return;
+            }
 
-            //var editResponse = await AdminService.DeleteUserAsync(_userWaitingForDeleteConfirmation);
-            //var usersToEditbyAdminResponse = await AdminService.GetAllUsersAsync();
-            //Users = usersToEditbyAdminResponse.Result;
-            //if (editResponse.IsError || usersToEditbyAdminResponse.IsError)
-            //{
-            //    SetButtonStates(ButtonState.Enabled);
-            //    await Main.PromptMessageAsync(PromptType.Error, editResponse.Message ?? usersToEditbyAdminResponse.Message);
-            //    _userWaitingForDeleteConfirmation = null;
-            //    StateHasChanged();
-            //    return;
-            //}
+            _users.Remove(Mapper.Map(_userWaitingForDeleteConfirmation, new FindUserVM()));
 
-            //SetButtonStates(ButtonState.Enabled);
-            //await Main.PromptMessageAsync(PromptType.Success, editResponse.Message);
-            //_userWaitingForDeleteConfirmation = null;
-            //StateHasChanged();
+            await PromptMessageAsync(NotificationType.Success, editResponse.Message);
+            _userWaitingForDeleteConfirmation = null;
+            await _modalConfirmDeletingUser.HideModalAsync();
+        }
+
+        protected async Task Modal_HideAsync(MyModalBase sender, EventArgs e, CancellationToken _)
+        {
+            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
         }
 
         protected async Task BtnEditUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToEdit)

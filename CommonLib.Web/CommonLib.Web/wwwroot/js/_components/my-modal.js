@@ -7,6 +7,8 @@ import { NavBarUtils } from "../navbar-utils.js";
 import _ from "../../libs/libman/underscore/underscore-esm.js";
 
 class ModalUtils {
+    static ModalDotNetRefs = {};
+
     static moveModalToBodyAndHide($modal) {
         const $modalBg = $modal.parents(".my-modal-background").first();
         $modalBg.prependTo("body");
@@ -103,6 +105,8 @@ class ModalUtils {
             $modalBgToHide.removeClass("my-d-flex").addClass("my-d-none");
             $modalToHide.css("transform", "scale(0.5, 0.5)");
         }
+
+        await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("Modal_HideAsync");
     }
 
     static async showModalAsync($modal, animate = true) {
@@ -138,11 +142,11 @@ class ModalUtils {
             }
         }
     }
-
 }
 
-export function blazor_Modal_AfterFirstRender(modal) {
+export function blazor_Modal_AfterFirstRender(modal, dotNetRef) {
     ModalUtils.moveModalToBodyAndHide($(modal));
+    ModalUtils.ModalDotNetRefs[$(modal).guid()] = dotNetRef;
 }
 
 export async function blazor_Modal_HideAsync(modal, animate = true) {
@@ -159,7 +163,7 @@ $(document).ready(function() {
         const $modalBgToHide = $(this).parents(".my-modal-background").first();
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
 
-        if (e.which !== 1 || !$modalToHide.is(".shown")) {
+        if (e.which !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
             return;
         }
 
@@ -172,7 +176,7 @@ $(document).ready(function() {
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
         const $btnClose = $modalToHide.find(".my-close"); // it will find all (`dismiss` and `x`)
         
-        if (e.which !== 1 || $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") || $btnClose.is(":disabled")) {
+        if (e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") || $btnClose.is(":disabled")) {
             return;
         }
 
@@ -189,7 +193,7 @@ $(document).ready(function() {
         const $modalBgsToHide = $(".my-modal.shown").$toArray().map($m => $m.parents(".my-modal-background"));
         const isAnyModalShown = $modalBgsToHide.length > 0;
         
-        if (e.which !== 1 || $(e.target).parents().add($(e.target)).is(".my-modal-background, .my-modal, .my-modal .my-close, .my-nav-item.my-login, .my-prompt") 
+        if (e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal-background, .my-modal, .my-modal .my-close, .my-nav-item.my-login, .my-prompt") 
             || !isAnyModalShown) {
             return;
         }
@@ -209,7 +213,7 @@ $(document).ready(function() {
         const $nbs = $(".my-navbar");
         const $searchContainers = $nbs.find(".my-nav-search-container");
         const $otherModals = $(".my-modal").not($modal);
-        if (e.which !== 1 || $searchContainers.is(".shown") || $otherModals.is(".shown")) {
+        if (e.which !== 1 || e.detail > 1 || $searchContainers.is(".shown") || $otherModals.is(".shown")) {
             return;
         }
 

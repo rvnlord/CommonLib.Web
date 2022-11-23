@@ -6,7 +6,7 @@ using CommonLib.Source.Common.Utils.UtilClasses;
 
 namespace CommonLib.Web.Source.ViewModels.Account
 {
-    public class FindUserVM
+    public class FindUserVM : IEquatable<FindUserVM>
     {
         public Guid Id { get; set; }
         public string UserName { get; set; }
@@ -20,5 +20,22 @@ namespace CommonLib.Web.Source.ViewModels.Account
 
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsIgnoreCase(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsIgnoreCase(claim));
+
+        public bool Equals(FindUserVM other)
+        {
+            if (other is null) return false;
+            return ReferenceEquals(this, other) || Id.Equals(other.Id);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((FindUserVM)obj);
+        }
+
+        public override int GetHashCode() => Id.GetHashCode();
+        public static bool operator ==(FindUserVM left, FindUserVM right) => Equals(left, right);
+        public static bool operator !=(FindUserVM left, FindUserVM right) => !Equals(left, right);
     }
 }
