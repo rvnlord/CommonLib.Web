@@ -43,12 +43,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
             _btnRegister = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task FormRegister_ValidSubmitAsync() // no full validation on submit, simply never call this method if validator contains invalid fields from per field validation
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnRegister);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnRegister);
             var registrationResult = await AccountClient.RegisterAsync(_registerUserVM);
             if (registrationResult.IsError)
             {
@@ -57,12 +57,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
                 await _validator.AddValidationMessages(registrationResult.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, registrationResult.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
             var registeredUser = registrationResult.Result;
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls);
             await PromptMessageAsync(NotificationType.Success, registrationResult.Message);
             NavigationManager.NavigateTo(registeredUser.ReturnUrl);
         }

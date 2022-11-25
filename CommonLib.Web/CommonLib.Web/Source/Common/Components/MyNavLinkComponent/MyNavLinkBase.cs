@@ -19,9 +19,6 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 {
     public class MyNavLinkBase : MyComponentBase
     {
-        protected BlazorParameter<NavLinkState?> _bpState;
-        protected NavLinkState? _state;
-
         protected ElementReference _jsNavLink { get; set; }
         protected IconType _openIcon { get; set; }
         protected IconType _closeIcon { get; set; }
@@ -42,10 +39,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
         [Parameter]
         public string To { get; set; }
-
-        [Parameter]
-        public BlazorParameter<NavLinkState?> State { get; set; }
-
+        
         [Parameter]
         public NavLinkIconPlacement IconPlacement { get; set; } = NavLinkIconPlacement.Left;
 
@@ -60,8 +54,6 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         
         protected override async Task OnInitializedAsync()
         {
-            _bpState ??= new BlazorParameter<NavLinkState?>(_state);
-
             await Task.CompletedTask;
         }
 
@@ -101,16 +93,6 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
-            if (State.HasChanged())
-            {
-                _state = State.ParameterValue ?? NavLinkState.Enabled;
-
-                if (_state == NavLinkState.Disabled)
-                    AddClass("disabled");
-                else
-                    RemoveClasses("disabled");
-            }
-            
             await Task.CompletedTask;
         }
         
@@ -141,9 +123,9 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             
             if (e.ValidationMode == ValidationMode.Model)
             {
-                State = e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success) 
-                    ? NavLinkState.Disabled 
-                    : NavLinkState.Enabled;
+                InteractionState = e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success) 
+                    ? ComponentState.Disabled 
+                    : ComponentState.Enabled;
                 await NotifyParametersChangedAsync();
                 await StateHasChangedAsync(true);
             }

@@ -65,12 +65,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
-
-            _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             
+            _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
+            // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
             await StateHasChangedAsync(); // to re-render External Login Buttons and get their references using @ref in .razor file
             SetControls();
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls); // disable External Login Buttons
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, null, ChangeRenderingStateMode.AllSpecified); // disable External Login Buttons
             
             if (!HasAuthenticationStatus(AuthStatus.Authenticated)) // try to authorize with what is present in queryStrings, possibly from an external provider
             {
@@ -93,20 +93,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                     queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName;
                     Mapper.Map(queryUser, _loginUserVM);
 
-                    _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Loading;
+                    _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Loading;
                     await StateHasChangedAsync();
                     
                     await ExternalLoginAuthorizeAsync(queryUser);
                     return;
                 }
 
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
             else
             {
                 AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 Mapper.Map(AuthenticatedUser, _loginUserVM);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
         
@@ -118,28 +118,28 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (await EnsureAuthenticationChangedAsync(false, false))
             {
                 SetControls();
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
 
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnExternalLogins[queryUser.ExternalProvider]);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnExternalLogins[queryUser.ExternalProvider]);
             var externalLoginResponse = await AccountClient.ExternalLoginAuthorizeAsync(_loginUserVM);
             if (externalLoginResponse.IsError)
             {
                 await PromptMessageAsync(NotificationType.Error, externalLoginResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
             Mapper.Map(externalLoginResponse.Result, _loginUserVM);
             await PromptMessageAsync(NotificationType.Success, externalLoginResponse.Message);
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            _btnExternalLogins[queryUser.ExternalProvider].State.ParameterValue = ButtonState.Disabled;
+            _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
             await EnsureAuthenticationPerformedAsync(false, false);
             SetControls();
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             if (!_loginUserVM.IsConfirmed)
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}");
             else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace())
@@ -148,12 +148,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task FormLogin_ValidSubmitAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnLogin);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnLogin, ChangeRenderingStateMode.AllSpecified);
             var loginResult = await AccountClient.LoginAsync(_loginUserVM);
             if (loginResult.IsError)
             {
                 await PromptMessageAsync(NotificationType.Error, loginResult.Message); // prompt from modal
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
@@ -165,13 +165,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (await EnsureAuthenticationChangedAsync(true, false))
             {
                 SetControls();
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
 
         protected async Task BtnExternalLogin_ClickAsync(MouseEventArgs e, string provider)
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnExternalLogins[provider]);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnExternalLogins[provider]);
 
             _loginUserVM.ExternalProvider = provider;
             var url = $"{ConfigUtils.BackendBaseUrl}/api/account/externallogin";
@@ -191,12 +191,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task BtnSignOut_ClickAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnLogout);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnLogout);
             var logoutResult = await AccountClient.LogoutAsync();
             if (logoutResult.IsError)
             {
                 await PromptMessageAsync(NotificationType.Error, logoutResult.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (await EnsureAuthenticationChangedAsync(true, false))
             {
                 SetControls();
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
 

@@ -64,44 +64,31 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
                     ? $"{displayName}..."
                     : null;
 
-            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
-            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
-            if (State.HasChanged() || parentState != _prevParentState)
-            {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
-
-                if (State.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
-                    AddAttribute("disabled", string.Empty);
-                else
-                    RemoveAttribute("disabled");
-                _prevParentState = parentState;
-            }
-
             if (Validate.HasChanged())
                 Validate.ParameterValue ??= true;
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
-            var notifyParamsChangedTasks = new List<Task>();
-            var changeStateTasks = new List<Task>();
-            foreach (var inputGroupButton in InputGroupButtons)
-            {
-                if (!inputGroupButton.CascadingInput.HasValue())
-                    inputGroupButton.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
-                notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
-                changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
-            }
+            //var notifyParamsChangedTasks = new List<Task>();
+            //var changeStateTasks = new List<Task>();
+            //foreach (var inputGroupButton in InputGroupButtons)
+            //{
+            //    if (!inputGroupButton.CascadingInput.HasValue())
+            //        inputGroupButton.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+            //    notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
+            //    changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
+            //}
 
-            foreach (var inputGroupIcon in InputGroupIcons)
-            {
-                if (!inputGroupIcon.CascadingInput.HasValue())
-                    inputGroupIcon.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
-                notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
-                changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
-            }
+            //foreach (var inputGroupIcon in InputGroupIcons)
+            //{
+            //    if (!inputGroupIcon.CascadingInput.HasValue())
+            //        inputGroupIcon.CascadingInput.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+            //    notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
+            //    changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
+            //}
 
-            await Task.WhenAll(notifyParamsChangedTasks);
-            await Task.WhenAll(changeStateTasks);
+            //await Task.WhenAll(notifyParamsChangedTasks);
+            //await Task.WhenAll(changeStateTasks);
         }
         
         protected async Task InputText_Input(ChangeEventArgs e)

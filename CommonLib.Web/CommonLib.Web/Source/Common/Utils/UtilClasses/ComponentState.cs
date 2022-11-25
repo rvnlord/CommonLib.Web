@@ -1,4 +1,5 @@
 ﻿using System;
+using CommonLib.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
 
@@ -51,33 +52,35 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         public static bool operator ==(ComponentState left, ComponentState right) => Equals(left, right);
         public static bool operator !=(ComponentState left, ComponentState right) => !Equals(left, right);
 
-        public static explicit operator ComponentState(InputState state)
-        {
-            if (state is null) 
-                return new ComponentState(null);
-            if (state.State == InputStateKind.Enabled && state.IsForced)
-                return ForceEnabled;
-            if (state.State == InputStateKind.Disabled && state.IsForced)
-                return ForceDisabled;
-            if (state.State == InputStateKind.Enabled && !state.IsForced)
-                return Enabled;
-            if (state.State == InputStateKind.Disabled && !state.IsForced)
-                return Disabled;
-            throw new ArgumentOutOfRangeException(null, "Conversion not supported");
-        }
+        //public static explicit operator ComponentState(InputState state)
+        //{
+        //    if (state is null) 
+        //        return new ComponentState(null);
+        //    if (state.State == InputStateKind.Enabled && state.IsForced)
+        //        return ForceEnabled;
+        //    if (state.State == InputStateKind.Disabled && state.IsForced)
+        //        return ForceDisabled;
+        //    if (state.State == InputStateKind.Enabled && !state.IsForced)
+        //        return Enabled;
+        //    if (state.State == InputStateKind.Disabled && !state.IsForced)
+        //        return Disabled;
+        //    throw new ArgumentOutOfRangeException(null, "Conversion not supported");
+        //}
 
-        public static explicit operator ComponentState(ButtonState? state)
-        {
-            if (state is null) 
-                return new ComponentState(null);
-            if (state == ButtonState.Enabled)
-                return Enabled;
-            if (state == ButtonState.Disabled)
-                return Disabled;
-            if (state == ButtonState.Loading)
-                return Loading;
-            throw new ArgumentOutOfRangeException(null, "Conversion not supported");
-        }
+        //public static explicit operator ComponentState(ButtonState? state)
+        //{
+        //    if (state is null) 
+        //        return new ComponentState(null);
+        //    if (state == ButtonState.Enabled)
+        //        return Enabled;
+        //    if (state == ButtonState.Disabled)
+        //        return Disabled;
+        //    if (state == ButtonState.Loading)
+        //        return Loading;
+        //    throw new ArgumentOutOfRangeException(null, "Conversion not supported");
+        //}
+
+        public override string ToString() => $"{(State?.EnumToString() ?? "< no state >")}, {(IsForced ? "forced" : "not forced")}";
     }
 
     public enum ComponentStateKind

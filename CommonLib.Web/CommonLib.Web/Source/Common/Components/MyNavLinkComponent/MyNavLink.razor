@@ -1,16 +1,21 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
 @using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Extensions
 @inherits MyNavLinkBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
-    @if (_state == NavLinkState.Disabled)
+    @{
+        var iconClasses = ChildContent is null ? "my-nav-link-icon my-d-flex" : "my-nav-link-icon my-pr-10px my-d-flex";
+    }
+    @if (InteractionState.V.In(null, ComponentState.Disabled))
     {
-        <div class="@_renderClasses">
+        <div class="@_renderClasses" my-guid="@_guid">
             @if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)
             {
-                <MyIcon Color="none" IconType="@_icon" class="my-nav-link-icon my-pr-10px my-d-flex" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+                <MyIcon Color="none" IconType="@_icon" class="@iconClasses" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
             }
             @if (ChildContent != null)
             {
@@ -20,14 +25,30 @@
             {
                 <MyIcon Color="none" IconType="@_icon" class="my-nav-link-icon my-pl-10px my-d-flex" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
             }
+            @if (_openIcon != null)
+            {
+                <MyIcon Color="none" IconType="@_openIcon" class="my-nav-link-open-icon my-pl-10px my-ml-auto my-d-flex" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            }
+            @if (_closeIcon != null)
+            {
+                <MyIcon Color="none" IconType="@_closeIcon" class="my-nav-link-close-icon my-pl-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            }
+            @if (_openIconXs != null)
+            {
+                <MyIcon Color="none" IconType="@_openIconXs" class="my-nav-link-open-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            }
+            @if (_closeIconXs != null)
+            {
+                <MyIcon Color="none" IconType="@_closeIconXs" class="my-nav-link-close-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            }
         </div>
     }
-    else if (_state == NavLinkState.Enabled)
+    else if (InteractionState.V == ComponentState.Enabled)
     {
         <a class="@_renderClasses" href="@_absoluteVirtualLink" @ref="_jsNavLink" my-guid="@_guid" @onclick:preventDefault my-opens-modal="@(NavItemType == NavItemType.Login ? $"[my-guid='{NavBar.LoginModalGuid}']" : null)" style="@_renderStyle" @attributes="@_renderAttributes">
             @if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)
             {
-                <MyIcon Color="none" IconType="@(_icon.ToBp())" class="my-nav-link-icon my-pr-10px my-d-flex" SizeMode="@(IconSizeMode.Contain.ToBp())"></MyIcon>
+                <MyIcon Color="none" IconType="@(_icon.ToBp())" class="@iconClasses" SizeMode="@(IconSizeMode.Contain.ToBp())"></MyIcon>
             }
             @if (ChildContent != null)
             {

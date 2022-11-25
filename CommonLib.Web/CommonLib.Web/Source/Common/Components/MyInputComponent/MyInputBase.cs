@@ -30,17 +30,13 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
     public abstract class MyInputBase : MyComponentBase
     {
-        private BlazorParameter<InputState> _bpState;
-
         protected string _propName { get; set; }
         protected Task<IJSObjectReference> _inputModuleAsync;
-        protected InputState _prevParentState { get; set; }
-     
+
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
         public List<MyButtonBase> InputGroupButtons { get; set; }
         public List<MyIconBase> InputGroupIcons { get; set; }
         public virtual string Text { get; protected set; }
-        //public InputState? CurrentState { get; set; }
 
         [Parameter]
         public object Model { get; set; }
@@ -53,22 +49,6 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
         [Parameter]
         public BlazorParameter<IconType> Icon { get; set; }
-        
-        [Parameter]
-        public BlazorParameter<InputState> State
-        {
-            get
-            {
-                return _bpState ??= new BlazorParameter<InputState>(null);
-            }
-            set
-            {
-
-                if (value?.ParameterValue?.IsForced == true && _bpState?.HasValue() == true && _bpState.ParameterValue != value.ParameterValue)
-                   throw new Exception("State is forced and it cannot be changed");
-                _bpState = value;
-            }
-        }
 
         [Parameter]
         public BlazorParameter<bool?> Validate { get; set; }
@@ -85,7 +65,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 return;
             if (Validate.V != true)
                 return;
-            if (State.ParameterValue?.IsForced == true)
+            if (InteractionState.ParameterValue?.IsForced == true)
                 return;
 
             if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
@@ -99,14 +79,14 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
-                State.ParameterValue = InputState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
+                InteractionState.ParameterValue = ComponentState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
             {
-                State.ParameterValue = InputState.Enabled;
+                InteractionState.ParameterValue = ComponentState.Enabled;
                 //if (this is MyFileUploadBase fileUpload)
                 //{
                 //    var btnsForManyFiles = fileUpload.Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();
@@ -133,47 +113,47 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         }
     }
 
-    public class InputState : IEquatable<InputState>
-    {
-        public bool IsForced { get; set; }
-        public InputStateKind? State { get; set; }
+    //public class InputState : IEquatable<InputState>
+    //{
+    //    public bool IsForced { get; set; }
+    //    public InputStateKind? State { get; set; }
 
-        public bool IsDisabledOrForceDisabled => State == InputStateKind.Disabled;
-        public bool IsEnabledOrForceEnabled => State == InputStateKind.Enabled;
+    //    public bool IsDisabledOrForceDisabled => State == InputStateKind.Disabled;
+    //    public bool IsEnabledOrForceEnabled => State == InputStateKind.Enabled;
 
-        public static InputState Disabled => new(InputStateKind.Disabled);
-        public static InputState Enabled => new(InputStateKind.Enabled);
-        public static InputState ForceDisabled => new(InputStateKind.Disabled, true);
-        public static InputState ForceEnabled => new(InputStateKind.Enabled, true);
+    //    public static InputState Disabled => new(InputStateKind.Disabled);
+    //    public static InputState Enabled => new(InputStateKind.Enabled);
+    //    public static InputState ForceDisabled => new(InputStateKind.Disabled, true);
+    //    public static InputState ForceEnabled => new(InputStateKind.Enabled, true);
 
-        public InputState(InputStateKind? state, bool isForced = false)
-        {
-            State = state;
-            IsForced = isForced;
-        }
+    //    public InputState(InputStateKind? state, bool isForced = false)
+    //    {
+    //        State = state;
+    //        IsForced = isForced;
+    //    }
 
-        public bool Equals(InputState other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return IsForced == other.IsForced && State == other.State;
-        }
+    //    public bool Equals(InputState other)
+    //    {
+    //        if (ReferenceEquals(null, other)) return false;
+    //        if (ReferenceEquals(this, other)) return true;
+    //        return IsForced == other.IsForced && State == other.State;
+    //    }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((InputState)obj);
-        }
+    //    public override bool Equals(object obj)
+    //    {
+    //        if (ReferenceEquals(null, obj)) return false;
+    //        if (ReferenceEquals(this, obj)) return true;
+    //        return obj.GetType() == GetType() && Equals((InputState)obj);
+    //    }
 
-        public override int GetHashCode() => HashCode.Combine(IsForced, State);
-        public static bool operator ==(InputState left, InputState right) => Equals(left, right);
-        public static bool operator !=(InputState left, InputState right) => !Equals(left, right);
-    }
+    //    public override int GetHashCode() => HashCode.Combine(IsForced, State);
+    //    public static bool operator ==(InputState left, InputState right) => Equals(left, right);
+    //    public static bool operator !=(InputState left, InputState right) => !Equals(left, right);
+    //}
 
-    public enum InputStateKind
-    {
-        Enabled,
-        Disabled
-    }
+    //public enum InputStateKind
+    //{
+    //    Enabled,
+    //    Disabled
+    //}
 }

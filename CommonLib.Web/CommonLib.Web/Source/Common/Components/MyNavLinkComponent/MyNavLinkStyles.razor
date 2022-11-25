@@ -87,6 +87,15 @@
         flex-wrap: nowrap;
     }
 
+    .my-navbar .my-nav-item > .my-nav-link.disabled {
+        color: rgb(64, 64, 64);
+        cursor: default;
+    }
+
+    .my-navbar .my-nav-item > .my-nav-link.disabled svg > path {
+        fill: rgb(64, 64, 64);
+    }
+
     .my-navbar > .my-nav-item:first-child > .my-nav-link {
         box-shadow: none; /* no emulated border */
     }

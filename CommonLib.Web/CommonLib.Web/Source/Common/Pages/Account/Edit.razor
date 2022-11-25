@@ -47,7 +47,7 @@
                     <MyLabel For="@(() => _editUserVM.Id)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" State="InputState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" />
+                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" InteractionState="ComponentState.ForceDisabled" For="@(() => _editUserVM.IdString)" SyncPaddingGroup="edit-panel" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _editUserVM.Id)" />

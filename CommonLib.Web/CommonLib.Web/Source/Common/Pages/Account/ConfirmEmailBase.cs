@@ -66,12 +66,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 else
                 {
                     await PromptMessageAsync(NotificationType.Error, "Account cannot be activated, please check the validation Messages");
-                    await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 }
                 return;
             }
            
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task FormConfirmEmail_ValidSubmitAsync() => await ConfirmEmailAsync();
@@ -80,7 +80,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         private async Task ConfirmEmailAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnConfirmEmail);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnConfirmEmail);
             var confirmUserToSend = Mapper.Map(_confirmEmailUserVM, new ConfirmUserVM());
             confirmUserToSend.ConfirmationCode = confirmUserToSend.ConfirmationCode.Base58ToUTF8();
             var emailConfirmationResponse = await AccountClient.ConfirmEmailAsync(confirmUserToSend);
@@ -88,7 +88,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             {
                 await _validator.AddValidationMessages(emailConfirmationResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator); // since field validation never updates the whole model, adding errors here would cause all other fields to be valid (the ones that were never validated) but technically if even one field was never validated Confirm email method should not be reached be code
                 await PromptMessageAsync(NotificationType.Error, emailConfirmationResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
@@ -96,7 +96,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _confirmEmailUserVM.ConfirmationCode = _confirmEmailUserVM.ConfirmationCode.UTF8ToBase58(false);
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
             await PromptMessageAsync(NotificationType.Success, $"Email for user: \"{_confirmEmailUserVM.UserName}\" has been confirmed successfully"); // can't update state on afterrender because it would cause an infinite loop
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls);
 
         } // https://localhost:44396/Account/ConfirmEmail?email=rvnlord@gmail.com&code=xxx
 

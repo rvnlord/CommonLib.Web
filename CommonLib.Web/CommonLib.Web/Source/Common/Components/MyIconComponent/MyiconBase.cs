@@ -88,7 +88,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 return;
             }
 
-            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.State?.V;
+            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.InteractionState?.V;
             
             var cascadingInputHasChanged = CascadingInput.HasChanged();
             if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
@@ -105,8 +105,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 CascadingButton.SetAsUnchanged(); // so the notify won't end up here again
             }
             
-            if (CascadingButton.ParameterValue?.State?.HasValue() == true && CascadingButton.ParameterValue?.State.ParameterValue == ButtonState.Disabled
-                || CascadingInput.ParameterValue?.State?.HasValue() == true && CascadingInput.ParameterValue?.State.ParameterValue.IsDisabledOrForceDisabled == true
+            if (CascadingButton.ParameterValue?.InteractionState?.HasValue() == true && CascadingButton.ParameterValue?.InteractionState.ParameterValue == ComponentState.Disabled
+                || CascadingInput.ParameterValue?.InteractionState?.HasValue() == true && CascadingInput.ParameterValue?.InteractionState.ParameterValue.IsDisabledOrForceDisabled == true
                 || parentDropDownState?.IsDisabledOrForceDisabled == true)
                 _disabled = true;
             else

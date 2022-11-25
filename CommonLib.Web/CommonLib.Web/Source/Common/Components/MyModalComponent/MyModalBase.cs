@@ -17,14 +17,11 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 {
     public class MyModalBase : MyComponentBase
     {
-        protected ComponentState _prevParentState { get; set; }
+        protected ComponentState PrevParentComponentState { get; set; }
         protected MyButtonBase _btnCloseModal { get; set; }
 
         public ElementReference JsModal { get; set; }
-
-        [Parameter]
-        public BlazorParameter<ComponentState> State { get; set; }
-
+        
         [Parameter]
         public MyAsyncEventHandler<MyModalBase, EventArgs> Hide { get; set; }
 
@@ -39,26 +36,6 @@ namespace CommonLib.Web.Source.Common.Components.MyModalComponent
                 SetUserDefinedAttributes();
             }
 
-            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
-            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? ComponentState.Disabled : ComponentState.Enabled;
-            if (State.HasChanged() || parentState != _prevParentState)
-            {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? ComponentState.Disabled;
-
-                if (State.V.IsDisabledOrForceDisabled)
-                {
-                    AddAttribute("disabled", string.Empty);
-                    AddClass("disabled");
-                }
-                else
-                {
-                    RemoveAttribute("disabled");
-                    RemoveClass("disabled");
-                }
-
-                _prevParentState = parentState;
-            }
-            
             await Task.CompletedTask;
         }
         

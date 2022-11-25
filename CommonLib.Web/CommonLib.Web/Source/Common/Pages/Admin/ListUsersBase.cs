@@ -64,28 +64,28 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
         {
             _allControls = GetInputControls();
             _modalBtns = _modalConfirmDeletingUser.Descendants.OfType<MyButtonBase>().ToArray();
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task BtnDeleteUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToDelete)
         {
-            await SetControlStatesAsync(ComponentStateKind.Disabled, _allControls, sender);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
             _userWaitingForDeleteConfirmation = Mapper.Map(userToDelete, new AdminEditUserVM());
-            await SetControlStatesAsync(ComponentStateKind.Enabled, _modalBtns, null, false);
+            await SetControlStatesAsync(ComponentState.Enabled, _modalBtns, null, ChangeRenderingStateMode.None);
             await _modalConfirmDeletingUser.NotifyParametersChangedAsync().StateHasChangedAsync(true);
             await _modalConfirmDeletingUser.ShowModalAsync();
         }
 
         protected async Task BtnConfirmUserDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
-            await SetControlStatesAsync(ComponentStateKind.Disabled, _modalBtns, sender, false);
+            await SetControlStatesAsync(ComponentState.Disabled, _modalBtns, sender, ChangeRenderingStateMode.None);
             await _modalConfirmDeletingUser.StateHasChangedAsync(true);
             var editResponse = await AdminClient.DeleteUserAsync(_userWaitingForDeleteConfirmation);
             if (editResponse.IsError)
             {
                 await PromptMessageAsync(NotificationType.Error, editResponse.Message);
                 _userWaitingForDeleteConfirmation = null;
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
@@ -98,7 +98,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
 
         protected async Task Modal_HideAsync(MyModalBase sender, EventArgs e, CancellationToken _)
         {
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task BtnEditUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToEdit)

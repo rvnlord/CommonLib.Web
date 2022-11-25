@@ -49,18 +49,19 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             Mapper.Map(AuthenticatedUser, _editUserVM);
             _editUserVM.Avatar = (await AccountClient.GetUserAvatarByNameAsync(_editUserVM.UserName)).Result;
             if (!_editUserVM.HasPassword)
-                _pwdOldPassword.State.ParameterValue = InputState.ForceDisabled;
+                _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
 
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+            await StateHasChangedAsync(true);
         }
 
         protected async Task BtnSubmit_ClickAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnSave);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnSave);
 
             if (!await EnsureAuthenticatedAsync(true, false))
             {
-                await SetControlStatesAsync(ButtonState.Disabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Disabled, _allControls);
                 await ShowLoginModalAsync();
                 return;
             }
@@ -75,7 +76,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             {
                 await _validator.AddValidationMessages(editResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, editResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
@@ -86,13 +87,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await EnsureAuthenticationPerformedAsync(false, true);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
             {
-                if (_editUserVM.HasPassword && _pwdOldPassword.State.V == InputState.ForceDisabled)
-                    _pwdOldPassword.State.ParameterValue = InputState.Enabled;
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                if (_editUserVM.HasPassword && _pwdOldPassword.InteractionState.V == ComponentState.ForceDisabled)
+                    _pwdOldPassword.InteractionState.ParameterValue = ComponentState.Enabled;
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             }
             else
             {
-                await SetControlStatesAsync(ButtonState.Disabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Disabled, _allControls);
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail/?{GetNavQueryStrings()}"); // TODO: test it
             }
         }

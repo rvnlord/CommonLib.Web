@@ -47,6 +47,7 @@ using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Components.MyRadioButtonComponent;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
+using Keras;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -61,6 +62,8 @@ namespace CommonLib.Web.Source.Common.Components
         private Task<IJSObjectReference> _promptModuleAsync;
         private bool _firstParamSetup;
         private bool _isInitialized;
+        private BlazorParameter<ComponentState> _bpState;
+
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncClasses = new(1, 1);
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
@@ -142,6 +145,28 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Parameter]
         public RenderFragment ChildContent { get; set; }
+
+        [Parameter]
+        public BlazorParameter<ComponentState> InteractionState
+        {
+            get
+            {
+                return _bpState ??= new BlazorParameter<ComponentState>(null);
+            }
+            set
+            {
+
+                if (value?.ParameterValue?.IsForced == true && _bpState?.HasValue() == true && _bpState.ParameterValue != value.ParameterValue)
+                    throw new Exception("State is forced and it cannot be changed");
+                _bpState = value;
+            }
+        }
+
+        [Parameter]
+        public BlazorParameter<bool?> InheritState { get; set; }
+
+        [Parameter]
+        public BlazorParameter<bool?> DisabledByDefault { get; set; }
 
         [Parameter(CaptureUnmatchedValues = true)]
         public Dictionary<string, object> AdditionalAttributes { get; set; } = new();
@@ -361,9 +386,33 @@ namespace CommonLib.Web.Source.Common.Components
 
             AdditionalAttributesHaveChanged = !AdditionalAttributes.Keys.CollectionEqual(_prevAdditionalAttributes.Keys) || !AdditionalAttributes.Values.CollectionEqual(_prevAdditionalAttributes.Values);
             _prevAdditionalAttributes = AdditionalAttributes.ToOrderedDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-
+            
             OnParametersSet();
             await OnParametersSetAsync();
+
+            if (InheritState.HasChanged())
+                InheritState.ParameterValue ??= InheritState.V ?? true;
+
+            if (DisabledByDefault.HasChanged())
+                DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
+            
+            var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
+            if (InteractionState.HasChanged() || parentState is not null)
+            {
+                InteractionState.ParameterValue = parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true ? Utils.UtilClasses.ComponentState.Disabled : Utils.UtilClasses.ComponentState.Enabled);
+
+                if (InteractionState.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
+                {
+                    AddAttribute("disabled", string.Empty);
+                    AddClass("disabled");
+                }
+                else
+                {
+                    RemoveAttribute("disabled");
+                    RemoveClass("disabled");
+                }
+            }
+
             _firstParamSetup = false;
             SetAllBlazorParametersAsUnchanged();
         }
@@ -557,7 +606,8 @@ namespace CommonLib.Web.Source.Common.Components
             var additionalClasses = AdditionalAttributes.VorN("class")?.ToString().NullifyIf(s => s.IsNullOrWhiteSpace())?.Split(" ");
             if (additionalClasses != null)
                 Classes.AddRange(additionalClasses.Where(c => !c.IsNullOrWhiteSpace()));
-            _renderClasses = Classes.Distinct().JoinAsString(" ");
+            Classes.ReplaceAll(Classes.Distinct());
+            _renderClasses = Classes.JoinAsString(" ");
 
             _syncClasses.Release();
         }
@@ -574,7 +624,13 @@ namespace CommonLib.Web.Source.Common.Components
 
             if (classes != null)
                 Classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace() && !c.In(Classes)));
-            _renderClasses = Classes.Distinct().JoinAsString(" ");
+            Classes.ReplaceAll(Classes.Distinct());
+            _renderClasses = Classes.JoinAsString(" ");
+            
+            if (_renderClasses.Contains("my-dropup my-dropup"))
+            {
+                var t = 0;
+            }
 
             _syncClasses.Release();
 
@@ -590,7 +646,13 @@ namespace CommonLib.Web.Source.Common.Components
 
             if (classes != null)
                 Classes.AddRange(classes.Where(c => !c.IsNullOrWhiteSpace()));
-            _renderClasses = Classes.Distinct().JoinAsString(" ");
+            Classes.ReplaceAll(Classes.Distinct());
+            _renderClasses = Classes.JoinAsString(" ");
+
+            if (_renderClasses.Contains("my-dropup my-dropup"))
+            {
+                var t = 0;
+            }
 
             _syncClasses.Release();
 
@@ -612,6 +674,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncClasses.Wait();
 
             Classes.RemoveAll(s => s.In(classes));
+            Classes.ReplaceAll(Classes.Distinct());
             _renderClasses = Classes.JoinAsString(" ");
 
             _syncClasses.Release();
@@ -839,13 +902,16 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public async Task<MyComponentBase> StateHasChangedAsync(bool force = false)
+        public async Task<MyComponentBase> StateHasChangedAsync(bool force = false, bool waitForRerender = false)
         {
             if (force)
                 PreventRender = false;
-            
+            if (waitForRerender)
+                ClearControlRerenderingStatus();
+
             await InvokeAsync(StateHasChanged);
-            
+            if (waitForRerender)
+                await WaitForControlToRerenderAsync();
             return this;
         }
 
@@ -972,7 +1038,7 @@ namespace CommonLib.Web.Source.Common.Components
         {
             await TaskUtils.WaitUntil(() =>
             {
-                return controls.All(c => c.IsRerendered || c.IsDisposed || (c is MyInputBase input && input.State.V.IsForced));
+                return controls.All(c => c.IsRerendered || c.IsDisposed || c.InteractionState.V.IsForced);
             }, 25, 10000);
             ClearControlsRerenderingStatus(controls);
         }
@@ -981,77 +1047,46 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected Task WaitForControlToRerenderAsync() => WaitForControlToRerenderAsync(this);
 
-        protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading, changeRenderingState);
+        //protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading, changeRenderingState);
        
-        protected async Task SetControlStatesAsync(ComponentStateKind state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true)
-        {
-            var arrControlsToChangeState = controlsToChangeState.ToArray();
-            ClearControlsRerenderingStatus(arrControlsToChangeState);
+        protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
+        { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
+            var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
+            if (componentLoading is not null && !componentLoading.InteractionState.V.IsForced)
+                componentLoading.InteractionState.ParameterValue = ComponentState.Loading;
 
-            if (btnLoading is not null)
-            {
-                btnLoading.State.ParameterValue = ButtonState.Loading;
-                arrControlsToChangeState = arrControlsToChangeState.Except(btnLoading).ToArray();
-            }
-
-            var notifyParamsChangedTasks = new List<Task>();
-            var changeStateTasks = new List<Task>();
+            var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => c.NotifyParametersChangedAsync());
+            var changeStateTasks = new Dictionary<MyComponentBase, Task>();
             foreach (var control in arrControlsToChangeState)
             {
-                var stateProp = control.GetProperty("State").GetProperty("ParameterValue");
-                var enumType = stateProp?.GetType();
-                if (enumType is null) // special case, uninitialised Blazor param
-                {
-                    var stateType = control.GetProperty("State").GetType().GetProperty("ParameterValue")?.PropertyType;
-                    if (stateType?.IsGenericType == true && stateType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                        enumType = Nullable.GetUnderlyingType(stateType);
-                }
+                if (control.InteractionState is null || control.InteractionState.V.IsForced)
+                    continue;
 
-                if (enumType is null)
-                    throw new NullReferenceException("enumType shouldn't be null at this point");
-               
-                Type propType = null;
-                bool? isForcedProp = null;
-                var isEnum = enumType.IsEnum;
-                if (!isEnum)
-                {
-                    isForcedProp = stateProp.GetProperty<bool?>("IsForced");
-                    stateProp = stateProp.GetProperty("State");
-                    propType = enumType;
-                    enumType = stateProp.GetType();
-                }
-                var enumValues = Enum.GetValues(enumType).IColToArray();
-                var val = enumValues.Single(v => StringExtensions.EndsWithInvariant(EnumConverter.EnumToString(v.CastToReflected(enumType)), state.EnumToString()));
-
-                if (!isEnum)
-                {
-                    val = Activator.CreateInstance(propType, val, false);
-                    if (isForcedProp != true)
-                        control.GetProperty("State").SetProperty("ParameterValue", val);
-                }
-                else 
-                    control.GetProperty("State").SetProperty("ParameterValue", val);
-
-                if (changeRenderingState)
-                {
-                    notifyParamsChangedTasks.Add((Task<MyComponentBase>)(control.GetType().GetMethod("NotifyParametersChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
-                    changeStateTasks.Add((Task<MyComponentBase>)(control.GetType().GetMethod("StateHasChangedAsync")?.Invoke(control, new object[] { true }) ?? throw new NullReferenceException()));
-                }
+                control.InteractionState.ParameterValue = state;
+                if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent)) 
+                    continue;
+                
+                changeStateTasks[control] = control.StateHasChangedAsync(true);
             }
 
-            if (changeRenderingState)
-            {
-                await Task.WhenAll(notifyParamsChangedTasks);
-                await Task.WhenAll(changeStateTasks);
-                await NotifyParametersChangedAsync();
-                await StateHasChangedAsync(true);
-                await WaitForControlsToRerenderAsync(arrControlsToChangeState);
-            }
+            if (changeRenderingState.In(ChangeRenderingStateMode.Current, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
+                changeStateTasks[this] = StateHasChangedAsync(true);
+            
+            ClearControlsRerenderingStatus(changeStateTasks.Keys);
+            await Task.WhenAll(notifyParamsChangedTasks.Values);
+            var t1 = notifyParamsChangedTasks.Keys.ToDictionary(c => c, c => c.InteractionState.V);
+            await Task.WhenAll(changeStateTasks.Values);
+            await WaitForControlsToRerenderAsync(changeStateTasks.Keys);
         }
 
-        protected Task SetControlStateAsync(ComponentStateKind state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState);
+        protected Task SetControlStateAsync(ComponentState state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
 
-        protected MyComponentBase[] GetInputControls() => Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload && !c.Ancestors.Any(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrNull() is not null)).ToArray();
+        protected MyComponentBase[] GetInputControls()
+        {
+            var inputControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload).ToArray();
+            var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
+            return inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
+        }
 
         protected async Task CatchAllExceptionsAsync(Func<Task> action)
         {
@@ -1107,7 +1142,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         ~MyComponentBase() => _ = DisposeAsync(false);
         
-        public override string ToString() => $"[{_guid}] {_renderClasses}";
+        public override string ToString() => $"{GetType().Name} [{_guid.ToString().Take(4)}...{_guid.ToString().TakeLast(4)}] {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
 
         public bool Equals(MyComponentBase other)
         {
@@ -1164,5 +1199,13 @@ namespace CommonLib.Web.Source.Common.Components
 
             public ComponentAuthenticationStatus() { }
         }
+    }
+
+    public enum ChangeRenderingStateMode
+    {
+        None,
+        AllSpecified,
+        Current,
+        AllSpecifiedThenCurrent
     }
 }

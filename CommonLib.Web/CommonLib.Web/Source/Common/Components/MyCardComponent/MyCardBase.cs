@@ -28,6 +28,6 @@ public class MyCardBase : MyComponentBase
     {
         _allControls = GetInputControls();
 
-        await SetControlStatesAsync(ComponentStateKind.Enabled, _allControls);
+        await SetControlStatesAsync(ComponentState.Enabled, _allControls);
     }
 }

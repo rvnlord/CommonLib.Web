@@ -63,7 +63,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         {
             _allControls = GetInputControls();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task MediaQuery_ChangedAsync(MyMediaQueryChangedEventArgs e)
@@ -74,7 +74,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
 
         protected async Task BtnSubmit_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnSave);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnSave);
             if (!await _editContext.ValidateAsync())
                 return;
 

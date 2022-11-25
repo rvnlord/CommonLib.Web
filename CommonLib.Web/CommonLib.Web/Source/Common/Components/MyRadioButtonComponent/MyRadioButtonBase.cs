@@ -22,30 +22,11 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
 {
     public class MyRadioButtonBase : MyComponentBase
     {
-        private BlazorParameter<InputState> _bpState;
-      
         protected string _propName { get; set; }
         protected string _renderRadioGroup { get; set; }
-        protected InputState _prevParentState { get; set; }
 
         [CascadingParameter(Name = "Model")] 
         public BlazorParameter<object> Model { get; set; }
-        
-        [Parameter]
-        public BlazorParameter<InputState> State
-        {
-            get
-            {
-                return _bpState ??= new BlazorParameter<InputState>(null);
-            }
-            set
-            {
-
-                if (value?.ParameterValue?.IsForced == true && _bpState?.HasValue() == true && _bpState.ParameterValue != value.ParameterValue)
-                    throw new Exception("State is forced and it cannot be changed");
-                _bpState = value;
-            }
-        }
 
         [Parameter]
         public BlazorParameter<string> Description { get; set; }
@@ -94,26 +75,6 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
                     : _propName;
             }
 
-            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
-            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
-            if (State.HasChanged() || parentState != _prevParentState)
-            {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
-
-                if (State.V.In(InputState.Disabled, InputState.ForceDisabled))
-                {
-                    AddAttribute("disabled", string.Empty);
-                    AddClass("disabled");
-                }
-                else
-                {
-                    RemoveAttribute("disabled");
-                    RemoveClass("disabled");
-                }
-
-                _prevParentState = parentState;
-            }
-
             if (RadioGroup.HasChanged())
                 _renderRadioGroup = RadioGroup.V.PascalCaseToKebabCase();
             
@@ -141,7 +102,7 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
-            if (State.ParameterValue?.IsForced == true)
+            if (InteractionState.ParameterValue?.IsForced == true)
                 return;
             if (Ancestors.Any(a => a is MyInputBase))
                 return;
@@ -157,13 +118,13 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
-                State.ParameterValue = InputState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
+                InteractionState.ParameterValue = ComponentState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
-                State.ParameterValue = InputState.Enabled;
+                InteractionState.ParameterValue = ComponentState.Enabled;
 
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
             var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));

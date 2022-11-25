@@ -98,30 +98,24 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace() ? Placeholder : !displayName.IsNullOrWhiteSpace() ? $"{displayName}..." : null;
 
-            if (State.HasChanged())
+            if (InteractionState.HasChanged())
             {
-                State.ParameterValue ??= InputState.Disabled;
                 var thumbnailContainerSelector = $"div.my-fileupload[my-guid='{_guid}'] > .my-fileupload-thumbnail-container";
-                if (State.ParameterValue.IsDisabledOrForceDisabled)
+                if (InteractionState.V?.IsDisabledOrForceDisabled != false) // true or null (not set), State is currently being set after SetParams in MyComponentBase
                 {
-                    AddAttribute("disabled", string.Empty);
-                    AddClass("disabled");
                     if (PreviewFor.HasValue() || PreviewFor?.V?.Compile()?.Invoke() == _prevDefaultPreviewFile)
                     {
                         if (!IsRendered)
                             _thumbnailContainerStyle.AddOrUpdate("opacity", "0.3");
-                        else
+                        else if (!IsDisposed)
                             await JQuery.QueryOneAsync(thumbnailContainerSelector).CssAsync("opacity", "0.3");
                     }
                 }
                 else
                 {
-                    RemoveAttribute("disabled");
-                    RemoveClass("disabled");
-
                     if (!IsRendered)
                         _thumbnailContainerStyle.RemoveIfExists("opacity");
-                    else
+                    else if (!IsDisposed)
                         await JQuery.QueryOneAsync(thumbnailContainerSelector).RemoveCssAsync("opacity");
                 }
             }
@@ -268,7 +262,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (!selectedFiles.Any())
                 return;
 
-            await SetControlStateAsync(ComponentStateKind.Loading, sender);
+            await SetControlStateAsync(ComponentState.Loading, sender);
             var filesToUpload = Files.Where(f => f.In(selectedFiles) && f.Status == UploadStatus.NotStarted).ToArray();
             var uploadTasks = filesToUpload.Select(UploadAndManageStateAsync).ToList();
             await Task.WhenAll(uploadTasks);
@@ -280,7 +274,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (!selectedFiles.Any())
                 return;
 
-            await SetControlStateAsync(ComponentStateKind.Loading, sender);
+            await SetControlStateAsync(ComponentState.Loading, sender);
             var filesToPause = Files.Where(f => f.In(selectedFiles) && f.Status == UploadStatus.Uploading).ToArray();
             var pauseTasks = filesToPause.Select(PauseAndManageStateAsync).ToList();
             await Task.WhenAll(pauseTasks);
@@ -292,7 +286,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (!selectedFiles.Any())
                 return;
 
-            await SetControlStateAsync(ComponentStateKind.Loading, sender);
+            await SetControlStateAsync(ComponentState.Loading, sender);
             var filesToResume = Files.Where(f => f.In(selectedFiles) && f.Status == UploadStatus.Paused).ToArray();
             var resumeTasks = filesToResume.Select(ResumeAndManageStateAsync).ToList();
             await Task.WhenAll(resumeTasks);
@@ -304,7 +298,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (!selectedFiles.Any())
                 return;
 
-            await SetControlStateAsync(ComponentStateKind.Loading, sender);
+            await SetControlStateAsync(ComponentState.Loading, sender);
             var filesToRetry = Files.Where(f => f.In(selectedFiles) && f.Status == UploadStatus.Failed).ToArray();
             var retryTasks = filesToRetry.Select(RetryAndManageStateAsync).ToList();
             await Task.WhenAll(retryTasks);
@@ -316,7 +310,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             if (!selectedFiles.Any())
                 return;
 
-            await SetControlStateAsync(ComponentStateKind.Loading, sender);
+            await SetControlStateAsync(ComponentState.Loading, sender);
             var filesToClear = Files.Where(f => f.In(selectedFiles) && f.Status.In(UploadStatus.Failed, UploadStatus.Paused, UploadStatus.Finished, UploadStatus.NotStarted)).ToArray();
             var clearTasks = filesToClear.Select(ClearAndManageStateAsync).ToList();
             await Task.WhenAll(clearTasks);
@@ -364,41 +358,41 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         {
             var btnsForTheSameFile = BtnsForFile(fd);
             var btnUpload = BtnForFileByClass(fd, "my-btn-upload-file");
-            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsForTheSameFile, btnUpload);
+            await SetControlStatesAsync(ComponentState.Disabled, btnsForTheSameFile, btnUpload);
             await UploadFileAsync(fd);
-            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsForTheSameFile);
+            await SetControlStatesAsync(ComponentState.Enabled, btnsForTheSameFile);
         }
 
         private async Task PauseAndManageStateAsync(FileData fd)
         {
             var btnPause = BtnForFileByClass(fd, "my-btn-pause-file");
             fd.Status = UploadStatus.Paused;
-            await SetControlStateAsync(ComponentStateKind.Loading, btnPause);
+            await SetControlStateAsync(ComponentState.Loading, btnPause);
         }
 
         private async Task ResumeAndManageStateAsync(FileData fd)
         {
             var btnsForTheSameFile = BtnsForFile(fd);
             var btnResume = BtnForFileByClass(fd, "my-btn-resume-file");
-            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsForTheSameFile, btnResume);
+            await SetControlStatesAsync(ComponentState.Disabled, btnsForTheSameFile, btnResume);
             await UploadFileAsync(fd);
-            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsForTheSameFile);
+            await SetControlStatesAsync(ComponentState.Enabled, btnsForTheSameFile);
         }
 
         private async Task RetryAndManageStateAsync(FileData fd)
         {
             var btnsForTheSameFile = BtnsForFile(fd);
             var btnResume = BtnForFileByClass(fd, "my-btn-retry-file");
-            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsForTheSameFile, btnResume);
+            await SetControlStatesAsync(ComponentState.Disabled, btnsForTheSameFile, btnResume);
             await UploadFileAsync(fd);
-            await SetControlStatesAsync(ComponentStateKind.Enabled, btnsForTheSameFile);
+            await SetControlStatesAsync(ComponentState.Enabled, btnsForTheSameFile);
         }
 
         private async Task ClearAndManageStateAsync(FileData fd)
         {
             var btnsForTheSameFile = BtnsForFile(fd);
             var btnClear = BtnForFileByClass(fd, "my-btn-remove-file");
-            await SetControlStatesAsync(ComponentStateKind.Disabled, btnsForTheSameFile, btnClear);
+            await SetControlStatesAsync(ComponentState.Disabled, btnsForTheSameFile, btnClear);
             Value.Remove(fd);
             fd.StateChanged -= FileData_StateChanged;
             await NotifyParametersChangedAsync().StateHasChangedAsync(true);
@@ -439,48 +433,48 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 var btnsToEnable = new List<MyButtonBase>();
                 var btnsToDisable = new List<MyButtonBase>();
 
-                if (State.V != InputState.Disabled)
+                if (InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnChooseFile);
                 else
                     btnsToDisable.Add(btnChooseFile);
 
-                if (selectedFiles.Any() && State.V != InputState.Disabled)
+                if (selectedFiles.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnSelectAllFiles);
                 else
                     btnsToDisable.Add(btnSelectAllFiles);
 
                 var filesToUpload = selectedFiles.Where(f => f.Status == UploadStatus.NotStarted).ToArray();
-                if (filesToUpload.Any() && State.V != InputState.Disabled)
+                if (filesToUpload.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnUploadManyFiles);
                 else
                     btnsToDisable.Add(btnUploadManyFiles);
 
                 var filesUploading = selectedFiles.Where(f => f.Status == UploadStatus.Uploading).ToArray();
-                if (filesUploading.Any() && State.V != InputState.Disabled)
+                if (filesUploading.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnPauseManyFiles);
                 else
                     btnsToDisable.Add(btnPauseManyFiles);
 
                 var filesPaused = selectedFiles.Where(f => f.Status == UploadStatus.Paused).ToArray();
-                if (filesPaused.Any() && State.V != InputState.Disabled)
+                if (filesPaused.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnResumeManyFiles);
                 else
                     btnsToDisable.Add(btnResumeManyFiles);
 
                 var filesFailed = selectedFiles.Where(f => f.Status == UploadStatus.Failed).ToArray();
-                if (filesFailed.Any() && State.V != InputState.Disabled)
+                if (filesFailed.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnRetryManyFiles);
                 else
                     btnsToDisable.Add(btnRetryManyFiles);
 
                 var filesToClear = selectedFiles.Where(f => f.Status.In(UploadStatus.Failed, UploadStatus.Paused, UploadStatus.NotStarted, UploadStatus.Finished)).ToArray();
-                if (filesToClear.Any() && State.V != InputState.Disabled)
+                if (filesToClear.Any() && InteractionState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnClearManyFiles);
                 else
                     btnsToDisable.Add(btnClearManyFiles);
 
-                await SetControlStatesAsync(ButtonState.Enabled, btnsToEnable, null, false);
-                await SetControlStatesAsync(ButtonState.Disabled, btnsToDisable, null, false);
+                await SetControlStatesAsync(ComponentState.Enabled, btnsToEnable, null, ChangeRenderingStateMode.None);
+                await SetControlStatesAsync(ComponentState.Disabled, btnsToDisable, null, ChangeRenderingStateMode.None);
                 if (changeOnlyBtnsState)
                 {
                     var tasksBtnsChangeState = btnsToEnable.Concat(btnsToDisable).Select(btn => btn.StateHasChangedAsync(true)).ToArray();

@@ -29,7 +29,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         private MyButtonBase _btnResetPassword;
 
         protected MyFluentValidator _validator { get; set; }
-        protected BlazorParameter<ButtonState?> _bpBtnResetPasswordState { get; set; }
+        protected BlazorParameter<ComponentState> _bpBtnResetPasswordState { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         protected ResetPasswordUserVM _resetPasswordUserVM { get; set; }
@@ -50,7 +50,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (FirstParamSetup)
             {
-                _bpBtnResetPasswordState = ButtonState.Loading;
+                _bpBtnResetPasswordState = ComponentState.Loading;
                 await SetUserNameAsync();
                 _editContext.ReBindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
             }
@@ -64,7 +64,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
             _btnResetPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
         
         protected async Task BtnSubmit_ClickAsync() => await _editForm.SubmitAsync();
@@ -72,20 +72,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         private async Task ResetPasswordAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnResetPassword);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnResetPassword);
             var resetPasswordResponse = await AccountClient.ResetPasswordAsync(_resetPasswordUserVM);
             if (resetPasswordResponse.IsError)
             {
                 await _validator.AddValidationMessages(resetPasswordResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator);
                 await PromptMessageAsync(NotificationType.Error, resetPasswordResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
             Mapper.Map(resetPasswordResponse.Result, _resetPasswordUserVM);
             await PromptMessageAsync(NotificationType.Success, resetPasswordResponse.Message);
             await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls);
         }
 
         private async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)

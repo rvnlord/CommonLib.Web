@@ -19,8 +19,6 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
 {
     public class MyProgressBarBase : MyComponentBase
     {
-        private BlazorParameter<InputState> _bpState;
-        private InputState _prevParentState;
         private readonly OrderedSemaphore _syncValidationStateBeingChanged = new (1, 1);
         
         protected string _propName { get; set; }
@@ -29,22 +27,6 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
 
         [CascadingParameter(Name = "Model")] 
         public BlazorParameter<object> Model { get; set; }
-        
-        [Parameter]
-        public BlazorParameter<InputState> State
-        {
-            get
-            {
-                return _bpState ??= new BlazorParameter<InputState>(null);
-            }
-            set
-            {
-
-                if (value?.ParameterValue?.IsForced == true && _bpState?.HasValue() == true && _bpState.ParameterValue != value.ParameterValue)
-                    throw new Exception("State is forced and it cannot be changed");
-                _bpState = value;
-            }
-        }
 
         [Parameter]
         public BlazorParameter<string> Description { get; set; }
@@ -91,26 +73,6 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
             if (Description.HasChanged())
                 Description.ParameterValue ??= Model.V?.GetPropertyDescriptionOrNull(_propName) ?? displayName ?? _propName;
 
-            var parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
-            var parentState = parentStates.All(s => s.State is null) ? null : parentStates.Any(s => s.State.In(ComponentStateKind.Disabled, ComponentStateKind.Loading)) ? InputState.Disabled : InputState.Enabled;
-            if (State.HasChanged() || parentState != _prevParentState)
-            {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? InputState.Disabled;
-
-                if (State.V.IsDisabledOrForceDisabled) 
-                {
-                    AddAttribute("disabled", string.Empty);
-                    AddClass("disabled");
-                }
-                else
-                {
-                    RemoveAttribute("disabled");
-                    RemoveClass("disabled");
-                }
-
-                _prevParentState = parentState;
-            }
-
             if (Styling.HasChanged())
             {
                 Styling.ParameterValue ??= ProgressBarStyling.Primary;
@@ -143,7 +105,7 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode != ValidationMode.Model)
                 return;
-            if (State.ParameterValue?.IsForced == true)
+            if (InteractionState.ParameterValue?.IsForced == true)
                 return;
             if (Ancestors.Any(a => a is MyInputBase))
                 return;
@@ -154,15 +116,15 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
             IsValidationStateBeingChanged = true;
             
             if (CascadedEditContext == null)
-                State.ParameterValue = InputState.Enabled;
+                InteractionState.ParameterValue = ComponentState.Enabled;
             else
             {
-                State.ParameterValue = e.ValidationStatus switch
+                InteractionState.ParameterValue = e.ValidationStatus switch
                 {
-                    ValidationStatus.Pending => InputState.Disabled,
-                    ValidationStatus.Failure => InputState.Enabled,
-                    ValidationStatus.Success => InputState.Disabled, 
-                    _ => InputState.Enabled
+                    ValidationStatus.Pending => ComponentState.Disabled,
+                    ValidationStatus.Failure => ComponentState.Enabled,
+                    ValidationStatus.Success => ComponentState.Disabled, 
+                    _ => ComponentState.Enabled
                 };
             }
             

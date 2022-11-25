@@ -54,20 +54,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
             _btnForgotPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
-            await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         protected async Task BtnChangeForgottenPassword_ClickAsync() => await _editForm.SubmitAsync();
         protected async Task FormChangeForgottenPassword_ValidSubmitAsync()
         {
-            await SetControlStatesAsync(ButtonState.Disabled, _allControls, _btnForgotPassword);
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnForgotPassword);
             var forgotPasswordResponse = await AccountClient.ForgotPasswordAsync(_forgotPasswordUserVM);
             if (forgotPasswordResponse.IsError)
             {
-                _btnForgotPassword.State.ParameterValue = ButtonState.Enabled;
+                _btnForgotPassword.InteractionState.ParameterValue = ComponentState.Enabled;
                 await _validator.AddValidationMessages(forgotPasswordResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator); ;
                 await PromptMessageAsync(NotificationType.Error, forgotPasswordResponse.Message);
-                await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 

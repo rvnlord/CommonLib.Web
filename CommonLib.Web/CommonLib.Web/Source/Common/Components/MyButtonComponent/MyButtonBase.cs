@@ -17,15 +17,13 @@ using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
-using CommonLib.Web.Source.Common.Converters;
 
 namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 {
     public class MyButtonBase : MyComponentBase
     {
         private readonly SemaphoreSlim _syncValidationStateBeingChanged = new(1, 1);
-
-        protected internal ButtonState? _prevParentState { get; set; }
+        
         protected BlazorParameter<MyButtonBase> _bpBtn { get; set; }
 
         public MyIconBase IconBefore { get; set; }
@@ -42,10 +40,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         [Parameter]
         public BlazorParameter<string> Value { get; set; }
-
-        [Parameter]
-        public BlazorParameter<ButtonState?> State { get; set; }
-
+        
         [Parameter]
         public BlazorParameter<ButtonStyling?> Styling { get; set; }
 
@@ -66,12 +61,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         [Parameter]
         public BlazorParameter<bool?> Validate { get; set; }
-
-        [Parameter]
-        public BlazorParameter<bool?> InheritState { get; set; }
-
-        [Parameter]
-        public BlazorParameter<bool?> DisabledByDefault { get; set; }
 
         [Parameter]
         public EventCallback<MouseEventArgs> OnClick { get; set; } // for backwards compatibility
@@ -110,28 +99,6 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
                 CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
             }
 
-            if (InheritState.HasChanged())
-                InheritState.ParameterValue ??= InheritState.V ?? true;
-
-            if (DisabledByDefault.HasChanged())
-                DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
-
-            var parentStates = Array.Empty<ComponentState>();
-            if (InheritState.V == true)
-                parentStates = Ancestors.Select(a => a.GetPropertyOrNull("State")?.GetPropertyOrNull("ParameterValue").ToComponentStateOrEmpty() ?? ComponentState.Empty).ToArray();
-            var parentState = parentStates.All(s => s.State is null) ? (ButtonState?) null : parentStates.Any(s => s.State == ComponentStateKind.Disabled) ? ButtonState.Disabled : parentStates.Any(s => s.State == ComponentStateKind.Loading) ? ButtonState.Loading : ButtonState.Enabled;
-            if (State.HasChanged() || parentState != _prevParentState)
-            {
-                State.ParameterValue = parentState.NullifyIf(s => s == _prevParentState) ?? State.V.NullifyIf(s => !State.HasChanged()) ?? (DisabledByDefault.V == true ? ButtonState.Disabled : ButtonState.Enabled);
-                
-                if (State.ParameterValue == ButtonState.Loading)
-                    AddClasses("my-loading");
-                else
-                    RemoveClasses("my-loading");
-
-                _prevParentState = parentState;
-            }
-            
             if (Styling.HasChanged())
             {
                 Styling ??= new BlazorParameter<ButtonStyling?>(ButtonStyling.Secondary);
@@ -164,16 +131,16 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             if (SubmitsForm.HasChanged())
                 SubmitsForm.ParameterValue ??= false;
 
-            var icons = OtherIcons.Values.Prepend(IconBefore).Prepend(IconAfter).Where(i => i is not null).ToArray();
-            var changeStateTasks = new List<Task>();
-            foreach (var icon in icons)
-            {
-                if (!icon.CascadingButton.HasValue())
-                    icon.CascadingButton.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
-                changeStateTasks.Add(icon.NotifyParametersChangedAsync());
-                changeStateTasks.Add(icon.StateHasChangedAsync(true));
-            }
-            await Task.WhenAll(changeStateTasks);
+            //var icons = OtherIcons.Values.Prepend(IconBefore).Prepend(IconAfter).Where(i => i is not null).ToArray();
+            //var changeStateTasks = new List<Task>();
+            //foreach (var icon in icons)
+            //{
+            //    if (!icon.CascadingButton.HasValue())
+            //        icon.CascadingButton.ParameterValue = this; // to solve issue when the parameter is not yet initialized but it needs to be disabled already, for instance before render
+            //    changeStateTasks.Add(icon.NotifyParametersChangedAsync());
+            //    changeStateTasks.Add(icon.StateHasChangedAsync(true));
+            //}
+            //await Task.WhenAll(changeStateTasks);
         }
         
         protected override async Task OnAfterFirstRenderAsync()
@@ -205,15 +172,15 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             IsValidationStateBeingChanged = true;
             
             if (CascadedEditContext == null)
-                State.ParameterValue = ButtonState.Enabled;
+                InteractionState.ParameterValue = ComponentState.Enabled;
             else
             {
-                State.ParameterValue = e.ValidationStatus switch
+                InteractionState.ParameterValue = e.ValidationStatus switch
                 {
-                    ValidationStatus.Pending => SubmitsForm.ParameterValue == true ? ButtonState.Loading : ButtonState.Disabled,
-                    ValidationStatus.Failure => ButtonState.Enabled,
-                    ValidationStatus.Success => SubmitsForm.ParameterValue == true ? ButtonState.Loading : ButtonState.Disabled, // disabled regardless because the one thats submtting should not be reenabled between validation and submit so the user has no chance to fuck up the async feature of the whole thing, alt: SubmitsForm.ParameterValue == true ? ButtonState.Disabled : ButtonState.Enabled,
-                    _ => ButtonState.Enabled
+                    ValidationStatus.Pending => SubmitsForm.ParameterValue == true ? ComponentState.Loading : ComponentState.Disabled,
+                    ValidationStatus.Failure => ComponentState.Enabled,
+                    ValidationStatus.Success => SubmitsForm.ParameterValue == true ? ComponentState.Loading : ComponentState.Disabled, // disabled regardless because the one thats submtting should not be reenabled between validation and submit so the user has no chance to fuck up the async feature of the whole thing, alt: SubmitsForm.ParameterValue == true ? ButtonState.Disabled : ButtonState.Enabled,
+                    _ => ComponentState.Enabled
                 };
             }
             
@@ -247,12 +214,12 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         LineHeightQuadratic
     }
 
-    public enum ButtonState
-    {
-        Enabled,
-        Disabled,
-        Loading
-    }
+    //public enum ButtonState
+    //{
+    //    Enabled,
+    //    Disabled,
+    //    Loading
+    //}
 
     public enum ButtonIconPlacement
     {

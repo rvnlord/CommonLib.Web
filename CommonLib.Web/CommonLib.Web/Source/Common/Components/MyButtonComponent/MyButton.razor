@@ -1,18 +1,19 @@
 ﻿@using CommonLib.Source.Common.Extensions
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
 
 @namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
-    @if (State.ParameterValue is not null)
+    @if (InteractionState.ParameterValue is not null)
     {
         @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
 
         <CascadingValue Value="_bpBtn">
-            @if (State.ParameterValue == ButtonState.Enabled)
+            @if (InteractionState.ParameterValue == ComponentState.Enabled)
             {
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
@@ -30,7 +31,7 @@
                     @ChildContent
                 </button>
             }
-            else if (State.ParameterValue == ButtonState.Disabled)
+            else if (InteractionState.ParameterValue == ComponentState.Disabled)
             {
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
@@ -48,7 +49,7 @@
                     @ChildContent
                 </button>
             }
-            else if (State.ParameterValue == ButtonState.Loading)
+            else if (InteractionState.ParameterValue == ComponentState.Loading)
             {
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)

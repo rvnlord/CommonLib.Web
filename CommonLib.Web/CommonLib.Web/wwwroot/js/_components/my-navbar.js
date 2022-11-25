@@ -86,6 +86,7 @@ $(document).ready(function () {
         const $searchContainer = $nb.find(".my-nav-search-container").first();
         const $modals = $(".my-modal");
         const isRendered = ($navLink.attr("rendered") || "false").toBool();
+        const isDisabled = $navLink.is(".disabled") || $navLink.attr("disabled") === "disabled";
 
         if (e.which !== 1 || !$nb.is(".shown")) { // prevents clicking on ddl if navbar is hiding
             return;
@@ -95,6 +96,10 @@ $(document).ready(function () {
         }
         if (!isRendered) {
             console.log("nav-link is not rendered yet");
+            return;
+        }
+        if (isDisabled) {
+            console.log("nav-link is disabled");
             return;
         }
 
@@ -123,6 +128,7 @@ $(document).ready(function () {
         const $clickedNavLink = $(this);
         const $clickedNavItem = $clickedNavLink.parents(".my-nav-item").first();
         const isRendered = ($clickedNavLink.attr("rendered") || "false").toBool();
+        const isDisabled = $clickedNavLink.is(".disabled") || $clickedNavLink.attr("disabled") === "disabled";
 
         if (e.which !== 1 || $clickedNavLink.parents(`.my-nav-item`).first().classes().some(c => c.startsWith("my-drop"))) {
             return;
@@ -130,6 +136,11 @@ $(document).ready(function () {
 
         if (!isRendered) {
             console.log("nav-link is not rendered yet");
+            return;
+        }
+
+        if (isDisabled) {
+            console.log("nav-link is disabled");
             return;
         }
 
@@ -170,7 +181,9 @@ $(document).ready(function () {
     $(document).on("mousedown", "*:not(.my-nav-item) > a.my-nav-link", async function (e) { // 'a' is enabled, 'div' is disabled, no .disabled class for navlinks
         e.preventDefault();
         const $clickedNavLink = $(this);
-        if (e.which !== 1) {
+        const isDisabled = $clickedNavLink.is(".disabled") || $clickedNavLink.attr("disabled") === "disabled";
+
+        if (e.which !== 1 || isDisabled) {
             return;
         }
 
@@ -226,10 +239,16 @@ $(document).ready(function () {
         const $nb = $navLink.parents(".my-navbar").first();
         const $searchContainer = $nb.find(".my-nav-search-container").first();
         const $modals = $(".my-modal");
+        const isRendered = ($navLink.attr("rendered") || "false").toBool();
+        const isDisabled = $navLink.is(".disabled") || $navLink.attr("disabled") === "disabled";
 
         for (let anim of runningAnims) {
             anim.seek(anim.duration);
             NavBarUtils.animsNavBar.remove(anim);
+        }
+
+        if (!isRendered || isDisabled) {
+            return;
         }
 
         if (!$nb.is(".shown") && !$navItem.is(".my-toggler, .my-home, .my-brand, .my-search, .my-login")) { // prevents hovering ddl if navbar is hiding

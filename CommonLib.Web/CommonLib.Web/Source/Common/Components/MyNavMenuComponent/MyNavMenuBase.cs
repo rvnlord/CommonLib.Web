@@ -9,13 +9,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavMenuComponent
     {
         protected override async Task OnParametersSetAsync()
         {
-            //if (IsItFirstParamSetup())
-            //{
-                //SetMainAndUserDefinedClasses("my-nav-menu", true);
-                _renderClasses = (AdditionalAttributes.VorN("class")?.ToString()?.Split(" ") ?? Array.Empty<string>()).Prepend("my-nav-menu").JoinAsString(" ");
-                //SetUserDefinedStyles(true); // don't render because it will override jquery set styles for animations
-                //SetUserDefinedAttributes(true);
-            //}
+            if (FirstParamSetup)
+            {
+                SetMainAndUserDefinedClasses("my-nav-menu");
+                SetUserDefinedStyles();
+                SetUserDefinedAttributes();
+            }
 
             await Task.CompletedTask;
         }

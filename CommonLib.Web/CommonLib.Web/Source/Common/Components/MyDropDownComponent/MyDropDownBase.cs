@@ -25,7 +25,6 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 {
     public class MyDropDownBase : MyComponentBase
     {
-        private BlazorParameter<InputState> _bpState;
         private Task<IJSObjectReference> _inputModuleAsync;
 
         protected string _propName { get; set; }
@@ -50,22 +49,6 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
         [Parameter]
         public BlazorParameter<string> SyncPaddingGroup { get; set; }
-
-        [Parameter]
-        public BlazorParameter<InputState> State
-        {
-            get
-            {
-                return _bpState ??= new BlazorParameter<InputState>(null);
-            }
-            set
-            {
-
-                if (value?.ParameterValue?.IsForced == true && _bpState?.HasValue() == true && _bpState.ParameterValue != value.ParameterValue)
-                    throw new Exception("State is forced and it cannot be changed");
-                _bpState = value;
-            }
-        }
 
         public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyInputBase).BeforeLast("Base"), NavigationManager, HttpClient);
     }
@@ -126,22 +109,6 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                     SelectedItem = EmptyItem;
             }
 
-            if (State.HasChanged())
-            {
-                State.ParameterValue ??= InputState.Disabled;
-
-                if (State.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
-                {
-                    AddAttribute("disabled", string.Empty);
-                    AddClass("disabled");
-                }
-                else
-                {
-                    RemoveAttribute("disabled");
-                    RemoveClass("disabled");
-                }
-            }
-
             if (SyncPaddingGroup.HasChanged() && SyncPaddingGroup.V?.IsNullOrWhiteSpace() != true)
                 AddAttribute("my-input-sync-padding-group", SyncPaddingGroup.V);
 
@@ -176,7 +143,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
         protected async Task DdlOption_ClickAsync(MouseEventArgs e, int? index, Guid ddlGuid)
         {
-            if (State.V.IsDisabledOrForceDisabled)
+            if (InteractionState.V.IsDisabledOrForceDisabled)
                 return;
 
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
@@ -216,7 +183,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
-            if (State.ParameterValue?.IsForced == true)
+            if (InteractionState.ParameterValue?.IsForced == true)
                 return;
 
             if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
@@ -230,13 +197,13 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
-                State.ParameterValue = InputState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
+                InteractionState.ParameterValue = ComponentState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
             }
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
-                State.ParameterValue = InputState.Enabled;
+                InteractionState.ParameterValue = ComponentState.Enabled;
 
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
             var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));

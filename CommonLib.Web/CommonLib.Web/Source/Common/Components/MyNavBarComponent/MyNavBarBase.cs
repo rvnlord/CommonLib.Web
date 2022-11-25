@@ -19,6 +19,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -134,6 +135,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             //var navLinks = ComponentsCache.Components.Where(c => c.Value.GetType() == typeof(MyNavLink)).ToDictionary(k => k.Key, v => (MyNavLink)v.Value);
             //var navLinkDotNetRefs = navLinks.ToDictionary(k => k.Key, v => DotNetObjectReference.Create(v.Value));
             await (await ModuleAsync).InvokeVoidAsync("blazor_Layout_AfterRender_SetupNavbar").ConfigureAwait(false);
+            await SetControlStateAsync(ComponentState.Enabled, this);
         }
 
         private async Task NavBar_WindowResized()
