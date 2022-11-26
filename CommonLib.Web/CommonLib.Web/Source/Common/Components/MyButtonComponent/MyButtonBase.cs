@@ -172,19 +172,18 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             IsValidationStateBeingChanged = true;
             
             if (CascadedEditContext == null)
-                InteractionState.ParameterValue = ComponentState.Enabled;
+                await SetControlStateAsync(ComponentState.Enabled, this);
             else
             {
-                InteractionState.ParameterValue = e.ValidationStatus switch
+                var state = e.ValidationStatus switch
                 {
                     ValidationStatus.Pending => SubmitsForm.ParameterValue == true ? ComponentState.Loading : ComponentState.Disabled,
                     ValidationStatus.Failure => ComponentState.Enabled,
                     ValidationStatus.Success => SubmitsForm.ParameterValue == true ? ComponentState.Loading : ComponentState.Disabled, // disabled regardless because the one thats submtting should not be reenabled between validation and submit so the user has no chance to fuck up the async feature of the whole thing, alt: SubmitsForm.ParameterValue == true ? ButtonState.Disabled : ButtonState.Enabled,
                     _ => ComponentState.Enabled
                 };
+                await SetControlStateAsync(state, this);
             }
-            
-            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
 
             IsValidationStateBeingChanged = false;
             _syncValidationStateBeingChanged.Release();

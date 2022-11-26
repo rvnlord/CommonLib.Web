@@ -7,6 +7,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyCssGridItemComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
@@ -33,6 +34,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
         protected LoginUserVM _loginUserVM;
+        protected MyCssGridItemBase _giAvatarContainer;
         
         public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
         
@@ -218,7 +220,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
 
             _btnCloseModal = Parent.Parent.Children.OfType<MyButtonBase>().Single(d => d.Classes.Contains("my-close"));
-            _allControls = GetInputControls().Append_(_btnCloseModal).ToArray();
+            _allControls = GetInputControls().Append_(_btnCloseModal).Append(_giAvatarContainer).ToArray();
 
             _btnLogin = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign In");
             _btnExternalLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.ExternalLogins.Select(l => l.DisplayName))).ToOrderedDictionary(b => b.Value.V, b => b);

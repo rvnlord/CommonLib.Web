@@ -123,11 +123,10 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             
             if (e.ValidationMode == ValidationMode.Model)
             {
-                InteractionState = e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success) 
+                var state = e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success) 
                     ? ComponentState.Disabled 
                     : ComponentState.Enabled;
-                await NotifyParametersChangedAsync();
-                await StateHasChangedAsync(true);
+                await SetControlStateAsync(state, this);
             }
         }
     }

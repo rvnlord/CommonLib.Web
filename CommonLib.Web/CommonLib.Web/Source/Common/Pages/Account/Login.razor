@@ -116,7 +116,7 @@
             Padding="StylesConfig.Gutter.Px()" 
             Gap="StylesConfig.Gutter.Px()" 
             Template="@(new CssGridLayout("150px auto", "repeat(2, auto)"))">
-            <MyCssGridItem>
+            <MyCssGridItem @ref="_giAvatarContainer">
                 <div>
                     <div class="logged-user-avatar-container">
                         @if (AuthenticatedUser.Avatar is null)

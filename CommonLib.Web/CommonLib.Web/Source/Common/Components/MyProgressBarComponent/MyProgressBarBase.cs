@@ -114,12 +114,13 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
 
             await _syncValidationStateBeingChanged.WaitAsync();
             IsValidationStateBeingChanged = true;
-            
+
+            ComponentState state;
             if (CascadedEditContext == null)
-                InteractionState.ParameterValue = ComponentState.Enabled;
+                state = ComponentState.Enabled;
             else
             {
-                InteractionState.ParameterValue = e.ValidationStatus switch
+                state = e.ValidationStatus switch
                 {
                     ValidationStatus.Pending => ComponentState.Disabled,
                     ValidationStatus.Failure => ComponentState.Enabled,
@@ -128,7 +129,7 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 };
             }
             
-            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+            await SetControlStateAsync(state, this);
 
             IsValidationStateBeingChanged = false;
             await _syncValidationStateBeingChanged.ReleaseAsync();

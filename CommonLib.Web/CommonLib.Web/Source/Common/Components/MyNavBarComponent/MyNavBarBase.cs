@@ -18,6 +18,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyNavItemComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -28,6 +29,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 {
     public class MyNavBarBase : MyComponentBase
     {
+        public bool IsSetupCompleted { get; set; }
+
         //protected string _hidden { get; set; }
         protected DotNetObjectReference<MyNavBarBase> _navBarDotNetRef { get; set; }
         //protected Task<IJSObjectReference> _modalModuleAsync;
@@ -124,8 +127,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)
+            if (firstRender || IsDisposed)
                 return;
+            
+            //var navitems = Descendants.OfType<MyNavItemBase>().Where(c => c.InteractionState.V.State != ComponentStateKind.Enabled).ToArray();
+            //await SetControlStatesAsync(ComponentState.Enabled, navitems);
 
             await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterRender");
         }
@@ -135,7 +141,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             //var navLinks = ComponentsCache.Components.Where(c => c.Value.GetType() == typeof(MyNavLink)).ToDictionary(k => k.Key, v => (MyNavLink)v.Value);
             //var navLinkDotNetRefs = navLinks.ToDictionary(k => k.Key, v => DotNetObjectReference.Create(v.Value));
             await (await ModuleAsync).InvokeVoidAsync("blazor_Layout_AfterRender_SetupNavbar").ConfigureAwait(false);
-            await SetControlStateAsync(ComponentState.Enabled, this);
+            //await SetControlStateAsync(ComponentState.Enabled, this);
+            IsSetupCompleted = true;
         }
 
         private async Task NavBar_WindowResized()

@@ -89,6 +89,8 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 
             //await Task.WhenAll(notifyParamsChangedTasks);
             //await Task.WhenAll(changeStateTasks);
+
+            await Task.CompletedTask;
         }
         
         protected async Task InputText_Input(ChangeEventArgs e)

@@ -52,7 +52,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-            await StateHasChangedAsync(true);
+            //await StateHasChangedAsync(true);
         }
 
         protected async Task BtnSubmit_ClickAsync()
@@ -68,7 +68,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             if (!await _editContext.ValidateAsync())
                 return;
-            
+
             await WaitForControlsToRerenderAsync(_allControls);
 
             var editResponse = await AccountClient.EditAsync(_editUserVM);
@@ -82,7 +82,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             Mapper.Map(editResponse.Result, _editUserVM);
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
-            
+
             AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
             await EnsureAuthenticationPerformedAsync(false, true);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))

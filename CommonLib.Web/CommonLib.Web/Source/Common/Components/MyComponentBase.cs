@@ -48,6 +48,7 @@ using CommonLib.Web.Source.Common.Components.MyRadioButtonComponent;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
 using Keras;
+using static NBitcoin.Protocol.Behaviors.ChainBehavior;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -192,6 +193,8 @@ namespace CommonLib.Web.Source.Common.Components
                 return children;
             }
         }
+
+        public List<MyComponentBase> ChildrenAndSelf => Children.Prepend_(this).ToList();
 
         public List<MyComponentBase> Descendants
         {
@@ -395,19 +398,28 @@ namespace CommonLib.Web.Source.Common.Components
 
             if (DisabledByDefault.HasChanged())
                 DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
-            
+
             var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
+            //Logger.For(GetType()).Info($"{GetType().Name}: Setting params - state changed: c: {(InteractionState.HasChanged() ? "true" : "false")}, p: {(parentState is not null ? "true" : "false")} | state: c: {InteractionState.V}, P: {parentState}");
             if (InteractionState.HasChanged() || parentState is not null)
             {
-                InteractionState.ParameterValue = parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true ? Utils.UtilClasses.ComponentState.Disabled : Utils.UtilClasses.ComponentState.Enabled);
-
-                if (InteractionState.ParameterValue.IsDisabledOrForceDisabled) // Disabled or ForceDisabled
+                InteractionState.ParameterValue = parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true ? ComponentState.Disabled : ComponentState.Enabled);
+                
+                if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
                 {
+                    RemoveClasses("my-loading");
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
                 }
+                else if (InteractionState.ParameterValue.IsLoadingOrForceLoading)
+                {
+                    RemoveClasses("disabled");
+                    RemoveAttribute("disabled");
+                    AddClass("my-loading");
+                }
                 else
                 {
+                    RemoveClasses("my-loading");
                     RemoveAttribute("disabled");
                     RemoveClass("disabled");
                 }
@@ -475,18 +487,18 @@ namespace CommonLib.Web.Source.Common.Components
                 IsRerendered = true;
                 _firstRenderAfterInit = false;
             }
-            catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)
+            catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException or JSDisconnectedException)
             {
                 //Logger.For<MyComponentBase>().Warn("'OnAfterRenderAsync' was canceled, disposed component?");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (!IsDisposed)
                     throw;
             }
             finally
             {
-                if (_syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
+                if (!IsDisposed && _syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
                     await _syncRender.ReleaseAsync();
             }
         }
@@ -495,7 +507,9 @@ namespace CommonLib.Web.Source.Common.Components
         {
             await _syncAfterSessionIdSet.WaitAsync();
 
-            if (IsDisposed || _isCommonLayout || Layout is null || _sessionIdAlreadySet)
+            if (IsDisposed)
+                return; // semaphore is disposed on component dispose
+            if (_isCommonLayout || Layout is null || _sessionIdAlreadySet)
             {
                 await _syncAfterSessionIdSet.ReleaseAsync();
                 return;
@@ -536,6 +550,8 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected async Task<ComponentAuthenticationStatus> AuthenticateAsync(bool changeStateEvenIfAuthUserIsTheSame)
         {
+            if (IsDisposed)
+                throw new ObjectDisposedException(GetType().Name);
             var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
             var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
@@ -626,12 +642,6 @@ namespace CommonLib.Web.Source.Common.Components
                 Classes.AddRange(classes.Prepend_(cls).Where(c => !c.IsNullOrWhiteSpace() && !c.In(Classes)));
             Classes.ReplaceAll(Classes.Distinct());
             _renderClasses = Classes.JoinAsString(" ");
-            
-            if (_renderClasses.Contains("my-dropup my-dropup"))
-            {
-                var t = 0;
-            }
-
             _syncClasses.Release();
 
             return this;
@@ -648,11 +658,6 @@ namespace CommonLib.Web.Source.Common.Components
                 Classes.AddRange(classes.Where(c => !c.IsNullOrWhiteSpace()));
             Classes.ReplaceAll(Classes.Distinct());
             _renderClasses = Classes.JoinAsString(" ");
-
-            if (_renderClasses.Contains("my-dropup my-dropup"))
-            {
-                var t = 0;
-            }
 
             _syncClasses.Release();
 
@@ -1052,30 +1057,31 @@ namespace CommonLib.Web.Source.Common.Components
         protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
             var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
+            if (!arrControlsToChangeState.Any())
+                return;
             if (componentLoading is not null && !componentLoading.InteractionState.V.IsForced)
                 componentLoading.InteractionState.ParameterValue = ComponentState.Loading;
 
-            var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => c.NotifyParametersChangedAsync());
-            var changeStateTasks = new Dictionary<MyComponentBase, Task>();
+            var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => new Func<Task<MyComponentBase>>(async () => await c.NotifyParametersChangedAsync()));
+            var changeStateTasks = new Dictionary<MyComponentBase, Func<Task<MyComponentBase>>>();
             foreach (var control in arrControlsToChangeState)
             {
-                if (control.InteractionState is null || control.InteractionState.V.IsForced)
-                    continue;
-
-                control.InteractionState.ParameterValue = state;
+                var c = control;
+                if (c.InteractionState is not null && !c.InteractionState.V.IsForced && c != componentLoading)
+                    c.InteractionState.ParameterValue = state;
                 if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent)) 
                     continue;
                 
-                changeStateTasks[control] = control.StateHasChangedAsync(true);
+                changeStateTasks[c] = async () => await c.StateHasChangedAsync(true);
             }
 
             if (changeRenderingState.In(ChangeRenderingStateMode.Current, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
-                changeStateTasks[this] = StateHasChangedAsync(true);
-            
+                changeStateTasks[this] = async () => await StateHasChangedAsync(true);
+
             ClearControlsRerenderingStatus(changeStateTasks.Keys);
-            await Task.WhenAll(notifyParamsChangedTasks.Values);
-            var t1 = notifyParamsChangedTasks.Keys.ToDictionary(c => c, c => c.InteractionState.V);
-            await Task.WhenAll(changeStateTasks.Values);
+            //Logger.For(GetType()).Info($"{GetType().Name}: SetControlStatesAsync({state}) - notifying {notifyParamsChangedTasks.Keys.Count} controls parameters changed ({notifyParamsChangedTasks.Keys.Select(c => c.GetType().Name).JoinAsString(", ")})");
+            await Task.WhenAll(notifyParamsChangedTasks.Values.Select(t => t.Invoke()));
+            await Task.WhenAll(changeStateTasks.Values.Select(t => t.Invoke()));
             await WaitForControlsToRerenderAsync(changeStateTasks.Keys);
         }
 
@@ -1125,6 +1131,8 @@ namespace CommonLib.Web.Source.Common.Components
                 //    _syncComponentsCache.Dispose();
                 //}
                 
+                _syncRender?.Dispose();
+                _syncAfterSessionIdSet?.Dispose();
                 _syncClasses?.Dispose();
                 _syncStyles?.Dispose();
                 _syncAttributes?.Dispose();

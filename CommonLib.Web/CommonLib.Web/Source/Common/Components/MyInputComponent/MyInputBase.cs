@@ -79,14 +79,13 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
-                InteractionState.ParameterValue = ComponentState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
-                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+                await SetControlStateAsync(ComponentState.Disabled, this);
                 return;
             }
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
             {
-                InteractionState.ParameterValue = ComponentState.Enabled;
+                await SetControlStateAsync(ComponentState.Enabled, this);
                 //if (this is MyFileUploadBase fileUpload)
                 //{
                 //    var btnsForManyFiles = fileUpload.Children?.OfType<MyButtonBase>().Where(b => b.Model?.V is null).ToArray();

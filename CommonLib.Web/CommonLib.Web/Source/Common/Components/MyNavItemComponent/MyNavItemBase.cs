@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
@@ -7,6 +8,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
@@ -16,9 +18,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
 {
     public class MyNavItemBase : MyComponentBase
     {
+        //private MyComponentBase[] _navItemAndNavLink => this.ToArrayOfOne().Cast<MyComponentBase>().Concat(Children.OfType<MyNavLinkBase>()).ToArray();
+        private MyNavLinkBase _disabledNavLink => Children.OfType<MyNavLinkBase>().SingleOrDefault(nl => nl.InteractionState.V.IsDisabledOrForceDisabled);
+
         [Parameter]
         public IconType Icon { get; set; }
-
+        
         [Parameter]
         public string To { get; set; }
 
@@ -55,8 +60,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
                 var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent  
                 AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
                 if (!AuthenticatedUser.Equals(prevAuthUser))
-                    await StateHasChangedAsync();
+                    await StateHasChangedAsync(true);
             }
+
+            if (_disabledNavLink is not null)
+                await SetControlStateAsync(ComponentState.Enabled, _disabledNavLink);
         }
     }
 

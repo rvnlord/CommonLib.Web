@@ -118,14 +118,10 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             
             if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
-                InteractionState.ParameterValue = ComponentState.Disabled; // new InputState(InputStateKind.Disabled, State.ParameterValue?.IsForced == true); // not needed because we won't end up here if state is forced
-                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+                await SetControlStateAsync(ComponentState.Disabled, this);
                 return;
             }
-
-            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
-                InteractionState.ParameterValue = ComponentState.Enabled;
-
+            
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
             var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));
             var wasValidationSuccessful = e.ValidationStatus == ValidationStatus.Success;
@@ -136,7 +132,8 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
             else if (validationFailed && wasCurrentFieldValidated)
                 AddClasses("my-invalid");
 
-            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
+            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
+                await SetControlStateAsync(ComponentState.Enabled, this);
         }
 
     }
