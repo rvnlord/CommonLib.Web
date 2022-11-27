@@ -574,13 +574,28 @@ Object.defineProperty(Array.prototype, "min", {
     configurable: true
 });
 
+Object.defineProperty(Array.prototype, "single", {
+    value: function (selector = x => x) {
+        const arr = this.filter(selector);
+        if (!Array.isArray(arr))
+            throw new Error("Not an array");
+        if (arr.length > 1)
+            throw new Error("Array contains more thaan one element");
+        if (arr.length < 1)
+             throw new Error("Array contains no elements");
+        return arr[0];
+    },
+    writable: true,
+    configurable: true
+});
+
 Object.defineProperty(Array.prototype, "singleOrNull", {
     value: function (selector = x => x) {
         const arr = this.filter(selector);
         if (!Array.isArray(arr))
             throw new Error("Not an array");
         if (arr.length > 1)
-            throw new Error("Array should contain only one element");
+            throw new Error("Array contains more than one element");
         if (arr.length < 1)
             return null;
         return arr[0] ? arr[0] : null;

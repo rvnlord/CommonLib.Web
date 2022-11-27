@@ -71,7 +71,7 @@ export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs
 }
 
 export function blazor_NavBar_SetNavLinksActiveClasses() {
-    NavBarUtils.setNavLinksActiveClasses(null, null, true);
+    NavBarUtils.setNavLinksActiveClasses(null, null);
 }
 
 $(document).ready(function () {
@@ -188,7 +188,7 @@ $(document).ready(function () {
         }
 
         await NavLinkUtils.navigateAsync($clickedNavLink.guid());
-        NavBarUtils.setNavLinksActiveClasses(null, null, true);
+        NavBarUtils.setNavLinksActiveClasses(null, null);
     });
 
     $(document).on("mousedown", "body", function (e) { // hide nav-menus on clicking sth else
@@ -225,7 +225,7 @@ $(document).ready(function () {
         }
 
         NavBarUtils.runAnims();
-        NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
+        NavBarUtils.setNavLinksActiveClasses();
     });
 
     $(document).on("mouseenter", ".my-nav-item > .my-nav-link", async function () { // [rendered='true']:not([disabled])

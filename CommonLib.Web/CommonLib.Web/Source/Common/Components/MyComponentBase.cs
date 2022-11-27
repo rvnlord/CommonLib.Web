@@ -1064,7 +1064,7 @@ namespace CommonLib.Web.Source.Common.Components
             {
                 var arrControls = controls.ToArray();
                 return arrControls.All(c => c.IsRerendered || c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
-            }, 25, 10000);
+            }, 25, 100000); // TODO
             ClearControlsRerenderingStatus(controls);
         }
 
@@ -1127,6 +1127,13 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         public bool HasClass(string cls) => Classes.Contains(cls);
+
+        public async Task<TComponent> NavigateAndUpdateActiveNavLinksAsync<TComponent>(string url) where TComponent : MyComponentBase
+        {
+            NavigationManager.NavigateTo(url);
+            await (await NavBar.ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+            return (TComponent) this;
+        }
 
         protected virtual async Task DisposeAsync(bool disposing)
         {

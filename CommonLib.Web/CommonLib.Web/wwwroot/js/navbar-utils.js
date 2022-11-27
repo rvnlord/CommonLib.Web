@@ -1,4 +1,9 @@
-﻿export class NavBarUtils {
+﻿/// <reference path="wrapper.js" />
+
+import Wrapper from "./wrapper.js";
+import utils from "./utils.js";
+
+export class NavBarUtils {
     static animsNavBar = [];
     static NavLinksInitCss = {};
     static NavBarInitCss = {};
@@ -496,31 +501,35 @@
         }
     }
 
-    static setNavLinksActiveClasses($clickedNavLink, $visibleNavMenu, clearAll) {
-        if ($clickedNavLink) {
-            const $clickedNavItem = $clickedNavLink.parents(".my-nav-item").first();
-
-            if (!$clickedNavItem.is(".my-nav-item.my-search, .my-nav-item.my-login, .my-nav-item.my-toggler, .my-nav-item.my-brand")) { // only if valid nav-link was clicked
-                var $allValidNavLinks = $clickedNavLink.parents(".my-navbar").find(".my-nav-link[href]");
-                $allValidNavLinks.removeClass("active");
-                var $navLinksToActivate = $allValidNavLinks.$toArray().filter(nl => nl.attr("href").toLowerCase() === $clickedNavLink.attr("href").toLowerCase()); // get all nav-links having link to the same page as clicked nav-link
-                for (let $nlta of $navLinksToActivate) {
-                    $nlta.addClass("active"); // this is the only situation that warrants setting active link manually (on non-dropdown link click) because blazor won't pick it up since the page wasn't rerendered
-                }
-                // too late $clickedNavLink.removeClass("hovered").addClass("hovered"); // reassign hovered class in case if blazor called OnParametersSet 
-            }
-            NavBarUtils.$ActiveNavLink = $clickedNavLink;
+    static setNavLinksActiveClasses($clickedNavLink = null, $visibleNavMenu = null) {
+        $clickedNavLink = $clickedNavLink || null;
+        $visibleNavMenu = $visibleNavMenu || null;
+        let desiredUrl;
+        if (utils.isNull($clickedNavLink) || !$clickedNavLink.attr("href")) {
+            $clickedNavLink = null;
+            desiredUrl = Wrapper.$($(".my-navbar").find(".my-nav-link[href].active")).$toArray().distinctBy($nl => $nl.attr("href").toLowerCase()).singleOrNull().to$OrNull().attrOrNull("href").toLowerOrNull().unwrap() || window.location.href; // second case is when clicked nav-link is null and no links are currently active (i.e.: after logout from authorised page which after refresh is no longer on navbar)
+        } else if (utils.is$($clickedNavLink)) {
+            $clickedNavLink = $clickedNavLink;
+            desiredUrl = $clickedNavLink.attr("href");
+        } else if (utils.isString($clickedNavLink)) {
+            $clickedNavLink = null;
+            desiredUrl = $clickedNavLink;
         }
 
-        if (clearAll) { // non-navbar link
-            var allNavLinksWithUrl = $(".my-navbar").find(".my-nav-link[href]");
-            allNavLinksWithUrl.removeClass("active");
-            NavBarUtils.$ActiveNavLink = null;
+        if (!desiredUrl) {
+            throw new Error("URL can't be empty");
         }
 
-        $(".my-nav-item > .my-nav-link").removeClass("active-descendant");
-
+        NavBarUtils.$ActiveNavLink = $clickedNavLink;
+        
         for (let $navBar of $(".my-navbar").$toArray()) {
+            const nbNavLinksWithUrl = $navBar.find(".my-nav-link[href]");
+            nbNavLinksWithUrl.removeClass("active");
+            $navBar.find(".my-nav-item > .my-nav-link").removeClass("active-descendant");
+
+            const $navLinksToActivate = Wrapper.$(nbNavLinksWithUrl).$toArray().where($nl => Wrapper.string($nl.attr("href")).equalsIgnoreCase(desiredUrl).unwrap());
+            $navLinksToActivate.forEach($nl => $nl.addClass("active"));
+
             const $upperVisibleContainers = $visibleNavMenu
                 ? $visibleNavMenu.parentsUntil($navBar).filter(".my-nav-menu").add($navBar).add($visibleNavMenu)
                 : $navBar;

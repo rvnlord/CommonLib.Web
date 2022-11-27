@@ -1,4 +1,6 @@
-﻿export default class utils {
+﻿import _ from "../libs/libman/underscore/underscore-esm.js";
+
+export default class utils {
     static guid = () => {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
@@ -213,4 +215,16 @@
             return false;
         }
     }
-}56
+
+    static isString(str) {
+        return _.isString(str);
+    }
+
+    static is$($selector) {
+        return $selector instanceof jQuery;
+    }
+
+    static isNull(item) {
+        return _.isNull(item);
+    }
+}
