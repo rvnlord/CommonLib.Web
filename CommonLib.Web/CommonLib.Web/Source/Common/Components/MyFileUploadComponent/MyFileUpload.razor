@@ -45,10 +45,10 @@
                 @foreach (var file in ValidFiles) 
                 {
                     <div class="my-fileupload-progressbar-checkbox-container">
-                        <MyCheckBox Validate="false" Model="file" For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>
+                        <MyCheckBox DisabledByDefault="false" Validate="false" Model="file" For="@(() => file.IsSelected)" DisplayLabel="false" @key=file></MyCheckBox>
                     </div>
                     <div class="my-fileupload-progressbar-container">
-                        <MyProgressBar Validate="false" Model="file" For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" @key=file />
+                        <MyProgressBar DisabledByDefault="false" Validate="false" Model="file" For="@(() => file.Progress)" Description="file.NameExtensionAndSize" Sizing="ProgressBarSizing.LineHeight" @key=file />
                     </div>
                     @if (file.Status == UploadStatus.NotStarted)
                     {

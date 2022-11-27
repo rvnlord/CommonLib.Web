@@ -104,6 +104,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await JQuery.QueryOneAsync(_guid).AttrAsync("rendered", "true");
+            //await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterRender", _guid);
         }
 
         [JSInvokable]

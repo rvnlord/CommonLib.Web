@@ -140,7 +140,7 @@ export async function blazor_FileUpload_SetThumbnail(guid, name, extension, tota
     const thumbnail = FileUploadUtils._fileUploadsCache.addIfNotExistsAndGet(guid, {}).addIfNotExistsAndGet("files", {}).addIfNotExistsAndGet(fileId, {}).thumbnail || null;
     const file = FileUploadUtils._fileUploadsCache[guid]["files"][fileId].file || null;
     if (!file) {
-        if (noThumbnailImage) {
+        if (noThumbnailImage && !name && !extension) {
             $fileUploadThumbnailContainer.css("background-image", `url('${noThumbnailImage}#t=${new Date().getTime()}')`);
             $fileUploadThumbnailContainer.empty();
         } else {

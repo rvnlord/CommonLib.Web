@@ -60,8 +60,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!_resetPasswordUserVM.Email.IsNullOrWhiteSpace() && !_resetPasswordUserVM.ResetPasswordCode.IsNullOrWhiteSpace())
                 await _editContext.ValidateFieldAsync(() => _resetPasswordUserVM.ResetPasswordCode);
-            
-            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+
+            _allControls = GetInputControls();
             _btnResetPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);

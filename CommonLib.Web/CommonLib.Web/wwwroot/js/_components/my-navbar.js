@@ -228,7 +228,7 @@ $(document).ready(function () {
         NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
     });
 
-    $(document).on("mouseenter", ".my-nav-item > .my-nav-link", async function () {
+    $(document).on("mouseenter", ".my-nav-item > .my-nav-link", async function () { // [rendered='true']:not([disabled])
         const navLink = this;
         const $navLink = $(navLink);
         const $navItem = $navLink.parents(".my-nav-item").first();
@@ -248,13 +248,16 @@ $(document).ready(function () {
         }
 
         if (!isRendered || isDisabled) {
+            $navLink.mouseleave();
             return;
         }
 
         if (!$nb.is(".shown") && !$navItem.is(".my-toggler, .my-home, .my-brand, .my-search, .my-login")) { // prevents hovering ddl if navbar is hiding
+            $navLink.mouseleave();
             return;
         }
         if ($searchContainer.is(".shown") && !$navLink.parent().hasClass("my-search") || $modals.is(".shown")) {// is implies any
+            $navLink.mouseleave();
             return;
         }
 
@@ -339,7 +342,7 @@ $(document).ready(function () {
         const navLinkIcons = $navlink.parent(".my-nav-item").find("div > svg > path").parent().parent().toArray().filter(ni => $(ni).classes().length > 1 && ($(ni).parent().is($navlink) || $(ni).parent().is($navlink.parent()))).map(ni => $(ni).find("path")[0]); // all 4 icons: magnifying glass, x and the same for xs displays need to be animated simulatanously because we don't know which one user ends up needing (and it might stay white if we don't animate it) 
         const runningAnims = anime.running.filter(a => a.animatables.map(tbl => tbl.target).containsAny([navLink, navLinkContent, ...navLinkIcons]));
 
-        console.log("[\"mouseleave\", \".my-nav-item > .my-nav-link\"] let anim of runningAnims, seek, remove");
+        //console.log("[\"mouseleave\", \".my-nav-item > .my-nav-link\"] let anim of runningAnims, seek, remove");
         for (let anim of runningAnims) {
             anim.seek(anim.duration);
             NavBarUtils.animsNavBar.remove(anim);
@@ -350,7 +353,7 @@ $(document).ready(function () {
 
         const initCss = NavBarUtils.NavLinksInitCss[$navlink.attr("my-guid")];
 
-        console.log("[\"mouseleave\", \".my-nav-item > .my-nav-link\"] let anim of runningAnims, create, run anims");
+        //console.log("[\"mouseleave\", \".my-nav-item > .my-nav-link\"] let anim of runningAnims, create, run anims");
         NavBarUtils.animsNavBar.push(anime({
             targets: navLink,
             //boxShadow: ["0 0 6px 2px rgb(255, 255, 255)", initCss["box-shadow"]],

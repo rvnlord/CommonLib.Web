@@ -67,13 +67,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
-            
+
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
-            await StateHasChangedAsync(); // to re-render External Login Buttons and get their references using @ref in .razor file
+            await StateHasChangedAsync(true); // to re-render External Login Buttons and get their references using @ref in .razor file
             SetControls();
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, null, ChangeRenderingStateMode.AllSpecified); // disable External Login Buttons
-            
+
             if (!HasAuthenticationStatus(AuthStatus.Authenticated)) // try to authorize with what is present in queryStrings, possibly from an external provider
             {
                 var remoteStatus = NavigationManager.GetQueryString<string>("remoteStatus")?.ToEnumN<NotificationType>();
@@ -86,7 +86,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 }
 
                 var queryUser = NavigationManager.GetQueryString<string>("user")?.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
-                
+
                 if (queryUser != null)
                 {
                     await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false); //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
@@ -96,8 +96,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                     Mapper.Map(queryUser, _loginUserVM);
 
                     _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Loading;
-                    await StateHasChangedAsync();
-                    
+                    await StateHasChangedAsync(true);
+
                     await ExternalLoginAuthorizeAsync(queryUser);
                     return;
                 }
@@ -117,7 +117,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (isFirstRender || IsDisposed)
                 return;
 
-            if (await EnsureAuthenticationChangedAsync(false, false))
+            if (await EnsureAuthenticationPerformedAsync(false, false)) // not changed because change may be frontrun by components updating it earlier
             {
                 SetControls();
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
@@ -162,11 +162,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, loginResult.Message);
             if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace())
                 NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
+            
+            await HideLoginModalAsync();
 
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
-            if (await EnsureAuthenticationChangedAsync(true, false))
+            if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
             {
                 SetControls();
+                AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
@@ -203,11 +205,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             await PromptMessageAsync(NotificationType.Success, logoutResult.Message);
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             _loginUserVM.UserName = null;
             _loginUserVM.Password = null;
 
-            if (await EnsureAuthenticationChangedAsync(true, false))
+            await HideLoginModalAsync();
+
+            if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
             {
                 SetControls();
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
@@ -220,7 +223,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
 
             _btnCloseModal = Parent.Parent.Children.OfType<MyButtonBase>().Single(d => d.Classes.Contains("my-close"));
-            _allControls = GetInputControls().Append_(_btnCloseModal).Append(_giAvatarContainer).ToArray();
+            _allControls = GetInputControls().Append_(_btnCloseModal).AppendIfNotNull(_giAvatarContainer).ToArray();
 
             _btnLogin = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign In");
             _btnExternalLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.ExternalLogins.Select(l => l.DisplayName))).ToOrderedDictionary(b => b.Value.V, b => b);

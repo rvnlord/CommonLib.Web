@@ -29,7 +29,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         protected ForgotPasswordUserVM _forgotPasswordUserVM { get; set; }
-        
+
         protected override async Task OnInitializedAsync()
         {
             var inheritedReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?");
@@ -51,7 +51,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _allControls = GetInputControls();
             _btnForgotPassword = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
@@ -94,7 +94,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         }
 
         private async Task SetUserNameAsync() => _forgotPasswordUserVM.UserName = (await AccountClient.FindUserByEmailAsync(_forgotPasswordUserVM.Email))?.Result?.UserName;
-        
+
         protected string GetNavQueryStrings()
         {
             return new OrderedDictionary<string, string>

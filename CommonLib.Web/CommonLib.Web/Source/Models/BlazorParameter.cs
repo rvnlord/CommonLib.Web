@@ -12,7 +12,8 @@ namespace CommonLib.Web.Source.Models
     {
         public static BlazorParameter<Expression<Func<TValue>>> BP<TValue>(Expression<Func<TValue>> parameterValue) => new(parameterValue);
         public static BlazorParameter<TParameter> BP<TParameter>(TParameter parameterValue) => new(parameterValue);
-        public static BlazorParameter<MyAsyncEventHandler<TSender, TEventArgs>> BP<TSender, TEventArgs>(Expression<Func<TSender, TEventArgs, CancellationToken, Task>> parameterValue) where TSender : MyComponentBase where TEventArgs : EventArgs => new(new MyAsyncEventHandler<TSender, TEventArgs>(parameterValue.Compile()));
+        public static BlazorParameter<MyAsyncEventHandler<TSender, TEventArgs>> BP<TSender, TEventArgs>(MyAsyncEventHandler<TSender, TEventArgs> parameterValue) where TSender : MyComponentBase where TEventArgs : EventArgs => new(parameterValue);
+        //public static BlazorParameter<MyAsyncEventHandler<TSender, TEventArgs>> BP<TSender, TEventArgs>(Expression<Func<TSender, TEventArgs, CancellationToken, Task>> parameterValue) where TSender : MyComponentBase where TEventArgs : EventArgs => new(new MyAsyncEventHandler<TSender, TEventArgs>(parameterValue.Compile()));
     }
 
     public class BlazorParameter<T> : BlazorParameter   

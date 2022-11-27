@@ -64,6 +64,7 @@ namespace CommonLib.Web.Source.Common.Components
         private bool _firstParamSetup;
         private bool _isInitialized;
         private BlazorParameter<ComponentState> _bpState;
+        private bool _preventRenderOnce;
 
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncClasses = new(1, 1);
@@ -94,7 +95,23 @@ namespace CommonLib.Web.Source.Common.Components
         protected OrderedDictionary<string, string> _attributes { get; } = new();
         protected BlazorParameter<MyComponentBase> _bpParentToCascade { get; set; }
       
-        protected bool _isCommonLayout
+        public List<string> Classes { get; } = new();
+        public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
+        public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
+        public Task<IJSObjectReference> PromptModuleAsync
+        {
+            get
+            {
+                if (IsCommonLayout)
+                    return _promptModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyPromptBase).BeforeLast("Base"), NavigationManager, HttpClient);
+                return LayoutParameter?.ParameterValue.PromptModuleAsync;
+            }
+        }
+        public bool IsRendered => !_firstRenderAfterInit;
+        public bool IsDisposed { get; set; }
+        public bool FirstParamSetup => _firstParamSetup;
+        public bool IsRerendered { get; set; } // to be set manually on demand
+        public bool IsCommonLayout
         {
             get
             {
@@ -103,7 +120,7 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        protected bool _isLayout
+        public bool IsLayout
         {
             get
             {
@@ -112,25 +129,8 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public List<string> Classes { get; } = new();
-
-        public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
-        public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
-        public Task<IJSObjectReference> PromptModuleAsync
-        {
-            get
-            {
-                if (_isCommonLayout)
-                    return _promptModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyPromptBase).BeforeLast("Base"), NavigationManager, HttpClient);
-                return LayoutParameter?.ParameterValue.PromptModuleAsync;
-            }
-        }
-
-        public bool IsRendered => !_firstRenderAfterInit;
-        public bool IsDisposed { get; set; }
-        public bool FirstParamSetup => _firstParamSetup;
-        public bool IsRerendered { get; set; } // to be set manually on demand
-
+        public bool IsPage => GetType().Namespace?.Split('.').Contains("Pages") == true;
+        
         public Guid SessionId
         {
             get
@@ -232,21 +232,23 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
-        public List<MyComponentBase> Siblings => Parent.Children.Except(this).ToList();
+        public List<MyComponentBase> Siblings => Parent is not null ? Parent.Children.Except(this).ToList() : Layout.Components.Values.Where(c => !c.IsLayout && !c.IsCommonLayout && c.Parent is null && c != this).ToList();
 
         public AuthenticateUserVM AuthenticatedUser
         {
-            get => !_isCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
+            get => !IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
             set
             {
-                var authUser = (!_isCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
+                var authUser = (!IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
                 authUser = Mapper.Map(value, authUser);
-                if (!_isCommonLayout)
+                if (!IsCommonLayout)
                     Layout.AuthenticatedUser = authUser;
                 else
                     _authenticatedUser = authUser;
             }
         }
+
+        public MyNavBarBase NavBar => Layout.Components.Values.OfType<MyNavBarBase>().Single();
 
         public bool AdditionalAttributesHaveChanged { get; private set; }
 
@@ -348,7 +350,7 @@ namespace CommonLib.Web.Source.Common.Components
                 if (_guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
                     _guid = Guid.NewGuid();
                 _bpParentToCascade = new BlazorParameter<MyComponentBase>(this);
-                if (_isCommonLayout) // set LayoutComponentBase_Layout as generic layout
+                if (IsCommonLayout) // set LayoutComponentBase_Layout as generic layout
                 {
                     var thisAsLayout = (MyLayoutComponentBase)this;
                     thisAsLayout._bpLayoutToCascade = new BlazorParameter<MyLayoutComponentBase>(thisAsLayout);
@@ -401,6 +403,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
             //Logger.For(GetType()).Info($"{GetType().Name}: Setting params - state changed: c: {(InteractionState.HasChanged() ? "true" : "false")}, p: {(parentState is not null ? "true" : "false")} | state: c: {InteractionState.V}, P: {parentState}");
+            
             if (InteractionState.HasChanged() || parentState is not null)
             {
                 InteractionState.ParameterValue = parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true ? ComponentState.Disabled : ComponentState.Enabled);
@@ -444,7 +447,7 @@ namespace CommonLib.Web.Source.Common.Components
                 
                 if (_firstRenderAfterInit)
                 {
-                    if (_isCommonLayout)
+                    if (IsCommonLayout)
                     {
                         await SetSessionIdAsync();
                         //SessionCache.AddIfNotExistsAndGet(SessionId, new SessionCacheData()).CurrentLayout = (MyLayoutComponentBase)this;
@@ -509,7 +512,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             if (IsDisposed)
                 return; // semaphore is disposed on component dispose
-            if (_isCommonLayout || Layout is null || _sessionIdAlreadySet)
+            if (IsCommonLayout || Layout is null || _sessionIdAlreadySet)
             {
                 await _syncAfterSessionIdSet.ReleaseAsync();
                 return;
@@ -535,9 +538,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected virtual async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize) => await Task.CompletedTask;
-
-        protected virtual bool ShouldRender() => !PreventRender;
-
+        
         protected Task InvokeAsync(Action workItem) => _renderHandle.Dispatcher.InvokeAsync(workItem);
 
         protected Task InvokeAsync(Func<Task> workItem) => _renderHandle.Dispatcher.InvokeAsync(workItem);
@@ -555,54 +556,61 @@ namespace CommonLib.Web.Source.Common.Components
             var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
             var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
-            Logger.For(GetType()).Info($"Setting Auth user to {authResponse.Result}");
-            AuthenticatedUser = authResponse.Result;
+            //Logger.For(GetType()).Info($"Setting Auth user to {authResponse.Result}");
+
+            var authPerformed = !authResponse.IsError;
+            var authChanged = !authResponse.Result.Equals(prevAuthUser);
+            var authSuccessful = !authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated);
 
             var authStatus = new ComponentAuthenticationStatus
             {
-                AuthenticationPerformed = !authResponse.IsError,
-                AuthenticationChanged = !AuthenticatedUser.Equals(prevAuthUser),
-                AuthenticationSuccessful = !authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated),
-                ResponseMessage = authResponse.Message
+                AuthenticationPerformed = authPerformed,
+                AuthenticationChanged = authChanged,
+                AuthenticationSuccessful = authSuccessful,
+                ResponseMessage = authResponse.IsError ? authResponse.Message : null
             };
             
-            if (!AuthenticatedUser.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
+            if (!authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
+                AuthenticatedUser = authResponse.Result; // ta the end because AUthenticatedUser servees as a Parameter in Login.razor so I don't want to cause rerendeer and changing the valuee prematurely
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
+                var page = navBar.Siblings.Single(c => c.IsPage);
+                if (page != this)
+                    await page.StateHasChangedAsync(true);
                 //await Layout.Components.Values.Single(c => c._isLayout).StateHasChangedAsync(true);
-                if (!changeStateEvenIfAuthUserIsTheSame)
-                    Logger.For(GetType()).Info("Auth User changed, updating this control and navbar state");
-                else
-                    Logger.For(GetType()).Info("Auth User didn't change but state will be force changed, updating this control and navbar state");
+                //if (!changeStateEvenIfAuthUserIsTheSame)
+                //    Logger.For(GetType()).Info("Auth User changed, updating this control and navbar state");
+                //else
+                //    Logger.For(GetType()).Info("Auth User didn't change but state will be force changed, updating this control and navbar state");
             }
-            else
-                Logger.For(GetType()).Info("Auth User didn't change, doing nothing");
+            //else
+            //    Logger.For(GetType()).Info("Auth User didn't change, doing nothing");
             
             return authStatus;
         }
-
+        
         protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if user authenticated
         {
             var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
-            if (authStatus.AuthenticationFailed && displayErrorMessage)
-                await PromptMessageAsync(NotificationType.Error, "You are not Authenticated");
+            if ((authStatus.AuthenticationFailed || authStatus.ResponseMessage is not null) && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "You are not Authenticated");
             return authStatus.AuthenticationSuccessful;
         }
 
         protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication didn't throw, regardless if user is authenticated
         {
             var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
-            if (authStatus.AuthenticationNotPerformed && displayErrorMessage)
-                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
+            if ((authStatus.AuthenticationNotPerformed || authStatus.ResponseMessage is not null) && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "Authentication was not performed");
             return authStatus.AuthenticationPerformed;
         }
 
         protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication state changed, regardless if user is authenticated
         {
             var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
-            if (authStatus.AuthenticationNotChanged && displayErrorMessage)
-                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage);
+            if ((authStatus.AuthenticationNotChanged || authStatus.ResponseMessage is not null) && displayErrorMessage)
+                await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "Authentication State didn't change");
             return authStatus.AuthenticationChanged;
         }
 
@@ -886,12 +894,12 @@ namespace CommonLib.Web.Source.Common.Components
                 cbp.PropertyType.GetMethod("SetAsChanged")?.Invoke(cbp.GetValue(this), null);
         }
 
-        protected void StateHasChanged()
+        protected void StateHasChanged(bool force)
         {
             if (_hasPendingQueuedRender)
                 return;
-
-            if (!IsRendered || ShouldRender() || _renderHandle.IsRenderingOnMetadataUpdate)
+            
+            if ((!IsRendered || _renderHandle.IsRenderingOnMetadataUpdate || force) && !PreventRender)
             {
                 _hasPendingQueuedRender = true;
 
@@ -905,19 +913,29 @@ namespace CommonLib.Web.Source.Common.Components
                     throw;
                 }
             }
+
+            if (_preventRenderOnce && PreventRender)
+            {
+                _preventRenderOnce = false;
+                PreventRender = false;
+            }
         }
 
         public async Task<MyComponentBase> StateHasChangedAsync(bool force = false, bool waitForRerender = false)
         {
-            if (force)
-                PreventRender = false;
             if (waitForRerender)
                 ClearControlRerenderingStatus();
 
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged(force));
             if (waitForRerender)
                 await WaitForControlToRerenderAsync();
             return this;
+        }
+
+        public void PreventNextRender()
+        {
+            PreventRender = true;
+            _preventRenderOnce = true;
         }
 
         //public async Task<MyComponentBase> WaitForRenderAsync()
@@ -1032,6 +1050,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
         
         public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
+        public async Task HideLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").HideModalAsync();
 
         protected static void ClearControlsRerenderingStatus(IEnumerable<MyComponentBase> controls) => controls.ForEach(c => c.IsRerendered = false);
 
@@ -1043,7 +1062,8 @@ namespace CommonLib.Web.Source.Common.Components
         {
             await TaskUtils.WaitUntil(() =>
             {
-                return controls.All(c => c.IsRerendered || c.IsDisposed || c.InteractionState.V.IsForced);
+                var arrControls = controls.ToArray();
+                return arrControls.All(c => c.IsRerendered || c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
             }, 25, 10000);
             ClearControlsRerenderingStatus(controls);
         }

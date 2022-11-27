@@ -12,6 +12,7 @@ using CommonLib.Web.Source.Common.Components.MyCssGridComponent;
 using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.Common.Components.MyImageComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
@@ -48,7 +49,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             {
                 new() { Name = @"Test1", Extension = "png", Data = RandomUtils.RandomBytes(4), Position = 3 },
                 new() { Name = @"Test2", Extension = "png", Data = RandomUtils.RandomBytes(5), Position = 3 }
-            }
+            },
+            Avatar = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png").PathToFileData(true)
         };
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";

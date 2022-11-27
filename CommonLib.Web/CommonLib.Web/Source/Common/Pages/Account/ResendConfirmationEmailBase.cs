@@ -54,7 +54,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            _allControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyButton or MyNavLink && !c.Ancestors.Any(a => a is MyInputBase)).ToArray();
+            _allControls = GetInputControls();
             _btnResendConfirmationEmail = Descendants.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);

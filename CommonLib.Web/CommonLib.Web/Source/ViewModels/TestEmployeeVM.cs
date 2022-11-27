@@ -9,8 +9,6 @@ namespace CommonLib.Web.Source.ViewModels
 {
     public class TestEmployeeVM
     {
-        private FileData _avatar;
-
         public int Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -22,7 +20,7 @@ namespace CommonLib.Web.Source.ViewModels
         [DisplayName("Terms of Use")]
         [Description("I accept the Terms of use")]
         public bool TermsAccepted { get; set; }
-        public FileData Avatar => _avatar ??= PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png").PathToFileData(true);
+        public FileData Avatar { get; set; }
 
         public double Progress { get; set; }
         public FileDataList Files { get; set; }
