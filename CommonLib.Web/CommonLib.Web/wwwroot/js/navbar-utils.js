@@ -501,19 +501,20 @@ export class NavBarUtils {
         }
     }
 
-    static setNavLinksActiveClasses($clickedNavLink = null, $visibleNavMenu = null) {
-        $clickedNavLink = $clickedNavLink || null;
+    static setNavLinksActiveClasses($clickedNavLinkOrUrl = null, $visibleNavMenu = null) {
+        $clickedNavLinkOrUrl = $clickedNavLinkOrUrl || null;
         $visibleNavMenu = $visibleNavMenu || null;
+        let $clickedNavLink;
         let desiredUrl;
-        if (utils.isNull($clickedNavLink) || !$clickedNavLink.attr("href")) {
+        if (utils.isNull($clickedNavLinkOrUrl) || !$clickedNavLinkOrUrl.attr("href")) {
             $clickedNavLink = null;
             desiredUrl = Wrapper.$($(".my-navbar").find(".my-nav-link[href].active")).$toArray().distinctBy($nl => $nl.attr("href").toLowerCase()).singleOrNull().to$OrNull().attrOrNull("href").toLowerOrNull().unwrap() || window.location.href; // second case is when clicked nav-link is null and no links are currently active (i.e.: after logout from authorised page which after refresh is no longer on navbar)
-        } else if (utils.is$($clickedNavLink)) {
-            $clickedNavLink = $clickedNavLink;
+        } else if (utils.is$($clickedNavLinkOrUrl)) {
+            $clickedNavLink = $clickedNavLinkOrUrl;
             desiredUrl = $clickedNavLink.attr("href");
-        } else if (utils.isString($clickedNavLink)) {
+        } else if (utils.isString($clickedNavLinkOrUrl)) {
             $clickedNavLink = null;
-            desiredUrl = $clickedNavLink;
+            desiredUrl = $clickedNavLinkOrUrl;
         }
 
         if (!desiredUrl) {

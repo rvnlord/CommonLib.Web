@@ -70,8 +70,8 @@ export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs
     NavBarUtils.handleScrollBarChange();
 }
 
-export function blazor_NavBar_SetNavLinksActiveClasses() {
-    NavBarUtils.setNavLinksActiveClasses(null, null);
+export function blazor_NavBar_SetNavLinksActiveClasses(url) {
+    NavBarUtils.setNavLinksActiveClasses(url);
 }
 
 $(document).ready(function () {

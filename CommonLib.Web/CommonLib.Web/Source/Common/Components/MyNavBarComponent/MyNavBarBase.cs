@@ -163,8 +163,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             var qs = new Dictionary<string, string> { ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58() }.ToQueryString();
             var registerUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Register?{qs}");
-            NavigationManager.NavigateTo(registerUrl);
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+            await NavigateAndUpdateActiveNavLinksAsync(registerUrl);
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
             if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
@@ -176,8 +175,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             var qs = new Dictionary<string, string> { ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58() }.ToQueryString();
             var forgotPasswordUrl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/ForgotPassword?{qs}");
-            NavigationManager.NavigateTo(forgotPasswordUrl);
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+            await NavigateAndUpdateActiveNavLinksAsync(forgotPasswordUrl);
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
             if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
@@ -188,8 +186,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
         {
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             var editurl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
-            NavigationManager.NavigateTo(editurl);
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses");
+            await NavigateAndUpdateActiveNavLinksAsync(editurl);
 
             var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
             if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
