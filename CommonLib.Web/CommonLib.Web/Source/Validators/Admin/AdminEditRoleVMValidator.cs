@@ -1,45 +1,45 @@
 ﻿using System;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils;
-using CommonLib.Web.Source.Services.Admin.Interfaces;
+using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.ViewModels.Admin;
 using FluentValidation;
 using SimpleInjector;
 
 namespace CommonLib.Web.Source.Validators.Admin
 {
-    public class AdminEditRoleVMValidator : AbstractValidator<AdminEditRoleVM>, IDisposable
+    public class AccountEditRoleVMValidator : AbstractValidator<AdminEditRoleVM>, IDisposable
     {
-        private Scope _adminClientScope;
-        private Scope _adminManagerScope;
+        private Scope _accountClientScope;
+        private Scope _accountManagerScope;
 
-        public IAdminClient AdminClient { get; set; }
-        public IAdminManager AdminManager { get; set; }
+        public IAccountClient AccountClient { get; set; }
+        public IAccountManager AccountManager { get; set; }
 
-        public AdminEditRoleVMValidator()
+        public AccountEditRoleVMValidator()
         {
             Initialize();
         }
 
-        public AdminEditRoleVMValidator(IAdminManager adminManager)
+        public AccountEditRoleVMValidator(IAccountManager accountManager)
         {
-            Initialize(adminManager);
+            Initialize(accountManager);
         }
 
-        private void Initialize(IAdminManager adminManager = null)
+        private void Initialize(IAccountManager accountManager = null)
         {
-            (AdminClient, _adminClientScope) = WebUtils.GetScopedServiceOrNull<IAdminClient>();
-            if (adminManager is null)
-                (AdminManager, _adminManagerScope) = WebUtils.GetScopedServiceOrNull<IAdminManager>();
+            (AccountClient, _accountClientScope) = WebUtils.GetScopedServiceOrNull<IAccountClient>();
+            if (accountManager is null)
+                (AccountManager, _accountManagerScope) = WebUtils.GetScopedServiceOrNull<IAccountManager>();
 
-            AdminManager = adminManager;
+            AccountManager = accountManager;
 
             RuleFor(m => m.Name)
                 .RequiredWithMessage()
                 .MinLengthWithMessage(3)
                 .MaxLengthWithMessage(25)
                 .AlphaNumericWithMessage()
-                .RoleNotInUseWithMessage(AdminClient, AdminManager);
+                .RoleNotInUseWithMessage(AccountClient, AccountManager);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -47,8 +47,8 @@ namespace CommonLib.Web.Source.Validators.Admin
             if (!disposing)
                 return;
 
-            _adminClientScope?.Dispose();
-            _adminManagerScope?.Dispose();
+            _accountClientScope?.Dispose();
+            _accountManagerScope?.Dispose();
         }
 
         public void Dispose()
@@ -57,7 +57,7 @@ namespace CommonLib.Web.Source.Validators.Admin
             GC.SuppressFinalize(this);
         }
 
-        ~AdminEditRoleVMValidator() {
+        ~AccountEditRoleVMValidator() {
             Dispose(false);
         }
     }

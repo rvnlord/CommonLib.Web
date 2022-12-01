@@ -118,7 +118,7 @@
                                             <div class="my-ml-10px" style="display: flex; flex-wrap: wrap; gap: 10px">
                                                 @foreach (var role in user.Roles.OrderBy(r => r.Name))
                                                 {
-                                                    <MyBadge Badge="@BadgeKind.Primary">@role</MyBadge>
+                                                    <MyBadge Badge="@BadgeKind.Primary" key=@role>@role</MyBadge>
                                                 }
                                             </div>
                                         }
@@ -134,7 +134,7 @@
                                             <div class="my-ml-10px" style="display: flex; flex-wrap: wrap; gap: 10px">
                                                 @foreach (var claim in user.Claims.OrderBy(c => c.Name))
                                                 {
-                                                    <MyBadge Badge="@BadgeKind.Info">@claim</MyBadge>
+                                                    <MyBadge Badge="@BadgeKind.Info" key=@claim>@claim</MyBadge>
                                                 }
                                             </div>
                                         }

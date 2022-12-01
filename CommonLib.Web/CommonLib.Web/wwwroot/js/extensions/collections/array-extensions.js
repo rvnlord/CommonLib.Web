@@ -36,5 +36,17 @@ export default class ArrayExtensions {
     static groupBy(array, keySelector = (x, i) => i, elementSelector = (x) => x, resultSelector = (key, items) => ({ key, items: items.toArray() })) {
         return utils.groupBy(array, keySelector, elementSelector, resultSelector);
     }
+
+    static last(array) {
+        return array[array.length - 1];
+    }
+
+    static skipLast(array, n) {
+        return array.slice(0, -n);
+    }
+
+    static joinAsString(array, joinChar) {
+        return array.join(joinChar);
+    }
 }
 

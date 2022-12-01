@@ -310,7 +310,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<TModel, FileDataList> FileSizeWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, Expression<Func<FileSize, bool>> fdCondition)
         {
-            ValidationContext<TModel> validationContext = null;
+            ValidationContext<TModel> validationContext;
             string displayName = null;
             var conditionString = "match the condition";
             return rb.Must((_, value, vc) =>
@@ -352,7 +352,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<TModel, FileDataList> FileExtensionWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, params string[] extensions)
         {
-            ValidationContext<TModel> validationContext = null;
+            ValidationContext<TModel> validationContext;
             string displayName = null;
             string[] expectedExtensions = null;
             return rb.Must((_, value, vc) =>
@@ -389,12 +389,12 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, _) => $"\"{displayName}\" can't be still uploading");
         }
 
-        public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAdminClient adminClient, IAdminManager adminManager)
+        public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindRoleVM> roleByNameResp = null;
             return rb.MustAsync(async (model, value, _, _) =>
             {
-                roleByNameResp = adminClient is not null ? await adminClient.FindRoleByNameAsync(value) : await adminManager.FindRoleByNameAsync(value);
+                roleByNameResp = accountClient is not null ? await accountClient.FindRoleByNameAsync(value) : await accountManager.FindRoleByNameAsync(value);
                 if (roleByNameResp.IsError)
                     return false;
                 
@@ -405,12 +405,12 @@ namespace CommonLib.Web.Source.Common.Extensions
                 : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
         }
 
-        public static IRuleBuilderOptions<T, string> ClaimNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAdminClient adminClient, IAdminManager adminManager)
+        public static IRuleBuilderOptions<T, string> ClaimNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
             ApiResponse<FindClaimVM> claimByNameResp = null;
             return rb.MustAsync(async (model, value, _, _) =>
             {
-                claimByNameResp = adminClient is not null ? await adminClient.FindClaimByNameAsync(value) : await adminManager.FindClaimByNameAsync(value);
+                claimByNameResp = accountClient is not null ? await accountClient.FindClaimByNameAsync(value) : await accountManager.FindClaimByNameAsync(value);
                 if (claimByNameResp.IsError)
                     return false;
                 

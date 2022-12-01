@@ -55,8 +55,6 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
 
         protected async Task CurrentEditContext_ValidationStateChangedAsync(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _)
         {
-            var fi = new FieldIdentifier(Model, _propName);
-
             if (e == null)
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
@@ -68,6 +66,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             if (InteractionState.ParameterValue?.IsForced == true)
                 return;
 
+            var fi = new FieldIdentifier(Model, _propName);
             if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
                 RemoveClasses("my-valid", "my-invalid");
 

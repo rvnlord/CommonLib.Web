@@ -109,12 +109,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 UserToAdd = userToAdd
             });
         }
-
-        public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string name)
-        {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindRoleVM>>("api/admin/findrolebyname", name);
-        }
-
+        
         public async Task<ApiResponse<AdminEditRoleVM>> DeleteRoleAsync(AdminEditRoleVM roleToDelete)
         {
             var authUser = (await _accountClient.GetAuthenticatedUserAsync())?.Result;
@@ -149,12 +144,7 @@ namespace CommonLib.Web.Source.Services.Admin
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FindRoleVM>>("api/admin/findrolebyid", id);
         }
-
-        public async Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string name)
-        {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindClaimVM>>("api/admin/findclaimbyname", name);
-        }
-
+        
         public async Task<ApiResponse<AdminEditClaimVM>> DeleteClaimAsync(AdminEditClaimVM claimToDelete)
         {
             var authUser = (await _accountClient.GetAuthenticatedUserAsync())?.Result;

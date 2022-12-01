@@ -103,16 +103,14 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
 
         protected async Task BtnEditUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _, FindUserVM userToEdit)
         {
-            //SetButtonStates(ButtonState.Disabled);
-            //_btnEditUserStates[userToEdit.Id] = ButtonState.Loading;
-            //NavigationManager.NavigateTo($"admin/edituser/{userToEdit.Id}");
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
+            await NavigateAndUpdateActiveNavLinksAsync($"admin/edituser/{userToEdit.Id}");
         }
 
         protected async Task BtnAddUser_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
-            //SetButtonStates(ButtonState.Disabled);
-            //_btnAddUserState = ButtonState.Loading;
-            //NavigationManager.NavigateTo("admin/adduser/");
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
+            await NavigateAndUpdateActiveNavLinksAsync("admin/adduser/");
         }
     }
 }

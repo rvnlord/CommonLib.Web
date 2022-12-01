@@ -15,16 +15,13 @@ namespace CommonLib.Web.Source.Services.Admin.Interfaces
         Task<ApiResponse<List<FindRoleVM>>> GetRolesAsync(AuthenticateUserVM authUser);
         Task<ApiResponse<List<FindClaimVM>>> GetClaimsAsync(AuthenticateUserVM authUser);
         Task<ApiResponse<AdminEditUserVM>> AddUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdd);
-        Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName);
         Task<ApiResponse<AdminEditRoleVM>> DeleteRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToDelete);
         Task<ApiResponse<AdminEditRoleVM>> AddRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToAdd);
         Task<ApiResponse<AdminEditRoleVM>> EditRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToEdit);
         Task<ApiResponse<FindRoleVM>> FindRoleByIdAsync(Guid id);
-        Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string claimName);
         Task<ApiResponse<AdminEditClaimVM>> DeleteClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToDelete);
         Task<ApiResponse<bool>> HasClaimAsync(FindUserVM user, string claimName);
         Task<ApiResponse<AdminEditClaimVM>> AddClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToAdd);
-        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id);
         Task<ApiResponse<AdminEditClaimVM>> EditClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToEdit);
     }
 }

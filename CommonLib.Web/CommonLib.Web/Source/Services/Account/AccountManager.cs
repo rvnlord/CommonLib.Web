@@ -24,6 +24,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CommonLib.Web.Source.Common.Converters;
+using System.Xml.Linq;
+using Z.Expressions;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -60,19 +62,75 @@ namespace CommonLib.Web.Source.Services.Account
             _passwordResetTokenProvider = passwordResetTokenProvider;
         }
 
-        public async Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name)
+        private async Task<ApiResponse<FindUserVM>> FindUserAsync(FindUserVM userToFind)
         {
-            var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.UserName.ToLower() == name.ToLower());
-            if (user == null)
+            DbUser user;
+            if (userToFind.Id != Guid.Empty)
+                user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToFind.Id);
+            else if (!userToFind.UserName.IsNullOrWhiteSpace())
+                user = await _db.Users.SingleOrDefaultAsync(u => u.UserName.ToLower() == userToFind.UserName.ToLower());
+            else if (!userToFind.Email.IsNullOrWhiteSpace())
+                user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToFind.Email.ToLower());
+            else if (!userToFind.Email.IsNullOrWhiteSpace())
+                user = await _db.Users.SingleOrDefaultAsync(u => u.EmailActivationToken.ToLower() == userToFind.EmailActivationToken.ToLower());
+            else
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status406NotAcceptable, "No property specified can be used to uniquely identify a correct user", null);
+
+            if (user is null)
                 return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
-            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
+            foundUser.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
+            foundUser.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
 
             return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", null, foundUser);
         }
 
+        public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName)
+        {
+            var role = await _db.Roles.SingleOrDefaultAsync(r => r.Name.ToLower() == roleName.ToLower());
+            if (role == null)
+                return new ApiResponse<FindRoleVM>(StatusCodeType.Status404NotFound, "There is no Role with the given Name", null);
+
+            var foundRole = _mapper.Map(role, new FindRoleVM());
+            return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Role Found", null, foundRole);
+        }
+
+        public async Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string claimName)
+        {
+            var claim = (
+                from uc in await _db.UserClaims.ToListAsync()
+                group uc by uc.ClaimType into claimsByType
+                where claimsByType.Key.EqualsIgnoreCase(claimName)
+                select new FindClaimVM
+                {
+                    Name = claimsByType.Key,
+                    Values = (
+                        from cbt in claimsByType
+                        group cbt by cbt.ClaimValue into claimByTypeByValue
+                        select new FindClaimValueVM
+                        {
+                            Value = claimByTypeByValue.Key,
+                            UserNames = (
+                                from cbtbv in claimByTypeByValue
+                                join u in _db.Users.ToList() on cbtbv.UserId equals u.Id
+                                select u.UserName).ToList()
+                        }).ToList()
+                }).SingleOrDefault();
+
+            if (claim != null)
+                claim.OriginalName = claim.Name; // for 'NotInUse' validation attribute compatibility
+
+            return claim == null
+                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status404NotFound, "There is no Claim with the given Name", null)
+                : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
+        }
+
+        public Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id) => FindUserAsync(FindUserVM.FromId(id));
+        public Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name) => FindUserAsync(FindUserVM.FromUserName(name));
+        public Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email) => FindUserAsync(FindUserVM.FromEmail(email));
+        public Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode) => FindUserAsync(FindUserVM.FromEmailActivationToken(confirmationCode));
+        
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users.Include(u => u.Avatar), u => u.UserName.ToLower() == name.ToLower());
@@ -81,19 +139,6 @@ namespace CommonLib.Web.Source.Services.Account
             
             var avatar = user.Avatar?.ToFileData();
             return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", null, avatar);
-        }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email)
-        {
-            var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.Email.ToLower() == email.ToLower());
-            if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no DbUser with the given Email", null);
-
-            var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
-            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
-
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding DbUser by Email has been Successful", null, foundUser);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
@@ -199,10 +244,14 @@ namespace CommonLib.Web.Source.Services.Account
 
             await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
 
-            if (!await _roleManager.RoleExistsAsync("DbUser"))
-                await _roleManager.CreateAsync(new IdentityRole<Guid>("DbUser"));
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+                await _roleManager.CreateAsync(new IdentityRole<Guid>("Admin"));
+            if (!await _roleManager.RoleExistsAsync("User"))
+                await _roleManager.CreateAsync(new IdentityRole<Guid>("User"));
 
-            await _userManager.AddToRoleAsync(user, "DbUser");
+            if (!_db.Users.Any())
+                await _userManager.AddToRoleAsync(user, "Admin");
+            await _userManager.AddToRoleAsync(user, "User");
 
             if (_userManager.Options.SignIn.RequireConfirmedEmail)
             {
@@ -261,19 +310,6 @@ namespace CommonLib.Web.Source.Services.Account
 
             return $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}|{id}|{passwordHash}|{Convert.ToInt32(rememberMe)}".UTF8ToByteArray()
                 .EncryptCamellia(key.Base58ToByteArray()).ToBase58String();
-        }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode)
-        {
-            var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users, u => u.EmailActivationToken?.ToLower() == confirmationCode.ToLower());
-            if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Activation Code", null);
-
-            var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
-            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
-
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Activation Code has been Successful", null, foundUser);
         }
 
         public async Task<ApiResponse<ResendConfirmationEmailUserVM>> ResendConfirmationEmailAsync(ResendConfirmationEmailUserVM userToResendConfirmationEmail)
@@ -538,19 +574,6 @@ namespace CommonLib.Web.Source.Services.Account
             if (verificationResult != PasswordVerificationResult.Success)
                 return new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
             return await Task.FromResult(new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is correct", null, true));
-        }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
-        {
-            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == id);
-            if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Id", null);
-
-            var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => new FindRoleVM { Name = r }).ToList();
-            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
-
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Id has been Successful", null, foundUser);
         }
 
         public async Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)

@@ -21,6 +21,11 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsIgnoreCase(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsIgnoreCase(claim));
 
+        public static FindUserVM FromId(Guid id) => new() { Id = id };
+        public static FindUserVM FromUserName(string name) => new() { UserName = name };
+        public static FindUserVM FromEmail(string email) => new() { Email = email };
+        public static FindUserVM FromEmailActivationToken(string emailActivationToken) => new() { EmailActivationToken = emailActivationToken };
+
         public bool Equals(FindUserVM other)
         {
             if (other is null) return false;

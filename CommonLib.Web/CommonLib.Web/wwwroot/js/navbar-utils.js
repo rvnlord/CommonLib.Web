@@ -506,9 +506,9 @@ export class NavBarUtils {
         $visibleNavMenu = $visibleNavMenu || null;
         let $clickedNavLink;
         let desiredUrl;
-        if (utils.isNull($clickedNavLinkOrUrl) || !$clickedNavLinkOrUrl.attr("href")) {
+        if (utils.isNull($clickedNavLinkOrUrl) || utils.is$($clickedNavLinkOrUrl) && !$clickedNavLinkOrUrl.attr("href")) {
             $clickedNavLink = null;
-            desiredUrl = Wrapper.$($(".my-navbar").find(".my-nav-link[href].active")).$toArray().distinctBy($nl => $nl.attr("href").toLowerCase()).singleOrNull().to$OrNull().attrOrNull("href").toLowerOrNull().unwrap() || window.location.href; // second case is when clicked nav-link is null and no links are currently active (i.e.: after logout from authorised page which after refresh is no longer on navbar)
+            desiredUrl = Wrapper.$($(".my-navbar").find(".my-nav-link[href].active")).$toArray().distinctBy($nl => $nl.attr("href").toLowerCase()).singleOrNull().as$OrNull().attrOrNull("href").toLowerOrNull().unwrap() || window.location.href; // second case is when clicked nav-link is null and no links are currently active (i.e.: after logout from authorised page which after refresh is no longer on navbar)
         } else if (utils.is$($clickedNavLinkOrUrl)) {
             $clickedNavLink = $clickedNavLinkOrUrl;
             desiredUrl = $clickedNavLink.attr("href");
@@ -521,6 +521,12 @@ export class NavBarUtils {
             throw new Error("URL can't be empty");
         }
 
+        let wDesiredUrl = Wrapper.string(desiredUrl).toLower().trimEnd("/");
+        //const wDesiredUrlSplit = wDesiredUrl.split("/");
+        //if (wDesiredUrlSplit.last().asString().isGuid().unwrap()) { // if the desire is to match partsa that end up with guid using links without the guid this needs to also be applied to nav-link url in the loop
+        //    wDesiredUrl = wDesiredUrlSplit.skipLast(1).joinAsString("/");
+        //}
+        desiredUrl = wDesiredUrl.isAbsoluteUrl().unwrap() ? wDesiredUrl.unwrap() : utils.origin() + "/" + wDesiredUrl.trimStart("/").unwrap();
         NavBarUtils.$ActiveNavLink = $clickedNavLink;
         
         for (let $navBar of $(".my-navbar").$toArray()) {
@@ -528,7 +534,7 @@ export class NavBarUtils {
             nbNavLinksWithUrl.removeClass("active");
             $navBar.find(".my-nav-item > .my-nav-link").removeClass("active-descendant");
 
-            const $navLinksToActivate = Wrapper.$(nbNavLinksWithUrl).$toArray().where($nl => Wrapper.string($nl.attr("href")).equalsIgnoreCase(desiredUrl).unwrap());
+            const $navLinksToActivate = Wrapper.$(nbNavLinksWithUrl).$toArray().where($nl => Wrapper.string($nl.attr("href")).trimEnd("/").equalsIgnoreCase(desiredUrl).unwrap());
             $navLinksToActivate.forEach($nl => $nl.addClass("active"));
 
             const $upperVisibleContainers = $visibleNavMenu

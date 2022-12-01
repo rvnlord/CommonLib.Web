@@ -11,6 +11,8 @@ namespace CommonLib.Web.Source.ViewModels.Admin
     public class AdminEditUserVM
     {
         public Guid Id { get; set; }
+        [DisplayName("Id")]
+        public string IdString => Id != Guid.Empty ? Id.ToString() : null;
         [DisplayName("User Name")]
         public string UserName { get; set; }
         public string Email { get; set; }
@@ -26,6 +28,7 @@ namespace CommonLib.Web.Source.ViewModels.Admin
         public List<FindRoleVM> Roles { get; set; } = new();
         public List<FindClaimVM> Claims { get; set; } = new();
         public string Ticket { get; set; }
+        public FileData Avatar { get; set; }
 
         public bool HasRole(string role) => Roles.Any(r => r.Name.EqualsIgnoreCase(role));
         public bool HasClaim(string claim) => Claims.Any(c => c.Name.EqualsIgnoreCase(claim));

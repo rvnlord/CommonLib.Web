@@ -19,6 +19,24 @@ namespace CommonLib.Web.Source.Controllers
             _accountManager = accountManager;
         }
 
+        [HttpPost("finduserbyid")] // POST: api/account/finduserbyid
+        public async Task<JToken> FindUserByIdAsync(JToken jId) => await EnsureResponseAsync(async () => await _accountManager.FindUserByIdAsync(Guid.Parse(jId is JValue ? jId.ToString() : jId["id"]?.ToString() ?? "")));
+
+        [HttpPost("finduserbyname")] // POST: api/account/finduserbyname
+        public async Task<JToken> FindUserByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.FindUserByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
+
+        [HttpPost("finduserbyemail")] // POST: api/account/finduserbyemail
+        public async Task<JToken> FindUserByEmailAsync(JToken jEmail) => await EnsureResponseAsync(async () => await _accountManager.FindUserByEmailAsync(jEmail is JValue ? jEmail.ToString() : jEmail["email"]?.ToString()));
+
+        [HttpPost("finduserbyconfirmationcode")] // POST: api/account/finduserbyconfirmationcode
+        public async Task<JToken> FindUserByConfirmationCodeAsync(JToken jConfirmationCode) => await EnsureResponseAsync(async () => await _accountManager.FindUserByConfirmationCodeAsync(jConfirmationCode is JValue ? jConfirmationCode.ToString() : jConfirmationCode["confirmationcode"]?.ToString()));
+
+        [HttpPost("findrolebyname")] // POST: api/account/findrolebyname
+        public async Task<JToken> FindEoleByName(JToken jRoleName) => await EnsureResponseAsync(async () => await _accountManager.FindRoleByNameAsync(jRoleName["roleName"]?.ToString()));
+        
+        [HttpPost("findclaimbyname")] // POST: api/admin/findclaimbyname
+        public async Task<JToken> FindClaimByName(JToken jClaimName) => await EnsureResponseAsync(async () => await _accountManager.FindClaimByNameAsync(jClaimName["claimName"]?.ToString()));
+
         [HttpPost("login")] // POST: api/account/login
         public async Task<JToken> LoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.LoginAsync(user));
 
@@ -48,17 +66,8 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("confirmemail")] // POST: api/account/confirmemail
         public async Task<JToken> ConfirmEmailAsync(JToken jConfirmUserEmail) => await EnsureResponseAsync(async () => await _accountManager.ConfirmEmailAsync(jConfirmUserEmail.To<ConfirmUserVM>()));
         
-        [HttpPost("finduserbyemail")] // POST: api/account/finduserbyemail
-        public async Task<JToken> FindUserByEmailAsync(JToken jEmail) => await EnsureResponseAsync(async () => await _accountManager.FindUserByEmailAsync(jEmail is JValue ? jEmail.ToString() : jEmail["email"]?.ToString()));
-
-        [HttpPost("finduserbyname")] // POST: api/account/finduserbyname
-        public async Task<JToken> FindUserByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.FindUserByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
-        
         [HttpPost("getuseravatarbyname")] // POST: api/account/getuseravatarbyname
         public async Task<JToken> GetUserAvatarByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.GetUserAvatarByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
-
-        [HttpPost("finduserbyconfirmationcode")] // POST: api/account/finduserbyconfirmationcode
-        public async Task<JToken> FindUserByConfirmationCodeAsync(JToken jConfirmationCode) => await EnsureResponseAsync(async () => await _accountManager.FindUserByConfirmationCodeAsync(jConfirmationCode is JValue ? jConfirmationCode.ToString() : jConfirmationCode["confirmationcode"]?.ToString()));
 
         [HttpPost("checkusermanagercompliance")] // POST: api/account/checkusermanagercompliance
         public async Task<JToken> CheckUserManagerCompliance(JToken jUserPropertyNameUserPropertyDisplayNameAndUserPropertValue) => await EnsureResponseAsync(async () => await _accountManager.CheckUserManagerComplianceAsync(jUserPropertyNameUserPropertyDisplayNameAndUserPropertValue["UserPropertyName"]?.ToString(), jUserPropertyNameUserPropertyDisplayNameAndUserPropertValue["UserPropertyDisplayName"]?.ToString(), jUserPropertyNameUserPropertyDisplayNameAndUserPropertValue["UserPropertyValue"]?.ToString()));
@@ -95,9 +104,6 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost("checkuserpassword")] // POST: api/account/checkuserpassword
         public async Task<JToken> CheckUserPasswordAsync(JToken jCheckPasswordUser) => await EnsureResponseAsync(async () => await _accountManager.CheckUserPasswordAsync(jCheckPasswordUser.To<CheckPasswordUserVM>()));
-
-        [HttpPost("finduserbyid")] // POST: api/account/finduserbyid
-        public async Task<JToken> FindUserByIdAsync(JToken jId) => await EnsureResponseAsync(async () => await _accountManager.FindUserByIdAsync(Guid.Parse(jId is JValue ? jId.ToString() : jId["id"]?.ToString() ?? "")));
 
     }
 }

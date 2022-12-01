@@ -23,6 +23,9 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
         [Parameter]
         public BlazorParameter<bool?> DisplayLabel { get; set; }
 
+        [Parameter]
+        public MyAsyncEventHandler<MyCheckBoxBase, ChangeEventArgs> Check { get; set; }
+
         protected override async Task OnInitializedAsync() => await Task.CompletedTask.ConfigureAwait(false);
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask.ConfigureAwait(false);
 
@@ -67,7 +70,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             if (e == null)
                 throw new NullReferenceException(nameof(e));
 
-            if (Model is not null)
+            if (Model is not null && _propName is not null)
             {
                 Model.SetProperty(_propName, e.Value);
                 if (CascadedEditContext?.V is not null)
@@ -76,6 +79,8 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
 
             Value = e.Value.ToBool();
             Text = Value.ToStringInvariant();
+
+            await Check.InvokeAsync(this, e);
         }
     }
 }

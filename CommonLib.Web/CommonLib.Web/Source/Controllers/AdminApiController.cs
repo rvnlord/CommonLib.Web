@@ -37,9 +37,6 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("adduser")] // POST: api/admin/adduser
         public async Task<JToken> AddUserAsync(JToken jAuthenticatedUserAndUserToAdd) => await EnsureResponseAsync(async () => await _adminManager.AddUserAsync(jAuthenticatedUserAndUserToAdd["AuthenticatedUser"]?.To<AuthenticateUserVM>(), jAuthenticatedUserAndUserToAdd["UserToAdd"]?.To<AdminEditUserVM>()));
 
-        [HttpPost("findrolebyname")] // POST: api/admin/findrolebyname
-        public async Task<JToken> FindEoleByName(JToken jRoleName) => await EnsureResponseAsync(async () => await _adminManager.FindRoleByNameAsync(jRoleName["roleName"]?.ToString()));
-
         [HttpPost("deleterole")] // POST: api/admin/deleterole
         public async Task<JToken> DeleteRoleAsync(JToken jAuthenticatedUserAndRoleToDelete) => await EnsureResponseAsync(async () => await _adminManager.DeleteRoleAsync(jAuthenticatedUserAndRoleToDelete["AuthenticatedUser"]?.To<AuthenticateUserVM>(), jAuthenticatedUserAndRoleToDelete["RoleToDelete"]?.To<AdminEditRoleVM>()));
 
@@ -52,18 +49,12 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("findrolebyid")] // POST: api/admin/findrolebyid
         public async Task<JToken> FindRoleByIdAsync(JToken id) => await EnsureResponseAsync(async () => await _adminManager.FindRoleByIdAsync(id.To<Guid>()));
         
-        [HttpPost("findclaimbyname")] // POST: api/admin/findclaimbyname
-        public async Task<JToken> FindClaimByName(JToken jClaimName) => await EnsureResponseAsync(async () => await _adminManager.FindClaimByNameAsync(jClaimName["claimName"]?.ToString()));
-
         [HttpPost("deleteclaim")] // POST: api/admin/deleteclaim
         public async Task<JToken> DeleteClaimAsync(JToken jAuthenticatedUserAndClaimToDelete) => await EnsureResponseAsync(async () => await _adminManager.DeleteClaimAsync(jAuthenticatedUserAndClaimToDelete["AuthenticatedUser"]?.To<AuthenticateUserVM>(), jAuthenticatedUserAndClaimToDelete["ClaimToDelete"]?.To<AdminEditClaimVM>()));
 
         [HttpPost("addclaim")] // POST: api/admin/addclaim
         public async Task<JToken> AddClaimAsync(JToken jAuthenticatedUserAndClaimToAdd) => await EnsureResponseAsync(async () => await _adminManager.AddClaimAsync(jAuthenticatedUserAndClaimToAdd["AuthenticatedUser"]?.To<AuthenticateUserVM>(), jAuthenticatedUserAndClaimToAdd["ClaimToAdd"]?.To<AdminEditClaimVM>()));
 
-        [HttpPost("finduserbyid")] // POST: api/account/finduserbyid
-        public async Task<JToken> FindUserByIdAsync(JToken id) => await EnsureResponseAsync(async () => await _adminManager.FindUserByIdAsync(id.To<Guid>()));
-        
         [HttpPost("editclaim")] // POST: api/admin/editclaim
         public async Task<JToken> EditClaimAsync(JToken jAuthenticatedUserAndClaimToEdit) => await EnsureResponseAsync(async () => await _adminManager.EditClaimAsync(jAuthenticatedUserAndClaimToEdit["AuthenticatedUser"]?.To<AuthenticateUserVM>(), jAuthenticatedUserAndClaimToEdit["ClaimToEdit"]?.To<AdminEditClaimVM>()));
     }

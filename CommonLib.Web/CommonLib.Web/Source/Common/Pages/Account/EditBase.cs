@@ -69,7 +69,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!await _editContext.ValidateAsync())
                 return;
 
-            await WaitForControlsToRerenderAsync(_allControls);
+            //await WaitForControlsToRerenderAsync(_allControls); // it shouldn't be needed anymore since it is enforced in validation itself
 
             var editResponse = await AccountClient.EditAsync(_editUserVM);
             if (editResponse.IsError)

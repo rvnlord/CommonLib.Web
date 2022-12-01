@@ -11,12 +11,10 @@ namespace CommonLib.Web.Source.ViewModels.Account
 
         public override bool Equals(object o)
         {
-            if (!(o is FindRoleVM))
+            if (o is not FindRoleVM role)
                 return false;
 
-            var that = (FindRoleVM) o;
-
-            return Name == that.Name;
+            return Name == role.Name;
         }
 
         public override int GetHashCode() => Name.GetHashCode() ^ 3 * Id.GetHashCode() ^ 5 * UserNames.GetHashCode() ^ 7;

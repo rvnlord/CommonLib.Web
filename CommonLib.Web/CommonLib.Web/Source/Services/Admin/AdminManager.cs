@@ -49,8 +49,8 @@ namespace CommonLib.Web.Source.Services.Admin
             foreach (var user in users)
             {
                 var userToEditByAdmin = _mapper.Map(user, new FindUserVM());
-                userToEditByAdmin.Roles = (await _userManager.GetRolesAsync(user)).Select(r => FindRoleByName(r).Result).ToList();
-                userToEditByAdmin.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => FindClaimByName(c.Type).Result).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
+                userToEditByAdmin.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await _accountManager.FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
+                userToEditByAdmin.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await _accountManager.FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
                 userToFind.Add(userToEditByAdmin);
             }
 
@@ -204,26 +204,6 @@ namespace CommonLib.Web.Source.Services.Admin
             return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Added User: \"{userToAdd.UserName}\"", null, userToAdd);
         }
 
-        public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName)
-        {
-            var role = await _db.Roles.SingleOrDefaultAsync(r => r.Name.ToLower() == roleName.ToLower());
-            if (role == null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status404NotFound, "There is no Role with the given Name", null);
-
-            var foundRole = _mapper.Map(role, new FindRoleVM());
-            return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Role Found", null, foundRole);
-        }
-
-        public ApiResponse<FindRoleVM> FindRoleByName(string roleName)
-        {
-            var role = _db.Roles.SingleOrDefault(r => r.Name.ToLower() == roleName.ToLower());
-            if (role == null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status404NotFound, "There is no Role with the given Name", null);
-
-            var foundRole = _mapper.Map(role, new FindRoleVM());
-            return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Role Found", null, foundRole);
-        }
-
         public async Task<ApiResponse<AdminEditRoleVM>> DeleteRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToDelete)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
@@ -323,67 +303,7 @@ namespace CommonLib.Web.Source.Services.Admin
 
             return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Finding Role by Id has been Successful", null, foundRole);
         }
-
-        public ApiResponse<FindClaimVM> FindClaimByName(string claimName)
-        {
-            var claim = (
-                from uc in _db.UserClaims.ToList()
-                group uc by uc.ClaimType into claimsByType
-                where claimsByType.Key.EqualsIgnoreCase(claimName)
-                select new FindClaimVM
-                {
-                    Name = claimsByType.Key,
-                    Values = (
-                        from cbt in claimsByType
-                        group cbt by cbt.ClaimValue into claimByTypeByValue
-                        select new FindClaimValueVM
-                        {
-                            Value = claimByTypeByValue.Key,
-                            UserNames = (
-                                from cbtbv in claimByTypeByValue
-                                join u in _db.Users.ToList() on cbtbv.UserId equals u.Id
-                                select u.UserName).ToList()
-                        }).ToList()
-                }).SingleOrDefault();
-
-            if (claim != null)
-                claim.OriginalName = claim.Name; // for 'NotInUse' validation attribute compatibility
-
-            return claim == null
-                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status404NotFound, "There is no Claim with the given Name", null)
-                : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
-        }
-
-        public async Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string claimName)
-        {
-            var claim = (
-                from uc in await _db.UserClaims.ToListAsync()
-                group uc by uc.ClaimType into claimsByType
-                where claimsByType.Key.EqualsIgnoreCase(claimName)
-                select new FindClaimVM
-                {
-                    Name = claimsByType.Key,
-                    Values = (
-                        from cbt in claimsByType
-                        group cbt by cbt.ClaimValue into claimByTypeByValue
-                        select new FindClaimValueVM
-                        {
-                            Value = claimByTypeByValue.Key,
-                            UserNames = (
-                                from cbtbv in claimByTypeByValue
-                                join u in _db.Users.ToList() on cbtbv.UserId equals u.Id
-                                select u.UserName).ToList()
-                        }).ToList()
-                }).SingleOrDefault();
-
-            if (claim != null)
-                claim.OriginalName = claim.Name; // for 'NotInUse' validation attribute compatibility
-
-            return claim == null
-                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status404NotFound, "There is no Claim with the given Name", null)
-                : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
-        }
-
+        
         public async Task<ApiResponse<bool>> HasClaimAsync(FindUserVM user, string claimName)
         {
             var hasClaim = await _db.UserClaims.Join(_db.Users, uc => uc.UserId, u => u.Id, (uc, u) => new { uc, u })
@@ -397,7 +317,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Claims", null);
             if (claimToDelete.Name.IsNullOrWhiteSpace())
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Name for the Claim was not supplied, as it is done automatically it should never happen", null);
-            var claimResp = await FindClaimByNameAsync(claimToDelete.Name);
+            var claimResp = await _accountManager.FindClaimByNameAsync(claimToDelete.Name);
             if (claimResp.IsError)
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Claim \"{claimToDelete.Name}\" was not found, it should never happen", null);
 
@@ -454,8 +374,8 @@ namespace CommonLib.Web.Source.Services.Admin
                 return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Id", null);
 
             var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await _userManager.GetRolesAsync(user)).Select(r => FindRoleByName(r).Result).ToList();
-            foundUser.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => FindClaimByName(c.Type).Result).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
+            foundUser.Roles = (await Task.WhenAll((await _userManager.GetRolesAsync(user)).Select(async r => (await _accountManager.FindRoleByNameAsync(r)).Result))).OrderBy(r => r.Name).ToList();
+            foundUser.Claims = (await Task.WhenAll((await _userManager.GetRolesAsync(user)).Select(async c => (await _accountManager.FindClaimByNameAsync(c)).Result))).Where(c => !c.Name.EqualsIgnoreCase("Email")).OrderBy(r => r.Name).ToList();
 
             return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Id has been Successful", null, foundUser);
         }

@@ -47,6 +47,11 @@ namespace CommonLib.Web.Source.Services.Account
             _myJsRuntime = myJsRuntime;
         }
 
+        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyid", id);
+        }
+
         public async Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string email)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyname", email);
@@ -55,6 +60,21 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyemail", email);
+        }
+
+        public async Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string activationCode)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyconfirmationcode", activationCode);
+        }
+        
+        public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string name)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindRoleVM>>("api/admin/findrolebyname", name);
+        }
+
+        public async Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string name)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindClaimVM>>("api/admin/findclaimbyname", name);
         }
 
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
@@ -105,11 +125,6 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<ConfirmUserVM>> ConfirmEmailAsync(ConfirmUserVM userToConfirmEmail)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<ConfirmUserVM>>("api/account/confirmemail", userToConfirmEmail);
-        }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string activationCode)
-        {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyconfirmationcode", activationCode);
         }
 
         public async Task<ApiResponse<ResendConfirmationEmailUserVM>> ResendConfirmationEmailAsync(ResendConfirmationEmailUserVM resendConfirmationEmailUser)
@@ -200,11 +215,6 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<bool>>($"Api/Account/{nameof(CheckUserPasswordAsync).Before("Async")}", userToCheckPassword);
-        }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
-        {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyid", id);
         }
 
         public async Task<ApiResponse<EditUserVM>> EditAsync(EditUserVM editUser)

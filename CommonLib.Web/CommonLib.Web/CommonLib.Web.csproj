@@ -64,6 +64,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\CommonLib\CommonLib\CommonLib\CommonLib.csproj" />
+    <ProjectReference Include="..\..\..\CryptoApisLib\CryptoApisLib\CryptoApisLib\CryptoApisLib.csproj" />
   </ItemGroup>
 
   <UsingTask TaskName="CopyToReferencingProjectsMSBuildTask" AssemblyFile="G:\Moje Pliki\Programowanie\CSharp\Projects\MSBuildTasks\MSBuildTasks\MSBuildTasks\bin\Debug\netstandard2.0\MSBuildTasks.dll" />
