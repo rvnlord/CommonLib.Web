@@ -24,14 +24,16 @@ export async function blazor_NavBar_AfterFirstRender() {
 }
 
 export async function blazor_NavBar_AfterRender() {
-    //const $navLinksToSetAsRendered = $(".my-navbar").find(".my-nav-item > .my-nav-link:not([rendered='true'])");
-    //console.log(`navbar subsequent render, ${$navLinksToSetAsRendered.length} nav-links to be as rendered`);
-    //NavBarUtils.finishAndRemoveRunningAnims();
-    NavBarUtils.adjustToDeviceSize();
-    NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
+    const $navLinksToSetAsAdjustedAtLeastOnce = $(".my-navbar").find(".my-nav-item > .my-nav-link:not([adjusted='true'])");
+    if ($navLinksToSetAsAdjustedAtLeastOnce.length > 0) {
+        console.log(`navbar subsequent render, ${$navLinksToSetAsAdjustedAtLeastOnce.length} nav-links to be as adjusted`);
+        NavBarUtils.finishAndRemoveRunningAnims();
+        NavBarUtils.adjustToDeviceSize();
+        $navLinksToSetAsAdjustedAtLeastOnce.attr("adjusted", "true");
+        console.log(`navbar subsequent render, set ${$navLinksToSetAsAdjustedAtLeastOnce.length} nav-links as adjusted`);
+    }
 
-    //$navLinksToSetAsRendered.attr("rendered", "true");
-    //console.log(`navbar subsequent render, set ${$navLinksToSetAsRendered.length} nav-links as rendered`);
+    NavBarUtils.setNavLinksActiveClasses(NavBarUtils.$ActiveNavLink, null);
 }
 
 export function blazor_Layout_AfterRender_SetupNavbar() { // navLinkDotNetRefs
@@ -74,7 +76,7 @@ export function blazor_NavBar_SetNavLinksActiveClasses(url) {
     NavBarUtils.setNavLinksActiveClasses(url);
 }
 
-$(document).ready(function () {
+$(document).ready(async function () {
 
     $(document).on("mouseleave", ".my-navbar", async function () {
         // ultimately mouseleaving any nav-link, item, menu will end here, use it!
@@ -86,18 +88,27 @@ $(document).ready(function () {
         const $searchContainer = $nb.find(".my-nav-search-container").first();
         const $modals = $(".my-modal");
         const isRendered = ($navLink.attr("rendered") || "false").toBool();
+        const isAdjusted = ($navLink.attr("adjusted") || "false").toBool();
         const isDisabled = $navLink.is(".disabled") || $navLink.attr("disabled") === "disabled";
 
         if (e.which !== 1 || !$nb.is(".shown")) { // prevents clicking on ddl if navbar is hiding
             return;
         }
+
         if ($searchContainer.is(".shown") || $modals.is(".shown")) { // is implies any
             return;
         }
+
         if (!isRendered) {
             console.log("nav-link is not rendered yet");
             return;
         }
+
+        if (!isAdjusted) {
+            console.log("nav-link is not adjusted yet");
+            return;
+        }
+
         if (isDisabled) {
             console.log("nav-link is disabled");
             return;
@@ -128,6 +139,7 @@ $(document).ready(function () {
         const $clickedNavLink = $(this);
         const $clickedNavItem = $clickedNavLink.parents(".my-nav-item").first();
         const isRendered = ($clickedNavLink.attr("rendered") || "false").toBool();
+        const isAdjusted = ($clickedNavLink.attr("adjusted") || "false").toBool();
         const isDisabled = $clickedNavLink.is(".disabled") || $clickedNavLink.attr("disabled") === "disabled";
 
         if (e.which !== 1 || $clickedNavLink.parents(`.my-nav-item`).first().classes().some(c => c.startsWith("my-drop"))) {
@@ -136,6 +148,11 @@ $(document).ready(function () {
 
         if (!isRendered) {
             console.log("nav-link is not rendered yet");
+            return;
+        }
+
+        if (!isAdjusted) {
+            console.log("nav-link is not adjusted yet");
             return;
         }
 
@@ -228,9 +245,8 @@ $(document).ready(function () {
         NavBarUtils.setNavLinksActiveClasses();
     });
 
-    $(document).on("mouseenter", ".my-nav-item > .my-nav-link", async function () { // [rendered='true']:not([disabled])
-        const navLink = this;
-        const $navLink = $(navLink);
+    async function $navLink_MouseEnterAsync($navLink) { // [rendered='true']:not([disabled])
+        const navLink = $navLink[0];
         const $navItem = $navLink.parents(".my-nav-item").first();
         const navLinkContent = $navLink.children(".my-nav-link-content")[0];
         // it specifically can't be `$navlink.children("div").children("svg").children("path").toArray();` because search icon for instance is in different navLink but in the same NavItem
@@ -240,6 +256,7 @@ $(document).ready(function () {
         const $searchContainer = $nb.find(".my-nav-search-container").first();
         const $modals = $(".my-modal");
         const isRendered = ($navLink.attr("rendered") || "false").toBool();
+        const isAdjusted = ($navLink.attr("adjusted") || "false").toBool();
         const isDisabled = $navLink.is(".disabled") || $navLink.attr("disabled") === "disabled";
 
         for (let anim of runningAnims) {
@@ -247,21 +264,24 @@ $(document).ready(function () {
             NavBarUtils.animsNavBar.remove(anim);
         }
 
-        if (!isRendered || isDisabled) {
-            $navLink.mouseleave();
+        if (!isRendered || !isAdjusted || isDisabled) {
+            console.log(`Not hovering: isRendered = ${isRendered}, isAdjusted = ${isAdjusted}, isDisabled = ${isDisabled}`);
             return;
         }
 
         if (!$nb.is(".shown") && !$navItem.is(".my-toggler, .my-home, .my-brand, .my-search, .my-login")) { // prevents hovering ddl if navbar is hiding
-            $navLink.mouseleave();
+            console.log(`Not hovering: navbar is hiding`);
             return;
         }
         if ($searchContainer.is(".shown") && !$navLink.parent().hasClass("my-search") || $modals.is(".shown")) {// is implies any
-            $navLink.mouseleave();
+            console.log(`Not hovering: search container or one of the modals is shown`);
             return;
         }
 
-        if ($navLink.is(".hovered")) return; // hover can happen only once, otherwise it would take init css from already hovered item and animation would be broken
+        if ($navLink.is(".hovered")) {
+            console.log(`Not hovering: nav-link is already hovered`);
+            return; 
+        } // hover can happen only once, otherwise it would take init css from already hovered item and animation would be broken
         $navLink.addClass("hovered");
 
         const origBoxShadow = $navLink.css("box-shadow") === "none" ? "0 0 0.00000001px 0.00000001px rgb(255, 255, 255)" : $navLink.css("box-shadow");
@@ -332,6 +352,28 @@ $(document).ready(function () {
             easing: "easeInOutSine"
         }));
 
+    }
+    
+    // This version wouldn't fire if element is already hovered on page load
+    //$(document).on("mouseenter", ".my-nav-item > .my-nav-link", async e => await $navLink_MouseEnterAsync($(e.currentTarget)));
+
+    // This version would be bugged with 'isHovered()' using 'getBoundingClientRect()', it would not allow some 'mouseleave' events to trigger
+    $(document).on("mousemove", ".my-nav-item > .my-nav-link", async function (e) {
+        const $hoverableNavLinks = $(".my-navbar").find(".my-nav-item > .my-nav-link[adjusted='true'][rendered='true']:not([disabled]):not(.hovered)");
+        const $hoveredNavLink = $hoverableNavLinks.$toArray().singleOrNull($hnl => $hnl.is(":hover")); // .isHovered(e.clientX, e.clientY)
+        
+        //if ($("#dbg").length === 0) {
+        //    $("body").append("<div id='dbg' style='position: absolute; right: 400px; top: 200px; background: black; color: white; height: 24px; z-index: 1000'><div/>");
+        //}
+
+        //const $hoveredNavLinkWoConditions = $(".my-navbar").find(".my-nav-item > .my-nav-link").$toArray().singleOrNull($hnl => $hnl.isHovered(e.clientX, e.clientY));
+        //$("#dbg").text(`coords: x = ${e.clientX}, y = ${e.clientY} | ${$hoveredNavLinkWoConditions ? $hoveredNavLinkWoConditions.text().trimMultiline() : "< nothing >"} hovered`);
+
+        if ($hoveredNavLink) {
+            $navLink_MouseEnterAsync($hoveredNavLink);
+            console.log(`hover called for ${$hoveredNavLink.text().trimMultiline()}`);
+        }
+        //$(document).off("mousemove");
     });
 
     $(document).on("mouseleave", ".my-nav-item > .my-nav-link", async function () {
@@ -348,8 +390,12 @@ $(document).ready(function () {
             NavBarUtils.animsNavBar.remove(anim);
         }
 
-        if (!$navlink.is(".hovered")) return; // hover can happen only once, otherwise it would take init css from already hovered item and animation would be broken
+        if (!$navlink.is(".hovered")) {
+            console.log(`mouseleave won't be called, ${$navlink.text().trimMultiline()} is not hovered`);
+            return; 
+        }// hover can happen only once, otherwise it would take init css from already hovered item and animation would be broken
         $navlink.removeClass("hovered");
+        console.log(`Calling 'mouseleave' for '${$navlink.text().trimMultiline()}'`);
 
         const initCss = NavBarUtils.NavLinksInitCss[$navlink.attr("my-guid")];
 
@@ -401,4 +447,26 @@ $(document).ready(function () {
         NavBarUtils.handleScrollBarChange(true);
     });
 
+    // This version would cause a lot of overheaad
+    //let $hoveredNavLink;
+    //await utils.waitUntilAsync(() => {
+    //    const $hoverableNavLinks = $(".my-navbar").find(".my-nav-item > .my-nav-link[adjusted='true'][rendered='true']:not([disabled]):not(.hovered)");
+    //    $hoveredNavLink = $hoverableNavLinks.$toArray().singleOrNull($hnl => $hnl.isHovered());
+    //    return $hoveredNavLink !== null;
+    //}, 500);
+    //$navLink_MouseEnterAsync($hoveredNavLink);
+
+    //let arr = [1, 2, 3, 4];
+    //let arr2 = [{ name: "Sara", age: "31" }, { name: "Bob", age: "35" }, { name: "Joe", age: "35" }];
+    //let guid = utils.guid();
+    //let select = arr.select(x => x + 2);
+    //let where = arr.where(x => x % 2 === 0);
+    //let distinctBy = arr2.distinctBy(x => x.age);
+    //let skipLast = arr.skipLast(3);
+    //let joinAsString = arr2.select(x => x.name).joinAsString(", ");
+    //let isAbsoluteUrl = "https://koverss.k/".isAbsoluteUrl();
+    //let trimStart = arr2[0].name.trimStart("S");
+    //let trimEnd = arr2[0].name.trimEnd("ra");
+    //let isGuid = guid.isGuid();
+    //let forEach = arr2.forEach(x => x.name = "<not set>");
 });

@@ -1,7 +1,8 @@
 ﻿/// <reference path="../libs/libman/jquery/dist/jquery.js" />
 
-import _ from "../libs/libman/underscore/underscore-esm.js";
+import _, { select } from "../libs/libman/underscore/underscore-esm.js";
 import utils from "./utils.js";
+import Wrapper, { JQueryWrapper } from "./wrapper.js";
 
 // #region ObjectExtensions
 
@@ -481,6 +482,38 @@ Object.defineProperty(String.prototype, "pathToNameWithExtension", {
     configurable: true
 });
 
+Object.defineProperty(String.prototype, "isAbsoluteUrl", {
+    value: function () {
+        return Wrapper.string(this).isAbsoluteUrl().unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "trimStart", {
+    value: function (strToTrimFromStart) {
+        return Wrapper.string(this).trimStart(strToTrimFromStart).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "trimEnd", {
+    value: function (strToTrimFromEnd) {
+        return Wrapper.string(this).trimEnd(strToTrimFromEnd).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(String.prototype, "isGuid", {
+    value: function () {
+        return Wrapper.string(this).isGuid().unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region ArrayExtensions
@@ -843,6 +876,46 @@ Object.defineProperty(Array.prototype, "orderByWithDirection", {
     configurable: true
 });
 
+Object.defineProperty(Array.prototype, "select", {
+    value: function (selector) {
+        return Wrapper.array(this).select(selector).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Array.prototype, "where", {
+    value: function (filter) {
+        return Wrapper.array(this).where(filter).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Array.prototype, "distinctBy", {
+    value: function (selector) {
+        return Wrapper.array(this).distinctBy(selector).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Array.prototype, "forEach", {
+    value: function (action) {
+        return Wrapper.array(this).forEach(action).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
+Object.defineProperty(Array.prototype, "skipLast", {
+    value: function (n) {
+        return Wrapper.array(this).skipLast(n).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region FileListExtensions
@@ -961,7 +1034,7 @@ jQuery.fn.extend({
         return this;
     },
     firstOrNull: function() {
-        return this.nullifyIfEmpty();
+        return $(this[0]).nullifyIfEmpty();
     },
     textOnlySelf: function() {
         if (this[0] === window || this[0] === document)
@@ -1169,6 +1242,13 @@ jQuery.fn.extend({
             return caretPosition;
         }
         return Math.max(this[0].selectionStart, this[0].selectionEnd);
+    },
+    isHovered: function(cursorX, cursorY) {
+        // TODO: This would prevent some 'mouseleave' events from being triggered, using ':hover' instead atm
+        return Wrapper.$(this).isHovered(cursorX, cursorY).unwrap();
+    },
+    attrOrNull: function(attrName) {
+        return Wrapper.$(this).attrOrNull(attrName).unwrap();
     }
 });
 

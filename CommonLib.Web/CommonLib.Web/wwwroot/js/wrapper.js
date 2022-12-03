@@ -38,6 +38,10 @@ export default class Wrapper {
         return new BoolWrapper(bool);
     }
 
+    static number(number) {
+        return new NumberWrapper(number);
+    }
+
     unwrap = () => _.isBoolean(this._o) ? this._o : (this._o || null);
 
     static enforceString(o) {
@@ -49,6 +53,16 @@ export default class Wrapper {
             throw new Error("Argument must be of type 'String'");
         }
     } 
+
+    static enforceNumber(o) {
+        if (o instanceof NumberWrapper) {
+            return o.unwrap();
+        } else if (_.isNumber(o)) {
+            return o;
+        } else {
+            throw new Error("Argument must be of type 'Number'");
+        }
+    }
 } // TODO: make extensions use wrappers
 
 export class ObjectWrapper extends Wrapper {
@@ -97,6 +111,7 @@ export class JQueryWrapper extends Wrapper {
     $toArray = () => Wrapper.array(JQueryConverter.$toArray(this._$selectors));
 
     attrOrNull = (attrName) => Wrapper.string(JQueryExtensions.attrOrNull(this._$selectors, attrName));
+    isHovered = (cursorX, cursorY) => Wrapper.bool(JQueryExtensions.isHovered(this._$selectors, Wrapper.enforceNumber(cursorX), Wrapper.enforceNumber(cursorY)));
 }
 
 export class StringWrapper extends Wrapper {
@@ -131,6 +146,18 @@ export class BoolWrapper extends Wrapper {
         }
         super(bool);
         this._bool = bool;
+    }
+}
+
+export class NumberWrapper extends Wrapper {
+    _number;
+
+    constructor(number) {
+        if (!_.isNumber(number)) {
+            throw new Error("This is not a Number Object");
+        }
+        super(number);
+        this._number = number;
     }
 }
 

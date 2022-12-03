@@ -132,7 +132,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             
             //var navitems = Descendants.OfType<MyNavItemBase>().Where(c => c.InteractionState.V.State != ComponentStateKind.Enabled).ToArray();
             //await SetControlStatesAsync(ComponentState.Enabled, navitems);
-
+            
             await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterRender");
         }
 

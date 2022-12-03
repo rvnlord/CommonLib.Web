@@ -576,8 +576,8 @@ namespace CommonLib.Web.Source.Common.Components
                 AuthenticatedUser = authResponse.Result; // ta the end because AUthenticatedUser servees as a Parameter in Login.razor so I don't want to cause rerendeer and changing the valuee prematurely
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
-                var page = navBar.Siblings.Single(c => c.IsPage);
-                if (page != this)
+                var page = navBar.Siblings.SingleOrNull(c => c.IsPage);
+                if (page is not null && page != this) // it would be null for a subpage that doesn't definee any 'Page' component, i.e.: empty page
                     await page.StateHasChangedAsync(true);
                 //await Layout.Components.Values.Single(c => c._isLayout).StateHasChangedAsync(true);
                 //if (!changeStateEvenIfAuthUserIsTheSame)

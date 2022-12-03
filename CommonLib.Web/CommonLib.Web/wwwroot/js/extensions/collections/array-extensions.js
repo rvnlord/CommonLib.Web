@@ -45,8 +45,17 @@ export default class ArrayExtensions {
         return array.slice(0, -n);
     }
 
-    static joinAsString(array, joinChar) {
-        return array.join(joinChar);
+    static joinAsString(arr, separator) {
+        if (!arr.every(el => typeof el === "string" || el instanceof String))
+            throw new Error("some array elements are not of type \"string\"");
+        let joinedString = "";
+        for (let i = 0; i < arr.length; i++) {
+            joinedString += arr[i];
+            if (i !== arr.length - 1) {
+                joinedString += separator;
+            }
+        }
+        return joinedString;
     }
 }
 
