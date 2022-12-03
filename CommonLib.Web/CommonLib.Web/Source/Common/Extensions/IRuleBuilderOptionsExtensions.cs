@@ -14,6 +14,7 @@ using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
 using FluentValidation;
+using Google.Protobuf.WellKnownTypes;
 using MoreLinq.Extensions;
 using WebSocketSharp;
 
@@ -43,12 +44,12 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<T, string> MinLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int minLength)
         {
-            return rb.Must((_, value, _) => value.Length >= minLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at least {minLength} characters");
+            return rb.Must((_, value, _) => value?.Length >= minLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at least {minLength} characters");
         }
 
         public static IRuleBuilderOptions<T, string> MaxLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int maxLength)
         {
-            return rb.Must((_, value, _) => value.Length <= maxLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at most {maxLength} characters");
+            return rb.Must((_, value, _) => value?.Length <= maxLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at most {maxLength} characters");
         }
 
         public static IRuleBuilderOptions<T, string> AlphaNumericWithMessage<T>(this IRuleBuilder<T, string> rb)
@@ -387,6 +388,22 @@ namespace CommonLib.Web.Source.Common.Extensions
                 displayName = vc.DisplayName ?? vc.GetField("_parentContext")?.GetProperty<string>("DisplayName");
                 return value.All(fd => fd.Status != UploadStatus.Uploading || !fd.ValidateUploadStatus);
             }).WithMessage((_, _) => $"\"{displayName}\" can't be still uploading");
+        }
+
+        public static IRuleBuilderOptions<TModel, FileDataList> PotentialAvatarsNotInUseWithMessage<TModel>(this IRuleBuilder<TModel, FileDataList> rb, IAccountClient accountClient, IAccountManager accountManager)
+        {
+            ApiResponse<FileDataList> avatarsInUseResp = null;
+            string displayName = null;
+            return rb.MustAsync(async (_, value, vc, _) =>
+            {
+                displayName = vc.DisplayName ?? vc.GetField("_parentContext")?.GetProperty<string>("DisplayName");
+                avatarsInUseResp = accountClient is not null ? await accountClient.FindAvatarsInUseAsync(false) : await accountManager.FindAvatarsInUseAsync(false);
+                if (avatarsInUseResp.IsError)
+                    return false;
+                
+                value.ForEach(fd => fd.IsAlreadyInUse = fd.In(avatarsInUseResp.Result));
+                return !avatarsInUseResp.Result.Intersect(value).Any();
+            }).WithMessage((_, _) => avatarsInUseResp.IsError ? avatarsInUseResp.Message : $"Some of the \"{displayName}\" are already in use");
         }
 
         public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)

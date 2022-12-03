@@ -10,7 +10,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
 {
     public interface IAccountClient
     {
-        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id);
+        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false);
         Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name);
         Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email);
         Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string activationCode);
@@ -31,5 +31,6 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword);
         Task<ApiResponse<EditUserVM>> EditAsync(EditUserVM user);
         Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name);
+        Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeFileData);
     }
 }

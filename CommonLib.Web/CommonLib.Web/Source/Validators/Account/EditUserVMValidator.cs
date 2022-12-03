@@ -49,7 +49,7 @@ namespace CommonLib.Web.Source.Validators.Account
                 .NameNotInUseWithMessage(AccountClient, AccountManager);
 
             RuleFor(m => m.PotentialAvatars)
-                .SetValidator(new AvatarValidator());
+                .SetValidator(new AvatarValidator(AccountManager));
                 //.WithDisplayName(m => m.PotentialAvatars); // not really needed
 
             RuleFor(m => m.Email)

@@ -47,9 +47,9 @@ namespace CommonLib.Web.Source.Services.Account
             _myJsRuntime = myJsRuntime;
         }
 
-        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
+        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false)
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyid", id);
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindUserVM>>("api/account/finduserbyid", new JObject { ["Id"] = id, ["IncludeEmailClaim"] = includeEmailClaim });
         }
 
         public async Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string email)
@@ -80,6 +80,11 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FileData>>($"api/account/{nameof(AccountApiController.GetUserAvatarByNameAsync).BeforeLast("Async")}", name);
+        }
+
+        public async Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeFileData)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<FileDataList>>($"api/account/{nameof(AccountApiController.FindAvatarsInUseAsync).BeforeLast("Async")}", includeFileData);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)

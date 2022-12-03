@@ -56,7 +56,7 @@ namespace CommonLib.Web.Source.Services.Upload
             {
                 storedFile = filePath.PathToFileData(false);
                 storedFile.ValidateUploadStatus = false;
-                if (!(await new AvatarValidator().ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
+                if (!(await new AvatarValidator(_accountManager).ValidateAsync(storedFile.ToListOfOne().ToFileDataList())).IsValid)
                     return new ApiResponse(StatusCodeType.Status401Unauthorized, "The part of the File stored on server is not valid", null);
             }
 
@@ -75,7 +75,7 @@ namespace CommonLib.Web.Source.Services.Upload
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
             chunk.ValidateUploadStatus = false;
-            if (!(await new AvatarValidator().ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
+            if (!(await new AvatarValidator(_accountManager).ValidateAsync(chunk.ToListOfOne().ToFileDataList())).IsValid)
                 return new ApiResponse(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
             chunk.ValidateUploadStatus = true;
             

@@ -46,7 +46,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
         protected MyAsyncEventHandler<MyButtonBase, MouseEventArgs> _btnPreviewControls_Click { get; set; }
 
         public IReadOnlyList<FileData> Files => Value?.ToList() ?? new List<FileData>();
-        public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
+        public IReadOnlyList<FileData> ValidFiles => Value?.Where(f => f.IsFileSizeValid && f.IsExtensionValid && !f.IsAlreadyInUse || f.IsPreAdded).ToList() ?? new List<FileData>(); // without checking uploaded status
 
         [Parameter]
         public BlazorParameter<Expression<Func<FileData>>> PreviewFor { get; set; }
@@ -209,7 +209,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     file.StateChanged -= FileData_StateChanged;
                     file.StateChanged += FileData_StateChanged;
                 }
-                await SetMultipleFileBtnsStateAsync(null); // null, not calling SetThumbnail() because thumbnail is set in js call directly so I need to updated previewedFile directly
+                await SetMultipleFileBtnsStateAsync(addedFiles.Last()); // null, not calling SetThumbnail() because thumbnail is set in js call directly so I need to updated previewedFile directly
                 _previewedFile = addedFiles.Last();
                 await SetPreviewControlsAsync();
             }

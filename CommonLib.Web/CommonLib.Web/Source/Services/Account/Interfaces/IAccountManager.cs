@@ -12,7 +12,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
 {
     public interface IAccountManager
     {
-        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id);
+        Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false);
         Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name);
         Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email);
         Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode);
@@ -36,5 +36,6 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<bool>> CheckUserPasswordAsync(CheckPasswordUserVM userToCheckPassword);
         Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
         Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name);
+        Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData);
     }
 }

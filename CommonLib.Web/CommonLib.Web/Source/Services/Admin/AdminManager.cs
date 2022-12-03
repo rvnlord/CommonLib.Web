@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -7,12 +8,16 @@ using AutoMapper;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
+using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
+using CommonLib.Web.Source.Validators.Admin;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Web.Source.ViewModels.Admin;
 using Microsoft.AspNetCore.Identity;
@@ -50,7 +55,7 @@ namespace CommonLib.Web.Source.Services.Admin
             {
                 var userToEditByAdmin = _mapper.Map(user, new FindUserVM());
                 userToEditByAdmin.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await _accountManager.FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
-                userToEditByAdmin.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await _accountManager.FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
+                userToEditByAdmin.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await _accountManager.FindClaimByNameAsync(c.Type)).Result).OrderByAsync(r => r.Name).ToListAsync();
                 userToFind.Add(userToEditByAdmin);
             }
 
@@ -78,44 +83,99 @@ namespace CommonLib.Web.Source.Services.Admin
             return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Deleted User: \"{userToDelete.UserName}\"", null, userToDelete);
         }
 
-        public async Task<ApiResponse<AdminEditUserVM>> EditUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToEdit)
+        public async Task<ApiResponse<AdminEditUserVM>> EditUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdminEdit)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
                 return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Users", null);
-            if (userToEdit.Id == authUser.Id && !userToEdit.HasRole("Admin"))
+            if (userToAdminEdit.Id == authUser.Id && !userToAdminEdit.HasRole("Admin"))
                 return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove \"Admin\" Role from your own Account", null);
-            if (userToEdit.Id == default)
+            if (userToAdminEdit.Id == default)
                 return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, "Id for the User was not supplied, as it is done automatically it should never happen", null);
-            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
-            if (user == null)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToEdit.Id}\" was not found, it should never happen", null);
+            if (!(await new AdminEditUserVMValidator(_accountManager).ValidateAsync(userToAdminEdit)).IsValid)
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
-            user.Email = userToEdit.Email.IsNullOrWhiteSpace() ? user.Email : userToEdit.Email;
-            user.UserName = userToEdit.UserName.IsNullOrWhiteSpace() ? user.UserName : userToEdit.UserName;
-            user.EmailConfirmed = userToEdit.IsConfirmed;
-            var updateuserResp = await _userManager.UpdateAsync(user);
-            if (!updateuserResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToEdit.Id}\" Failed", updateuserResp.Errors.ToLookup(userToEdit.GetPropertyNames()));
+            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToAdminEdit.Id);
+            if (user is null)
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToAdminEdit.Id}\" was not found, it should never happen", null);
 
-            if (!userToEdit.Password.IsNullOrWhiteSpace() && _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToEdit.Password) != PasswordVerificationResult.Success) // if admin changed password to a new one
+            var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars"); // on purpose if editing other user avatar the _teemp file should be stored within admin user's foldeer not within the destination user's folder 
+            var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
+            var existingRoles = await _userManager.GetRolesAsync(user);
+            var newRoles = userToAdminEdit.Roles.Select(r => r.Name).ToList();
+            var existingClaims = (await _userManager.GetClaimsAsync(user)).ToList(); // take only claim names into account because I am not differentiating between values anyway
+            var newClaims = userToAdminEdit.Claims.Select(c => new Claim(c.Name, c.Values.First().Value)).ToList();
+            var propsToChange = new List<string>();
+
+            var userNameChanged = !userToAdminEdit.UserName.EqualsIgnoreCase(user.UserName);
+            var emailChanged = !userToAdminEdit.Email.EqualsIgnoreCase(user.Email);
+            var passwordChanged = !userToAdminEdit.Password.IsNullOrWhiteSpace() && _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToAdminEdit.Password) != PasswordVerificationResult.Success;
+            var avatarChanged = newAvatar is not null && user.Avatar?.Hash?.EqualsInvariant(newAvatar.Hash) != true;
+            var avatarShouldBeRemoved = userToAdminEdit.Avatar == FileData.Empty;
+            var rolesChanged = !newRoles.CollectionEqual(existingRoles);
+            var claimsChanged = !newClaims.Select(c => c.Type).CollectionEqual(existingClaims.Select(c => c.Type));
+
+            if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved && !rolesChanged && !claimsChanged)
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
+            
+            if (userNameChanged)
             {
-                user.PasswordHash = _passwordHasher.HashPassword(user, userToEdit.Password);
-                await _db.SaveChangesAsync();
-                if (userToEdit.Id == authUser.Id)
-                    userToEdit.Ticket = await _accountManager.GenerateLoginTicketAsync(user.Id, user.PasswordHash, authUser.RememberMe);
+                user.UserName = userToAdminEdit.UserName;
+                propsToChange.Add(nameof(user.UserName));
             }
 
-            var removeRolesResp = await _userManager.RemoveFromRolesAsync(user, await _userManager.GetRolesAsync(user));
-            var editRolesResp = await _userManager.AddToRolesAsync(user, userToEdit.Roles.Select(r => r.Name));
-            if (!removeRolesResp.Succeeded || !editRolesResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToEdit.Id}\" Succeeded, but modifying Roles Failed. ({(!removeRolesResp.Succeeded ? removeRolesResp.FirstError() : editRolesResp.FirstError())})", null);
+            if (emailChanged)
+            {
+                user.Email = userToAdminEdit.Email;
+                user.NormalizedEmail = userToAdminEdit.Email.ToUpperInvariant();
+                user.EmailConfirmed = true;
+                propsToChange.Add(nameof(user.Email));
+            }
 
-            var removeClaimsResp = await _userManager.RemoveClaimsAsync(user, await _userManager.GetClaimsAsync(user));
-            var editClaimsResp = await _userManager.AddClaimsAsync(user, userToEdit.Claims.Select(c => new Claim(c.Name, c.Values.First().Value))); // we don't consider values for simplicity sake so we can tak any (first) available
-            if (!removeClaimsResp.Succeeded || !editClaimsResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToEdit.Id}\" Succeeded, but modifying Claims Failed. ({(!removeClaimsResp.Succeeded ? removeClaimsResp.FirstError() : editClaimsResp.FirstError())})", null);
+            if (passwordChanged)
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, userToAdminEdit.Password); // use db directly to override identity validation because we want to be able to provide password for a null hash if user didn't set password before
+                userToAdminEdit.Ticket = await _accountManager.GenerateLoginTicketAsync(userToAdminEdit.Id, user.PasswordHash, authUser.RememberMe);
+                propsToChange.Add("Password");
+            }
 
-            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Modified User: \"{userToEdit.UserName}\"", null, userToEdit);
+            if (avatarChanged || avatarShouldBeRemoved)
+            {
+                var dbAvatar = _db.Files.SingleOrDefault(f => f.UserHavingFileAsAvatarId == user.Id);
+                if (dbAvatar is not null)
+                {
+                    dbAvatar.UserHavingFileAsAvatarId = null;
+                    await _db.SaveChangesAsync();
+                }
+
+                if (avatarChanged)
+                    _db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash); // or this and set userid in avatar to null first
+
+                userToAdminEdit.Avatar = newAvatar;
+                FileUtils.EmptyDir(tempAvatarDir);
+                propsToChange.Add(nameof(user.Avatar));
+            }
+
+            await _db.SaveChangesAsync();
+
+            if (rolesChanged)
+            {
+                var removeRolesResp = await _userManager.RemoveFromRolesAsync(user, existingRoles);
+                var editRolesResp = await _userManager.AddToRolesAsync(user, userToAdminEdit.Roles.Select(r => r.Name));
+                if (!removeRolesResp.Succeeded || !editRolesResp.Succeeded)
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Roles Failed. ({(!removeRolesResp.Succeeded ? removeRolesResp.FirstError() : editRolesResp.FirstError())})", null);
+                propsToChange.Add(nameof(user.Roles));
+            }
+
+            if (claimsChanged)
+            {
+                var removeClaimsResp = await _userManager.RemoveClaimsAsync(user, existingClaims);
+                var editClaimsResp = await _userManager.AddClaimsAsync(user, existingClaims); // we don't consider values for simplicity sake so we can tak any (first) available
+                if (!removeClaimsResp.Succeeded || !editClaimsResp.Succeeded)
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Claims Failed. ({(!removeClaimsResp.Succeeded ? removeClaimsResp.FirstError() : editClaimsResp.FirstError())})", null);
+                propsToChange.Add(nameof(user.Claims));
+            }
+
+            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Modified User: \"{userToAdminEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", null, userToAdminEdit);
         }
 
         public async Task<ApiResponse<List<FindRoleVM>>> GetRolesAsync(AuthenticateUserVM authUser)
@@ -167,41 +227,62 @@ namespace CommonLib.Web.Source.Services.Admin
             return new ApiResponse<List<FindClaimVM>>(StatusCodeType.Status200OK, "Successfully Retrieved Claims", null, claims);
         }
 
-        public async Task<ApiResponse<AdminEditUserVM>> AddUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdd)
+        public async Task<ApiResponse<AdminEditUserVM>> AddUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdminAdd)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
                 return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Users", null);
+            if (!(await new AdminEditUserVMValidator(_accountManager).ValidateAsync(userToAdminAdd)).IsValid)
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+
+            var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
+            var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
+            var newRoles = userToAdminAdd.Roles.Select(r => r.Name).ToList();
+            var newClaims = userToAdminAdd.Claims.Select(r => r.Name).ToList();
+            var passwordSet = !userToAdminAdd.Password.IsNullOrWhiteSpace();
+            var avatarSet = newAvatar is not null;
+            var rolesSet = newRoles.Any();
+            var claimsSet = newClaims.Any();
 
             var user = new DbUser
             {
-                UserName = userToAdd.UserName,
-                Email = userToAdd.Email,
-                EmailConfirmed = userToAdd.IsConfirmed,
+                UserName = userToAdminAdd.UserName,
+                Email = userToAdminAdd.Email,
+                NormalizedEmail = userToAdminAdd.Email.ToUpperInvariant(),
+                EmailConfirmed = true
             };
+            
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            user = _db.Users.Single(u => u.UserName.ToLower() == user.UserName.ToLower());
+            await _userManager.UpdateSecurityStampAsync(user);
 
-            var addUserResp = await _userManager.CreateAsync(user);
-            if (!addUserResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Adding User \"{userToAdd.UserName}\" Failed. ({addUserResp.FirstError()})", null);
+            if (passwordSet)
+                user.PasswordHash = _passwordHasher.HashPassword(user, userToAdminAdd.Password);
 
-            if (!userToAdd.Password.IsNullOrWhiteSpace())
+            if (avatarSet)
             {
-                user = await _db.Users.SingleOrDefaultAsync(u => u.UserName.ToLower() == userToAdd.UserName.ToLower());
-                if (user is not null)
-                {
-                    user.PasswordHash = _passwordHasher.HashPassword(user, userToAdd.Password); // use db directly to override identity constraints, we are admin after all here
-                    await _db.SaveChangesAsync();
-                }
+                _db.Files.AddOrUpdate(newAvatar.ToDbFile(user.Id, user.Id), f => f.Hash);
+                await _db.SaveChangesAsync();
+                userToAdminAdd.Avatar = newAvatar;
+                FileUtils.EmptyDir(tempAvatarDir);
+            }
+            
+            if (rolesSet)
+            {
+                var addRolesResp = await _userManager.AddToRolesAsync(user, userToAdminAdd.Roles.Select(r => r.Name));
+                if (!addRolesResp.Succeeded)
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addRolesResp.FirstError()})", null);
             }
 
-            var addRolesResp = await _userManager.AddToRolesAsync(user, userToAdd.Roles.Select(r => r.Name));
-            if (!addRolesResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Adding User \"{userToAdd.UserName}\" Succeeded, but modifying Roles Failed. ({addRolesResp.FirstError()})", null);
+            if (claimsSet)
+            {
+                var addClaimsResp = await _userManager.AddClaimsAsync(user, userToAdminAdd.Claims.Select(c => new Claim(c.Name, c.Values.First().Value)));
+                if (!addClaimsResp.Succeeded)
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addClaimsResp.FirstError()})", null);
+            }
 
-            var addClaimsResp = await _userManager.AddClaimsAsync(user, userToAdd.Claims.Select(c => new Claim(c.Name, c.Values.First().Value))); // we don't consider values for simplicity sake so we can tak any (first) available
-            if (!addClaimsResp.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdd.Id}\" Succeeded, but modifying Claims Failed. ({addClaimsResp.FirstError()})", null);
+            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully added User: \"{userToAdminAdd.UserName}\" ", null, userToAdminAdd);
 
-            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Added User: \"{userToAdd.UserName}\"", null, userToAdd);
         }
 
         public async Task<ApiResponse<AdminEditRoleVM>> DeleteRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToDelete)

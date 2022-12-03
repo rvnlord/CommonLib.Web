@@ -20,7 +20,7 @@ namespace CommonLib.Web.Source.Controllers
         }
 
         [HttpPost("finduserbyid")] // POST: api/account/finduserbyid
-        public async Task<JToken> FindUserByIdAsync(JToken jId) => await EnsureResponseAsync(async () => await _accountManager.FindUserByIdAsync(Guid.Parse(jId is JValue ? jId.ToString() : jId["id"]?.ToString() ?? "")));
+        public async Task<JToken> FindUserByIdAsync(JToken jIdAndIncludeEmailClaim) => await EnsureResponseAsync(async () => await _accountManager.FindUserByIdAsync(Guid.Parse(jIdAndIncludeEmailClaim is JValue ? jIdAndIncludeEmailClaim.ToString() : jIdAndIncludeEmailClaim["Id"]?.ToString() ?? ""), jIdAndIncludeEmailClaim["IncludeEmailClaim"].ToBool()));
 
         [HttpPost("finduserbyname")] // POST: api/account/finduserbyname
         public async Task<JToken> FindUserByNameAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.FindUserByNameAsync(jName is JValue ? jName.ToString() : jName["name"]?.ToString()));
@@ -34,8 +34,11 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("findrolebyname")] // POST: api/account/findrolebyname
         public async Task<JToken> FindEoleByName(JToken jRoleName) => await EnsureResponseAsync(async () => await _accountManager.FindRoleByNameAsync(jRoleName["roleName"]?.ToString()));
         
-        [HttpPost("findclaimbyname")] // POST: api/admin/findclaimbyname
+        [HttpPost("findclaimbyname")] // POST: api/account/findclaimbyname
         public async Task<JToken> FindClaimByName(JToken jClaimName) => await EnsureResponseAsync(async () => await _accountManager.FindClaimByNameAsync(jClaimName["claimName"]?.ToString()));
+
+        [HttpPost("findavatarsinuse")] // POST: api/account/findavatarsinuse
+        public async Task<JToken> FindAvatarsInUseAsync(JToken jIncludeData) => await EnsureResponseAsync(async () => await _accountManager.FindAvatarsInUseAsync(jIncludeData is JValue ? jIncludeData.ToBool() : jIncludeData["IncludeData"].ToBool()));
 
         [HttpPost("login")] // POST: api/account/login
         public async Task<JToken> LoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.LoginAsync(user));

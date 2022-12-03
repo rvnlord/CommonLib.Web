@@ -25,6 +25,30 @@ namespace CommonLib.Web.Source.DbContext
             mb.RenameIdentityTables();
 
             mb.Entity<DbUser>()
+                .HasMany(e => e.Claims)
+                .WithOne()
+                .HasForeignKey(uc => uc.UserId)
+                .IsRequired();
+            
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Logins)
+                .WithOne()
+                .HasForeignKey(ul => ul.UserId)
+                .IsRequired();
+            
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Tokens)
+                .WithOne()
+                .HasForeignKey(ut => ut.UserId)
+                .IsRequired();
+            
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Roles)
+                .WithOne()
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired();
+
+            mb.Entity<DbUser>()
                 .HasMany(e => e.Files)
                 .WithOne(e => e.UserOwningFile)
                 .HasForeignKey(e => e.UserOwningFileId)

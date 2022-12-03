@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.DbContext.Models.Account;
 
@@ -23,12 +26,13 @@ namespace CommonLib.Web.Source.Common.Converters
             };
         }
 
-        public static FileData ToFileData(this DbFile dbFile)
+        public static FileData ToFileData(this DbFile dbFile, bool includeData = true)
         {
             return new FileData
             {
                 TotalSizeInBytes = dbFile.Data.Length,
-                Data = dbFile.Data.ToList(),
+                Data = includeData ? dbFile.Data.ToList() : null,
+                DeclaredHash = dbFile.Hash ?? dbFile.Data.Keccak256().ToHexString(),
                 Position = 0,
                 Name = dbFile.Name,
                 Extension = dbFile.Extension.TrimStart('.'),
@@ -44,5 +48,8 @@ namespace CommonLib.Web.Source.Common.Converters
         }
 
         public static FileData ToFileDataOrNull(this DbFile dbFile) => dbFile?.ToFileData();
+
+        public static FileDataList ToFileDataList(this IEnumerable<DbFile> dbFiles, bool includeData = true) => dbFiles.Select(f => f.ToFileData(includeData)).ToFileDataList();
+        public static async Task<FileDataList> ToFileDataListAsync(this Task<IEnumerable<DbFile>> taskDbFiles, bool includeData = true) => (await taskDbFiles).ToFileDataList(includeData);
     }
 }

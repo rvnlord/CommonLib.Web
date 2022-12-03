@@ -1,15 +1,15 @@
-﻿@page "/Admin/EditUser/{id:guid}"
+﻿@page "/admin/adduser/"
 
-@using CommonLib.Web.Source.Common.Utils.UtilClasses
-@using CommonLib.Web.Source.Common.Converters
-@using CommonLib.Web.Source.ViewModels.Account
-@using CommonLib.Source.Common.Converters
-@using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Extensions
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.ViewModels.Account
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using static CommonLib.Web.Source.Models.BlazorParameter
+@using CommonLib.Source.Common.Converters
 
-@inherits EditUserBase
+@inherits AddUserBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
@@ -47,55 +47,45 @@
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminEditUserVM.Id)" Align="@HorizontalAlignment.Right" />
+                    <MyLabel For="@(() => _adminAddUserVM.UserName)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" InteractionState="ComponentState.ForceDisabled" For="@(() => _adminEditUserVM.IdString)" SyncPaddingGroup="edit-panel" />
+                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _adminAddUserVM.UserName)" SyncPaddingGroup="edit-panel" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminEditUserVM.Id)" />
+                    <MyValidationMessage For="@(() => _adminAddUserVM.UserName)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminEditUserVM.UserName)" Align="@HorizontalAlignment.Right" />
+                    <MyLabel For="@(() => _adminAddUserVM.Avatar)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _adminEditUserVM.UserName)" SyncPaddingGroup="edit-panel" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminEditUserVM.UserName)" />
-                </MyCssGridItem>
-
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminEditUserVM.Avatar)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyFileUpload For="@(() => _adminEditUserVM.PotentialAvatars)"
-                              PreviewFor="@BP(() => _adminEditUserVM.Avatar)"
+                    <MyFileUpload For="@(() => _adminAddUserVM.PotentialAvatars)"
+                              PreviewFor="@BP(() => _adminAddUserVM.Avatar)"
                               PredefinedSaveUrl="PredefinedSaveUrlKind.SaveTemporaryAvatar" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminEditUserVM.PotentialAvatars)" />
+                    <MyValidationMessage For="@(() => _adminAddUserVM.PotentialAvatars)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminEditUserVM.Email)" Align="@HorizontalAlignment.Right" />
+                    <MyLabel For="@(() => _adminAddUserVM.Email)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.Envelope)" For="@(() => _adminEditUserVM.Email)" SyncPaddingGroup="edit-panel" />
+                    <MyTextInput Icon="IconType.From(LightIconType.Envelope)" For="@(() => _adminAddUserVM.Email)" SyncPaddingGroup="edit-panel" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminEditUserVM.Email)" />
+                    <MyValidationMessage For="@(() => _adminAddUserVM.Email)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminEditUserVM.Password)" Align="@HorizontalAlignment.Right" />
+                    <MyLabel For="@(() => _adminAddUserVM.Password)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyPasswordInput For="@(() => _adminEditUserVM.Password)" SyncPaddingGroup="edit-panel" />
+                    <MyPasswordInput For="@(() => _adminAddUserVM.Password)" SyncPaddingGroup="edit-panel" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminEditUserVM.Password)" />
+                    <MyValidationMessage For="@(() => _adminAddUserVM.Password)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem @ref="_giRoles" Area="CssGridArea.C1" LGArea="CssGridArea.C2">
@@ -109,7 +99,7 @@
                         <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
                             @foreach (var role in _roles.OrderBy(r => r.Name))
                             {
-                                <MyCheckBox Value="role.In(_adminEditUserVM.Roles)" Check="(s, e, t) => CbRole_CheckedAsync(s, role, s.Value)" Validate="false" Description="@role.Name" key=@role></MyCheckBox>
+                                <MyCheckBox Value="role.In(_adminAddUserVM.Roles)" Check="(s, e, t) => CbRole_CheckedAsync(s, role, s.Value)" Description="@role.Name" key=@role></MyCheckBox>
                             }
                         </div>
                     }
@@ -126,7 +116,7 @@
                         <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
                             @foreach (var claim in _claims.OrderBy(c => c.Name))
                             {
-                                <MyCheckBox Value="claim.In(_adminEditUserVM.Claims)" Check="(s, e, t) => CbClaim_CheckedAsync(s, claim, s.Value)" Validate="false" Description="@claim.Name" key=@claim></MyCheckBox>
+                                <MyCheckBox Value="claim.In(_adminAddUserVM.Claims)" Check="(s, e, t) => CbClaim_CheckedAsync(s, claim, s.Value)" Description="@claim.Name" key=@claim></MyCheckBox>
                             }
                         </div>
                     }
@@ -137,7 +127,7 @@
                            Template="@(new CssGridLayout("1fr", "auto"))"
                            LGTemplate="@(new CssGridLayout("max-content", "auto"))">
                         <MyCssGridItem>
-                            <MyButton Value="@("Save User".ToBp())" SubmitsForm="true" Click="BtnSaveUser_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
+                            <MyButton Value="@("Add User".ToBp())" SubmitsForm="true" Click="BtnAddUser_ClickAsync" Icon="IconType.From(LightIconType.UserPlus)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
                         </MyCssGridItem>
                     </MyCssGrid>
                 </MyCssGridItem>

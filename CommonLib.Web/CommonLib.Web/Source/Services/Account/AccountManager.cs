@@ -62,7 +62,7 @@ namespace CommonLib.Web.Source.Services.Account
             _passwordResetTokenProvider = passwordResetTokenProvider;
         }
 
-        private async Task<ApiResponse<FindUserVM>> FindUserAsync(FindUserVM userToFind)
+        private async Task<ApiResponse<FindUserVM>> FindUserAsync(FindUserVM userToFind, bool includeEmailClaim = false)
         {
             DbUser user;
             if (userToFind.Id != Guid.Empty)
@@ -81,7 +81,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
-            foundUser.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
+            foundUser.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => includeEmailClaim || !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
 
             return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", null, foundUser);
         }
@@ -126,7 +126,7 @@ namespace CommonLib.Web.Source.Services.Account
                 : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
         }
 
-        public Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id) => FindUserAsync(FindUserVM.FromId(id));
+        public Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false) => FindUserAsync(FindUserVM.FromId(id), includeEmailClaim);
         public Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name) => FindUserAsync(FindUserVM.FromUserName(name));
         public Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email) => FindUserAsync(FindUserVM.FromEmail(email));
         public Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode) => FindUserAsync(FindUserVM.FromEmailActivationToken(confirmationCode));
@@ -139,6 +139,12 @@ namespace CommonLib.Web.Source.Services.Account
             
             var avatar = user.Avatar?.ToFileData();
             return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", null, avatar);
+        }
+
+        public async Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData)
+        {
+            var files = (await _db.Files.WhereAsync(f => f.UserHavingFileAsAvatarId != null)).ToFileDataList(false);
+            return new ApiResponse<FileDataList>(StatusCodeType.Status200OK, "Getting Avatars in Use was Successful", null, files);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)

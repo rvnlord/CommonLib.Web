@@ -45,8 +45,11 @@ namespace CommonLib.Web.Source.Validators.Admin
                 .UserManagerCompliantWithMessage(AccountClient, AccountManager)
                 .NameNotInUseWithMessage(AccountClient, AccountManager);
 
+            RuleFor(m => m.Password)
+                .UserManagerCompliantOrNullWithMessage(AccountClient, AccountManager);
+
             RuleFor(m => m.PotentialAvatars)
-                .SetValidator(new AvatarValidator());
+                .SetValidator(new AvatarValidator(AccountManager));
 
             RuleFor(m => m.Email)
                 .RequiredWithMessage()

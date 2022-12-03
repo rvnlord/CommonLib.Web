@@ -66,11 +66,11 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
             if (InteractionState.ParameterValue?.IsForced == true)
                 return;
 
-            var fi = new FieldIdentifier(Model, _propName);
-            if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))
+            var fi = Model is not null && !_propName.IsNullOrWhiteSpace() ? new FieldIdentifier(Model, _propName) : (FieldIdentifier?)null;
+            if (e.ValidationMode == ValidationMode.Model || fi?.In(e.NotValidatedFields) == true || fi?.In(e.ValidatedFields) == true)
                 RemoveClasses("my-valid", "my-invalid");
 
-            if (e.ValidationMode == ValidationMode.Property && !fi.In(e.ValidatedFields)) // do nothing if identifier is is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
+            if (e.ValidationMode == ValidationMode.Property && fi is not null && !((FieldIdentifier)fi).In(e.ValidatedFields)) // do nothing if identifier is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
             {
                 await NotifyParametersChangedAsync().StateHasChangedAsync(true);
                 return;
@@ -96,6 +96,9 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 //    await fileUpload.SetMultipleFileBtnsStateAsync(null);
                 //}
             }
+
+            if (fi is null)
+                return;
 
             var wasCurrentFieldValidated = _propName.In(e.ValidatedFields.Select(f => f.FieldName));
             var isCurrentFieldValid = !_propName.In(e.InvalidFields.Select(f => f.FieldName));
