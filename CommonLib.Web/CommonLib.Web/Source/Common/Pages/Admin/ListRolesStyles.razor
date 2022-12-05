@@ -1,0 +1,30 @@
+﻿@namespace CommonLib.Web.Source.Common.Pages.Admin
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using CommonLib.Source.Common.Converters
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+    
+    .admin-roles-list-role-properties-container {
+        display: grid;
+        grid-column: 1 / span 1;
+        grid-template-columns: 2fr 10fr;
+        column-gap: 10px;
+    }
+
+    .admin-roles-list-users-container {
+        grid-column: 1;
+    }
+
+    .admin-roles-list-card-body {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 10px;
+    }
+
+    .delete-role-message {
+        font-size: @((FontSize * 1.25).Px());
+        text-align: center;
+    }
+    
+</style>

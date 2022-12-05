@@ -116,7 +116,10 @@ namespace CommonLib.Web.Source.Services.Admin
 
             if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved && !rolesChanged && !claimsChanged)
                 return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
-            
+
+            if (user.SecurityStamp.IsNullOrWhiteSpace())
+                await _userManager.UpdateSecurityStampAsync(user);
+
             if (userNameChanged)
             {
                 user.UserName = userToAdminEdit.UserName;
@@ -160,7 +163,7 @@ namespace CommonLib.Web.Source.Services.Admin
             if (rolesChanged)
             {
                 var removeRolesResp = await _userManager.RemoveFromRolesAsync(user, existingRoles);
-                var editRolesResp = await _userManager.AddToRolesAsync(user, userToAdminEdit.Roles.Select(r => r.Name));
+                var editRolesResp = await _userManager.AddToRolesAsync(user, newRoles);
                 if (!removeRolesResp.Succeeded || !editRolesResp.Succeeded)
                     return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Roles Failed. ({(!removeRolesResp.Succeeded ? removeRolesResp.FirstError() : editRolesResp.FirstError())})", null);
                 propsToChange.Add(nameof(user.Roles));
@@ -169,7 +172,7 @@ namespace CommonLib.Web.Source.Services.Admin
             if (claimsChanged)
             {
                 var removeClaimsResp = await _userManager.RemoveClaimsAsync(user, existingClaims);
-                var editClaimsResp = await _userManager.AddClaimsAsync(user, existingClaims); // we don't consider values for simplicity sake so we can tak any (first) available
+                var editClaimsResp = await _userManager.AddClaimsAsync(user, newClaims); // we don't consider values for simplicity sake so we can tak any (first) available
                 if (!removeClaimsResp.Succeeded || !editClaimsResp.Succeeded)
                     return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Claims Failed. ({(!removeClaimsResp.Succeeded ? removeClaimsResp.FirstError() : editClaimsResp.FirstError())})", null);
                 propsToChange.Add(nameof(user.Claims));
