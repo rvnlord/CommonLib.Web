@@ -58,12 +58,17 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
             if (Type == NavItemType.Login)
             {
                 var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent  
-                AuthenticatedUser = (await AccountClient.GetAuthenticatedUserAsync()).Result;
-                if (!AuthenticatedUser.Equals(prevAuthUser))
-                    await StateHasChangedAsync(true);
+                var authResp = await AccountClient.GetAuthenticatedUserAsync();
+                if (!authResp.IsError)
+                {
+                    AuthenticatedUser = authResp.Result;
+                    if (!AuthenticatedUser.Equals(prevAuthUser))
+                        await StateHasChangedAsync(true);
+                    if (_disabledNavLink is not null && _disabledNavLink.InteractionState.V.IsDisabledOrForceDisabled)
+                        await SetControlStateAsync(ComponentState.Enabled, _disabledNavLink);
+                }
             }
-
-            if (_disabledNavLink is not null)
+            else if (_disabledNavLink is not null && _disabledNavLink.InteractionState.V.IsDisabledOrForceDisabled)
                 await SetControlStateAsync(ComponentState.Enabled, _disabledNavLink);
         }
     }

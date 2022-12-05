@@ -560,7 +560,7 @@ namespace CommonLib.Web.Source.Common.Components
             //Logger.For(GetType()).Info($"Setting Auth user to {authResponse.Result}");
 
             var authPerformed = !authResponse.IsError;
-            var authChanged = !authResponse.Result.Equals(prevAuthUser);
+            var authChanged = !authResponse.IsError && !authResponse.Result.Equals(prevAuthUser);
             var authSuccessful = !authResponse.IsError && authResponse.Result.HasAuthenticationStatus(AuthStatus.Authenticated);
 
             var authStatus = new ComponentAuthenticationStatus
@@ -571,7 +571,7 @@ namespace CommonLib.Web.Source.Common.Components
                 ResponseMessage = authResponse.IsError ? authResponse.Message : null
             };
             
-            if (!authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
+            if (!authResponse.IsError && !authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
                 AuthenticatedUser = authResponse.Result; // ta the end because AUthenticatedUser servees as a Parameter in Login.razor so I don't want to cause rerendeer and changing the valuee prematurely
                 await StateHasChangedAsync(true);
@@ -1135,6 +1135,12 @@ namespace CommonLib.Web.Source.Common.Components
             await (await NavBar.ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavBar_SetNavLinksActiveClasses", url);
             return this;
         }
+
+        [JSInvokable]
+        public bool IsDisabled() => InteractionState.V.IsDisabledOrForceDisabled;
+
+        [JSInvokable]
+        public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c._guid == guid).InteractionState.V.IsDisabledOrForceDisabled;
 
         protected virtual async Task DisposeAsync(bool disposing)
         {

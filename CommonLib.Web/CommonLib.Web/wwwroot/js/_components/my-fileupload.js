@@ -178,6 +178,12 @@ $(document).ready(function () {
     });
 
     $(document).on("drop", ".my-fileupload-drop-container:not([disabled])", async function (e) {
+        const $fileUpload = $(e.currentTarget).closest(".my-fileupload");
+        const isDisabled = await FileUploadUtils._fileUploadsCache[$fileUpload.guid()].dotNetRef.invokeMethodAsync("IsDisabled");
+        if (isDisabled) {
+            return;
+        }
+
         const files = Array.from(e.originalEvent.dataTransfer.files).filter(f => f.type); // FileReader appears to be changing 'e' data
         const $fileUploadDropContainer = $(e.currentTarget);
         $fileUploadDropContainer.removeCss("border");
@@ -187,11 +193,22 @@ $(document).ready(function () {
 
     $(document).on("click", ".my-fileupload-btn-choose-file-container > button", async function (e) {
         const $fileUpload = $(e.currentTarget).closest(".my-fileupload");
+        const isDisabled = await FileUploadUtils._fileUploadsCache[$fileUpload.guid()].dotNetRef.invokeMethodAsync("IsDisabled");
+        if (isDisabled) {
+            return;
+        }
+
         const $hiddenFileInput = $fileUpload.find("input[type='file'].my-fileupload-hidden-file-input").first();
         $hiddenFileInput.click();
     });
 
     $(document).on("change", "input[type='file'].my-fileupload-hidden-file-input", async function (e) {
+        const $fileUpload = $(e.currentTarget).closest(".my-fileupload");
+        const isDisabled = await FileUploadUtils._fileUploadsCache[$fileUpload.guid()].dotNetRef.invokeMethodAsync("IsDisabled");
+        if (isDisabled) {
+            return;
+        }
+
         const files = Array.from($(e.currentTarget)[0].files);
         const $fileUploadDropContainer = $(e.currentTarget).closest(".my-fileupload-drop-container:not([disabled])");
         await FileUploadUtils.addFilesToUploadAsync($fileUploadDropContainer, files);

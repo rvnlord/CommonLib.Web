@@ -162,8 +162,9 @@ $(document).ready(function() {
     $(document).on("click", ".my-modal .my-close", async function(e) {
         const $modalBgToHide = $(this).parents(".my-modal-background").first();
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
+        const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $(this).guid());
 
-        if (e.which !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
+        if (isDisabled || e.which !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
             return;
         }
 
@@ -174,9 +175,10 @@ $(document).ready(function() {
     $(document).on("click", ".my-modal-background", async function(e) {
         const $modalBgToHide = $(this);
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
-        const $btnClose = $modalToHide.find(".my-close"); // it will find all (`dismiss` and `x`)
-        
-        if (e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") || $btnClose.is(":disabled")) {
+        const $btnClose = $modalToHide.find(".my-close").first(); // it will find all (`dismiss` and `x`)
+        const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $btnClose.guid());
+
+        if (isDisabled || e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") || $btnClose.is(":disabled")) {
             return;
         }
 
@@ -192,7 +194,7 @@ $(document).ready(function() {
     $(document).on("click", "body", async function(e) {
         const $modalBgsToHide = $(".my-modal.shown").$toArray().map($m => $m.parents(".my-modal-background"));
         const isAnyModalShown = $modalBgsToHide.length > 0;
-        
+
         if (e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal-background, .my-modal, .my-modal .my-close, .my-nav-item.my-login, .my-prompt") 
             || !isAnyModalShown) {
             return;

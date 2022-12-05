@@ -150,7 +150,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 
         protected async Task Button_ClickAsync(MouseEventArgs e)
         {
-            if (e.Button != 0 || (PreventMultiClicks.V == true && e.Detail > 1))
+            if (InteractionState.V.IsDisabledOrForceDisabled || e.Button != 0 || (PreventMultiClicks.V == true && e.Detail > 1))
                 return;
 
             await OnClick.InvokeAsync(e).ConfigureAwait(false);

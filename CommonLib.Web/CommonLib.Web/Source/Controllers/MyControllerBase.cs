@@ -30,7 +30,7 @@ namespace CommonLib.Web.Source.Controllers
             }
             catch (Exception ex)
             {
-                return (new ApiResponse(StatusCodeType.Status500InternalServerError, "Server Logic threw an Exception - check API code for issues", null, null, ex)).ToJToken();
+                return new ApiResponse(StatusCodeType.Status500InternalServerError, $"API Server threw {ex.GetType().Name}: {ex.Message}", null, null, ex).ToJToken();
             }
         }
 
@@ -42,7 +42,7 @@ namespace CommonLib.Web.Source.Controllers
             }
             catch (Exception ex)
             {
-                return (new ApiResponse(StatusCodeType.Status500InternalServerError, "Server Logic threw an Exception - check API code for issues", null, null, ex)).ToJToken();
+                return new ApiResponse(StatusCodeType.Status500InternalServerError, $"API Server threw {ex.GetType().Name}: {ex.Message}", null, null, ex).ToJToken();
             }
         }
     }
