@@ -69,12 +69,12 @@ namespace CommonLib.Web.Source.Services.Account
         
         public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string name)
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindRoleVM>>("api/admin/findrolebyname", name);
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindRoleVM>>("api/account/findrolebyname", name);
         }
 
         public async Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string name)
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<FindClaimVM>>("api/admin/findclaimbyname", name);
+            return await HttpClient.PostJTokenAsync<ApiResponse<FindClaimVM>>("api/account/findclaimbyname", name);
         }
 
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)

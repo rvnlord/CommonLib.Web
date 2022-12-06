@@ -12,6 +12,7 @@ using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
 {
@@ -24,7 +25,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
         public BlazorParameter<bool?> DisplayLabel { get; set; }
 
         [Parameter]
-        public MyAsyncEventHandler<MyCheckBoxBase, ChangeEventArgs> Check { get; set; }
+        public MyAsyncEventHandler<MyCheckBoxBase, CheckBoxChangedEventArgs> Check { get; set; }
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask.ConfigureAwait(false);
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask.ConfigureAwait(false);
@@ -65,22 +66,36 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             await Task.CompletedTask;
         }
         
-        protected async Task CheckBox_Checked(ChangeEventArgs e)
+        protected async Task CheckBox_ClickAsync(MouseEventArgs e)
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
+            if (InteractionState.V.IsDisabledOrForceDisabled)
+            {
+                return;
+            }
+            
+            Value = !Value;
+            Text = Value.ToStringInvariant();
 
             if (Model is not null && _propName is not null)
             {
-                Model.SetProperty(_propName, e.Value);
+                Model.SetProperty(_propName, Value);
                 if (CascadedEditContext?.V is not null)
                     await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model, _propName), Validate.V == true);
             }
+            
+            await Check.InvokeAsync(this, new CheckBoxChangedEventArgs(Value));
+        }
+    }
 
-            Value = e.Value.ToBool();
-            Text = Value.ToStringInvariant();
+    public class CheckBoxChangedEventArgs : EventArgs
+    {
+        public bool IsChecked { get; }
 
-            await Check.InvokeAsync(this, e);
+        public CheckBoxChangedEventArgs(bool value)
+        {
+            IsChecked = value;
         }
     }
 }

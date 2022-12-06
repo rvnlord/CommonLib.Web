@@ -38,7 +38,7 @@
                    style="background: #101010;">
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom">
-                    <h3>Admin Edit</h3>
+                    <h3>Admin Edit User</h3>
                     <hr class="my-mt-10px" />
                 </MyCssGridItem>
 
@@ -109,7 +109,7 @@
                         <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
                             @foreach (var role in _roles.OrderBy(r => r.Name))
                             {
-                                <MyCheckBox Value="role.In(_adminEditUserVM.Roles)" Check="(s, e, t) => CbRole_CheckedAsync(s, role, s.Value)" Validate="false" Description="@role.Name" key=@role></MyCheckBox>
+                                <MyCheckBox Value="role.In(_adminEditUserVM.Roles)" Check="(s, e, t) => CbRole_CheckedAsync(s, role, s.Value)" Description="@role.Name" key=@role></MyCheckBox>
                             }
                         </div>
                     }
@@ -126,7 +126,7 @@
                         <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
                             @foreach (var claim in _claims.OrderBy(c => c.Name))
                             {
-                                <MyCheckBox Value="claim.In(_adminEditUserVM.Claims)" Check="(s, e, t) => CbClaim_CheckedAsync(s, claim, s.Value)" Validate="false" Description="@claim.Name" key=@claim></MyCheckBox>
+                                <MyCheckBox Value="claim.In(_adminEditUserVM.Claims)" Check="(s, e, t) => CbClaim_CheckedAsync(s, claim, s.Value)" Description="@claim.Name" key=@claim></MyCheckBox>
                             }
                         </div>
                     }

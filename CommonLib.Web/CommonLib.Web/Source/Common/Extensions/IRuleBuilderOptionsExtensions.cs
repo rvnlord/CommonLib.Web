@@ -17,6 +17,7 @@ using FluentValidation;
 using Google.Protobuf.WellKnownTypes;
 using MoreLinq.Extensions;
 using WebSocketSharp;
+using CommonLib.Web.Source.Services.Admin;
 
 namespace CommonLib.Web.Source.Common.Extensions
 {
@@ -406,36 +407,89 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, _) => avatarsInUseResp.IsError ? avatarsInUseResp.Message : $"Some of the \"{displayName}\" are already in use");
         }
 
-        public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
+        public static IRuleBuilderOptions<T, string> RoleNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager, IAdminClient adminClient, IAdminManager adminManager)
         {
-            ApiResponse<FindRoleVM> roleByNameResp = null;
+            ApiResponse<FindRoleVM> roleByNameResp;
+            ApiResponse<FindRoleVM> roleByIdResp;
+            string message = null;
             return rb.MustAsync(async (model, value, _, _) =>
             {
                 roleByNameResp = accountClient is not null ? await accountClient.FindRoleByNameAsync(value) : await accountManager.FindRoleByNameAsync(value);
                 if (roleByNameResp.IsError)
+                {
+                    message = roleByNameResp.Message;
                     return false;
-                
+                }
+
                 var roleByName = roleByNameResp.Result;
-                return roleByName is null;
-            }).WithMessage((_, value) => roleByNameResp.IsError 
-                ? roleByNameResp.Message 
-                : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
+                if (roleByName is null)
+                    return true;
+
+                var id = model.GetProperty<Guid>("Id");
+                if (id == default)
+                {
+                    message = $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use";
+                    return false;
+                }
+
+                roleByIdResp = adminClient is not null ? await adminClient.FindRoleByIdAsync(id) : await adminManager.FindRoleByIdAsync(id);
+                if (roleByIdResp.IsError)
+                {
+                    message = roleByIdResp.Message;
+                    return false;
+                }
+
+                var roleByid = roleByIdResp.Result;
+                if (roleByid is null || !roleByid.Name.EqualsIgnoreCase(roleByName.Name))
+                {
+                    message = $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use";
+                    return false;
+                }
+                
+                return true;
+            }).WithMessage((_, _) => message);
         }
 
         public static IRuleBuilderOptions<T, string> ClaimNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)
         {
-            ApiResponse<FindClaimVM> claimByNameResp = null;
+            ApiResponse<FindClaimVM> claimByNameResp;
+            ApiResponse<FindClaimVM> claimByOriginalNameResp;
+            string message = null;
             return rb.MustAsync(async (model, value, _, _) =>
             {
                 claimByNameResp = accountClient is not null ? await accountClient.FindClaimByNameAsync(value) : await accountManager.FindClaimByNameAsync(value);
                 if (claimByNameResp.IsError)
+                {
+                    message = claimByNameResp.Message;
                     return false;
-                
+                }
+
                 var claimByName = claimByNameResp.Result;
-                return claimByName is null;
-            }).WithMessage((_, value) => claimByNameResp.IsError 
-                ? claimByNameResp.Message 
-                : $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use");
+                if (claimByName is null)
+                    return true;
+
+                var originalName = model.GetProperty<string>("OriginalName");
+                if (originalName is null)
+                {
+                    message = $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use";
+                    return false;
+                }
+                claimByOriginalNameResp = accountClient is not null ? await accountClient.FindClaimByNameAsync(originalName) : await accountManager.FindClaimByNameAsync(originalName);
+                if (claimByOriginalNameResp.IsError)
+                {
+                    message = claimByOriginalNameResp.Message;
+                    return false;
+                }
+
+                var claimByid = claimByOriginalNameResp.Result;
+                if (claimByid is null || !claimByid.Name.EqualsIgnoreCase(claimByName.Name))
+                {
+                    message = $"{rb.GetPropertyDisplayName()} \"{value}\" is already in use";
+                    return false;
+                }
+                
+                return true;
+            }).WithMessage((_, _) => message);
         }
 
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()

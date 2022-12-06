@@ -15,7 +15,10 @@
         align-items: center;
         position: relative;
         width: 100%;
-        height: @InputHeight.Px();
+        min-height: @InputHeight.Px();
+        padding-top: 5px;
+        padding-bottom: 5px;
+        box-sizing: border-box;
         @Font
     }
 
@@ -34,7 +37,6 @@
         width: auto;
         max-width: 100%;
         color: @FailureColor;
-        @NoOverflowSingleLine
         @Font
     }
 
@@ -54,7 +56,6 @@
 
     .my-validation-message-icon-and-description-container {
         display: flex;
-        align-items: center;
     }
 
 </style>

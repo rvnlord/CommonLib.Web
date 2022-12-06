@@ -93,7 +93,11 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
             }.CssDictionaryToString();
 
             if (Sizing == LabelSizing.LineHeight)
-                AddStyle("height", StylesConfig.LineHeight.Px());
+            {
+                AddStyle("min-height", StylesConfig.LineHeight.Px());
+                AddStyle("padding-top", 0.ToString());
+                AddStyle("padding-bottom", 0.ToString());
+            }
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 

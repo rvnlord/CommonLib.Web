@@ -32,10 +32,10 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> FindUserByConfirmationCodeAsync(JToken jConfirmationCode) => await EnsureResponseAsync(async () => await _accountManager.FindUserByConfirmationCodeAsync(jConfirmationCode is JValue ? jConfirmationCode.ToString() : jConfirmationCode["confirmationcode"]?.ToString()));
 
         [HttpPost("findrolebyname")] // POST: api/account/findrolebyname
-        public async Task<JToken> FindEoleByName(JToken jRoleName) => await EnsureResponseAsync(async () => await _accountManager.FindRoleByNameAsync(jRoleName["roleName"]?.ToString()));
+        public async Task<JToken> FindEoleByName(JToken jRoleName) => await EnsureResponseAsync(async () => await _accountManager.FindRoleByNameAsync(jRoleName is JValue ? jRoleName.ToString() : jRoleName["RoleName"]?.ToString()));
         
         [HttpPost("findclaimbyname")] // POST: api/account/findclaimbyname
-        public async Task<JToken> FindClaimByName(JToken jClaimName) => await EnsureResponseAsync(async () => await _accountManager.FindClaimByNameAsync(jClaimName["claimName"]?.ToString()));
+        public async Task<JToken> FindClaimByName(JToken jClaimName) => await EnsureResponseAsync(async () => await _accountManager.FindClaimByNameAsync(jClaimName is JValue ? jClaimName.ToString() : jClaimName["ClaimName"]?.ToString()));
 
         [HttpPost("findavatarsinuse")] // POST: api/account/findavatarsinuse
         public async Task<JToken> FindAvatarsInUseAsync(JToken jIncludeData) => await EnsureResponseAsync(async () => await _accountManager.FindAvatarsInUseAsync(jIncludeData is JValue ? jIncludeData.ToBool() : jIncludeData["IncludeData"].ToBool()));

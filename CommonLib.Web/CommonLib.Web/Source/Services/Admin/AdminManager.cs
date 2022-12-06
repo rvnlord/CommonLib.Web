@@ -20,6 +20,7 @@ using CommonLib.Web.Source.Services.Admin.Interfaces;
 using CommonLib.Web.Source.Validators.Admin;
 using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Web.Source.ViewModels.Admin;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -311,6 +312,8 @@ namespace CommonLib.Web.Source.Services.Admin
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
                 return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Roles", null);
+            if (!(await new AdminEditRoleVMValidator(_accountManager, this).ValidateAsync(roleToAdd)).IsValid)
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
             var role = new IdentityRole<Guid> { Name = roleToAdd.Name };
 
@@ -343,7 +346,9 @@ namespace CommonLib.Web.Source.Services.Admin
                 return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't change \"{role.Name}\" Role Name", null);
             if (role.Name.EqualsIgnoreCase("Admin") && !authUser.UserName.EqAnyIgnoreCase(roleToEdit.UserNames))
                 return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't remove \"{role.Name}\" Role from yourself", null);
-
+            if (!(await new AdminEditRoleVMValidator(_accountManager, this).ValidateAsync(roleToEdit)).IsValid)
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+            
             _mapper.Map(roleToEdit, role);
 
             var updateRoleResp = await _roleManager.UpdateAsync(role);
@@ -375,7 +380,7 @@ namespace CommonLib.Web.Source.Services.Admin
         {
             var role = await _db.Roles.SingleOrDefaultAsync(u => u.Id == id);
             if (role == null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status404NotFound, "There is no Role with the given Id", null);
+                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Id", null);
 
             var foundRole = _mapper.Map(role, new FindRoleVM());
             foundRole.UserNames = await (
@@ -450,20 +455,7 @@ namespace CommonLib.Web.Source.Services.Admin
 
             return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Added Claim: \"{claimToAdd.Name}\"", null, claimToAdd);
         }
-
-        public async Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id)
-        {
-            var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == id);
-            if (user == null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status404NotFound, "There is no User with the given Id", null);
-
-            var foundUser = _mapper.Map(user, new FindUserVM());
-            foundUser.Roles = (await Task.WhenAll((await _userManager.GetRolesAsync(user)).Select(async r => (await _accountManager.FindRoleByNameAsync(r)).Result))).OrderBy(r => r.Name).ToList();
-            foundUser.Claims = (await Task.WhenAll((await _userManager.GetRolesAsync(user)).Select(async c => (await _accountManager.FindClaimByNameAsync(c)).Result))).Where(c => !c.Name.EqualsIgnoreCase("Email")).OrderBy(r => r.Name).ToList();
-
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Id has been Successful", null, foundUser);
-        }
-
+        
         public async Task<ApiResponse<AdminEditClaimVM>> EditClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToEdit)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))

@@ -89,8 +89,8 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName)
         {
             var role = await _db.Roles.SingleOrDefaultAsync(r => r.Name.ToLower() == roleName.ToLower());
-            if (role == null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status404NotFound, "There is no Role with the given Name", null);
+            if (role is null)
+                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Name", null);
 
             var foundRole = _mapper.Map(role, new FindRoleVM());
             return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Role Found", null, foundRole);
@@ -118,11 +118,11 @@ namespace CommonLib.Web.Source.Services.Account
                         }).ToList()
                 }).SingleOrDefault();
 
-            if (claim != null)
+            if (claim is not null)
                 claim.OriginalName = claim.Name; // for 'NotInUse' validation attribute compatibility
 
-            return claim == null
-                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status404NotFound, "There is no Claim with the given Name", null)
+            return claim is null
+                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "There is no Claim with the given Name", null)
                 : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
         }
 

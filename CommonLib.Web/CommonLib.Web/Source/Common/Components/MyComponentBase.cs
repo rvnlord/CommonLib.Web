@@ -1061,12 +1061,17 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
         {
+            var arrControls = controls.ToArray();
+            var wereRerenderedAtSomePoint = new List<MyComponentBase>();
             await TaskUtils.WaitUntil(() =>
             {
-                var arrControls = controls.ToArray();
-                return arrControls.All(c => c.IsRerendered || c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
+                foreach (var c in arrControls)
+                    if (c.IsRerendered && !c.In(wereRerenderedAtSomePoint))
+                        wereRerenderedAtSomePoint.Add(c);
+
+                return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
             }, 25, 10000);
-            ClearControlsRerenderingStatus(controls);
+            ClearControlsRerenderingStatus(arrControls);
         }
 
         protected static Task WaitForControlToRerenderAsync(MyComponentBase control) => WaitForControlsToRerenderAsync(new[] { control });
