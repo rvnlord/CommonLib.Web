@@ -1,0 +1,90 @@
+﻿@page "/Admin/AddRole/"
+
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
+@using CommonLib.Web.Source.ViewModels.Account
+@using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Extensions
+@using static CommonLib.Web.Source.Common.Components.StylesConfig
+@using static CommonLib.Web.Source.Models.BlazorParameter
+
+@inherits AddRoleBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (HasAuthenticationStatus(AuthStatus.NotChecked))
+    {
+        <div class="no-page-error">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-message">Authorizing...</div>
+            </div>
+        </div>
+    }
+    else if (!IsAuthorized) // show nothing if null, not checked
+    {
+        <div class="no-page-error">You are not authorized to access this page</div>
+    }
+    else if (IsAuthorized)
+    {
+        <MyEditForm @ref="_editForm" EditContext="_editContext" style="margin: 0 5px 5px 5px;">
+            <MyFluentValidator @ref="_validator" />
+            <MyCssGrid Padding="Gutter.Px()" Gap="Gutter.Px()"
+                   XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                   style="background: #101010;">
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom">
+                    <h3>Admin Edit Role</h3>
+                    <hr class="my-mt-10px" />
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <MyButton Click="BtnBackToListRoles_ClickAsync" Icon="IconType.From(LightIconType.ArrowLeft)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Quadratic" class="my-btn-back-to-list-users" />
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _adminAddRoleVM.Name)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _adminAddRoleVM.Name)" SyncPaddingGroup="edit-panel" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _adminAddRoleVM.Name)" />
+                </MyCssGridItem>
+
+                <MyCssGridItem @ref="_giUsers" Area="CssGridArea.C1" LGArea="CssGridArea.C2">
+                    <span class="my-mb-10px" style="color: blue; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">Users:</span>
+                    @if (!_users.Any())
+                    {
+                        <span class="my-ml-10px" style="color: #ff3333; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: block;">&lt; No Roles &gt;</span>
+                    }
+                    else
+                    {
+                        <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
+                            @foreach (var user in _users.OrderBy(r => r.UserName))
+                            {
+                                <MyCheckBox Value="user.UserName.In(_adminAddRoleVM.UserNames)" Check="(s, e, t) => CbUser_CheckedAsync(s, user, s.Value)" Description="@user.UserName" key=@user></MyCheckBox>
+                            }
+                        </div>
+                    }
+                </MyCssGridItem>
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
+                    <MyCssGrid Gap="Gutter.Px()"
+                           Template="@(new CssGridLayout("1fr", "auto"))"
+                           LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                        <MyCssGridItem>
+                            <MyButton Value="@("Add Role".ToBp())" SubmitsForm="true" Click="BtnAddRole_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-add-role" />
+                        </MyCssGridItem>
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+            </MyCssGrid>
+        </MyEditForm>
+    }
+
+</CascadingValue>

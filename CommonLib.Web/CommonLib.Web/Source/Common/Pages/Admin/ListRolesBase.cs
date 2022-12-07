@@ -76,7 +76,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
             await _modalConfirmDeletingRole.ShowModalAsync();
         }
 
-        protected async Task BtnConfirmUserDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
+        protected async Task BtnConfirmRoleDelete_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken _)
         {
             await SetControlStatesAsync(ComponentState.Disabled, _modalBtns, sender, ChangeRenderingStateMode.None);
             await _modalConfirmDeletingRole.StateHasChangedAsync(true);
@@ -94,6 +94,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
             _roleWaitingForDeleteConfirmation = null;
             await _modalConfirmDeletingRole.HideModalAsync();
+            await StateHasChangedAsync(true);
         }
 
         protected async Task Modal_HideAsync(MyModalBase sender, EventArgs e, CancellationToken _)

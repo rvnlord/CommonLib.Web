@@ -55,7 +55,7 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<T, string> AlphaNumericWithMessage<T>(this IRuleBuilder<T, string> rb)
         {
-            return rb.Must((_, value, _) => Regex.IsMatch(value, "^[a-zA-Z0-9 ]*$")).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must only contain alphanumeric characters");
+            return rb.Must((_, value, _) => value is not null && Regex.IsMatch(value, "^[a-zA-Z0-9 ]*$")).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must only contain alphanumeric characters");
         }
 
         public static IRuleBuilderOptions<T, string> NameNotInUseWithMessage<T>(this IRuleBuilder<T, string> rb, IAccountClient accountClient, IAccountManager accountManager)

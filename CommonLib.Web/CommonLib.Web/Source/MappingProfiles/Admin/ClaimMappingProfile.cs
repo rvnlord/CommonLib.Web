@@ -11,9 +11,10 @@ namespace CommonLib.Web.Source.MappingProfiles.Admin
         public ClaimMappingProfile()
         {
             CreateMap<IdentityUserClaim<Guid>, FindClaimVM>();
-            CreateMap<FindClaimVM, AdminEditClaimVM>();
             CreateMap<FindClaimValueVM, AdminEditClaimValueVM>();
             CreateMap<AdminEditClaimVM, IdentityUserClaim<Guid>>();
+            CreateMap<FindClaimVM, AdminEditClaimVM>();
+            CreateMap<AdminEditClaimVM, FindClaimVM>();
         }
     }
 }

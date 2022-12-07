@@ -94,6 +94,7 @@ namespace CommonLib.Web.Source.Common.Pages.Admin
             await PromptMessageAsync(NotificationType.Success, editResponse.Message);
             _userWaitingForDeleteConfirmation = null;
             await _modalConfirmDeletingUser.HideModalAsync();
+            await StateHasChangedAsync(true);
         }
 
         protected async Task Modal_HideAsync(MyModalBase sender, EventArgs e, CancellationToken _)
