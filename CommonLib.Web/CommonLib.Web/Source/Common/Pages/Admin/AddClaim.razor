@@ -1,4 +1,4 @@
-﻿@page "/Admin/AddRole/"
+﻿@page "/Admin/AddClaim/"
 
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
@@ -9,7 +9,7 @@
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using static CommonLib.Web.Source.Models.BlazorParameter
 
-@inherits AddRoleBase
+@inherits AddClaimBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
@@ -38,22 +38,22 @@
                    style="background: #101010;">
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom">
-                    <h3>Admin Edit Role</h3>
+                    <h3>Admin Add Claim</h3>
                     <hr class="my-mt-10px" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                    <MyButton Click="BtnBackToListRoles_ClickAsync" Icon="IconType.From(LightIconType.ArrowLeft)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Quadratic" class="my-btn-back-to-list-users" />
+                    <MyButton Click="BtnBackToListClaims_ClickAsync" Icon="IconType.From(LightIconType.ArrowLeft)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Quadratic" class="my-btn-back-to-list-users" />
                 </MyCssGridItem>
 
                 <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _adminAddRoleVM.Name)" Align="@HorizontalAlignment.Right" />
+                    <MyLabel For="@(() => _adminAddClaimVM.Name)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _adminAddRoleVM.Name)" SyncPaddingGroup="edit-panel" />
+                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _adminAddClaimVM.Name)" SyncPaddingGroup="edit-panel" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _adminAddRoleVM.Name)" />
+                    <MyValidationMessage For="@(() => _adminAddClaimVM.Name)" />
                 </MyCssGridItem>
 
                 <MyCssGridItem @ref="_giUsers" Area="CssGridArea.C1" LGArea="CssGridArea.C2">
@@ -67,7 +67,7 @@
                         <div class="my-ml-10px" style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px">
                             @foreach (var user in _users.OrderBy(r => r.UserName))
                             {
-                                <MyCheckBox Value="user.UserName.In(_adminAddRoleVM.UserNames)" Check="(s, e, t) => CbUser_CheckedAsync(s, user, s.Value)" Description="@user.UserName" key=@user></MyCheckBox>
+                                <MyCheckBox Value="user.UserName.In(_adminAddClaimVM.GetUserNames())" Check="(s, e, t) => CbUser_CheckedAsync(s, user, s.Value)" Description="@user.UserName" key=@user></MyCheckBox>
                             }
                         </div>
                     }
@@ -78,7 +78,7 @@
                            Template="@(new CssGridLayout("1fr", "auto"))"
                            LGTemplate="@(new CssGridLayout("max-content", "auto"))">
                         <MyCssGridItem>
-                            <MyButton Value="@("Add Role".ToBp())" SubmitsForm="true" Click="BtnAddRole_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-add-role" />
+                            <MyButton Value="@("Add Claim".ToBp())" SubmitsForm="true" Click="BtnAddClaim_ClickAsync" Icon="IconType.From(LightIconType.Save)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" class="my-btn-save" />
                         </MyCssGridItem>
                     </MyCssGrid>
                 </MyCssGridItem>
