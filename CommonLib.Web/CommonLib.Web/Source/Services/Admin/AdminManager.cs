@@ -431,6 +431,8 @@ namespace CommonLib.Web.Source.Services.Admin
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be a Duplicate", new[] { new KeyValuePair<string, string>("Name", "Claim Name is a Duplicate") }.ToLookup());
             if (!claimToAdd.GetUserNames().Any())
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users", null);
+            if (!(await new AdminEditClaimVMValidator(_accountManager, this).ValidateAsync(claimToAdd)).IsValid)
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
 
             foreach (var claimVal in claimToAdd.Values) // claims have no table, they exist in thew context of users only so if sb removes a claim from all users, the claim is no longer stored anywhere
             {
@@ -471,7 +473,9 @@ namespace CommonLib.Web.Source.Services.Admin
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be a Duplicate", new[] { new KeyValuePair<string, string>("Name", "Claim Name is a Duplicate") }.ToLookup());
             if (!claimToEdit.GetUserNames().Any())
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users", null);
-
+            if (!(await new AdminEditClaimVMValidator(_accountManager, this).ValidateAsync(claimToEdit)).IsValid)
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+            
             _db.UserClaims.RemoveBy(c => c.ClaimType.ToLower() == claimToEdit.OriginalName.ToLower()); // as much as I'd love to add 'EqualsInvariantIgnoreCase' in all these 'Queryable' backed places, I can't :/.
             await _db.SaveChangesAsync();
             foreach (var claimVal in claimToEdit.Values) // claims have no table, they exist in thew context of users only so if sb removes a claim from all users, the claim is no longer stored anywhere

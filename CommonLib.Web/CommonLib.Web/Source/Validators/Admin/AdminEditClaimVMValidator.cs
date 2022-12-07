@@ -26,12 +26,12 @@ namespace CommonLib.Web.Source.Validators.Admin
             Initialize();
         }
 
-        public AdminEditClaimVMValidator(IAdminManager adminManager, IAccountManager accountManager)    
+        public AdminEditClaimVMValidator(IAccountManager accountManager, IAdminManager adminManager)    
         {
-            Initialize(adminManager, accountManager);
+            Initialize(accountManager, adminManager);
         }
-
-        private void Initialize(IAdminManager adminManager = null, IAccountManager accountManager = null)
+        
+        private void Initialize(IAccountManager accountManager = null, IAdminManager adminManager = null)
         {
             (AdminClient, _adminClientScope) = WebUtils.GetScopedServiceOrNull<IAdminClient>();
             if (adminManager is null)
@@ -40,6 +40,7 @@ namespace CommonLib.Web.Source.Validators.Admin
             if (adminManager is null)
                 (AccountManager, _accountManagerScope) = WebUtils.GetScopedServiceOrNull<IAccountManager>();
 
+            AccountManager = accountManager;
             AdminManager = adminManager;
 
             RuleFor(m => m.Name)
