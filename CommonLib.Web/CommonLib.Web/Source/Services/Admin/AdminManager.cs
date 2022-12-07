@@ -214,6 +214,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 select new FindClaimVM
                 {
                     Name = claimsByType.Key,
+                    OriginalName = claimsByType.Key,
                     Values = (
                         from cbt in claimsByType
                         group cbt by cbt.ClaimValue
