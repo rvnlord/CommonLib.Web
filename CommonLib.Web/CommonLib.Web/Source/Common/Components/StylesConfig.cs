@@ -17,12 +17,14 @@ namespace CommonLib.Web.Source.Common.Components
         public const string PrimaryBackgroundColor = "#000080";
         public const string InfoBackgroundColor = "#027c80";
         public const string InputBackgroundColor = "#303030";
+        public const string InputDisabledBackgroundColor = "#101010";
         public const string SuccessBackgroundGradient = $"linear-gradient(to bottom, {SuccessBackgroundColor}, #000000)";
         public const string ErrorBackgroundGradient = $"linear-gradient(to bottom, {ErrorBackgroundColor}, #000000)";
         public const string WarningBackgroundGradient = $"linear-gradient(to bottom, {WarningBackgroundColor}, #000000)";
         public const string PrimaryBackgroundGradient = $"linear-gradient(to bottom, {PrimaryBackgroundColor}, #000000)";
         public const string InfoBackgroundGradient = $"linear-gradient(to bottom, {InfoBackgroundColor}, #000000)";
-        public const string InputBackgroundGradient = $" linear-gradient(to bottom, {InputBackgroundColor}, #000000);";
+        public const string InputBackgroundGradient = $"linear-gradient(to bottom, {InputBackgroundColor}, #000000);";
+        public const string InputDisabledBackgroundGradient = $"linear-gradient(to bottom, {InputDisabledBackgroundColor}, #000000);";
         public const double CommonPadding = 10;
         public const double Gutter = 10;
         public static double HalfGutter => (Gutter / 2).Round(8);

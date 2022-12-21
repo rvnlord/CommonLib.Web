@@ -465,6 +465,8 @@ namespace CommonLib.Web.Source.Common.Components
                         var navBar = await ComponentByTypeAsync<MyNavBarBase>();
                         await navBar.Setup();
 
+                        await ComponentBaseModuleAsync; // needed i.e.: for handling events of non-nativee components
+
                         await thisAsLayout.OnLayoutSessionIdSettingAsync(SessionId);
                     }
 

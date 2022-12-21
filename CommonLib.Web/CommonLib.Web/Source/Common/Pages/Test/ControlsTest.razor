@@ -5,6 +5,7 @@
 @using CommonLib.Source.Common.Converters
 @using static CommonLib.Web.Source.Common.Components.StylesConfig;
 @using System.Linq.Expressions
+@using CommonLib.Source.Common.Extensions
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
@@ -135,18 +136,33 @@
                     <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyFileUpload For="@(() => _employee.Files)" 
-                        PreviewFor="@BP(() => _employee.Avatar)" 
-                        PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
+                    <MyFileUpload For="@(() => _employee.Files)" PreviewFor="@BP(() => _employee.Avatar)" PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight"  />
                 </MyCssGridItem>
 
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel For="@(() => _employee.Salary)" Align="@HorizontalAlignment.Right" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <TelerikNumericTextBox @bind-Value="_employee.Salary" Format="0.00 $" Decimals="2" Min="0m" Max="10000m" Step="1250.50m" Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")"></TelerikNumericTextBox>
+@*                    <MyInputGroup>
+
+                        <MyInputGroupPrepend>
+                            <MyIcon IconType="IconType.From(LightIconType.CircleDollar)"></MyIcon>
+                        </MyInputGroupPrepend>
+                        <MyInputGroupAppend>
+                            <MyButton Icon="IconType.From(LightIconType.BasketballBall)"></MyButton>
+                        </MyInputGroupAppend>
+                    </MyInputGroup>*@
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyValidationMessage For="@(() => _employee.Salary)" />
+                </MyCssGridItem>
+
                 <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
-                    <MyCssGrid Gap="Gutter.Px()" 
-                        Template="@(new CssGridLayout("1fr", "auto"))"
-                        LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                    <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("max-content", "auto"))">
                         <MyCssGridItem>  
                             <MyButton Value="@("Submit".ToBp())" Click="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
                         </MyCssGridItem>

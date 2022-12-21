@@ -21,9 +21,9 @@ namespace CommonLib.Web.Source.ViewModels
         [Description("I accept the Terms of use")]
         public bool TermsAccepted { get; set; }
         public FileData Avatar { get; set; }
-
         public double Progress { get; set; }
         public FileDataList Files { get; set; }
+        public decimal Salary { get; set; }
     }
 
     public enum Gender
