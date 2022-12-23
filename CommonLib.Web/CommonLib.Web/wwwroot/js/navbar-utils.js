@@ -474,14 +474,16 @@ export class NavBarUtils {
 
     }
 
-    static adjustToDeviceSize() {
+    static adjustToDeviceSize(skipProcessingNavMenus = false) {
         const $arrNavBars = $(".my-navbar").$toArray();
 
         for (let $nb of $arrNavBars) {
-            const $navMenus = $nb.find(".my-nav-menu").$toArray();
-            for (let $nm of $navMenus) {
-                NavBarUtils.setNavMenuToDeviceSize($nm);
-                NavBarUtils.setNavLinkContentsLeftMargin($nm);
+            if (!skipProcessingNavMenus) {
+                const $navMenus = $nb.find(".my-nav-menu").$toArray();
+                for (let $nm of $navMenus) {
+                    NavBarUtils.setNavMenuToDeviceSize($nm);
+                    NavBarUtils.setNavLinkContentsLeftMargin($nm);
+                }
             }
 
             NavBarUtils.setNavBarToDeviceSize($nb); // relies on rearrange to read height correctly

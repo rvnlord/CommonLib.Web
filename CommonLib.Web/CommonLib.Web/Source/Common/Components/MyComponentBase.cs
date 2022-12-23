@@ -49,6 +49,7 @@ using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
 using Keras;
 using static NBitcoin.Protocol.Behaviors.ChainBehavior;
+using Telerik.Blazor.Components.Common;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -61,6 +62,7 @@ namespace CommonLib.Web.Source.Common.Components
         private Task<IJSObjectReference> _moduleAsync;
         private Task<IJSObjectReference> _componentBaseModuleAsync;
         private Task<IJSObjectReference> _promptModuleAsync;
+        private Task<IJSObjectReference> _inputModuleAsync;
         private bool _firstParamSetup;
         private bool _isInitialized;
         private BlazorParameter<ComponentState> _bpState;
@@ -107,6 +109,8 @@ namespace CommonLib.Web.Source.Common.Components
                 return LayoutParameter?.ParameterValue.PromptModuleAsync;
             }
         }
+        public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyInputBase).BeforeLast("Base"), NavigationManager, HttpClient);
+
         public bool IsRendered => !_firstRenderAfterInit;
         public bool IsDisposed { get; set; }
         public bool FirstParamSetup => _firstParamSetup;
@@ -1114,6 +1118,19 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected Task SetControlStateAsync(ComponentState state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
+
+        protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<IComponent> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
+        {
+            var arrControlsToChangeState = controlsToChangeState.ToArray();
+            var nativeControls = arrControlsToChangeState.OfType<MyComponentBase>().ToArray();
+            var nonNativeControls = arrControlsToChangeState.Except(nativeControls).Where(c => c.GetType().BaseType?.GetGenericTypeDefinition() == typeof(TelerikInputBase<>)).ToArray();
+            nonNativeControls.ForEach(c =>
+            {
+                c.SetPropertyValue("Enabled", state.IsEnabledOrForceEnabled);
+                c.GetType().GetMethod("StateHasChanged", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(c, Array.Empty<object>());
+            });
+            await SetControlStatesAsync(state, nativeControls, componentLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
+        }
 
         protected MyComponentBase[] GetInputControls()
         {

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
@@ -15,23 +17,30 @@ using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyImageComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
+using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using MoreLinq;
 using Org.BouncyCastle.Security;
+using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Pages.Test
 {
     public class ControlsTestBase : MyComponentBase
     {
-        private MyComponentBase[] _allControls;
+        private IComponent[] _allControls;
         private MyButtonBase _btnSave;
 
         protected MyFluentValidatorBase _validator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
+        protected TelerikNumericTextBox<decimal> _tnumSalary;
+        protected Guid _tnumSalaryGuid;
+        protected string _syncPaddingGroup;
 
         protected MyCssGridBase _cssgridTest { get; set; }
 
@@ -55,15 +64,23 @@ namespace CommonLib.Web.Source.Common.Pages.Test
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";
 
+        [Inject]
+        public IJQueryService JQuery { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             _editContext = new MyEditContext(_employee);
-            await Task.CompletedTask;
+            _tnumSalaryGuid = _tnumSalaryGuid == Guid.Empty ? Guid.NewGuid() : _tnumSalaryGuid;
+            _syncPaddingGroup = "controls-test-panel";
+            await Task.CompletedTask; 
         }
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            _allControls = GetInputControls();
+            // fix sync padding group for every non-native input
+            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixSyncInputPaddingGroup", _tnumSalaryGuid);
+
+            _allControls = GetInputControls().Cast<IComponent>().Append_(_tnumSalary).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

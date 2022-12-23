@@ -28,7 +28,7 @@ export async function blazor_NavBar_AfterRender() {
     if ($navLinksToSetAsAdjustedAtLeastOnce.length > 0) {
         console.log(`navbar subsequent render, ${$navLinksToSetAsAdjustedAtLeastOnce.length} nav-links to be as adjusted`);
         NavBarUtils.finishAndRemoveRunningAnims();
-        NavBarUtils.adjustToDeviceSize();
+        NavBarUtils.adjustToDeviceSize(true);
         $navLinksToSetAsAdjustedAtLeastOnce.attr("adjusted", "true");
         console.log(`navbar subsequent render, set ${$navLinksToSetAsAdjustedAtLeastOnce.length} nav-links as adjusted`);
     }

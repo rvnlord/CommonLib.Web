@@ -208,7 +208,7 @@ Object.defineProperty(String.prototype, "cssStringToDictionary", {
 
 Object.defineProperty(String.prototype, "guidToSelector", {
     value: function () {
-        return `[my-guid='${this}']`;
+        return `[my-guid='${this}'], .my-guid_${this}`;
     },
     writable: true,
     configurable: true
@@ -1164,7 +1164,7 @@ jQuery.fn.extend({
         return this.attr("id");
     },
     guid: function() {
-        return this.attr("my-guid");
+        return this.attr("my-guid") || this.classes().singleOrNull(c => c.startsWith("my-guid"))?.split("_").last();
     },
     isAtLeastPartiallyWithinViewPort: function() {
         const el = this[0],
@@ -1249,6 +1249,12 @@ jQuery.fn.extend({
     },
     attrOrNull: function(attrName) {
         return Wrapper.$(this).attrOrNull(attrName).unwrap();
+    },
+    single: function () {
+        if (this.length !== 1) {
+            throw new Error("JQuery object should only contain one element");
+        }
+        return $(this[0]);
     }
 });
 

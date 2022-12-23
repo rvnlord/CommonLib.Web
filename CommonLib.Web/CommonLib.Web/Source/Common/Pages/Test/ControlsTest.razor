@@ -3,13 +3,14 @@
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Source.Common.Converters
-@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+@using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using System.Linq.Expressions
 @using CommonLib.Source.Common.Extensions
 @using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Extensions
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
-@using static CommonLib.Web.Source.Models.BlazorParameter;
+@using static CommonLib.Web.Source.Models.BlazorParameter
 
 @inherits ControlsTestBase
 
@@ -146,16 +147,19 @@
                     <MyLabel For="@(() => _employee.Salary)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <TelerikNumericTextBox @bind-Value="_employee.Salary" Format="0.00 $" Decimals="2" Min="0m" Max="10000m" Step="1250.50m" Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")"></TelerikNumericTextBox>
-@*                    <MyInputGroup>
-
+                    @{
+                        // guid, padding-group, inteeeractionstate, validation
+                    }
+                    <MyInputGroup>
+                        <TelerikNumericTextBox @ref="_tnumSalary" Class="@($"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup}")" Enabled="@(_tnumSalary is null ? false : _tnumSalary.Enabled)" @bind-Value="_employee.Salary" Format="0.00 $" Decimals="2" Min="0m" Max="10000m" Step="1250.50m" Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")"></TelerikNumericTextBox>
                         <MyInputGroupPrepend>
                             <MyIcon IconType="IconType.From(LightIconType.CircleDollar)"></MyIcon>
                         </MyInputGroupPrepend>
                         <MyInputGroupAppend>
-                            <MyButton Icon="IconType.From(LightIconType.BasketballBall)"></MyButton>
+                            <MyButton Icon="IconType.From(LightIconType.BasketballBall)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                            <MyButton Icon="IconType.From(LightIconType.Mars)" Sizing="ButtonSizing.Quadratic"></MyButton>
                         </MyInputGroupAppend>
-                    </MyInputGroup>*@
+                    </MyInputGroup>
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _employee.Salary)" />

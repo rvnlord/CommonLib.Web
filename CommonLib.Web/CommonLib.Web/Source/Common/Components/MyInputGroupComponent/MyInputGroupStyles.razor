@@ -26,7 +26,7 @@
 
     .my-input-group > .my-input-group-prepend > .my-btn:not(:first-child),
     .my-input-group > .my-input-group-append > .my-btn:not(:first-child) {
-        margin-left: -1px;
+        margin-left: -1px !important;
     }
 
     .my-input-group > .my-input-group-prepend > .my-icon:not(:first-child),
@@ -50,8 +50,8 @@
                 width: auto !important;
             }
 
-    .my-input-group > .my-input-group-prepend >.my-btn,
-    .my-input-group > .my-input-group-append >.my-btn {
+    .my-input-group > .my-input-group-prepend >.my-btn:not(.my-btn.my-quadratic),
+    .my-input-group > .my-input-group-append >.my-btn:not(.my-btn.my-quadratic) {
         min-height: @((LineHeight + Gutter).Px());
         height: 100% !important;
         width: auto;

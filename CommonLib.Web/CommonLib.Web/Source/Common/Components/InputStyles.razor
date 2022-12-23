@@ -7,13 +7,13 @@
 
 <style class="@_renderClasses" my-guid="@_guid">
 
-    input[type=text],
-    input[type=password],
-    input[type=number],
-    input[type=date],
-    input[type=datetime],
-    textarea,
-    textarea.form-control {
+    input[type=text]:not(.k-input):not(.k-input-inner),
+    input[type=password]:not(.k-input):not(.k-input-inner),
+    input[type=number]:not(.k-input):not(.k-input-inner),
+    input[type=date]:not(.k-input):not(.k-input-inner),
+    input[type=datetime]:not(.k-input):not(.k-input-inner),
+    textarea:not(.k-input):not(.k-input-inner),
+    textarea.form-control:not(.k-input):not(.k-input-inner) {
         background: linear-gradient(to bottom, #303030, #000000);
         color: white;
         display: block;
@@ -29,26 +29,26 @@
         border: none;
     }
 
-        input[type=text]:focus,
-        input[type=password]:focus,
-        input[type=number]:focus,
-        input[type=date]:focus,
-        input[type=datetime]:focus,
-        textarea:focus,
-        textarea.form-control:focus {
+        input[type=text]:focus:not(.k-input):not(.k-input-inner),
+        input[type=password]:focus:not(.k-input):not(.k-input-inner),
+        input[type=number]:focus:not(.k-input):not(.k-input-inner),
+        input[type=date]:focus:not(.k-input):not(.k-input-inner),
+        input[type=datetime]:focus:not(.k-input):not(.k-input-inner),
+        textarea:focus:not(.k-input):not(.k-input-inner),
+        textarea.form-control:focus:not(.k-input):not(.k-input-inner) {
             color: white;
             box-shadow: inset 0 0 0 1px #404040, 0 0 6px 2px blue;
             outline: none;
         }
 
-        .form-control[disabled],
-        .form-control[readonly],
-        fieldset[disabled].form-control,
-        input[disabled],
-        input[readonly],
-        fieldset[disabled] input,
-        textarea[disabled],
-        textarea[disabled].form-control {
+        .form-control[disabled]:not(.k-input):not(.k-input-inner),
+        .form-control[readonly]:not(.k-input):not(.k-input-inner),
+        fieldset[disabled].form-control:not(.k-input):not(.k-input-inner),
+        input[disabled]:not(.k-input):not(.k-input-inner),
+        input[readonly]:not(.k-input):not(.k-input-inner),
+        fieldset[disabled] input:not(.k-input):not(.k-input-inner),
+        textarea[disabled]:not(.k-input):not(.k-input-inner),
+        textarea[disabled].form-control:not(.k-input):not(.k-input-inner) {
             background: linear-gradient(to bottom, #101010, #000000);
             box-shadow: inset 0 0 0 1px #303030;
             color: #404040;
