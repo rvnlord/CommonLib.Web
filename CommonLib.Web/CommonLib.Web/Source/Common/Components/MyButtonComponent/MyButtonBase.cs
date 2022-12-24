@@ -14,6 +14,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
@@ -161,7 +162,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
         {
             if (e == null)
                 throw new NullReferenceException(nameof(e));
-            if (Ancestors.Any(a => a is MyInputBase))
+            if (Ancestors.Any(a => a is MyInputBase or MyInputGroupBase))
                 return;
             if (Validate.V != true)
                 return;

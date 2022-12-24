@@ -21,6 +21,6 @@ $(document).ready(function () { // ensure to not end up here more than once if u
         }
         
         $btn.css("z-index", "1");
-        $otherBtns.removeCss("z-index", "0");
+        $otherBtns.css("z-index", "0");
     });
 });

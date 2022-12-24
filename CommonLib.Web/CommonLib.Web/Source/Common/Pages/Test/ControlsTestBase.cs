@@ -15,6 +15,7 @@ using CommonLib.Web.Source.Common.Components.MyEditFormComponent;
 using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
 using CommonLib.Web.Source.Common.Components.MyImageComponent;
+using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Extensions;
@@ -78,7 +79,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnAfterFirstRenderAsync()
         {
             // fix sync padding group for every non-native input
-            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixSyncInputPaddingGroup", _tnumSalaryGuid);
+            await FixNonNativeComponentSyncPaddingGroupAsync(_tnumSalaryGuid);
 
             _allControls = GetInputControls().Cast<IComponent>().Append_(_tnumSalary).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
@@ -95,7 +96,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         {
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnSave);
             if (!await _editContext.ValidateAsync())
+            {
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls.Where(c => c is MyInputGroupBase).Concat(new[] { _tnumSalary }));
                 return;
+            }
 
             //await Task.Delay(5000);
             //await SetControlStatesAsync(ButtonState.Enabled, _allControls);

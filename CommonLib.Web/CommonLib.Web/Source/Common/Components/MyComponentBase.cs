@@ -39,6 +39,8 @@ using CommonLib.Web.Source.Common.Components.MyInputComponent;
 using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
+using CommonLib.Web.Source.Common.Components.MyIconComponent;
+using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
 using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
@@ -76,8 +78,9 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncAttributes = new(1, 1);
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
+        private readonly OrderedSemaphore _syncSettingParameters = new(1, 1);
         private readonly OrderedSemaphore _syncRender = new(1, 1);
-        private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);        
+        private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);
         private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
         private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
         //private OrderedSemaphore _syncComponentsCache => (_isCommonLayout ? (MyLayoutComponentBase)this : Layout)._syncComponentsCache;
@@ -96,7 +99,7 @@ namespace CommonLib.Web.Source.Common.Components
         protected OrderedDictionary<string, string> _style { get; } = new();
         protected OrderedDictionary<string, string> _attributes { get; } = new();
         protected BlazorParameter<MyComponentBase> _bpParentToCascade { get; set; }
-      
+
         public List<string> Classes { get; } = new();
         public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
         public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
@@ -134,7 +137,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         public bool IsPage => GetType().Namespace?.Split('.').Contains("Pages") == true;
-        
+
         public Guid SessionId
         {
             get
@@ -143,7 +146,7 @@ namespace CommonLib.Web.Source.Common.Components
                     _sessionId = LayoutParameter.ParameterValue.SessionId;
                 return _sessionId;
             }
-            set =>  _sessionId = value;
+            set => _sessionId = value;
         }
 
         public bool IsCached { get; set; }
@@ -180,11 +183,11 @@ namespace CommonLib.Web.Source.Common.Components
         public BlazorParameter<MyEditContext> CascadedEditContext { get; set; }
 
         [CascadingParameter(Name = "LayoutParameter")]
-        public BlazorParameter<MyLayoutComponentBase> LayoutParameter { get;  set; }
+        public BlazorParameter<MyLayoutComponentBase> LayoutParameter { get; set; }
 
         [CascadingParameter(Name = "ParentParameter")]
         public BlazorParameter<MyComponentBase> ParentParameter { get; set; }
-        
+
         public MyLayoutComponentBase Layout => LayoutParameter?.ParameterValue;
         public MyComponentBase Parent => ParentParameter?.ParameterValue;
         public List<MyComponentBase> Children
@@ -290,7 +293,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Inject]
         public IParametersCacheService ParametersCache { get; set; }
-        
+
         [Inject]
         public ISessionStorageService SessionStorage { get; set; }
 
@@ -299,7 +302,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         [Inject]
         public IHttpContextAccessor HttpContextAccessor { get; set; }
-        
+
         [Inject]
         public IRequestScopedCacheService RequestScopedCache { get; set; }
 
@@ -315,13 +318,13 @@ namespace CommonLib.Web.Source.Common.Components
                 //OnStateChangedAsync += MyComponentBase_StateChangedAsync;
             };
         }
-        
+
         public async Task<MyPromptBase> GetPromptAsync() => _prompt ??= await ComponentByTypeAsync<MyPromptBase>();
-        
+
         protected virtual void BuildRenderTree(RenderTreeBuilder builder) { } // code within this class should *not* invoke BuildRenderTree directly, use `_renderFragment` instead
 
         public Task HandleEventAsync(EventCallbackWorkItem callback, object arg) => callback.InvokeAsync(arg);
-        
+
         public virtual async Task SetParametersAsync(ParameterView parameters)
         {
             if (IsDisposed || JsRuntime == null)
@@ -346,7 +349,7 @@ namespace CommonLib.Web.Source.Common.Components
                     throw;
             }
         }
-        
+
         private async Task InitializeAsync()
         {
             if (!_isInitialized)
@@ -362,7 +365,7 @@ namespace CommonLib.Web.Source.Common.Components
 
                 OnInitialized();
                 await OnInitializedAsync();
-                
+
                 _isInitialized = true;
                 _firstRenderAfterInit = true;
                 _firstParamSetup = true;
@@ -379,7 +382,7 @@ namespace CommonLib.Web.Source.Common.Components
             {
                 if (forceSetCascadingParamsAsChangedOnFirstSetup)
                     SetCascadingBlazorParametersAsChanged();
-                
+
                 if (LayoutParameter.HasValue() && !IsDisposed) // Style components would not have Layout value as they are rendered manually to a css file so we need `Layout.HasValue()`, also a specialized layout from an app would have a value and wouldn't be a common layout so I need to account for that lateer, here `&& !_isCommonLayout && !_isSpecialisedLayout` is not needed because MyLayoutComponent utilizes these event | IsDisposed is an edge case, I don't want the component to remain in cache if it was disposed before params were initialised
                 {
                     Layout.Components[_guid] = this;
@@ -395,7 +398,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             AdditionalAttributesHaveChanged = !AdditionalAttributes.Keys.CollectionEqual(_prevAdditionalAttributes.Keys) || !AdditionalAttributes.Values.CollectionEqual(_prevAdditionalAttributes.Values);
             _prevAdditionalAttributes = AdditionalAttributes.ToOrderedDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-            
+
             OnParametersSet();
             await OnParametersSetAsync();
 
@@ -406,12 +409,24 @@ namespace CommonLib.Web.Source.Common.Components
                 DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
 
             var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
+            var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
             //Logger.For(GetType()).Info($"{GetType().Name}: Setting params - state changed: c: {(InteractionState.HasChanged() ? "true" : "false")}, p: {(parentState is not null ? "true" : "false")} | state: c: {InteractionState.V}, P: {parentState}");
             
             if (InteractionState.HasChanged() || parentState is not null)
             {
-                InteractionState.ParameterValue = parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true ? ComponentState.Disabled : ComponentState.Enabled);
+                ComponentState thisAsIconState = null;
+                if (this is MyIconBase)
+                    thisAsIconState = (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractionState.V;
+
+                InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+                InteractionState.SetAsUnchanged();
                 
+                if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("Dollar") == true)
+                {
+                    Logger.For<MyIconBase>().Info($"PARAMS: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
+                    var t = 0;
+                }
+
                 if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
                 {
                     RemoveClasses("my-loading");
@@ -435,7 +450,7 @@ namespace CommonLib.Web.Source.Common.Components
             _firstParamSetup = false;
             SetAllBlazorParametersAsUnchanged();
         }
-        
+
         protected virtual async Task OnFirstParametersSetAsync() => await Task.CompletedTask;
         protected virtual void OnParametersSet() { }
         protected virtual async Task OnParametersSetAsync() => await Task.CompletedTask;
@@ -448,7 +463,7 @@ namespace CommonLib.Web.Source.Common.Components
             try
             {
                 await _syncRender.WaitAsync(); // if `State` is being changed manually by calling `StateHasChangedAsync` also block render | For instance first render may enter this method and subsequent render can enter as well before the first render finished thus leaving some parts like session not initialized properly
-                
+
                 if (_firstRenderAfterInit)
                 {
                     if (IsCommonLayout)
@@ -488,7 +503,7 @@ namespace CommonLib.Web.Source.Common.Components
                 OnAfterRender(_firstRenderAfterInit);
                 await OnAfterRenderAsync(_firstRenderAfterInit);
                 await OnAfterRenderFinishingAsync(_firstRenderAfterInit);
-                
+
                 //if (LayoutParameter.HasValue() && SessionId != Guid.Empty && Layout.DeviceSize is not null && isFirstRenderAfterInit) // it means component was loaded some time after layout which means layout couldn't trigger the event for it because it wasn't aavailable at the time
                 if (_firstRenderAfterInit && Layout?.IsRendered == true)
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
@@ -527,10 +542,10 @@ namespace CommonLib.Web.Source.Common.Components
 
             _sessionIdAlreadySet = true;
             await OnLayoutAfterRenderFinishedAsync(e.Sessionid, Layout.DeviceSize ?? throw new NullReferenceException("Device Size shouldn't be null"));
-            
+
             await _syncAfterSessionIdSet.ReleaseAsync();
         }
-        
+
         protected virtual async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
         protected virtual void OnAfterRender(bool firstRender) { }
         protected virtual async Task OnAfterRenderAsync(bool firstRender) => await Task.CompletedTask;
@@ -545,7 +560,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected virtual async Task OnDeviceSizeChangedAsync(DeviceSizeKind deviceSize) => await Task.CompletedTask;
-        
+
         protected Task InvokeAsync(Action workItem) => _renderHandle.Dispatcher.InvokeAsync(workItem);
 
         protected Task InvokeAsync(Func<Task> workItem) => _renderHandle.Dispatcher.InvokeAsync(workItem);
@@ -553,9 +568,9 @@ namespace CommonLib.Web.Source.Common.Components
         protected bool IsFirstParamSetup() => _firstParamSetup;
 
         protected bool HasAuthenticationStatus(AuthStatus authStatus) => AuthenticatedUser == null && authStatus == AuthStatus.NotChecked || AuthenticatedUser != null && AuthenticatedUser.HasAuthenticationStatus(authStatus);
-        
+
         protected bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticatedUser == null && AuthStatus.NotChecked.In(authStatuses) || AuthenticatedUser != null && AuthenticatedUser.HasAnyAuthenticationStatus(authStatuses);
-        
+
         protected async Task<ComponentAuthenticationStatus> AuthenticateAsync(bool changeStateEvenIfAuthUserIsTheSame)
         {
             if (IsDisposed)
@@ -576,7 +591,7 @@ namespace CommonLib.Web.Source.Common.Components
                 AuthenticationSuccessful = authSuccessful,
                 ResponseMessage = authResponse.IsError ? authResponse.Message : null
             };
-            
+
             if (!authResponse.IsError && !authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
                 AuthenticatedUser = authResponse.Result; // ta the end because AUthenticatedUser servees as a Parameter in Login.razor so I don't want to cause rerendeer and changing the valuee prematurely
@@ -593,10 +608,10 @@ namespace CommonLib.Web.Source.Common.Components
             }
             //else
             //    Logger.For(GetType()).Info("Auth User didn't change, doing nothing");
-            
+
             return authStatus;
         }
-        
+
         protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if user authenticated
         {
             var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
@@ -768,7 +783,7 @@ namespace CommonLib.Web.Source.Common.Components
                 return;
 
             _syncStyles.Wait();
-            
+
             if (customStyles != null)
                 _style.AddRange(customStyles.Where(s => !s.Value.IsNullOrWhiteSpace() && !s.Key.In(_style.Keys)));
             _renderStyle = _style.CssDictionaryToString();
@@ -776,7 +791,7 @@ namespace CommonLib.Web.Source.Common.Components
             _syncStyles.Release();
         }
 
-        protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string>{ [key] = value });
+        protected void AddStyleIfNotExist(string key, string value) => AddStylesIfNotExist(new Dictionary<string, string> { [key] = value });
 
         protected void AddStyles(Dictionary<string, string> customStyles)
         {
@@ -814,7 +829,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected void RemoveStyle(string key) => RemoveStyles(new[] { key });
-        
+
         protected void SetCustomAndUserDefinedAttributes(Dictionary<string, string> customAttributes, bool preserveExistingAttributes = false)
         {
             if (IsDisposed)
@@ -905,7 +920,7 @@ namespace CommonLib.Web.Source.Common.Components
         {
             if (_hasPendingQueuedRender)
                 return;
-            
+
             if ((!IsRendered || _renderHandle.IsRenderingOnMetadataUpdate || force) && !PreventRender)
             {
                 _hasPendingQueuedRender = true;
@@ -976,7 +991,7 @@ namespace CommonLib.Web.Source.Common.Components
         {
             await (await GetPromptAsync()).AddNotificationAsync(status, message);
         }
-        
+
         private async Task SetSessionIdAsync()
         {
             if (SessionId == Guid.Empty)
@@ -985,9 +1000,9 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<Guid> GetSessionIdAsync()
         {
-            if (SessionId == Guid.Empty) 
+            if (SessionId == Guid.Empty)
                 SessionId = await MyJsRuntime.GetSessionIdAsync();
-            
+
             return SessionId;
         }
 
@@ -999,10 +1014,10 @@ namespace CommonLib.Web.Source.Common.Components
                 if (sessionid != Guid.Empty)
                     SessionId = sessionid;
             }
-            
+
             return SessionId;
         }
-        
+
         public async Task<Guid> GetTemporarySessionIdAsync() // for use when JsInterop is not available i.e.: `OnInitialized`, `OnParametersSet` 
         {
             if (RequestScopedCache.TemporarySessionId == Guid.Empty)
@@ -1013,7 +1028,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             return await Task.FromResult(RequestScopedCache.TemporarySessionId);
         }
-        
+
         public async Task<List<TComponent>> ComponentsByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
         {
             //await _syncComponentsCache.WaitAsync();
@@ -1032,7 +1047,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentById = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
             //await _syncComponentsCache.ReleaseAsync();
-            return  await Task.FromResult(componentById);
+            return await Task.FromResult(componentById);
         }
 
         public async Task<TComponent> ComponentByGuidAsync<TComponent>(Guid guid) where TComponent : MyComponentBase
@@ -1040,7 +1055,7 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentByGuid = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => guid.Equals(c._guid));
             //await _syncComponentsCache.ReleaseAsync();
-            return  await Task.FromResult(componentByGuid);
+            return await Task.FromResult(componentByGuid);
         }
 
         public async Task<List<TComponent>> ComponentsByTypeAsync<TComponent>() where TComponent : MyComponentBase
@@ -1048,14 +1063,14 @@ namespace CommonLib.Web.Source.Common.Components
             //await _syncComponentsCache.WaitAsync();
             var componentsByType = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().ToList();
             //await _syncComponentsCache.ReleaseAsync();
-            return  await Task.FromResult(componentsByType);
+            return await Task.FromResult(componentsByType);
         }
 
         public async Task<TComponent> ComponentByTypeAsync<TComponent>() where TComponent : MyComponentBase
         {
             return (await ComponentsByTypeAsync<TComponent>()).Single();
         }
-        
+
         public async Task ShowLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").ShowModalAsync();
         public async Task HideLoginModalAsync() => await ComponentByClassAsync<MyModalBase>("my-login-modal").HideModalAsync();
 
@@ -1085,7 +1100,7 @@ namespace CommonLib.Web.Source.Common.Components
         protected Task WaitForControlToRerenderAsync() => WaitForControlToRerenderAsync(this);
 
         //protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading, changeRenderingState);
-       
+
         protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
             var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
@@ -1101,9 +1116,9 @@ namespace CommonLib.Web.Source.Common.Components
                 var c = control;
                 if (c.InteractionState is not null && !c.InteractionState.V.IsForced && c != componentLoading)
                     c.InteractionState.ParameterValue = state;
-                if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent)) 
+                if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
                     continue;
-                
+
                 changeStateTasks[c] = async () => await c.StateHasChangedAsync(true);
             }
 
@@ -1134,9 +1149,10 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
-            return inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
+            var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
+            return topMostInputControls;
         }
 
         protected async Task CatchAllExceptionsAsync(Func<Task> action)
@@ -1166,6 +1182,8 @@ namespace CommonLib.Web.Source.Common.Components
         [JSInvokable]
         public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c._guid == guid).InteractionState.V.IsDisabledOrForceDisabled;
 
+        public async Task FixNonNativeComponentSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
+
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)
@@ -1188,7 +1206,7 @@ namespace CommonLib.Web.Source.Common.Components
                 //        await _syncComponentsCache.ReleaseAsync();
                 //    _syncComponentsCache.Dispose();
                 //}
-                
+
                 _syncRender?.Dispose();
                 _syncAfterSessionIdSet?.Dispose();
                 _syncClasses?.Dispose();
@@ -1207,7 +1225,7 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         ~MyComponentBase() => _ = DisposeAsync(false);
-        
+
         public override string ToString() => $"{GetType().Name} [{_guid.ToString().Take(4)}...{_guid.ToString().TakeLast(4)}] {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
 
         public bool Equals(MyComponentBase other)
@@ -1238,7 +1256,7 @@ namespace CommonLib.Web.Source.Common.Components
         public class AfterRenderFinishedEventArgs : EventArgs
         {
             public bool IsFirstRender { get; }
-            
+
             public AfterRenderFinishedEventArgs(bool isFirstRender)
             {
                 IsFirstRender = isFirstRender;

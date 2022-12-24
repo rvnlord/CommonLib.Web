@@ -13,9 +13,9 @@ class InputUtils {
         if (!$input.parent().is(".my-input-group") && !$input.closest(".k-input").parent().is(".my-input-group"))
             return;
 
-        if ($input.parents(".k-input").length === 1) {
-            let t = 0;
-        }
+        //if ($input.parents(".k-input").length === 1) {
+        //    let t = 0;
+        //}
 
         const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.closest(".k-input").classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last();
         const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [ $input ];
@@ -77,7 +77,7 @@ export function blazor_Input_AfterRender(input) {
     InputUtils.fixPaddingForInputGroups($(input));
 }
 
-export function blazor_NonNativeInput_FixSyncInputPaddingGroup(guid) {
+export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
     InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).find("input.k-input-inner").single());
 }
 
@@ -87,7 +87,7 @@ $(document).ready(function() {
         const $inputGroup = $btn.parents(".my-input-group").first();
         const $otherBtns = $inputGroup.find(".my-btn, .k-button").not($btn);
 
-        $btn.css("z-index", 1);
-        $otherBtns.removeCss("z-index");
+        $btn.css("z-index", "1");
+        $otherBtns.css("z-index", "0");
     });
 });

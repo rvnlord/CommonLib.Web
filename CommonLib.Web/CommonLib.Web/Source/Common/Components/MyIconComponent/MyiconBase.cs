@@ -105,12 +105,12 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 CascadingButton.SetAsUnchanged(); // so the notify won't end up here again
             }
             
-            if (CascadingButton.ParameterValue?.InteractionState?.HasValue() == true && CascadingButton.ParameterValue?.InteractionState.ParameterValue == ComponentState.Disabled
-                || CascadingInput.ParameterValue?.InteractionState?.HasValue() == true && CascadingInput.ParameterValue?.InteractionState.ParameterValue.IsDisabledOrForceDisabled == true
-                || parentDropDownState?.IsDisabledOrForceDisabled == true)
-                _disabled = true;
-            else
-                _disabled = false;
+            //if (CascadingButton.ParameterValue?.InteractionState?.HasValue() == true && CascadingButton.ParameterValue?.InteractionState.ParameterValue == ComponentState.Disabled
+            //    || CascadingInput.ParameterValue?.InteractionState?.HasValue() == true && CascadingInput.ParameterValue?.InteractionState.ParameterValue.IsDisabledOrForceDisabled == true
+            //    || parentDropDownState?.IsDisabledOrForceDisabled == true)
+            //    _disabled = true;
+            //else
+            //    _disabled = false; // using State directly now
 
             if (IconType.HasChanged())
             {

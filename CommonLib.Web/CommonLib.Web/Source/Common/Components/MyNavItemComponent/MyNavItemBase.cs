@@ -20,7 +20,8 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
     {
         //private MyComponentBase[] _navItemAndNavLink => this.ToArrayOfOne().Cast<MyComponentBase>().Concat(Children.OfType<MyNavLinkBase>()).ToArray();
         private MyNavLinkBase _disabledNavLink => Children.OfType<MyNavLinkBase>().SingleOrDefault(nl => nl.InteractionState.V.IsDisabledOrForceDisabled);
-
+        private List<MyComponentBase> _disabledNavLinkContent => _disabledNavLink.Children;
+        
         [Parameter]
         public IconType Icon { get; set; }
         
@@ -69,7 +70,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
                 }
             }
             else if (_disabledNavLink is not null && _disabledNavLink.InteractionState.V.IsDisabledOrForceDisabled)
-                await SetControlStateAsync(ComponentState.Enabled, _disabledNavLink);
+                await SetControlStatesAsync(ComponentState.Enabled, _disabledNavLinkContent.Prepend(_disabledNavLink)); // need to set children directly because the way I am reendering nav-links is that I am swapping icons, buttons etc with their disabled/enabled equivalent each time
         }
     }
 

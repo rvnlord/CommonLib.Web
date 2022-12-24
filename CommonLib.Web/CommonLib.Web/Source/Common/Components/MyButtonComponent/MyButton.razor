@@ -11,7 +11,7 @@
     @if (InteractionState.ParameterValue is not null)
     {
         @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
-
+        @* Icons are physically swapped with interaction stateee so they need to have stateee set explicitly not to remain disabled. Swapped icon would always have initial statee null that would always be corrected on parameters set to disabled because parent didn't change | done in MyComponentbase' *@
         <CascadingValue Value="_bpBtn">
             @if (InteractionState.ParameterValue == ComponentState.Enabled)
             {
