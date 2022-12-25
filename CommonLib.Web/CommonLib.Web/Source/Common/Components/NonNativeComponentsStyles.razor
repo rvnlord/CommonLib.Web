@@ -46,12 +46,20 @@
         box-sizing: border-box;
     }
 
-    .k-input:focus-within {
+    .k-input:focus-within, .k-input:focus, .k-input.k-focus {
         color: white;
         box-shadow: inset 0 0 0 1px #404040, 0 0 6px 2px blue;
         outline: none;
         border-color: inherit;
         background-color: transparent;
+    }
+
+    .k-input:not([disabled]):not(.disabled).my-valid {
+        background: @SuccessBackgroundGradient;
+    }
+
+    .k-input:not([disabled]):not(.disabled).my-invalid {
+        background: @ErrorBackgroundGradient;
     }
 
     ::-webkit-input-placeholder {

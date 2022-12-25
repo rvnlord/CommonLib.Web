@@ -134,6 +134,16 @@ namespace CommonLib.Web.Source.Models
             return this;
         }
 
+        public async Task<JQuery> ReplaceClassesAsync(string[] classes)
+        {
+            if (classes == null)
+                throw new NullReferenceException(nameof(classes));
+            await _jsRuntime.InvokeVoidAsync("BlazorJQueryUtils.ReplaceClass", GetSelector(), classes.JoinAsString(" ")).ConfigureAwait(false);
+            return this;
+        }
+
+        public Task<JQuery> ReplaceClassesAsync(string cls) => ReplaceClassesAsync(cls.ToArrayOfOne());
+
         public async Task<JQuery> ToggleClassAsync(string cls)
         {
             if (Classes.Contains(cls))

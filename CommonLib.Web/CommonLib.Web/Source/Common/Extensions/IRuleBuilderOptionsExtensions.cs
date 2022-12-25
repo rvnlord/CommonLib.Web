@@ -492,6 +492,11 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, _) => message);
         }
 
+        public static IRuleBuilderOptions<T, decimal> BetweenWithMessage<T>(this IRuleBuilder<T, decimal> rb, decimal minValue, decimal maxValue)
+        {
+            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be between \"{minValue:0.00}\" and \"{maxValue:0.00}\"");
+        }
+
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()
         {
             DefaultValidatorOptions.Configurable(rb).SetDisplayName(new TModel().GetPropertyDisplayName(propertySelector));

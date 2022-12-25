@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CommonLib.Web.Source.Common.Extensions
 {
@@ -125,6 +126,18 @@ namespace CommonLib.Web.Source.Common.Extensions
         {
             return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false))
                 .RemoveClassAndGetRemovedAsync(classToRemove).ConfigureAwait(false);
+        }
+
+        public static async Task<JQuery> ReplaceClassesAsync(this Task<JQuery> jquery, string[] classes)
+        {
+            return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false))
+                .ReplaceClassesAsync(classes).ConfigureAwait(false);
+        }
+
+        public static async Task<JQuery> ReplaceClassesAsync(this Task<JQuery> jquery, string cls)
+        {
+            return await (await (jquery ?? throw new NullReferenceException(nameof(jquery))).ConfigureAwait(false))
+                .ReplaceClassesAsync(cls).ConfigureAwait(false);
         }
 
         public static async Task<JQuery> ToggleClassAsync(this Task<JQuery> jquery, string cls)

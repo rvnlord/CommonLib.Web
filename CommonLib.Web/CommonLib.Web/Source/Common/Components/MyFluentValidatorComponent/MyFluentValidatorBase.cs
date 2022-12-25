@@ -247,6 +247,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
         }
 
         public bool WasValidated<TProperty>(Expression<Func<TProperty>> accessor) => MessageStore.WasValidated(accessor);
+        public bool IsValid<TProperty>(Expression<Func<TProperty>> accessor) => MessageStore.IsValid(accessor);
 
         protected override async Task DisposeAsync(bool disposing)
         {

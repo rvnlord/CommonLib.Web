@@ -424,7 +424,6 @@ namespace CommonLib.Web.Source.Common.Components
                 if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("Dollar") == true)
                 {
                     Logger.For<MyIconBase>().Info($"PARAMS: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
-                    var t = 0;
                 }
 
                 if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
@@ -1101,7 +1100,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         //protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading, changeRenderingState);
 
-        protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
+        public async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
             var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
             if (!arrControlsToChangeState.Any())
@@ -1132,21 +1131,27 @@ namespace CommonLib.Web.Source.Common.Components
             await WaitForControlsToRerenderAsync(changeStateTasks.Keys);
         }
 
-        protected Task SetControlStateAsync(ComponentState state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
+        public Task SetControlStateAsync(ComponentState state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
 
-        protected async Task SetControlStatesAsync(ComponentState state, IEnumerable<IComponent> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
+        public async Task SetControlStatesAsync(ComponentState state, IEnumerable<IComponent> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         {
             var arrControlsToChangeState = controlsToChangeState.ToArray();
             var nativeControls = arrControlsToChangeState.OfType<MyComponentBase>().ToArray();
             var nonNativeControls = arrControlsToChangeState.Except(nativeControls).Where(c => c.GetType().BaseType?.GetGenericTypeDefinition() == typeof(TelerikInputBase<>)).ToArray();
-            nonNativeControls.ForEach(c =>
+            var nncChangeStates = new List<Func<Task>>();
+            foreach (var c in nonNativeControls)
             {
                 c.SetPropertyValue("Enabled", state.IsEnabledOrForceEnabled);
-                c.GetType().GetMethod("StateHasChanged", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(c, Array.Empty<object>());
-            });
+                nncChangeStates.Add(async () => await c.StateHasChangedAsync());
+            }
+
+            await Task.WhenAll(nncChangeStates.Select(t => t.Invoke()));
+
             await SetControlStatesAsync(state, nativeControls, componentLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
         }
 
+        public Task SetControlStateAsync(ComponentState state, IComponent controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
+        
         protected MyComponentBase[] GetInputControls()
         {
             var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload).ToArray();

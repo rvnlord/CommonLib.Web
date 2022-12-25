@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
@@ -41,6 +42,9 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected MyEditContext _editContext;
         protected TelerikNumericTextBox<decimal> _tnumSalary;
         protected Guid _tnumSalaryGuid;
+        //protected string _tnumSalaryValidationClass => !_validator.WasValidated(() => _employee.Salary) ? "" : _validator.IsValid(() => _employee.Salary) ? "my-valid" : "my-invalid";
+        //protected string _tnumSalaryRenderClasses => $"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup} {_tnumSalaryValidationClass}";
+        protected string _tnumSalaryRenderClasses => $"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup}";
         protected string _syncPaddingGroup;
 
         protected MyCssGridBase _cssgridTest { get; set; }
@@ -80,6 +84,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         {
             // fix sync padding group for every non-native input
             await FixNonNativeComponentSyncPaddingGroupAsync(_tnumSalaryGuid);
+            _editContext.BindValidationStateChangedForNonNativeComponent(_tnumSalary, () => _employee.Salary, this);
 
             _allControls = GetInputControls().Cast<IComponent>().Append_(_tnumSalary).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
@@ -97,7 +102,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnSave);
             if (!await _editContext.ValidateAsync())
             {
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls.Where(c => c is MyInputGroupBase).Concat(new[] { _tnumSalary }));
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls.Where(c => c is MyInputGroupBase)); // only input-groups on validation, validation itsdelf is taking care of non-native components' correct state
                 return;
             }
 

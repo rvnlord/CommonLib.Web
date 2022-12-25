@@ -56,6 +56,9 @@ namespace CommonLib.Web.Source.Validators
                 //.FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
                 //.FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif", ".mkv")
                 //.FilesUploadedWithMessage();
+
+            RuleFor(m => m.Salary)
+                .BetweenWithMessage(1000, 3000);
         }
 
         protected virtual void Dispose(bool disposing)

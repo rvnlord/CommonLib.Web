@@ -55,6 +55,10 @@ window.BlazorJQueryUtils = {
         $(fixSelector(selector)).removeClass(cls);
     },
 
+    ReplaceClass: (selector, cls) => {
+        $(fixSelector(selector)).removeClass().addClass(cls);
+    },
+
     AddClassesAndGetAdded: (selector, cls) => {
         return $(fixSelector(selector)).addClassesAndGetAdded(cls);
     },

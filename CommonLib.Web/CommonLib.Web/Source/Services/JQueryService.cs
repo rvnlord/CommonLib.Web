@@ -43,7 +43,7 @@ namespace CommonLib.Web.Source.Services
 
         public async Task<JQueryCollection> QueryAsync(Guid[] guids)
         {
-            return await QueryAsync(guids.Select(guid => $"[my-guid='{guid}']").JoinAsString(", ")).ConfigureAwait(false);
+            return await QueryAsync(guids.Select(guid => $"[my-guid='{guid}'], .my-guid_{guid}").JoinAsString(", ")).ConfigureAwait(false);
         }
 
         public async Task<Models.JQuery> QueryOneAsync(Guid id)

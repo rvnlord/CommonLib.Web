@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Extensions;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
@@ -28,6 +36,12 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         {
             Model = model ?? throw new ArgumentNullException(nameof(model));
             _fieldStates = new();
+        }
+
+        public async Task NotifyFieldChangedAsync<TProperty>(Expression<Func<TProperty>> accessor, bool shouldValidate)
+        {
+            var (m, p, _, _) = accessor.GetModelAndProperty();
+            await NotifyFieldChangedAsync(new FieldIdentifier(m, p), shouldValidate);
         }
 
         public async Task NotifyFieldChangedAsync(FieldIdentifier fieldIdentifier, bool shouldValidate)
@@ -110,6 +124,62 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         {
             OnValidationStateChangedAsync -= handleValidationStateChanged;
             OnValidationStateChangedAsync += handleValidationStateChanged;
+        }
+
+        public void BindValidationStateChangedForNonNativeComponent<TProperty>(IComponent component, Expression<Func<TProperty>> accessor, MyComponentBase containingComponent)
+        {
+            ReBindValidationStateChanged((s, e, t) => CurrentEditContext_NonNativeValidationStateChangedAsync(s, e, t, component, accessor, containingComponent));
+        }
+
+        private async Task CurrentEditContext_NonNativeValidationStateChangedAsync<TProperty>(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _, IComponent component, Expression<Func<TProperty>> accessor, MyComponentBase containingComponent)
+        {
+            if (e == null)
+                throw new NullReferenceException(nameof(e));
+            if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
+                throw new NullReferenceException(nameof(e.ValidatedFields));
+
+            var propName = accessor.GetPropertyName();
+            var fi = Model is not null && !propName.IsNullOrWhiteSpace() ? new FieldIdentifier(Model, propName) : (FieldIdentifier?)null;
+            var classes = component.GetPropertyValue<string>("Class").Split(" ");
+            if (e.ValidationMode == ValidationMode.Model || fi?.In(e.NotValidatedFields) == true || fi?.In(e.ValidatedFields) == true)
+            {
+                classes = classes.Except(new[] { "my-valid", "my-invalid" }).ToArray();
+                component.SetPropertyValue("Class", classes.JoinAsString(" "));
+            }
+
+            if (e.ValidationMode == ValidationMode.Property && fi is not null && !((FieldIdentifier)fi).In(e.ValidatedFields)) // do nothing if identifier is not propName (if validation is triggered for another field, go ahead if it is propName or if it is null which means we are validating model so there is only one validation changed for all props)
+            {
+                await component.StateHasChangedAsync();
+                return;
+            }
+            
+            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
+            {
+                await containingComponent.SetControlStateAsync(ComponentState.Disabled, component);
+                return;
+            }
+
+            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
+                await containingComponent.SetControlStateAsync(ComponentState.Enabled, component);
+
+            if (fi is null)
+            {
+                await component.StateHasChangedAsync();
+                return;
+            }
+
+            var wasCurrentFieldValidated = propName.In(e.ValidatedFields.Select(f => f.FieldName));
+            var isCurrentFieldValid = !propName.In(e.InvalidFields.Select(f => f.FieldName));
+            var wasValidationSuccessful = e.ValidationStatus == ValidationStatus.Success;
+            var validationFailed = e.ValidationStatus == ValidationStatus.Failure;
+
+            if ((wasValidationSuccessful || isCurrentFieldValid) && wasCurrentFieldValidated)
+                classes = classes.Append("my-valid").ToArray();
+            else if (validationFailed && wasCurrentFieldValidated)
+                classes = classes.Append("my-invalid").ToArray();
+
+            component.SetPropertyValue("Class", classes.JoinAsString(" "));
+            await component.StateHasChangedAsync();
         }
     }
 

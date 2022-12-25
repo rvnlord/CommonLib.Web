@@ -7,6 +7,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using Microsoft.AspNetCore.Components.Forms;
+using Telerik.Blazor.Resources;
 
 namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
@@ -77,6 +78,20 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
         {
             var (m, p, _, _) = accessor.GetModelAndProperty();
             return WasValidated(new FieldIdentifier(m, p));
+        }
+
+        public bool IsValid(FieldIdentifier fi)
+        {
+            if (!WasValidated(fi))
+                throw new Exception("Field was not validated");
+
+            return !_messages[fi].Any();
+        }
+
+        public bool IsValid<TProperty>(Expression<Func<TProperty>> accessor)
+        {
+            var (m, p, _, _) = accessor.GetModelAndProperty();
+            return IsValid(new FieldIdentifier(m, p));
         }
     }
 }
