@@ -492,9 +492,14 @@ namespace CommonLib.Web.Source.Common.Extensions
             }).WithMessage((_, _) => message);
         }
 
-        public static IRuleBuilderOptions<T, decimal> BetweenWithMessage<T>(this IRuleBuilder<T, decimal> rb, decimal minValue, decimal maxValue)
+        public static IRuleBuilderOptions<T, decimal?> BetweenWithMessage<T>(this IRuleBuilder<T, decimal?> rb, decimal? minValue, decimal? maxValue)
         {
             return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be between \"{minValue:0.00}\" and \"{maxValue:0.00}\"");
+        }
+
+        public static IRuleBuilderOptions<T, DateTime?> BetweenWithMessage<T>(this IRuleBuilder<T, DateTime?> rb,  DateTime? minValue,  DateTime? maxValue)
+        {
+            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be between \"{minValue:dd-MMM-yyyy HH:mm:ss}\" and \"{maxValue:dd-MMM-yyyy HH:mm:ss}\"");
         }
 
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()

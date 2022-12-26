@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Utils;
@@ -23,7 +24,9 @@ namespace CommonLib.Web.Source.ViewModels
         public FileData Avatar { get; set; }
         public double Progress { get; set; }
         public FileDataList Files { get; set; }
-        public decimal Salary { get; set; }
+        public decimal? Salary { get; set; }
+        [DisplayName("Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
     }
 
     public enum Gender

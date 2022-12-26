@@ -1036,6 +1036,9 @@ jQuery.fn.extend({
     firstOrNull: function() {
         return $(this[0]).nullifyIfEmpty();
     },
+    last: function() {
+        return this.length === 0 ? $() : $(this[this.length - 1]);
+    },
     textOnlySelf: function() {
         if (this[0] === window || this[0] === document)
             return "";
@@ -1250,11 +1253,11 @@ jQuery.fn.extend({
     attrOrNull: function(attrName) {
         return Wrapper.$(this).attrOrNull(attrName).unwrap();
     },
-    single: function () {
-        if (this.length !== 1) {
-            throw new Error("JQuery object should only contain one element");
-        }
-        return $(this[0]);
+    single: function (selector = x => x) {
+        return this.$toArray().single(selector);
+    },
+    singleOrNull: function (selector = x => x) {
+        return this.$toArray().singleOrNull(selector);
     }
 });
 

@@ -59,6 +59,9 @@ namespace CommonLib.Web.Source.Validators
 
             RuleFor(m => m.Salary)
                 .BetweenWithMessage(1000, 3000);
+            
+            RuleFor(m => m.DateOfBirth)
+                .BetweenWithMessage(new DateTime(1890, 5, 5), new DateTime(1995, 8, 31));
         }
 
         protected virtual void Dispose(bool disposing)
