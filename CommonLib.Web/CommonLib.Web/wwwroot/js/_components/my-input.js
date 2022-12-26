@@ -6,7 +6,7 @@ import "../extensions.js";
 class InputUtils {
     static initPaddings = { // if I stored it as an attribute it might interfere with blazor rendering
         left: {},
-        right: {} 
+        right: {}
     };
 
     static fixPaddingForInputGroups($input) {
@@ -20,11 +20,11 @@ class InputUtils {
         }
 
         const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.parents(".k-input").last().classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last();
-        const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [ $input ];
+        const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [$input];
         const leftPaddings = {};
         const rightPaddings = {};
 
-        for (let $ti of $tiToSetPadding) { 
+        for (let $ti of $tiToSetPadding) {
             const guid = $ti.guid();
             const $inputGroup = $ti.parent();
             const $inputGroupPrepend = $inputGroup.children(".my-input-group-prepend").first();
@@ -99,13 +99,58 @@ export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
     InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).find("input.k-input-inner").single());
 }
 
-$(document).ready(function() {
-    $(document).on("mouseenter", ".my-input-group .my-btn", function() {
+$(document).ready(function () {
+    $(document).on("mouseenter", ".my-input-group .my-btn", function () {
         const $btn = $(this);
         const $inputGroup = $btn.parents(".my-input-group").first();
         const $otherBtns = $inputGroup.find(".my-btn, .k-button").not($btn);
 
-        $btn.css("z-index", "1");
+        $btn.css("z-index", "3");
         $otherBtns.css("z-index", "0");
     });
+
+    $(document).on("mouseenter", ".k-button", function (e) {
+        const $btn = $(e.currentTarget);
+        const $inputGroup = $btn.closest(".my-input-group");
+        let $otherBtns = $btn.siblings(".k-button");
+
+        if ($inputGroup.length === 1) {
+            const $igBtns = $inputGroup.find(".my-btn, .k-button").not($btn);
+            $.uniqueSort($.merge($otherBtns, $igBtns));
+        }
+
+        $btn.css("z-index", "3");
+        $otherBtns.css("z-index", "0");
+    });
+
+
+    //const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    //var observer = new MutationObserver(function (mutations, observer) {
+    //    console.log(mutations, observer);
+    //    for (const mutation of mutations) {
+    //        const calendarPopup = $(mutation.target).is(".k-animation-container-shown");
+    //        if (calendarPopup) {
+    //            var t = 0;
+    //        }
+            
+    //        //if (mutation.type === 'childList') {
+
+    //        //    var t1 = mutation.addedNodes;
+    //        //    var t = $(mutation.addedNodes);
+    //        //}
+    //    }
+    //});
+    //observer.observe(document, { subtree: true, attributes: true, childList: true }); // 
+
+
+    //$(document).on("click", ".k-datepicker > .k-dateinput + .k-button", function (e) {
+    //    if (e.button !== 0 || e.detail > 1) {
+    //        return;
+    //    }
+
+    //    const $kAnimationContainers = $(".k-animation-container").$toArray();
+    //    for (let kan of $kAnimationContainers) {
+    //        observer.observe(kan[0], { subtree: true, attributes: true, childList: true });
+    //    }
+    //});
 });

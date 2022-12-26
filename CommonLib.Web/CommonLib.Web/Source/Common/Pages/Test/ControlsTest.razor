@@ -29,199 +29,196 @@
                 </div>
             </div>
 
-            <MyCssGrid 
-                Padding="HalfGutter.Px()" 
-                Gap="Gutter.Px()" 
-                Template="@(new CssGridLayout("auto", "repeat(12, minmax(80px, auto))"))"
-                SMTemplate="@(new CssGridLayout("60px auto", "repeat(6, minmax(60px, auto))"))"
-                MDTemplate="@(new CssGridLayout("60px auto 200px 100px", "repeat(3, minmax(40px, auto))"))"
-                class="my-test" @ref="_cssgridTest">
+            <MyCssGrid Padding="HalfGutter.Px()"
+                       Gap="Gutter.Px()"
+                       Template="@(new CssGridLayout("auto", "repeat(12, minmax(80px, auto))"))"
+                       SMTemplate="@(new CssGridLayout("60px auto", "repeat(6, minmax(60px, auto))"))"
+                       MDTemplate="@(new CssGridLayout("60px auto 200px 100px", "repeat(3, minmax(40px, auto))"))"
+                       class="my-test" @ref="_cssgridTest">
                 <MyCssGridItem class="item1">1</MyCssGridItem>
                 <MyCssGridItem class="item2">2: Device Size: @(_cssgridTest?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(_cssgridTest?.HighestDeviceSizeWithLayout?.EnumToString() ?? "not defined")</MyCssGridItem>
-                <MyCssGridItem class="item3">3</MyCssGridItem>  
-                <MyCssGridItem class="item4">4</MyCssGridItem>
-                <MyCssGridItem class="item5">5</MyCssGridItem>
-                <MyCssGridItem class="item6" MDArea="@(new CssGridArea(2, 2, 2, 1))">6</MyCssGridItem>
-                <MyCssGridItem class="item7" Hide="@(new CssGridAreaHide(DeviceSizeKind.MD))">7</MyCssGridItem>
-                <MyCssGridItem class="item8">8</MyCssGridItem>
-                <MyCssGridItem class="item9">9</MyCssGridItem>
-                <MyCssGridItem class="item10">10</MyCssGridItem>
-                <MyCssGridItem class="item11">11</MyCssGridItem>
-                <MyCssGridItem class="item12">12</MyCssGridItem>
-            </MyCssGrid>
+                    <MyCssGridItem class="item3">3</MyCssGridItem>
+                    <MyCssGridItem class="item4">4</MyCssGridItem>
+                    <MyCssGridItem class="item5">5</MyCssGridItem>
+                    <MyCssGridItem class="item6" MDArea="@(new CssGridArea(2, 2, 2, 1))">6</MyCssGridItem>
+                    <MyCssGridItem class="item7" Hide="@(new CssGridAreaHide(DeviceSizeKind.MD))">7</MyCssGridItem>
+                    <MyCssGridItem class="item8">8</MyCssGridItem>
+                    <MyCssGridItem class="item9">9</MyCssGridItem>
+                    <MyCssGridItem class="item10">10</MyCssGridItem>
+                    <MyCssGridItem class="item11">11</MyCssGridItem>
+                    <MyCssGridItem class="item12">12</MyCssGridItem>
+                </MyCssGrid>
 
-            <MyCssGrid 
-                Padding="HalfGutter.Px()" Gap="Gutter.Px()" 
-                XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
-                LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fit, minmax(0, max-content))"))"
-                SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fit, minmax(0, max-content))"))"
-                Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))">
-                
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Name)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _employee.Name)" SyncPaddingGroup="controls-test-panel" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Name)" />
-                </MyCssGridItem>
+                <MyCssGrid Padding="HalfGutter.Px()" Gap="Gutter.Px()"
+                       XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                       LGTemplate="@(new CssGridLayout("3fr 4fr 5fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                       SMTemplate="@(new CssGridLayout("6fr 6fr", "repeat(auto-fit, minmax(0, max-content))"))"
+                       Template="@(new CssGridLayout("12fr", "repeat(auto-fit, minmax(0, max-content))"))">
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Department)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyDropDown Icon="IconType.From(LightIconType.Box)" For="@(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Department)" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Name)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyTextInput Icon="IconType.From(LightIconType.User)" For="@(() => _employee.Name)" SyncPaddingGroup="controls-test-panel" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Name)" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Domain)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyDropDown Icon="IconType.From(LightIconType.Dragon)" For="@(() => _employee.Domain)" PossibleValues="@(new[] { "test1.com", "test2.com", "test3.com", "test4.com" })" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Domain)" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Department)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyDropDown Icon="IconType.From(LightIconType.Box)" For="@(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Department)" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Password)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyPasswordInput For="@(() => _employee.Password)" SyncPaddingGroup="controls-test-panel" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Password)" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Domain)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyDropDown Icon="IconType.From(LightIconType.Dragon)" For="@(() => _employee.Domain)" PossibleValues="@(new[] { "test1.com", "test2.com", "test3.com", "test4.com" })" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Domain)" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Salary)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyInputGroup>
-                        <TelerikNumericTextBox @ref="_tnumSalary" 
-                            Class="@(_tnumSalary is null ? $"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup}"  : _tnumSalary.Class)"
-                            Value="_employee.Salary"
-                            ValueChanged="@(async (decimal? value) => { 
-                                _employee.Salary = value; 
-                                await _editContext.NotifyFieldChangedAsync(() => _employee.Salary, true);
-                                //_tnumSalary.StateHasChanged();
-                                //await JQuery.QueryOneAsync(_tnumSalaryGuid).RemoveClassesAsync(new[] { "my-valid", "my-invalid" }).AddClassAsync(_tnumSalaryValidationClass);
-                            })"
-                            Enabled="@(_tnumSalary is null ? false : _tnumSalary.Enabled)" 
-                            Format="0.00 $" 
-                            Decimals="2" 
-                            Min="0m" 
-                            Max="10000m" 
-                            Step="1250.50m" 
-                            Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")">
-                        </TelerikNumericTextBox>
-                        <MyInputGroupPrepend>
-                            <MyIcon IconType="IconType.From(LightIconType.CircleDollar)"></MyIcon>
-                        </MyInputGroupPrepend>
-                        <MyInputGroupAppend>
-                            <MyButton Icon="IconType.From(LightIconType.BasketballBall)" Sizing="ButtonSizing.Quadratic"></MyButton>
-                            <MyButton Icon="IconType.From(LightIconType.BreadLoaf)" Sizing="ButtonSizing.Quadratic"></MyButton>
-                        </MyInputGroupAppend>
-                    </MyInputGroup>
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Salary)" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Password)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyPasswordInput For="@(() => _employee.Password)" SyncPaddingGroup="controls-test-panel" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Password)" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.DateOfBirth)" Align="@HorizontalAlignment.Right" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyInputGroup>
-                        <TelerikDatePicker @ref="_tdpDateOfBirth" 
-                            Class="@(_tdpDateOfBirth is null ? $"my-guid_{_tdpDateOfBirthGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tdpDateOfBirth.Class)"
-                            Value="_employee.DateOfBirth"
-                            ValueChanged="@(async (DateTime? value) => { 
-                                _employee.DateOfBirth = value; 
-                                await _editContext.NotifyFieldChangedAsync(() => _employee.DateOfBirth, true);
-                            })"
-                            Enabled="@(_tdpDateOfBirth is not null && _tdpDateOfBirth.Enabled)" 
-                            Format="dd-MM-yyyy"
-                            Min="new DateTime(1900, 1, 1)" 
-                            Max="DateTime.Now - TimeSpanUtils.FromApproximateYears(18)"
-                            Placeholder="@_employee.GetPropertyDisplayName(e => e.DateOfBirth).Append("...")">
-                            <DatePickerSteps Year="1" Month="1" Day="1" />
-                        </TelerikDatePicker>
-                        <MyInputGroupPrepend>
-                            <MyIcon IconType="IconType.From(LightIconType.Calendar)"></MyIcon>
-                        </MyInputGroupPrepend>
-                        <MyInputGroupAppend>
-                            <MyButton Icon="IconType.From(LightIconType.BasketballBall)" Sizing="ButtonSizing.Quadratic"></MyButton>
-                            <MyButton Icon="IconType.From(LightIconType.Bicycle)" Sizing="ButtonSizing.Quadratic"></MyButton>
-                        </MyInputGroupAppend>
-                    </MyInputGroup>
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.DateOfBirth)" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Salary)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyInputGroup>
+                            <TelerikNumericTextBox @ref="_tnumSalary"
+                                Class="@(_tnumSalary is null ? $"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup}"  : _tnumSalary.Class)"
+                                Value="_employee.Salary"
+                                ValueChanged="@(async (decimal? value) => {
+                                    _employee.Salary = value;
+                                    await _editContext.NotifyFieldChangedAsync(() => _employee.Salary, true);
+                                    //_tnumSalary.StateHasChanged();
+                                    //await JQuery.QueryOneAsync(_tnumSalaryGuid).RemoveClassesAsync(new[] { "my-valid", "my-invalid" }).AddClassAsync(_tnumSalaryValidationClass);
+                                })"
+                                Enabled="@(_tnumSalary is null ? false : _tnumSalary.Enabled)"
+                                Format="0.00 $"
+                                Decimals="2"
+                                Min="0m"
+                                Max="10000m"
+                                Step="1250.50m"
+                                Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")">
+                            </TelerikNumericTextBox>
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.CircleDollar)"></MyIcon>
+                            </MyInputGroupPrepend>
+                            <MyInputGroupAppend>
+                                <MyButton Icon="IconType.From(LightIconType.BasketballBall)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                                <MyButton Icon="IconType.From(LightIconType.BreadLoaf)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                            </MyInputGroupAppend>
+                        </MyInputGroup>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Salary)" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Gender)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr 1fr", "auto"))">
-                        <MyCssGridItem>  
-                            <MyRadioButton For="@(() => _employee.Gender)" ValueIfTrue="Gender.Male" />
-                        </MyCssGridItem>
-                        <MyCssGridItem>                    
-                            <MyRadioButton For="@(() => _employee.Gender)" ValueIfTrue="Gender.Female" />
-                        </MyCssGridItem>
-                    </MyCssGrid>
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Gender)" Sizing="LabelSizing.LineHeight" />
-                </MyCssGridItem>
-                
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.TermsAccepted)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyCheckBox For="@(() => _employee.TermsAccepted)"></MyCheckBox>
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.TermsAccepted)" Sizing="LabelSizing.LineHeight" />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.DateOfBirth)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyInputGroup>
+                            <TelerikDatePicker @ref="_tdpDateOfBirth"
+                                Class="@(_tdpDateOfBirth is null ? $"my-guid_{_tdpDateOfBirthGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tdpDateOfBirth.Class)"
+                                Value="_employee.DateOfBirth"
+                                ValueChanged="@(async (DateTime? value) => {
+                                    _employee.DateOfBirth = value;
+                                    await _editContext.NotifyFieldChangedAsync(() => _employee.DateOfBirth, true); })"
+                                Enabled="@(_tdpDateOfBirth is not null && _tdpDateOfBirth.Enabled)"
+                                Format="dd-MM-yyyy"
+                                Min="new DateTime(1900, 1, 1)"
+                                Max="DateTime.Now - TimeSpanUtils.FromApproximateYears(18)"
+                                Placeholder="@_employee.GetPropertyDisplayName(e => e.DateOfBirth).Append("...")">
+                                <DatePickerSteps Year="1" Month="1" Day="1" />
+                            </TelerikDatePicker>
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.Calendar)"></MyIcon>
+                            </MyInputGroupPrepend>
+                            <MyInputGroupAppend>
+                                <MyButton Icon="IconType.From(LightIconType.BasketballBall)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                                <MyButton Icon="IconType.From(LightIconType.Bicycle)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                            </MyInputGroupAppend>
+                        </MyInputGroup>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.DateOfBirth)" />
+                    </MyCssGridItem>
                     
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Progress)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyProgressBar For="@(() => _employee.Progress)" Description="@("Test.png")" Sizing="ProgressBarSizing.LineHeight"  />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Progress)" Sizing="LabelSizing.LineHeight"  />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Gender)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr 1fr", "auto"))">
+                            <MyCssGridItem>
+                                <MyRadioButton For="@(() => _employee.Gender)" ValueIfTrue="Gender.Male" />
+                            </MyCssGridItem>
+                            <MyCssGridItem>
+                                <MyRadioButton For="@(() => _employee.Gender)" ValueIfTrue="Gender.Female" />
+                            </MyCssGridItem>
+                        </MyCssGrid>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Gender)" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
-                    <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight"  />
-                </MyCssGridItem>
-                <MyCssGridItem>
-                    <MyFileUpload For="@(() => _employee.Files)" PreviewFor="@BP(() => _employee.Avatar)" PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
-                </MyCssGridItem>
-                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
-                    <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight"  />
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.TermsAccepted)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyCheckBox For="@(() => _employee.TermsAccepted)"></MyCheckBox>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.TermsAccepted)" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
 
-                <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
-                    <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("max-content", "auto"))">
-                        <MyCssGridItem>  
-                            <MyButton Value="@("Submit".ToBp())" Click="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
-                        </MyCssGridItem>
-                    </MyCssGrid>
-                </MyCssGridItem>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Progress)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyProgressBar For="@(() => _employee.Progress)" Description="@("Test.png")" Sizing="ProgressBarSizing.LineHeight" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Progress)" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
 
-            </MyCssGrid>
-            
-        </MyEditForm>
-    </div>
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Files)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyFileUpload For="@(() => _employee.Files)" PreviewFor="@BP(() => _employee.Avatar)" PredefinedSaveUrl="PredefinedSaveUrlKind.SaveFileInUserFolder" />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Files)" Sizing="LabelSizing.LineHeight" />
+                    </MyCssGridItem>
 
-</CascadingValue>
+                    <MyCssGridItem Area="CssGridArea.C1SpanAll" LGArea="CssGridArea.C2SpanAll">
+                        <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("max-content", "auto"))">
+                            <MyCssGridItem>
+                                <MyButton Value="@("Submit".ToBp())" Click="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
+                            </MyCssGridItem>
+                        </MyCssGrid>
+                    </MyCssGridItem>
+
+                </MyCssGrid>
+
+            </MyEditForm>
+        </div>
+
+    </CascadingValue>

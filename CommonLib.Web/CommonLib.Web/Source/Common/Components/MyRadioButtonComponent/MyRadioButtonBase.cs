@@ -134,6 +134,8 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
                 await SetControlStateAsync(ComponentState.Enabled, this);
+            else
+                await NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
 
     }
