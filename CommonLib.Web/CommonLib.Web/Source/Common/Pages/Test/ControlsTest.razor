@@ -162,6 +162,37 @@
                     </MyCssGridItem>
                     
                     <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.AvailableFrom)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyInputGroup>
+                            <TelerikDateTimePicker @ref="_tdtpAvailableFrom"
+                                Class="@(_tdtpAvailableFrom is null ? $"my-guid_{_tdtpAvailableFromGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tdtpAvailableFrom.Class)"
+                                Value="_employee.AvailableFrom"
+                                ValueChanged="@(async (DateTime? value) => {
+                                    _employee.AvailableFrom = value;
+                                    await _editContext.NotifyFieldChangedAsync(() => _employee.AvailableFrom, true); })"
+                                Enabled="@(_tdtpAvailableFrom is not null && _tdtpAvailableFrom.Enabled)"
+                                Format="dd-MM-yyyy HH:mm:ss"
+                                Min="DateTime.UtcNow"
+                                Max="DateTime.UtcNow + TimeSpanUtils.FromApproximateMonths(4)"
+                                Placeholder="@_employee.GetPropertyDisplayName(e => e.AvailableFrom).Append("...")">
+                                <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="1" Second="1" />
+                            </TelerikDateTimePicker>
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.Calendar)"></MyIcon>
+                            </MyInputGroupPrepend>
+                            <MyInputGroupAppend>
+                                <MyButton Icon="IconType.From(LightIconType.BatteryQuarter)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                                <MyButton Icon="IconType.From(LightIconType.FlaskPotion)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                            </MyInputGroupAppend>
+                        </MyInputGroup>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.AvailableFrom)" />
+                    </MyCssGridItem>
+
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
                         <MyLabel For="@(() => _employee.Gender)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
                     </MyCssGridItem>
                     <MyCssGridItem>

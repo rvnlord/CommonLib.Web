@@ -2,6 +2,7 @@
 /// <reference path="../../libs/custom/@types/animejs/index.d.ts" />
 
 import "../extensions.js";
+import utils from "../utils.js";
 
 class InputUtils {
     static initPaddings = { // if I stored it as an attribute it might interfere with blazor rendering
@@ -128,29 +129,45 @@ $(document).ready(function () {
     //var observer = new MutationObserver(function (mutations, observer) {
     //    console.log(mutations, observer);
     //    for (const mutation of mutations) {
-    //        const calendarPopup = $(mutation.target).is(".k-animation-container-shown");
-    //        if (calendarPopup) {
+    //        const isKCalendarContainer = $(mutation.target).is(".k-animation-container-shown") && $(mutation.target).find(".k-calendar").length > 0;
+    //        if (isKCalendarContainer) {
+    //            const $calendarContainer = $(mutation.target);
+    //            const calendarOffset = $calendarContainer.offset();
+    //            const x1 = calendarOffset.left;
+    //            const y1 = calendarOffset.top;
+    //            const $datePickers = $(".k-datepicker, .k-datetimepicker").$toArray();
+    //            const $closestDatePicker = $datePickers.select($c => {
+    //                const dpOffset = $c.offset();
+    //                const x2 = dpOffset.left;
+    //                const y2 = dpOffset.top;
+    //                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+    //            });
     //            var t = 0;
     //        }
             
-    //        //if (mutation.type === 'childList') {
+    //        if (mutation.type === 'childList') {
 
-    //        //    var t1 = mutation.addedNodes;
-    //        //    var t = $(mutation.addedNodes);
-    //        //}
+    //            var t1 = mutation.addedNodes;
+    //            var t = $(mutation.addedNodes);
+    //        }
     //    }
     //});
     //observer.observe(document, { subtree: true, attributes: true, childList: true }); // 
 
 
-    //$(document).on("click", ".k-datepicker > .k-dateinput + .k-button", function (e) {
-    //    if (e.button !== 0 || e.detail > 1) {
-    //        return;
-    //    }
+    $(document).on("click", ".k-datepicker > .k-dateinput + .k-button, .k-datetimepicker > .k-dateinput + .k-button", async function (e) {
+        if (e.button !== 0 || e.detail > 1) {
+            return;
+        }
 
-    //    const $kAnimationContainers = $(".k-animation-container").$toArray();
-    //    for (let kan of $kAnimationContainers) {
-    //        observer.observe(kan[0], { subtree: true, attributes: true, childList: true });
-    //    }
-    //});
+        const $kHiddenAnimationContainers = $(".k-animation-container:not(.k-animation-container-shown)").$toArray();
+        const $kShownAnimationContainers = $(".k-animation-container.k-animation-container-shown").$toArray();
+        await utils.waitUntilAsync(() => $kHiddenAnimationContainers.any($c => $c.find(".k-calendar").length > 0 || $kShownAnimationContainers.any($c => !$c.is(".k-animation-container-shown"))));
+        const $container = $kHiddenAnimationContainers.singleOrNull($c => $c.find(".k-calendar").length > 0);
+        if ($container) {
+            const width = $(this).closest(".k-datepicker, .k-datetimepicker").outerWidth();
+            $container.css("min-width", width.px());
+            $container.css("width", width.px()); // or '.k-datetime-wrap' for datetimepicker
+        }
+    });
 });

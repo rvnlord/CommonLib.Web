@@ -637,6 +637,19 @@ Object.defineProperty(Array.prototype, "singleOrNull", {
     configurable: true
 });
 
+Object.defineProperty(Array.prototype, "firstOrNull", {
+    value: function (selector = x => x) {
+        const arr = this.filter(selector);
+        if (!Array.isArray(arr))
+            throw new Error("Not an array");
+        if (arr.length < 1)
+            return null;
+        return arr[0] ? arr[0] : null;
+    },
+    writable: true,
+    configurable: true
+});
+
 Object.defineProperty(Array.prototype, "except", {
     value: function (exceptArr) {
         if (this.some(o => o instanceof $)) {

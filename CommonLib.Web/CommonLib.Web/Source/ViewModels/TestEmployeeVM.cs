@@ -27,6 +27,8 @@ namespace CommonLib.Web.Source.ViewModels
         public decimal? Salary { get; set; }
         [DisplayName("Date of Birth")]
         public DateTime? DateOfBirth { get; set; }
+        [DisplayName("Available From")]
+        public DateTime? AvailableFrom { get; set; }
     }
 
     public enum Gender

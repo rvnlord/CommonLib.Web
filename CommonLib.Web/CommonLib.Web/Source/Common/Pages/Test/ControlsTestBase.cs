@@ -44,6 +44,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected Guid _tnumSalaryGuid;
         protected TelerikDatePicker<DateTime?> _tdpDateOfBirth;
         protected Guid _tdpDateOfBirthGuid;
+        protected TelerikDateTimePicker<DateTime?> _tdtpAvailableFrom;
+        protected Guid _tdtpAvailableFromGuid;
 
         protected string _syncPaddingGroup;
 
@@ -77,6 +79,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _editContext = new MyEditContext(_employee);
             _tnumSalaryGuid = _tnumSalaryGuid == Guid.Empty ? Guid.NewGuid() : _tnumSalaryGuid;
             _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
+            _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _syncPaddingGroup = "controls-test-panel";
             await Task.CompletedTask; 
         }
@@ -88,8 +91,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _editContext.BindValidationStateChangedForNonNativeComponent(_tnumSalary, () => _employee.Salary, this);
             await FixNonNativeComponentSyncPaddingGroupAsync(_tdpDateOfBirthGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdpDateOfBirth, () => _employee.DateOfBirth, this);
+            await FixNonNativeComponentSyncPaddingGroupAsync(_tdtpAvailableFromGuid);
+            _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
 
-            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth).ToArray();
+            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

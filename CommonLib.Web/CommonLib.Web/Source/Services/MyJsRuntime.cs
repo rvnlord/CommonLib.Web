@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Utils;
 using CommonLib.Web.Source.Services.Interfaces;
@@ -17,6 +21,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RestSharp;
 using CommonLib.Web.Source.Common.Extensions;
+using Google.Protobuf.WellKnownTypes;
 
 namespace CommonLib.Web.Source.Services
 {
@@ -25,6 +30,7 @@ namespace CommonLib.Web.Source.Services
         private readonly IJSRuntime _jsRuntime;
         private HttpClient _httpClient;
         private NavigationManager _navigationManager;
+        private readonly ISessionStorageService _sessionStorage;
         private static string _commonWwwRootDir;
         private static string _currentWwwRootDir;
         private static bool? _isProduction;
@@ -33,17 +39,26 @@ namespace CommonLib.Web.Source.Services
         public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
         public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
 
-        public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager)
+        public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager, ISessionStorageService sessionStorage)
         {
             _jsRuntime = jsRuntime;
             _httpClient = httpClient;
             _navigationManager = navigationManager;
+            _sessionStorage = sessionStorage;
         }
 
         public async Task<IJSObjectReference> ImportModuleAsync(string modulePath)
         {
             if (modulePath == null)
                 return null;
+
+            //var importedModules = (await _sessionStorage.GetItemAsStringAsync("ImportedModules"))?.JsonDeserialize().To<List<string>>();
+
+            //if (!importedModules.ContainsIgnoreCase(modulePath))
+            //{
+                
+            //}
+
             return await _jsRuntime.ImportModuleAndRetryIfCancelledAsync(modulePath);
         }
 
