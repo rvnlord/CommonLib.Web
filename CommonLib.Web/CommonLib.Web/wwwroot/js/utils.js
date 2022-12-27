@@ -49,7 +49,7 @@ export default class utils {
     static waitUntilAsync = (condition, ms) => new Promise(async resolve => {
         ms = ms || 25;
         while (!condition())
-            await this.waitAsync(25);
+            await this.waitAsync(ms);
         return resolve();
     });
 
