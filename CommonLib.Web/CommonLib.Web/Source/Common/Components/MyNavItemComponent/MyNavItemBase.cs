@@ -63,6 +63,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
                 if (!authResp.IsError)
                 {
                     AuthenticatedUser = authResp.Result;
+                    AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                     if (!AuthenticatedUser.Equals(prevAuthUser))
                         await StateHasChangedAsync(true);
                     if (_disabledNavLink is not null && _disabledNavLink.InteractionState.V.IsDisabledOrForceDisabled)

@@ -49,7 +49,7 @@
                 {
                     if (HasAuthenticationStatus(AuthStatus.Authenticated))
                     {
-                        <MyNavLink To="null" MatchEmptyRoute="false">@AuthenticatedUser.UserName</MyNavLink>
+                        <MyNavLink To="null" Image="AuthenticatedUser.Avatar" MatchEmptyRoute="false">@AuthenticatedUser.UserName</MyNavLink>
                     }
                     else
                     {

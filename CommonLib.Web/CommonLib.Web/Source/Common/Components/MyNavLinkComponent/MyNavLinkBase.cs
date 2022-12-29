@@ -44,11 +44,14 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         public NavLinkIconPlacement IconPlacement { get; set; } = NavLinkIconPlacement.Left;
 
         [Parameter]
+        public object Image { get; set; }
+        
+        [Parameter]
+        public NavLinkImagePlacement ImagePlacement { get; set; } = NavLinkImagePlacement.Left;
+
+        [Parameter]
         public bool MatchEmptyRoute { get; set; }
-
-        [CascadingParameter]
-        public MyNavBar NavBar { get; set; }
-
+        
         [CascadingParameter]
         public NavItemType NavItemType { get; set; }
         
@@ -139,6 +142,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
     }
 
     public enum NavLinkIconPlacement
+    {
+        Left,
+        Right
+    }
+
+    public enum NavLinkImagePlacement
     {
         Left,
         Right
