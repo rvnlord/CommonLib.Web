@@ -14,13 +14,13 @@ class InputUtils {
         if (!$input.parent().is(".my-input-group") && !$input.parents(".k-input").last().parent().is(".my-input-group"))
             return;
 
-        //if ($ti.parents(".k-input").length > 0 && $ti.parents(".k-input").last().classes().contains("k-datepicker")) {
-        if ($input.parents(".k-input").length > 0) {
+        //if ($input.parents(".k-input").length > 0 && $input.parents(".k-input").last().classes().contains("k-datepicker")) {
+        if ($input.is(".k-datepicker")) {
             let cc = $input.parents(".k-input").last().classes();
             let t = 0;
         }
 
-        const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.parents(".k-input").last().classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last();
+        const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last(); //.parents(".k-input").last()
         const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [$input];
         const leftPaddings = {};
         const rightPaddings = {};
@@ -37,7 +37,7 @@ class InputUtils {
             rightPaddings[guid] = appendWidth;
 
             // TEST
-            if ($ti.is(".k-datepicker")) {
+            if ($ti.is(".k-autocomplete")) {
                 let cc = $ti.classes();
                 let t = 0;
             }
@@ -56,9 +56,6 @@ class InputUtils {
             let $ddlConteiner = null;
             if ($ti.is(".my-dropdown")) {
                 $ddlConteiner = $ti.children(".my-dropdown-value-and-icon-container").first();
-            }
-            if ($ti.find(".k-input-inner").length > 0) {
-                $ti.find(".k-input-inner").first().css("padding-left", 0);
             }
 
             const leftInitInputPadding = this.initPaddings.left[guid]; //parseFloat([ null, undefined ].contains(this.initPaddings.left[guid]) ? $ti.css("padding-left") : this.initPaddings.left[guid]); // take init value if assigned, otherwise every element from the same group would get recalculated value and the padding would increase
@@ -80,6 +77,21 @@ class InputUtils {
                 let t = 0;
             }
 
+            if ($ti.find(".k-input-inner").length > 0) {
+                const $kInputInner = $ti.find(".k-input-inner").first();
+                if ($inputGroupPrepend.children().length > 0) {
+                    if ($kInputInner.parents().is(".my-k-autocomplete-asset")) {
+                        if (!$kInputInner.is(".my-ml--5px")) {
+                            $kInputInner.addClass("my-ml--5px");
+                        }
+                        //$kInputInner.css("margin-left", "-5px");
+                    } else {
+                        $kInputInner.css("padding-left", "0");
+                    }
+                }
+
+            }
+
             ($ddlConteiner || $ti).css("padding-left", paddingLeft.px());
             ($ddlConteiner || $ti).css("padding-right", paddingRight.px()); // I don't want to inherit right padding from the sync group, it needs to be taken from the input itself (or it's input group)
 
@@ -97,7 +109,7 @@ export function blazor_Input_AfterRender(input) {
 }
 
 export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
-    InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).find("input.k-input-inner").single());
+    InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single()); // .find("input.k-input-inner")
 }
 
 $(document).ready(function () {
@@ -169,5 +181,21 @@ $(document).ready(function () {
             $container.css("min-width", width.px());
             $container.css("width", width.px()); // or '.k-datetime-wrap' for datetimepicker
         }
+    });
+
+    $(document).on("input", ".k-autocomplete > .k-input-inner", async function (e) {
+        const id = $(this).attr("aria-controls");
+        const $autoCompleteListContainer = $(`.k-animation-container#${id}`);
+        //const inputOffset = $(this).offset();
+        //$autoCompleteListContainer.attr('style', `left: ${inputOffset.left}px !important; top: ${inputOffset.top + $(this).outerHeight()} !important;`);
+        await utils.waitUntilAsync(() => $autoCompleteListContainer.find(".k-list-ul > li > *:not(.k-placeholder-line)").length > 0 && $autoCompleteListContainer.css("display") !== "none" || $autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0);
+        
+        if ($autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0) {
+            return;
+        }
+
+        const height = $autoCompleteListContainer.find(".k-list-ul > li").$toArray().sum($li => $li.outerHeight());
+        $autoCompleteListContainer.find(".k-popup.k-list-container").first().css("height", `${height}px`);
+        $autoCompleteListContainer.css("height", `${height}px`);
     });
 });
