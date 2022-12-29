@@ -200,7 +200,7 @@
                     <MyCssGridItem>
                         <MyInputGroup>
                             <TelerikAutoComplete @ref="_tacAsset"
-                                Class="@(_tacAsset is null ? $"my-guid_{_tacAssetGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tacAsset.Class)"
+                                Class="@(_tacAsset is null ? $"my-guid_{_tacAssetGuid} my-input-sync-padding-group_{_syncPaddingGroup} my-k-autocomplete-asset" : _tacAsset.Class)"
                                 Data="@_employee.AvailableAssets"
                                 Filterable="true"
                                 Value="@_employee.Asset?.Name"
@@ -208,21 +208,25 @@
                                 ValueChanged="@(async (string value) => {
                                     var matchingAsset = _employee.AvailableAssets.SingleOrNull(a => a.Name.EqualsIgnoreCase(value));
                                     _employee.Asset = matchingAsset ?? new TestAsset { Name = value };
-                                    await _editContext.NotifyFieldChangedAsync(() => _employee.Asset, true);
                                     var jqTacAsset = await JQuery.QueryOneAsync(_tacAssetGuid);
                                     await jqTacAsset.RemoveAsync(".k-autocomplete-symbol");
                                     if (_employee.Asset.Image is not null)
                                     {
-                                        var symbolContainer = $"<div class=\"k-autocomplete-symbol-container\" style=\"position: relative; margin: 5px 5px 5px 0; width: 24px; height: 24px; border-radius: 50%; background-image: linear-gradient(160deg, black, #006000)\"></div>";
-                                        var symbolContent = $"<div class=\"k-autocomplete-symbol\" style=\"background-image: url('{_employee.Asset.Image.ToBase64ImageString()}'); width: 24px; height: 24px; border-radius: 50%; background-size: contain; background-repeat: no-repeat; background-position: center center; box-sizing: border-box;\"></div>";
-                                        var jqSymbolContainer = (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).SingleOrNull();
-                                        if (jqSymbolContainer is null)
-                                            await jqTacAsset.PrependAsync(symbolContainer);
+                                        //var symbolContainer = $"<div class=\"k-autocomplete-symbol-container\" style=\"position: relative; margin: 5px 5px 5px 0; width: 24px; height: 24px; border-radius: 50%; background-image: linear-gradient(160deg, black, #006000)\"></div>";
+                                        var left = (await jqTacAsset.CssAsync("padding-left")).ToDouble() + 5;
+                                        if ((await jqTacAsset.FindAsync(".k-input-inner")).Single().Classes.Contains("my-ml--5px"))
+                                            left -=  5;
+                                        var symbolContent = $"<div class=\"k-autocomplete-symbol\" style=\"background-image: url('{_employee.Asset.Image.ToBase64ImageString()}'); width: 24px; height: 24px; border-radius: 50%; background-size: contain; background-repeat: no-repeat; background-position: center center; box-sizing: border-box; top: 5px; left: {left}px; z-index: 2; position: absolute\"></div>";
+                                        //var jqSymbolContainer = (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).SingleOrNull();
+                                        //if (jqSymbolContainer is null)
+                                        //    await jqTacAsset.PrependAsync(symbolContainer);
                                             
-                                        await (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).Single().PrependAsync(symbolContent);
+                                        //await (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).Single().PrependAsync(symbolContent);
+                                        await jqTacAsset.PrependAsync(symbolContent);
                                     }
-                                    if (matchingAsset is null)
-                                        await JQuery.QueryOneAsync(_tacAssetGuid).RemoveAsync(".k-autocomplete-symbol-container");
+                                    //if (matchingAsset is null)
+                                    //    await JQuery.QueryOneAsync(_tacAssetGuid).RemoveAsync(".k-autocomplete-symbol-container");
+                                    await _editContext.NotifyFieldChangedAsync(() => _employee.Asset, true);
                                 })"
                                 Enabled="@(_tacAsset is not null && _tacAsset.Enabled)"
                                 Placeholder="@_employee.GetPropertyDisplayName(e => e.Asset).Append("...")">

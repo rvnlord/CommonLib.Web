@@ -96,11 +96,11 @@
         background-color: transparent;
     }
 
-    .k-input:not([disabled]):not(.disabled).my-valid {
+    .k-input:not([disabled]):not(.disabled):not(.k-disabled).my-valid {
         background: @SuccessBackgroundGradient;
     }
 
-    .k-input:not([disabled]):not(.disabled).my-invalid {
+    .k-input:not([disabled]):not(.disabled):not(.k-disabled).my-invalid {
         background: @ErrorBackgroundGradient;
     }
 
@@ -630,6 +630,34 @@
         text-align: center;
         white-space: normal;
         font-style: italic;
+    }
+
+    .my-k-autocomplete-asset:not([disabled]):not(.disabled):not(.k-disabled) > .k-input-inner {
+        background-size: 24px 24px;
+        background-repeat: no-repeat;
+        background-image: radial-gradient(circle at center, #050505 0%, #101010 35%, #000050 60%, transparent 70%);
+        background-position: center left 5px;
+        text-transform: uppercase;
+        padding-left: 34px;
+    }
+
+    .my-k-autocomplete-asset:disabled > .k-input-inner, .my-k-autocomplete-asset.disabled > .k-input-inner, .my-k-autocomplete-asset.k-disabled > .k-input-inner {
+        background-size: 24px 24px;
+        background-repeat: no-repeat;
+        background-image: radial-gradient(circle at center, #050505 0%, #060606 35%, #000015 60%, transparent 70%);
+        background-position: center left 5px;
+        text-transform: uppercase;
+        padding-left: 34px;
+    }
+
+    .my-k-autocomplete-asset:disabled > .k-autocomplete-symbol, .my-k-autocomplete-asset.disabled > .k-autocomplete-symbol, .my-k-autocomplete-asset.k-disabled > .k-autocomplete-symbol {
+        opacity: 0.25;
+    }
+
+    .k-animation-container > .k-popup.k-list-container {
+        height: auto !important;
+        max-height: 200px;
+        min-height: 34px;
     }
 
 </style>
