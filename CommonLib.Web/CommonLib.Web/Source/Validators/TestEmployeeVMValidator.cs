@@ -43,6 +43,18 @@ namespace CommonLib.Web.Source.Validators
                 .RequiredWithMessage()
                 .UserManagerCompliantWithMessage(accountClient, accountManager);
 
+            RuleFor(m => m.Salary)
+                .BetweenWithMessage(1000, 3000);
+            
+            RuleFor(m => m.DateOfBirth)
+                .BetweenWithMessage(new DateTime(1890, 5, 5), new DateTime(1995, 8, 31));
+
+            RuleFor(m => m.AvailableFrom)
+                .BetweenWithMessage(new DateTime(2022, 12, 30, 12, 30, 0), new DateTime(2023, 2, 20, 17, 26, 32));
+
+            RuleFor(m => m.Asset)
+                .InWithMessaage(m => m.AvailableAssets);
+
             RuleFor(m => m.Gender)
                 .RequiredWithMessage()
                 .NotEqualWithMessage(Gender.Male);
@@ -56,15 +68,6 @@ namespace CommonLib.Web.Source.Validators
                 //.FileSizeWithMessage(fs => fs <= new FileSize(50, FileSizeSuffix.MB))
                 //.FileExtensionWithMessage(".png", ".jpg", ".bmp", ".gif", ".mkv")
                 //.FilesUploadedWithMessage();
-
-            RuleFor(m => m.Salary)
-                .BetweenWithMessage(1000, 3000);
-            
-            RuleFor(m => m.DateOfBirth)
-                .BetweenWithMessage(new DateTime(1890, 5, 5), new DateTime(1995, 8, 31));
-
-            RuleFor(m => m.AvailableFrom)
-                .BetweenWithMessage(new DateTime(2022, 12, 30, 12, 30, 0), new DateTime(2023, 2, 20, 17, 26, 32));
         }
 
         protected virtual void Dispose(bool disposing)

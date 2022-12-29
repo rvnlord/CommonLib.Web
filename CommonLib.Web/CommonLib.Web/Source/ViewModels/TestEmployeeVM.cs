@@ -29,6 +29,35 @@ namespace CommonLib.Web.Source.ViewModels
         public DateTime? DateOfBirth { get; set; }
         [DisplayName("Available From")]
         public DateTime? AvailableFrom { get; set; }
+        public TestAsset Asset { get; set; }
+        public List<TestAsset> AvailableAssets { get; set; }
+    }
+
+    public class TestAsset : IEquatable<TestAsset>
+    {
+        public string Name { get; set; }
+        public FileData Image { get; set; }
+
+        public bool Equals(TestAsset other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((TestAsset)obj);
+        }
+
+        public override int GetHashCode() => Name is not null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(Name) : 0;
+        public static bool operator ==(TestAsset left, TestAsset right) => Equals(left, right);
+        public static bool operator !=(TestAsset left, TestAsset right) => !Equals(left, right);
+
+        public override string ToString() => Name;
     }
 
     public enum Gender

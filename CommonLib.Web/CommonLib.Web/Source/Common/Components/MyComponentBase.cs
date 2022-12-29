@@ -1137,7 +1137,7 @@ namespace CommonLib.Web.Source.Common.Components
         {
             var arrControlsToChangeState = controlsToChangeState.ToArray();
             var nativeControls = arrControlsToChangeState.OfType<MyComponentBase>().ToArray();
-            var nonNativeControls = arrControlsToChangeState.Except(nativeControls).Where(c => c.GetType().BaseType?.GetGenericTypeDefinition() == typeof(TelerikInputBase<>)).ToArray();
+            var nonNativeControls = arrControlsToChangeState.Except(nativeControls); //.Where(c => c.GetType().BaseType?.GetGenericTypeDefinition() == typeof(TelerikInputBase<>)).ToArray();
             var nncChangeStates = new List<Func<Task>>();
             foreach (var c in nonNativeControls)
             {

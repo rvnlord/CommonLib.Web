@@ -1061,8 +1061,8 @@ jQuery.fn.extend({
     },
     toBlazorDomElementsCollection: function(originalSelector) {
         return $.makeArray(this).map(el => {
-            const guid = $(el).attr("my-guid") || utils.guid();
-            if (!$(el).attr("my-guid")) {
+            const guid = $(el).guid() || utils.guid();
+            if (!$(el).guid()) {
                 $(el).attr("my-guid", guid);
             }
 

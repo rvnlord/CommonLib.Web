@@ -35,6 +35,14 @@ window.BlazorJQueryUtils = {
         $(fixSelector(selector)).attr(attr, value);
     },
 
+    Prepend: (selector, html) => {
+        $(fixSelector(selector)).prepend(html);
+    },
+
+    Remove: (selector, nodeSelector) => {
+        $(fixSelector(selector)).find(nodeSelector).remove();
+    },
+
     GetProp: (selector, prop) => {
         return $(fixSelector(selector)).prop(prop);
     },

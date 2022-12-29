@@ -3,10 +3,9 @@
 import "../extensions.js";
 
 export class DropdownUtils {
-    static async selectDdlOptionAsync(e, index, ddlGuid) {
-        if (e.button !== 0) {
-            return;
-        }
+    static _dropDownDotNetRefs = {};
+
+    static async selectDdlOptionAsync(index, ddlGuid) {
         index = index || "";
 
         const $ulOptionsContainer = $(`div[my-guid='${ddlGuid}'] > ul.my-dropdown-options-container`);
@@ -27,16 +26,27 @@ export class DropdownUtils {
         }, 250, "linear");
         $ddlValAndIconContainer.closest(".my-input-group").find(".my-dropdown-open-icon").css("display", "flex");
         $ddlValAndIconContainer.closest(".my-input-group").find(".my-dropdown-close-icon").css("display", "none");
+
+        this._dropDownDotNetRefs[ddlGuid].invokeMethodAsync("DdlOption_ClickAsync", parseInt(index) || null);
     }
 }
 
-export async function blazor_DdlOption_ClickAsync(e, index, ddlGuid) {
-    return await DropdownUtils.selectDdlOptionAsync(e, index, ddlGuid);
+export function blazor_Dropdown_AfterFirstRender(guid, dropDownDotNetRef) {
+    return DropdownUtils._dropDownDotNetRefs[guid] = dropDownDotNetRef;
 }
+
+//export async function blazor_DdlOption_ClickAsync(e, index, ddlGuid) {
+//    return await DropdownUtils.selectDdlOptionAsync(e, index, ddlGuid);
+//}
 
 $(document).ready(function() {
     $(document).on("mousedown", ".my-input-group.my-dropdown-input-group", e => {
-        const $ddl = $(e.currentTarget).children(".my-dropdown:not(.disabled)").first();
+        const $clickedPart = $(e.target);
+        if ($clickedPart.parents().addBack().is(".my-dropdown-option")) {
+            return;
+        }
+
+        const $ddl = $(e.currentTarget).children(".my-dropdown:not(.disabled):not([disabled])").first();
         if (!$ddl || e.which !== 1) {
             return;
         }
@@ -77,5 +87,16 @@ $(document).ready(function() {
             $ddl.closest(".my-input-group").find(".my-dropdown-open-icon").css("display", "flex");
             $ddl.closest(".my-input-group").find(".my-dropdown-close-icon").css("display", "none");
         }
+    });
+
+    $(document).on("mousedown", ".my-dropdown:not([disabled]):not(.disabled) .my-dropdown-option", async e => {
+        if (e.which !== 1 || e.detail > 1) {
+            return;
+        }
+
+        const $ddlOption = $(e.currentTarget);
+        const index = parseInt($ddlOption.attr("value")) || null;
+        const ddlGuid = $ddlOption.closest(".my-dropdown").guid();
+        await DropdownUtils.selectDdlOptionAsync(index, ddlGuid);
     });
 });

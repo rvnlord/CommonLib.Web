@@ -8,7 +8,7 @@
 
     .my-input-group {
         position: relative;
-        transform: translate3d(0, 0, 0);
+        /* transform: translate3d(0, 0, 0); */ /* would prevent z-index from taking effect and also it is not needed anymore because the issue with external inputs ws not broken rendering but style applied on focus for :after :before */
     }
 
     .my-input-group > .my-input-group-prepend {

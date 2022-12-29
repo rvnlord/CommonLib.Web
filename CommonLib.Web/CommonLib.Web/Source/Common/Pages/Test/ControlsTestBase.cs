@@ -36,6 +36,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
     {
         private IComponent[] _allControls;
         private MyButtonBase _btnSave;
+        private static readonly string _testImgsDir = FileUtils.GetAspNetWwwRootDir<MyImageBase>();
 
         protected MyFluentValidatorBase _validator;
         protected MyEditFormBase _editForm;
@@ -46,6 +47,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected Guid _tdpDateOfBirthGuid;
         protected TelerikDateTimePicker<DateTime?> _tdtpAvailableFrom;
         protected Guid _tdtpAvailableFromGuid;
+        protected TelerikAutoComplete<TestAsset> _tacAsset;
+        protected Guid _tacAssetGuid;
 
         protected string _syncPaddingGroup;
 
@@ -66,7 +69,18 @@ namespace CommonLib.Web.Source.Common.Pages.Test
                 new() { Name = @"Test1", Extension = "png", Data = RandomUtils.RandomBytes(4), Position = 3 },
                 new() { Name = @"Test2", Extension = "png", Data = RandomUtils.RandomBytes(5), Position = 3 }
             },
-            Avatar = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetAspNetWwwRootDir<MyImageBase>(), "images/test-avatar.png").PathToFileData(true)
+            Avatar = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-avatar.png").PathToFileData(true),
+            AvailableAssets = new()
+            {
+                new TestAsset { Name = "BTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/bitcoin.png").PathToFileData(true) },
+                new TestAsset { Name = "ETH", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum.png").PathToFileData(true) },
+                new TestAsset { Name = "LTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/litecoin.png").PathToFileData(true) },
+                new TestAsset { Name = "NEO", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/neo.png").PathToFileData(true) },
+                new TestAsset { Name = "XMR", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/monero.png").PathToFileData(true) },
+                new TestAsset { Name = "XTZ", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/tezos.png").PathToFileData(true) },
+                new TestAsset { Name = "DOGE", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/dogecoin.png").PathToFileData(true) },
+                new TestAsset { Name = "ETC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum-classic.png").PathToFileData(true) }
+            }
         };
 
         public string MediaQueryMessage { get; set; } = "Device Size not changed yet";
@@ -80,6 +94,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _tnumSalaryGuid = _tnumSalaryGuid == Guid.Empty ? Guid.NewGuid() : _tnumSalaryGuid;
             _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
             _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
+            _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
             _syncPaddingGroup = "controls-test-panel";
             await Task.CompletedTask; 
         }
@@ -93,8 +108,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdpDateOfBirth, () => _employee.DateOfBirth, this);
             await FixNonNativeComponentSyncPaddingGroupAsync(_tdtpAvailableFromGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
+            await FixNonNativeComponentSyncPaddingGroupAsync(_tacAssetGuid);
+            _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
 
-            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom).ToArray();
+            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

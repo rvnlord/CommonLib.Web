@@ -19,13 +19,13 @@
             <ul class="my-dropdown-options-container">
                 @if (EmptyItem.HasValue())
                 {
-                    <li class="my-dropdown-option" value="@(EmptyItem.V.Index?.ToString() ?? "")" @onclick="@(e => DdlOption_ClickAsync(e, EmptyItem.V.Index, _guid))">@EmptyItem.V.Text</li>
+                    <li @key=@EmptyItem.V class="my-dropdown-option" value="@(EmptyItem.V.Index?.ToString() ?? "")">@EmptyItem.V.Text</li>
                 }
                 @if (_ddlItems is not null && _ddlItems.Any())
                 {
                     @foreach (var item in _ddlItems.Where(i => i.Text != "None"))
                     {
-                        <li class="my-dropdown-option" value="@item.Index" @onclick="@(e => DdlOption_ClickAsync(e, item.Index, _guid))">@item.Text</li>
+                        <li @key=@item class="my-dropdown-option" value="@item.Index">@item.Text</li>
                     }
                 }
                 @ChildContent

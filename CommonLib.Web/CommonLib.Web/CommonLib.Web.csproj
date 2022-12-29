@@ -67,6 +67,10 @@
     <ProjectReference Include="..\..\..\CryptoApisLib\CryptoApisLib\CryptoApisLib\CryptoApisLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\test-assets\" />
+  </ItemGroup>
+
   <UsingTask TaskName="CopyToReferencingProjectsMSBuildTask" AssemblyFile="G:\Moje Pliki\Programowanie\CSharp\Projects\MSBuildTasks\MSBuildTasks\MSBuildTasks\bin\Debug\netstandard2.0\MSBuildTasks.dll" />
   <Target Name="CopyContentAfterBuild" BeforeTargets="Rebuild">
     <Message Importance="high" Text="PublishUrl: $(PublishDir)"></Message> 

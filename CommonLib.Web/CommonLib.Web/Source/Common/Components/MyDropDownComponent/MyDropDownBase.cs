@@ -49,8 +49,6 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
         [Parameter]
         public BlazorParameter<string> SyncPaddingGroup { get; set; }
-
-        public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyInputBase).BeforeLast("Base"), NavigationManager, HttpClient);
     }
     
     public class MyDropDownBase<TProperty> : MyDropDownBase
@@ -114,39 +112,41 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
-            var notifyParamsChangedTasks = new List<Task>();
-            var changeStateTasks = new List<Task>();
-            var inputGroupAppendAndPrepend = _inputGroup?.Children; // don't override parent for it, this component is designed in such a way that InputGroup is defined directly within it so InputGroup Parent would not bee MyDropdown but ratheer MyCssGridItem or sth else. Overriding parent directly would create infinite recursion of ancestors (InputGroup < MyDropdown < ...)
-            var inputGroupButtons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyButtonBase>()).ToArray() ?? Array.Empty<MyButtonBase>();
-            var inputGroupIcons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyIconBase>()).ToArray() ?? Array.Empty<MyIconBase>();
-            foreach (var inputGroupButton in inputGroupButtons)
-            {
-                notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
-                changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
-            }
+            //var notifyParamsChangedTasks = new List<Task>();
+            //var changeStateTasks = new List<Task>();
+            //var inputGroupAppendAndPrepend = _inputGroup?.Children; // don't override parent for it, this component is designed in such a way that InputGroup is defined directly within it so InputGroup Parent would not bee MyDropdown but ratheer MyCssGridItem or sth else. Overriding parent directly would create infinite recursion of ancestors (InputGroup < MyDropdown < ...)
+            //var inputGroupButtons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyButtonBase>()).ToArray() ?? Array.Empty<MyButtonBase>();
+            //var inputGroupIcons = inputGroupAppendAndPrepend?.SelectMany(c => c.Children.OfType<MyIconBase>()).ToArray() ?? Array.Empty<MyIconBase>();
+            //foreach (var inputGroupButton in inputGroupButtons)
+            //{
+            //    notifyParamsChangedTasks.Add(inputGroupButton.NotifyParametersChangedAsync());
+            //    changeStateTasks.Add(inputGroupButton.StateHasChangedAsync(true));
+            //}
 
-            foreach (var inputGroupIcon in inputGroupIcons)
-            {
-                notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
-                changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
-            }
+            //foreach (var inputGroupIcon in inputGroupIcons)
+            //{
+            //    notifyParamsChangedTasks.Add(inputGroupIcon.NotifyParametersChangedAsync());
+            //    changeStateTasks.Add(inputGroupIcon.StateHasChangedAsync(true));
+            //}
 
-            await Task.WhenAll(notifyParamsChangedTasks);
-            await Task.WhenAll(changeStateTasks);
+            //await Task.WhenAll(notifyParamsChangedTasks);
+            //await Task.WhenAll(changeStateTasks);
+            await Task.CompletedTask;
         }
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await ModuleAsync; // program don't need top call the module but JQyery events need to be available
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Dropdown_AfterFirstRender", _guid, DotNetObjectReference.Create(this)); // keep await ModuleAsync; if program don't need top call the module but JQyery events need to be available
             await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsDropdown);
         }
 
-        protected async Task DdlOption_ClickAsync(MouseEventArgs e, int? index, Guid ddlGuid)
+        [JSInvokable]
+        public async Task DdlOption_ClickAsync(int? index) // , Guid ddlGuid
         {
             if (InteractionState.V.IsDisabledOrForceDisabled)
                 return;
 
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
+            //await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
             var selectedItemWithMappedindex = _ddlItems.SingleOrDefault(i => i.Index == index);
             SelectedItem.ParameterValue = selectedItemWithMappedindex ?? EmptyItem.V;
             if (Model != null && For != null)
@@ -213,6 +213,8 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 
             if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
                 await SetControlStateAsync(ComponentState.Enabled, this);
+
+            await NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
     }
 }

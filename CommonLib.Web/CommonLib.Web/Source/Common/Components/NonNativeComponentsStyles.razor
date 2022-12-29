@@ -577,4 +577,59 @@
         cursor: pointer;
     }
 
+    .k-input-md .k-input-icon, .k-input-md .k-input-validation-icon, .k-input-md .k-input-loading-icon, .k-input-md .k-clear-value, .k-input-md .k-input-prefix > .k-icon, .k-input-md .k-input-suffix > .k-icon, .k-picker-md .k-input-icon, .k-picker-md .k-input-validation-icon, .k-picker-md .k-input-loading-icon, .k-picker-md .k-clear-value, .k-picker-md .k-input-prefix > .k-icon, .k-picker-md .k-input-suffix > .k-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .k-list {
+        border-color: transparent;
+        border-width: 0;
+        color: white;
+        background-color: transparent;
+    }
+
+    .k-popup.k-list-container {
+        padding: 0;
+    }
+
+    .k-list-item:focus, .k-list-optionlabel:focus, .k-list-item.k-focus, .k-focus.k-list-optionlabel {
+        background: linear-gradient(to bottom, #000088, #000000);
+        box-shadow: 0 0 6px 2px blue;
+        cursor: pointer;
+    }
+
+    .k-list-item:hover, .k-list-optionlabel:hover, .k-list-item.k-hover, .k-hover.k-list-optionlabel {
+        color: white;
+        background-color: transparent;
+        background: linear-gradient(to top, #000088, #000000);
+        box-shadow: 0 0 6px 2px blue;
+        cursor: pointer;
+    }
+
+    .k-list-md .k-list-item, .k-list-md .k-list-optionlabel {
+        padding: 5px;
+        gap: 5px;
+    }
+
+    span.k-list-item-text {
+        display: flex;
+    }
+
+    .k-autocomplete > .k-input-md .k-input-inner {
+        padding: 5px 0 5px 9px;
+    }
+
+    .k-no-data, .k-nodata {
+        min-height: 34px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: normal;
+        text-align: center;
+        white-space: normal;
+        font-style: italic;
+    }
+
 </style>

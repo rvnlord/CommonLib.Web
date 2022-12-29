@@ -6,9 +6,11 @@
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using System.Linq.Expressions
 @using CommonLib.Source.Common.Extensions
+@using CommonLib.Source.Common.Extensions.Collections
 @using CommonLib.Source.Common.Utils
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Extensions
+@using CommonLib.Web.Source.Common.Extensions.Collections
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
 @using static CommonLib.Web.Source.Models.BlazorParameter
@@ -190,6 +192,58 @@
                     </MyCssGridItem>
                     <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                         <MyValidationMessage For="@(() => _employee.AvailableFrom)" />
+                    </MyCssGridItem>
+
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Asset)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyInputGroup>
+                            <TelerikAutoComplete @ref="_tacAsset"
+                                Class="@(_tacAsset is null ? $"my-guid_{_tacAssetGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tacAsset.Class)"
+                                Data="@_employee.AvailableAssets"
+                                Filterable="true"
+                                Value="@_employee.Asset?.Name"
+                                ValueField="@(nameof(TestAsset.Name))"
+                                ValueChanged="@(async (string value) => {
+                                    var matchingAsset = _employee.AvailableAssets.SingleOrNull(a => a.Name.EqualsIgnoreCase(value));
+                                    _employee.Asset = matchingAsset ?? new TestAsset { Name = value };
+                                    await _editContext.NotifyFieldChangedAsync(() => _employee.Asset, true);
+                                    var jqTacAsset = await JQuery.QueryOneAsync(_tacAssetGuid);
+                                    await jqTacAsset.RemoveAsync(".k-autocomplete-symbol");
+                                    if (_employee.Asset.Image is not null)
+                                    {
+                                        var symbolContainer = $"<div class=\"k-autocomplete-symbol-container\" style=\"position: relative; margin: 5px 5px 5px 0; width: 24px; height: 24px; border-radius: 50%; background-image: linear-gradient(160deg, black, #006000)\"></div>";
+                                        var symbolContent = $"<div class=\"k-autocomplete-symbol\" style=\"background-image: url('{_employee.Asset.Image.ToBase64ImageString()}'); width: 24px; height: 24px; border-radius: 50%; background-size: contain; background-repeat: no-repeat; background-position: center center; box-sizing: border-box;\"></div>";
+                                        var jqSymbolContainer = (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).SingleOrNull();
+                                        if (jqSymbolContainer is null)
+                                            await jqTacAsset.PrependAsync(symbolContainer);
+                                            
+                                        await (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).Single().PrependAsync(symbolContent);
+                                    }
+                                    if (matchingAsset is null)
+                                        await JQuery.QueryOneAsync(_tacAssetGuid).RemoveAsync(".k-autocomplete-symbol-container");
+                                })"
+                                Enabled="@(_tacAsset is not null && _tacAsset.Enabled)"
+                                Placeholder="@_employee.GetPropertyDisplayName(e => e.Asset).Append("...")">
+                                <ItemTemplate>
+                                    <div style="border-radius: 50%; flex: 0 0 24px; background-image: linear-gradient(160deg, black, #006000)">
+                                        <MyImage Path="@context.Image" style="width: 24px; height: 24px; border-radius: 50%"></MyImage>
+                                    </div>
+                                    <div>@context.Name</div>
+                                </ItemTemplate>
+                            </TelerikAutoComplete>
+                            <MyInputGroupPrepend>
+                                <MyIcon IconType="IconType.From(LightIconType.BitcoinSign)"></MyIcon>
+                            </MyInputGroupPrepend>
+                            <MyInputGroupAppend>
+                                <MyButton Icon="IconType.From(LightIconType.BezierCurve)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                                <MyButton Icon="IconType.From(LightIconType.Frog)" Sizing="ButtonSizing.Quadratic"></MyButton>
+                            </MyInputGroupAppend>
+                        </MyInputGroup>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Asset)" />
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
