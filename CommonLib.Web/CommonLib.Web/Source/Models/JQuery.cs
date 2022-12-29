@@ -44,6 +44,18 @@ namespace CommonLib.Web.Source.Models
             return this;
         }
 
+        public async Task<JQuery> PrependAsync(string html)
+        {
+            await _jsRuntime.InvokeVoidAsync("BlazorJQueryUtils.Prepend", GetSelector(), html).ConfigureAwait(false);
+            return this;
+        }
+
+        public async Task<JQuery> RemoveAsync(string selector)
+        {
+            await _jsRuntime.InvokeVoidAsync("BlazorJQueryUtils.Remove", GetSelector(), selector).ConfigureAwait(false);
+            return this;
+        }
+
         public async Task<string> PropAsync(string prop)
         {
             return await _jsRuntime.InvokeAsync<string>("BlazorJQueryUtils.GetProp", GetSelector(), prop).ConfigureAwait(false);
@@ -329,6 +341,6 @@ namespace CommonLib.Web.Source.Models
             return $"Guid: {Guid}";
         }
 
-        public string GetSelector() => $"[my-guid='{Guid}']";
+        public string GetSelector() => $"[my-guid='{Guid}'], .my-guid_{Guid}";
     }
 }

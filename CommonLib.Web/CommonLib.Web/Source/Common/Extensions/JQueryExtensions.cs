@@ -32,6 +32,22 @@ namespace CommonLib.Web.Source.Common.Extensions
             return await (await jquery.ConfigureAwait(false)).RemoveAttrAsync(attr).ConfigureAwait(false);
         }
 
+        public static async Task<JQuery> PrependAsync(this Task<JQuery> jquery, string html)
+        {
+            if (jquery == null)
+                throw new NullReferenceException(nameof(jquery));
+
+            return await (await jquery.ConfigureAwait(false)).PrependAsync(html).ConfigureAwait(false);
+        }
+
+        public static async Task<JQuery> RemoveAsync(this Task<JQuery> jquery, string selector)
+        {
+            if (jquery == null)
+                throw new NullReferenceException(nameof(jquery));
+
+            return await (await jquery.ConfigureAwait(false)).RemoveAsync(selector).ConfigureAwait(false);
+        }
+
         public static async Task<string> PropAsync(this Task<JQuery> jquery, string prop)
         {
             if (jquery == null)
