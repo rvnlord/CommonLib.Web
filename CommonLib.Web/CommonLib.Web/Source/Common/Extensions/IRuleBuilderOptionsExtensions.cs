@@ -509,7 +509,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 availVals = inPropertySelector.GetPropertyValue(model).ToList();
                 return value.In(availVals);
-            }).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be one of the following: {availVals.Select(v => $"\"{v}\"").JoinAsString(", ")}");
+            }).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{(value is null || value?.ToString() is null ? "< not set >" : value)}\" must be one of the following: {availVals.Select(v => $"\"{v}\"").JoinAsString(", ")}");
         }
 
         public static IRuleBuilderOptions<TModel, string> InIgnoreCaseWithMessaage<TModel>(this IRuleBuilder<TModel, string> rb, Expression<Func<TModel, IEnumerable<string>>> inStringPropertySelector)
