@@ -19,7 +19,7 @@
             foreach (var sideType in new[] { "", "x", "y", "l", "r", "t", "b" })
             {
                 foreach (var spacingSize in
-                    Enumerable.Range(0, 11).Select(s => (s * 5).Px())
+                    Enumerable.Range(-2, 11).Select(s => (s * 5).Px())
                         .Concat(Enumerable.Range(1, 3).Select(s => (s * 25).ToStringInvariant()))
                         .Append("auto"))
                 {
