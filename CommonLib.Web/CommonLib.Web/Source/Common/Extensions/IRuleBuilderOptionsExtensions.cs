@@ -494,14 +494,34 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<T, decimal?> BetweenWithMessage<T>(this IRuleBuilder<T, decimal?> rb, decimal? minValue, decimal? maxValue)
         {
-            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be between \"{minValue:0.00}\" and \"{maxValue:0.00}\"");
+            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value:0.00 ?? 0:0.00}\" must be between \"{minValue:0.00}\" and \"{maxValue:0.00}\"");
         }
 
         public static IRuleBuilderOptions<T, DateTime?> BetweenWithMessage<T>(this IRuleBuilder<T, DateTime?> rb,  DateTime? minValue,  DateTime? maxValue)
         {
-            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{$"{value:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00")}\" must be between \"{$"{minValue:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00")}\" and \"{$"{maxValue:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00")}\"");
+            return rb.Must((_, value, _) => value >= minValue && value <= maxValue).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{$"{value:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00") ?? "<not set>"}\" must be between \"{$"{minValue:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00")}\" and \"{$"{maxValue:dd-MM-yyyy HH:mm:ss}".BeforeLastOrWhole(" 00:00:00")}\"");
         }
 
+        public static IRuleBuilderOptions<TModel, TProperty> InWithMessaage<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, IEnumerable<TProperty>>> inPropertySelector)
+        {
+            var availVals = new List<TProperty>();
+            return rb.Must((model, value, _) =>
+            {
+                availVals = inPropertySelector.GetPropertyValue(model).ToList();
+                return value.In(availVals);
+            }).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must be one of the following: {availVals.Select(v => $"\"{v}\"").JoinAsString(", ")}");
+        }
+
+        public static IRuleBuilderOptions<TModel, string> InIgnoreCaseWithMessaage<TModel>(this IRuleBuilder<TModel, string> rb, Expression<Func<TModel, IEnumerable<string>>> inStringPropertySelector)
+        {
+            var availVals = new List<string>();
+            return rb.Must((model, value, _) =>
+            {
+                availVals = inStringPropertySelector.GetPropertyValue(model).ToList();
+                return value is not null && value.ToLower().In(availVals.Select(v => v.ToLower()));
+            }).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value ?? "< not set >"}\" must be one of the following: {availVals.Select(v => $"\"{v}\"").JoinAsString(", ")}");
+        }
+        
         public static IRuleBuilderOptions<TModel, TProperty> WithDisplayName<TModel, TProperty>(this IRuleBuilder<TModel, TProperty> rb, Expression<Func<TModel, TProperty>> propertySelector) where TModel : new()
         {
             DefaultValidatorOptions.Configurable(rb).SetDisplayName(new TModel().GetPropertyDisplayName(propertySelector));
