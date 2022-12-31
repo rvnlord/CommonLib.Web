@@ -10,6 +10,8 @@ class InputUtils {
         right: {}
     };
 
+    static _scrollBoundGridViews = {};
+
     static fixPaddingForInputGroups($input) {
         if (!$input.parent().is(".my-input-group") && !$input.parents(".k-input").last().parent().is(".my-input-group"))
             return;
@@ -112,6 +114,27 @@ export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
     InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single()); // .find("input.k-input-inner")
 }
 
+export async function blazor_BindOverlayScrollBarToGridView(guid) {
+    await utils.waitUntilAsync(() => $(guid.guidToSelector()).length > 0);
+    const $kGridContent = $(guid.guidToSelector()).find(".k-grid-content").first();
+    
+    if (InputUtils._scrollBoundGridViews[guid]) {
+        return;
+    }
+
+    const scroll = $kGridContent.addClass("os-host-flexbox").overlayScrollbars({
+        className: "os-theme-dark",
+        scrollbars: {
+            clickScrolling: true
+        },
+        callbacks: {
+            onScroll: function () { }
+        }
+    }).overlayScrollbars();
+
+    InputUtils._scrollBoundGridViews[guid] = scroll;
+}
+
 $(document).ready(function () {
     $(document).on("mouseenter", ".my-input-group .my-btn", function () {
         const $btn = $(this);
@@ -156,7 +179,7 @@ $(document).ready(function () {
     //            });
     //            var t = 0;
     //        }
-            
+
     //        if (mutation.type === 'childList') {
 
     //            var t1 = mutation.addedNodes;
@@ -189,7 +212,7 @@ $(document).ready(function () {
         //const inputOffset = $(this).offset();
         //$autoCompleteListContainer.attr('style', `left: ${inputOffset.left}px !important; top: ${inputOffset.top + $(this).outerHeight()} !important;`);
         await utils.waitUntilAsync(() => $autoCompleteListContainer.find(".k-list-ul > li > *:not(.k-placeholder-line)").length > 0 && $autoCompleteListContainer.css("display") !== "none" || $autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0);
-        
+
         if ($autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0) {
             return;
         }
@@ -197,5 +220,10 @@ $(document).ready(function () {
         const height = $autoCompleteListContainer.find(".k-list-ul > li").$toArray().sum($li => $li.outerHeight());
         $autoCompleteListContainer.find(".k-popup.k-list-container").first().css("height", `${height}px`);
         $autoCompleteListContainer.css("height", `${height}px`);
+    });
+
+    $(document).on("click", ".k-grid .k-grid-pager .k-link", async function (e) {
+        const guid = $(this).closest(".k-grid").guid();
+        InputUtils._scrollBoundGridViews[guid].scroll({ y: 0 });
     });
 });

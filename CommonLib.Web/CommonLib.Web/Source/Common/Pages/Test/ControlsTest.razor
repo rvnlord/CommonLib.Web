@@ -13,7 +13,10 @@
 @using CommonLib.Web.Source.Common.Extensions.Collections
 @using CommonLib.Web.Source.Models
 @using CommonLib.Web.Source.ViewModels
+@using Telerik.Blazor
 @using static CommonLib.Web.Source.Models.BlazorParameter
+@using System.ComponentModel.DataAnnotations
+@using Blazored.FluentValidation
 
 @inherits ControlsTestBase
 
@@ -212,20 +215,12 @@
                                     await jqTacAsset.RemoveAsync(".k-autocomplete-symbol");
                                     if (_employee.Asset.Image is not null)
                                     {
-                                        //var symbolContainer = $"<div class=\"k-autocomplete-symbol-container\" style=\"position: relative; margin: 5px 5px 5px 0; width: 24px; height: 24px; border-radius: 50%; background-image: linear-gradient(160deg, black, #006000)\"></div>";
                                         var left = (await jqTacAsset.CssAsync("padding-left")).ToDouble() + 5;
                                         if ((await jqTacAsset.FindAsync(".k-input-inner")).Single().Classes.Contains("my-ml--5px"))
                                             left -=  5;
                                         var symbolContent = $"<div class=\"k-autocomplete-symbol\" style=\"background-image: url('{_employee.Asset.Image.ToBase64ImageString()}'); width: 24px; height: 24px; border-radius: 50%; background-size: contain; background-repeat: no-repeat; background-position: center center; box-sizing: border-box; top: 5px; left: {left}px; z-index: 2; position: absolute\"></div>";
-                                        //var jqSymbolContainer = (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).SingleOrNull();
-                                        //if (jqSymbolContainer is null)
-                                        //    await jqTacAsset.PrependAsync(symbolContainer);
-                                            
-                                        //await (await jqTacAsset.FindAsync(".k-autocomplete-symbol-container")).Single().PrependAsync(symbolContent);
                                         await jqTacAsset.PrependAsync(symbolContent);
                                     }
-                                    //if (matchingAsset is null)
-                                    //    await JQuery.QueryOneAsync(_tacAssetGuid).RemoveAsync(".k-autocomplete-symbol-container");
                                     await _editContext.NotifyFieldChangedAsync(() => _employee.Asset, true);
                                 })"
                                 Enabled="@(_tacAsset is not null && _tacAsset.Enabled)"
@@ -303,6 +298,36 @@
                                 <MyButton Value="@("Submit".ToBp())" Click="BtnSubmit_ClickAsync" Icon="IconType.From(LightIconType.PaperPlane)" SubmitsForm="true" Styling="@ButtonStyling.Primary" Sizing="ButtonSizing.Fill" IconPlacement="ButtonIconPlacement.Right" />
                             </MyCssGridItem>
                         </MyCssGrid>
+                    </MyCssGridItem>
+
+                    <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                        <TelerikGrid @ref="_gvTestData" Data="@MyData" EditMode="@GridEditMode.Inline" Pageable="true" Height="420px" Class="@(_gvTestData is null ? $"my-guid_{_gvTestDataGuid}" : _gvTestData.Class)"
+                            OnUpdate="@GvTestData_UpdateAsync" OnEdit="@GvTestData_EditAsync" OnDelete="@GvTestData_DeleteAsync" OnCreate="@GvTestData_CreateAsync" OnCancel="@GvTestData_CancelAsync" 
+                            OnRowRender="@(async (GridRowRenderEventArgs e) => {
+                                await (await InputModuleAsync).InvokeVoidAsync("blazor_BindOverlayScrollBarToGridView", _gvTestDataGuid);
+                            })">
+                            <GridSettings>
+                                <GridValidationSettings>
+                                    <ValidatorTemplate>
+                                        <FluentValidationValidator Validator="@_testDataValidator" @ref="_fvTestDataValidator">
+                                        </FluentValidationValidator>
+                                    </ValidatorTemplate>
+                                </GridValidationSettings>
+                            </GridSettings>
+                            <GridToolBar>
+                                <GridCommandButton Command="Add" Icon="add">Add Employee</GridCommandButton>
+                            </GridToolBar>
+                            <GridColumns>
+                                <GridColumn Field=@nameof(TestDataVM.Id) Title="Id" Editable="false" />
+                                <GridColumn Field=@nameof(TestDataVM.Name) Title="Name" />
+                                <GridCommandColumn>
+                                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
+                                    <GridCommandButton Command="Edit" Icon="edit">Edit</GridCommandButton>
+                                    <GridCommandButton Command="Delete" Icon="delete" Class="my-k-command-button-icon-only" />
+                                    <GridCommandButton  Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                                </GridCommandColumn>
+                            </GridColumns>
+                        </TelerikGrid>
                     </MyCssGridItem>
 
                 </MyCssGrid>

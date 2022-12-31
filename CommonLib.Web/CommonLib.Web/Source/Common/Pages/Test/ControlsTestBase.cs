@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Blazored.FluentValidation;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
@@ -21,11 +22,15 @@ using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Services;
 using CommonLib.Web.Source.Services.Interfaces;
+using CommonLib.Web.Source.Validators;
 using CommonLib.Web.Source.ViewModels;
+using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using MoreLinq;
 using Org.BouncyCastle.Security;
 using Telerik.Blazor.Components;
@@ -39,6 +44,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         private static readonly string _testImgsDir = FileUtils.GetAspNetWwwRootDir<MyImageBase>();
 
         protected MyFluentValidatorBase _validator;
+        protected FluentValidationValidator _fvTestDataValidator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
         protected TelerikNumericTextBox<decimal?> _tnumSalary;
@@ -49,6 +55,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected Guid _tdtpAvailableFromGuid;
         protected TelerikAutoComplete<TestAsset> _tacAsset;
         protected Guid _tacAssetGuid;
+        protected TelerikGrid<TestDataVM> _gvTestData;
+        protected Guid _gvTestDataGuid;
 
         protected string _syncPaddingGroup;
 
@@ -95,8 +103,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
             _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
+            _gvTestDataGuid = _gvTestDataGuid == Guid.Empty ? Guid.NewGuid() : _gvTestDataGuid;
             _syncPaddingGroup = "controls-test-panel";
-            await Task.CompletedTask; 
+            await UpdateGvTestDataAsync();
+            await Task.CompletedTask;
         }
 
         protected override async Task OnAfterFirstRenderAsync()
@@ -133,6 +143,64 @@ namespace CommonLib.Web.Source.Common.Pages.Test
 
             //await Task.Delay(5000);
             //await SetControlStatesAsync(ButtonState.Enabled, _allControls);
+        }
+
+
+        protected TestDataVMValidator _testDataValidator = new();
+        public TestDataManager TestDataManager { get; } = new();
+        public List<TestDataVM> MyData { get; set; }
+
+        protected async Task GvTestData_EditAsync(GridCommandEventArgs e)
+        {
+            var item = (TestDataVM) e.Item;
+            
+            //if (item.Id < 3) // prevent opening for edit based on condition
+            //    e.IsCancelled = true; // the general approach for cancelling an event
+
+            await Task.CompletedTask;
+        }
+
+        protected async Task GvTestData_UpdateAsync(GridCommandEventArgs e)
+        {
+            var item = (TestDataVM)e.Item;
+            
+            await TestDataManager.UpdateAsync(item);
+            await UpdateGvTestDataAsync();
+
+            Console.WriteLine("Update event is fired.");
+        }
+
+        protected async Task GvTestData_DeleteAsync(GridCommandEventArgs e)
+        {
+            var item = (TestDataVM)e.Item;
+            
+            await TestDataManager.DeleteAsync(item);
+            await UpdateGvTestDataAsync();
+
+            Console.WriteLine("Delete event is fired.");
+        }
+
+        protected async Task GvTestData_CreateAsync(GridCommandEventArgs e)
+        {
+            var item = (TestDataVM) e.Item;
+            
+            await TestDataManager.CreateAsync(item);
+            await UpdateGvTestDataAsync();
+
+            Console.WriteLine("Create event is fired.");
+        }
+
+        protected async Task GvTestData_CancelAsync(GridCommandEventArgs e)
+        {
+            var item = (TestDataVM) e.Item;
+
+            // if necessary, perform actual data source operation here through your service
+            await Task.CompletedTask;
+        }
+        
+        private async Task UpdateGvTestDataAsync()
+        {
+            MyData = await TestDataManager.ReadAsync();
         }
     }
 }
