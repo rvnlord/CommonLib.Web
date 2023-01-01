@@ -55,6 +55,11 @@ namespace CommonLib.Web.Source.Validators
             RuleFor(m => m.Asset)
                 .InWithMessaage(m => m.AvailableAssets);
 
+            RuleFor(m => m.Message)
+                .RequiredWithMessage()
+                .MinLengthWithMessage(3)
+                .MaxLengthWithMessage(250);
+
             RuleFor(m => m.Gender)
                 .RequiredWithMessage()
                 .NotEqualWithMessage(Gender.Male);

@@ -57,6 +57,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected Guid _tacAssetGuid;
         protected TelerikGrid<TestDataVM> _gvTestData;
         protected Guid _gvTestDataGuid;
+        protected TelerikRadialGauge _gTest;
+        protected Guid _gTestGuid;
+        protected TelerikEditor _teMessage;
+        protected Guid _teMessageGuid;
 
         protected string _syncPaddingGroup;
 
@@ -104,6 +108,8 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
             _gvTestDataGuid = _gvTestDataGuid == Guid.Empty ? Guid.NewGuid() : _gvTestDataGuid;
+            _teMessageGuid = _teMessageGuid == Guid.Empty ? Guid.NewGuid() : _teMessageGuid;
+            _gTestGuid = _gTestGuid == Guid.Empty ? Guid.NewGuid() : _gTestGuid;
             _syncPaddingGroup = "controls-test-panel";
             await UpdateGvTestDataAsync();
             await Task.CompletedTask;
@@ -120,8 +126,9 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
             await FixNonNativeComponentSyncPaddingGroupAsync(_tacAssetGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
+            _editContext.BindValidationStateChangedForNonNativeComponent(_teMessage, () => _employee.Message, this);
 
-            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
+            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset, _teMessage).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
@@ -146,7 +153,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         }
 
 
-        protected TestDataVMValidator _testDataValidator = new();
+        protected readonly TestDataVMValidator _testDataValidator = new();
         public TestDataManager TestDataManager { get; } = new();
         public List<TestDataVM> MyData { get; set; }
 

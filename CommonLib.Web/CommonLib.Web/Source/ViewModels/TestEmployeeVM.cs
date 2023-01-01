@@ -31,6 +31,7 @@ namespace CommonLib.Web.Source.ViewModels
         public DateTime? AvailableFrom { get; set; }
         public TestAsset Asset { get; set; }
         public List<TestAsset> AvailableAssets { get; set; }
+        public string Message { get; set; }
     }
 
     public class TestAsset : IEquatable<TestAsset>

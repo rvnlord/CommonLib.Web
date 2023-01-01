@@ -45,12 +45,34 @@ namespace CommonLib.Web.Source.Common.Extensions
 
         public static IRuleBuilderOptions<T, string> MinLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int minLength)
         {
-            return rb.Must((_, value, _) => value?.Length >= minLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at least {minLength} characters");
+            string trimmedValue = null;
+            return rb.Must((_, value, _) =>
+            {
+                if (value is null)
+                    return false;
+                trimmedValue = value;
+                if (trimmedValue.StartsWithIgnoreCase("<p>"))
+                    trimmedValue = trimmedValue.Skip(3);
+                if (trimmedValue.EndsWithIgnoreCase("</p>"))
+                    trimmedValue = trimmedValue.SkipLast(4);
+                return trimmedValue.Length >= minLength;
+            }).WithMessage((_, _) => $"{rb.GetPropertyDisplayName()} \"{trimmedValue}\" must contain at least {minLength} characters");
         }
 
         public static IRuleBuilderOptions<T, string> MaxLengthWithMessage<T>(this IRuleBuilder<T, string> rb, int maxLength)
         {
-            return rb.Must((_, value, _) => value?.Length <= maxLength).WithMessage((_, value) => $"{rb.GetPropertyDisplayName()} \"{value}\" must contain at most {maxLength} characters");
+            string trimmedValue = null;
+            return rb.Must((_, value, _) =>
+            {
+                if (value is null)
+                    return false;
+                trimmedValue = value;
+                if (trimmedValue.StartsWithIgnoreCase("<p>"))
+                    trimmedValue = trimmedValue.Skip(3);
+                if (trimmedValue.EndsWithIgnoreCase("</p>"))
+                    trimmedValue = trimmedValue.SkipLast(4);
+                return trimmedValue.Length <= maxLength;
+            }).WithMessage((_, _) => $"{rb.GetPropertyDisplayName()} \"{trimmedValue}\" must contain at most {maxLength} characters");
         }
 
         public static IRuleBuilderOptions<T, string> AlphaNumericWithMessage<T>(this IRuleBuilder<T, string> rb)

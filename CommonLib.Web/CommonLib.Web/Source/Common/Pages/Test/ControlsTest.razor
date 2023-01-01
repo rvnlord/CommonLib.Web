@@ -17,6 +17,7 @@
 @using static CommonLib.Web.Source.Models.BlazorParameter
 @using System.ComponentModel.DataAnnotations
 @using Blazored.FluentValidation
+@using Telerik.Blazor.Components.Editor
 
 @inherits ControlsTestBase
 
@@ -246,6 +247,35 @@
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel For="@(() => _employee.Message)" Align="@HorizontalAlignment.Right" />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <TelerikEditor @ref="_teMessage"
+                            Class="@(_teMessage is null ? $"my-guid_{_teMessageGuid} my-placeholder_{_employee.GetPropertyDisplayName(e => e.Message).Append("...")}" : _teMessage.Class)"
+                            Tools="@(new List<IEditorTool> { new CustomTool("TextDecoration") })"
+                            Value="@_employee.Message"
+                            EditMode="@EditorEditMode.Div"
+                            ValueChanged="@(async (string value) => {
+                                _employee.Message = value;
+                                await _editContext.NotifyFieldChangedAsync(() => _employee.Message, true);
+                            })"
+                            Enabled="@(_teMessage is not null && _teMessage.Enabled)">
+                            <EditorCustomTools>
+                                <EditorCustomTool Name="TextDecoration">
+                                    <TelerikButtonGroup>
+                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("italic")))" Icon="italic" />
+                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("bold")))" Icon="bold" />
+                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("underline")))" Icon="underline" />
+                                    </TelerikButtonGroup>
+                                </EditorCustomTool>
+                            </EditorCustomTools>
+                        </TelerikEditor>
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyValidationMessage For="@(() => _employee.Message)" />
+                    </MyCssGridItem>
+
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyBottom((-Gutter).Px())" SMGap="CssGridAreaGap.Auto">
                         <MyLabel For="@(() => _employee.Gender)" Align="@HorizontalAlignment.Right" Sizing="LabelSizing.LineHeight" />
                     </MyCssGridItem>
                     <MyCssGridItem>
@@ -301,9 +331,11 @@
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                        <TelerikGrid @ref="_gvTestData" Data="@MyData" EditMode="@GridEditMode.Inline" Pageable="true" Height="420px" Class="@(_gvTestData is null ? $"my-guid_{_gvTestDataGuid}" : _gvTestData.Class)"
+                        <TelerikGrid @ref="_gvTestData" Data="@MyData" EditMode="@GridEditMode.Inline" Pageable="true" Height="420px" Class="@(_gvTestData is null ? $"my-guid_{_gvTestDataGuid} disabled" : _gvTestData.Class)"
                             OnUpdate="@GvTestData_UpdateAsync" OnEdit="@GvTestData_EditAsync" OnDelete="@GvTestData_DeleteAsync" OnCreate="@GvTestData_CreateAsync" OnCancel="@GvTestData_CancelAsync" 
                             OnRowRender="@(async (GridRowRenderEventArgs e) => {
+                                if (!JQuery.JsRuntime.GetProperty<bool>("IsInitialized"))
+                                    return;
                                 await (await InputModuleAsync).InvokeVoidAsync("blazor_BindOverlayScrollBarToGridView", _gvTestDataGuid);
                             })">
                             <GridSettings>
@@ -331,7 +363,7 @@
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                        <TelerikRadialGauge>
+                        <TelerikRadialGauge @ref="_gTest" Class="@(_gTest is null ? $"my-guid_{_gTestGuid} disabled" : _gTest.Class)">
                             <RadialGaugeScales>
                                 <RadialGaugeScale Min="0" Max="50" MajorUnit="5" MinorUnit="1" StartAngle="-60" EndAngle="240" RangePlaceholderColor="#404040" RangeSize="10" RangeDistance="-3">
                                     <RadialGaugeScaleRanges>
