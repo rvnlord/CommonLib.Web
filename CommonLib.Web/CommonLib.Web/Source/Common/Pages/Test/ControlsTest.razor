@@ -330,6 +330,36 @@
                         </TelerikGrid>
                     </MyCssGridItem>
 
+                    <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                        <TelerikRadialGauge>
+                            <RadialGaugeScales>
+                                <RadialGaugeScale Min="0" Max="50" MajorUnit="5" MinorUnit="1" StartAngle="-60" EndAngle="240" RangePlaceholderColor="#404040" RangeSize="10" RangeDistance="-3">
+                                    <RadialGaugeScaleRanges>
+                                        <RadialGaugeScaleRange From="0" To="10" Color="#009402"></RadialGaugeScaleRange>
+                                        <RadialGaugeScaleRange From="10" To="20" Color="rgb(255,255,0)"></RadialGaugeScaleRange>
+                                        <RadialGaugeScaleRange From="20" To="30" Color="red"></RadialGaugeScaleRange>
+                                    </RadialGaugeScaleRanges>
+                                    <RadialGaugeScaleLabels Format="0 B" Color="blue">
+                                    </RadialGaugeScaleLabels>
+                                </RadialGaugeScale>
+                            </RadialGaugeScales>
+                            <RadialGaugePointers>
+                                <RadialGaugePointer Value="10" Length="0.8" Color="red">
+                                    <RadialGaugePointerCap Color="green" Size="0.15">
+                                    </RadialGaugePointerCap>
+                                </RadialGaugePointer>
+                                <RadialGaugePointer Value="30" Length="0.8" Color="#0356fc" >
+                                    <RadialGaugePointerCap Color="white" Size="0.10">
+                                    </RadialGaugePointerCap>
+                                </RadialGaugePointer>
+                                <RadialGaugePointer Value="70" Length="0.8" Color="rgb(210, 3, 252)" >
+                                    <RadialGaugePointerCap Color="blue" Size="0.05">
+                                    </RadialGaugePointerCap>
+                                </RadialGaugePointer>
+                            </RadialGaugePointers>
+                        </TelerikRadialGauge>
+                    </MyCssGridItem>
+
                 </MyCssGrid>
 
             </MyEditForm>
