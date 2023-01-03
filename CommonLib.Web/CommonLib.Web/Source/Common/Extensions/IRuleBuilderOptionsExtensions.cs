@@ -50,11 +50,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 if (value is null)
                     return false;
-                trimmedValue = value;
-                if (trimmedValue.StartsWithIgnoreCase("<p>"))
-                    trimmedValue = trimmedValue.Skip(3);
-                if (trimmedValue.EndsWithIgnoreCase("</p>"))
-                    trimmedValue = trimmedValue.SkipLast(4);
+                trimmedValue = value.RemoveHTML();
                 return trimmedValue.Length >= minLength;
             }).WithMessage((_, _) => $"{rb.GetPropertyDisplayName()} \"{trimmedValue}\" must contain at least {minLength} characters");
         }
@@ -66,11 +62,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 if (value is null)
                     return false;
-                trimmedValue = value;
-                if (trimmedValue.StartsWithIgnoreCase("<p>"))
-                    trimmedValue = trimmedValue.Skip(3);
-                if (trimmedValue.EndsWithIgnoreCase("</p>"))
-                    trimmedValue = trimmedValue.SkipLast(4);
+                trimmedValue = value.RemoveHTML();
                 return trimmedValue.Length <= maxLength;
             }).WithMessage((_, _) => $"{rb.GetPropertyDisplayName()} \"{trimmedValue}\" must contain at most {maxLength} characters");
         }
