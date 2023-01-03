@@ -250,26 +250,17 @@
                         <MyLabel For="@(() => _employee.Message)" Align="@HorizontalAlignment.Right" />
                     </MyCssGridItem>
                     <MyCssGridItem>
-                        <TelerikEditor @ref="_teMessage"
-                            Class="@(_teMessage is null ? $"my-guid_{_teMessageGuid} my-placeholder_{_employee.GetPropertyDisplayName(e => e.Message).Append("...")}" : _teMessage.Class)"
-                            Tools="@(new List<IEditorTool> { new CustomTool("TextDecoration") })"
-                            Value="@_employee.Message"
-                            EditMode="@EditorEditMode.Div"
-                            ValueChanged="@(async (string value) => {
-                                _employee.Message = value;
-                                await _editContext.NotifyFieldChangedAsync(() => _employee.Message, true);
-                            })"
-                            Enabled="@(_teMessage is not null && _teMessage.Enabled)">
-                            <EditorCustomTools>
-                                <EditorCustomTool Name="TextDecoration">
+                        <ExtEditor InteractionState="ComponentState.Disabled" For="@BP(() => _employee.Message)" @ref="_teMessage" 
+                            Tools="@(new List<IEditorTool> { new CustomTool("TextStyle") })">
+@*                            <ExtEditorCustomTools>
+                                <EditorCustomTool Name="TextStyle">
                                     <TelerikButtonGroup>
-                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("italic")))" Icon="italic" />
-                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("bold")))" Icon="bold" />
-                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.ExecuteAsync(new ToolCommandArgs("underline")))" Icon="underline" />
+                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.Te.ExecuteAsync(new ToolCommandArgs("italic")))" Icon="italic" />
+                                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await _teMessage.Te.ExecuteAsync(new ToolCommandArgs("bold")))" Icon="bold" />
                                     </TelerikButtonGroup>
                                 </EditorCustomTool>
-                            </EditorCustomTools>
-                        </TelerikEditor>
+                            </ExtEditorCustomTools>*@
+                        </ExtEditor>
                     </MyCssGridItem>
                     <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                         <MyValidationMessage For="@(() => _employee.Message)" />

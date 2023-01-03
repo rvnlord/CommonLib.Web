@@ -1,0 +1,34 @@
+﻿@using Telerik.Blazor
+@using Telerik.Blazor.Components.Editor
+
+@namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
+@typeparam TProperty
+@inherits ExtEditorBase<TProperty>
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <TelerikEditor @ref="Te"
+        Class="@($"{_renderClasses} my-guid_{_guid} my-placeholder_{Placeholder.V}")"
+        Value="@Value.V?.ToString()"
+        Tools="@(Tools.V is not null && ExtEditorCustomTools is not null ? Tools.V : new List<IEditorTool> { new CustomTool("TextDecoration") })"
+        EditMode="@EditorEditMode.Div"
+        ValueChanged="Editor_ValueChanged"
+        Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+        <EditorCustomTools>
+            @if (Tools.V is not null && ExtEditorCustomTools is not null)
+            {
+                @ExtEditorCustomTools
+            }
+            else
+            {
+                <EditorCustomTool Name="TextDecoration">
+                    <TelerikButtonGroup>
+                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("italic")))" Icon="italic" />
+                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("bold")))" Icon="bold" />
+                        <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("underline")))" Icon="underline" />
+                    </TelerikButtonGroup>
+                </EditorCustomTool>
+            }
+        </EditorCustomTools>
+    </TelerikEditor>
+</CascadingValue>

@@ -33,7 +33,6 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
         protected string _propName { get; set; }
         protected Task<IJSObjectReference> _inputModuleAsync;
 
-        public Task<IJSObjectReference> InputModuleAsync => _inputModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync("my-input", NavigationManager, HttpClient);
         public List<MyButtonBase> InputGroupButtons { get; set; }
         public List<MyIconBase> InputGroupIcons { get; set; }
         public virtual string Text { get; protected set; }

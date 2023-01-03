@@ -21,6 +21,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.ExtEditorComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Pages.Shared;
@@ -421,10 +422,10 @@ namespace CommonLib.Web.Source.Common.Components
                 InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
                 InteractionState.SetAsUnchanged();
                 
-                if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("Dollar") == true)
-                {
-                    Logger.For<MyIconBase>().Info($"PARAMS: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
-                }
+                //if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("Dollar") == true)
+                //{
+                //    Logger.For<MyIconBase>().Info($"PARAMS: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
+                //}
 
                 if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
                 {
@@ -1154,7 +1155,7 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtEditorBase).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;
