@@ -8,7 +8,7 @@
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
     <TelerikEditor @ref="Te"
-        Class="@($"{_renderClasses} my-guid_{_guid} my-placeholder_{Placeholder.V}")"
+        Class="@_renderClasses"
         Value="@Value.V?.ToString()"
         Tools="@(Tools.V is not null && ExtEditorCustomTools is not null ? Tools.V : new List<IEditorTool> { new CustomTool("TextDecoration") })"
         EditMode="@EditorEditMode.Div"

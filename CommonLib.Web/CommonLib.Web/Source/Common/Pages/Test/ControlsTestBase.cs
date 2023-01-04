@@ -23,6 +23,7 @@ using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Models;
 using CommonLib.Web.Source.Services;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.Validators;
@@ -58,7 +59,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected TelerikAutoComplete<TestAsset> _tacAsset;
         protected Guid _tacAssetGuid;
         protected TelerikGrid<TestDataVM> _gvTestData;
-        protected Guid _gvTestDataGuid;
         protected TelerikRadialGauge _gTest;
         protected Guid _gTestGuid;
         protected ExtEditor<string> _teMessage;
@@ -108,7 +108,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
             _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
-            _gvTestDataGuid = _gvTestDataGuid == Guid.Empty ? Guid.NewGuid() : _gvTestDataGuid;
             _gTestGuid = _gTestGuid == Guid.Empty ? Guid.NewGuid() : _gTestGuid;
             _syncPaddingGroup = "controls-test-panel";
             await UpdateGvTestDataAsync();
@@ -126,7 +125,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
             await FixNonNativeComponentSyncPaddingGroupAsync(_tacAssetGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
-
+            
             _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);

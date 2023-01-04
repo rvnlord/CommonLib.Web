@@ -53,7 +53,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
         {
             if (FirstParamSetup)
             {
-                SetMainAndUserDefinedClasses("ext-editor");
+                SetMainCustomAndUserDefinedClasses("ext-editor", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }

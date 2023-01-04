@@ -17,6 +17,7 @@
 @using static CommonLib.Web.Source.Models.BlazorParameter
 @using System.ComponentModel.DataAnnotations
 @using Blazored.FluentValidation
+@using Telerik.Blazor.Components
 @using Telerik.Blazor.Components.Editor
 
 @inherits ControlsTestBase
@@ -250,7 +251,7 @@
                         <MyLabel For="@(() => _employee.Message)" Align="@HorizontalAlignment.Right" />
                     </MyCssGridItem>
                     <MyCssGridItem>
-                        <ExtEditor InteractionState="ComponentState.Disabled" For="@BP(() => _employee.Message)" @ref="_teMessage" 
+                        <ExtEditor For="@BP(() => _employee.Message)" @ref="_teMessage" 
                             Tools="@(new List<IEditorTool> { new CustomTool("TextStyle") })">
 @*                            <ExtEditorCustomTools>
                                 <EditorCustomTool Name="TextStyle">
@@ -322,13 +323,7 @@
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                        <TelerikGrid @ref="_gvTestData" Data="@MyData" EditMode="@GridEditMode.Inline" Pageable="true" Height="420px" Class="@(_gvTestData is null ? $"my-guid_{_gvTestDataGuid} disabled" : _gvTestData.Class)"
-                            OnUpdate="@GvTestData_UpdateAsync" OnEdit="@GvTestData_EditAsync" OnDelete="@GvTestData_DeleteAsync" OnCreate="@GvTestData_CreateAsync" OnCancel="@GvTestData_CancelAsync" 
-                            OnRowRender="@(async (GridRowRenderEventArgs e) => {
-                                if (!JQuery.JsRuntime.GetProperty<bool>("IsInitialized"))
-                                    return;
-                                await (await InputModuleAsync).InvokeVoidAsync("blazor_BindOverlayScrollBarToGridView", _gvTestDataGuid);
-                            })">
+                        <ExtGrid Data="@BP(MyData.AsEnumerable())" EditMode="@GridEditMode.Inline" Pageable="true" Height="@BP("420px")" OnUpdate="@GvTestData_UpdateAsync" OnEdit="@GvTestData_EditAsync" OnDelete="@GvTestData_DeleteAsync" OnCreate="@GvTestData_CreateAsync" OnCancel="@GvTestData_CancelAsync">
                             <GridSettings>
                                 <GridValidationSettings>
                                     <ValidatorTemplate>
@@ -337,9 +332,9 @@
                                     </ValidatorTemplate>
                                 </GridValidationSettings>
                             </GridSettings>
-                            <GridToolBar>
+                            <GridToolbar>
                                 <GridCommandButton Command="Add" Icon="add">Add Employee</GridCommandButton>
-                            </GridToolBar>
+                            </GridToolbar>
                             <GridColumns>
                                 <GridColumn Field=@nameof(TestDataVM.Id) Title="Id" Editable="false" />
                                 <GridColumn Field=@nameof(TestDataVM.Name) Title="Name" />
@@ -347,10 +342,10 @@
                                     <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
                                     <GridCommandButton Command="Edit" Icon="edit">Edit</GridCommandButton>
                                     <GridCommandButton Command="Delete" Icon="delete" Class="my-k-command-button-icon-only" />
-                                    <GridCommandButton  Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
                                 </GridCommandColumn>
                             </GridColumns>
-                        </TelerikGrid>
+                        </ExtGrid>
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">

@@ -1,0 +1,25 @@
+﻿@using Telerik.Blazor
+@using Telerik.Blazor.Components.Editor
+
+@namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
+@typeparam TItem
+@inherits ExtGridBase<TItem>
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <TelerikGrid @ref="@Tg" Class="@_renderClasses"
+        Data="@Data.V" EditMode="@EditMode.V" Pageable="@Pageable.V" Height="@Height.V"
+        OnUpdate="@OnUpdate" OnEdit="@OnEdit" OnDelete="@OnDelete" OnCreate="@OnCreate" OnCancel="@OnCancel"
+        OnRead="@OnRead" OnRowRender="@OnRowRender">
+        <GridSettings>
+            @GridSettings
+        </GridSettings>
+        <GridToolBar>
+            @GridToolbar
+        </GridToolBar>
+        <GridColumns>
+            @GridColumns
+        </GridColumns>
+    </TelerikGrid>
+
+</CascadingValue>
