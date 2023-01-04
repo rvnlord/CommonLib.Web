@@ -39,6 +39,8 @@ namespace CommonLib.Web.Source.Services
         public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
         public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
 
+        public bool IsInitialized => _jsRuntime.GetProperty<bool>("IsInitialized");
+
         public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager, ISessionStorageService sessionStorage)
         {
             _jsRuntime = jsRuntime;

@@ -8,13 +8,15 @@ namespace CommonLib.Web.Source.Services.Interfaces
 {
     public interface IMyJsRuntime
     {
+        bool IsInitialized { get; }
+
         //ValueTask JsVoidFromModule(string modulePath, string functionName);
         //ValueTask JsVoidFromModule(string modulePath, string functionName, params object[] parameters);
         //ValueTask JsVoidFromComponent(string componentName, string functionName);
         //ValueTask JsVoidFromComponent(string componentName, string functionName, params object[] parameters);
-        public Task<IJSObjectReference> ImportModuleAsync(string modulePath);
-        public Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName, NavigationManager nav, HttpClient http);
-        public Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName);
+        Task<IJSObjectReference> ImportModuleAsync(string modulePath);
+        Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName, NavigationManager nav, HttpClient http);
+        Task<IJSObjectReference> ImportComponentOrPageModuleAsync(string componentOrPageName);
         Task<Guid> GetOrCreateSessionIdAsync();
         Task<Guid> GetSessionIdAsync();
         Task<Guid> GetSessionIdOrEmptyAsync();
