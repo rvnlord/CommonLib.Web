@@ -22,7 +22,7 @@ class InputUtils {
             let t = 0;
         }
 
-        const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last(); //.parents(".k-input").last()
+        const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last().nullifyIf(x => x === "") || null; //.parents(".k-input").last()
         const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [$input];
         const leftPaddings = {};
         const rightPaddings = {};

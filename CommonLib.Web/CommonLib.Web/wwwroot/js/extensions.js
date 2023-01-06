@@ -122,6 +122,14 @@ Object.defineProperty(Object.prototype, "remove", {
     configurable: true
 });
 
+Object.defineProperty(Object.prototype, "nullifyIf", {
+    value: function (condition) {
+        return Wrapper.object(this).nullifyIf(condition).unwrap();
+    },
+    writable: true,
+    configurable: true
+});
+
 // #endregion
 
 // #region NumberExtensions

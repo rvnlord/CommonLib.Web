@@ -73,6 +73,8 @@ export class ObjectWrapper extends Wrapper {
     as$ = () => Wrapper.$(this._o);
     as$OrNull = () => Wrapper.$(_.isNull(this._o) ? null : this._o);
     asString = () => Wrapper.string(this._o);
+
+    nullifyIf = (condition) => Wrapper.object(ObjectExtensions.nullifyIf(this._o, condition));
 }
 
 export class ArrayWrapper extends Wrapper {
