@@ -1,5 +1,6 @@
 ﻿@using Telerik.Blazor
 @using Telerik.Blazor.Components.Editor
+@using CommonLib.Source.Common.Extensions
 
 @namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
 @typeparam TProperty
@@ -31,4 +32,10 @@
             }
         </EditorCustomTools>
     </TelerikEditor>
+    @if (Value.V?.ToString().RemoveHTML().IsNullOrWhiteSpace() != false)
+    {
+        <div class="k-editor-placeholder">
+            @Placeholder.V
+        </div>
+    }
 </CascadingValue>

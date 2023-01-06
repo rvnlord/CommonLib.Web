@@ -23,6 +23,7 @@ using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.ExtEditorComponent;
 using CommonLib.Web.Source.Common.Components.ExtGridComponent;
+using CommonLib.Web.Source.Common.Components.ExtNumericInputComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Pages.Shared;
@@ -1161,7 +1162,7 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtEditorBase or ExtGridBase).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;
@@ -1194,7 +1195,8 @@ namespace CommonLib.Web.Source.Common.Components
         [JSInvokable]
         public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c._guid == guid).InteractionState.V.IsDisabledOrForceDisabled;
 
-        public async Task FixNonNativeComponentSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
+        public async Task FixInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
+        public async Task FixInputSyncPaddingGroupAsync() => await FixInputSyncPaddingGroupAsync(_guid);
 
         protected virtual async Task DisposeAsync(bool disposing)
         {

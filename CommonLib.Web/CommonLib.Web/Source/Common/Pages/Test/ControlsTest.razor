@@ -107,23 +107,7 @@
                     </MyCssGridItem>
                     <MyCssGridItem>
                         <MyInputGroup>
-                            <TelerikNumericTextBox @ref="_tnumSalary"
-                                Class="@(_tnumSalary is null ? $"my-guid_{_tnumSalaryGuid} my-input-sync-padding-group_{_syncPaddingGroup}"  : _tnumSalary.Class)"
-                                Value="_employee.Salary"
-                                ValueChanged="@(async (decimal? value) => {
-                                    _employee.Salary = value;
-                                    await _editContext.NotifyFieldChangedAsync(() => _employee.Salary, true);
-                                    //_tnumSalary.StateHasChanged();
-                                    //await JQuery.QueryOneAsync(_tnumSalaryGuid).RemoveClassesAsync(new[] { "my-valid", "my-invalid" }).AddClassAsync(_tnumSalaryValidationClass);
-                                })"
-                                Enabled="@(_tnumSalary is null ? false : _tnumSalary.Enabled)"
-                                Format="0.00 $"
-                                Decimals="2"
-                                Min="0m"
-                                Max="10000m"
-                                Step="1250.50m"
-                                Placeholder="@_employee.GetPropertyDisplayName(e => e.Salary).Append("...")">
-                            </TelerikNumericTextBox>
+                            <ExtNumericInput For="@BP(() => _employee.Salary)" Format="@BP("0.00 $")" Decimals="2" Max="10000m" Step="1250.50m" SyncPaddingGroup="@BP("controls-test-panel")" />
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.CircleDollar)"></MyIcon>
                             </MyInputGroupPrepend>

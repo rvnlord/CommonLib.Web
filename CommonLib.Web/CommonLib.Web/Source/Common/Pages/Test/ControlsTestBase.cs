@@ -50,8 +50,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected FluentValidationValidator _fvTestDataValidator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
-        protected TelerikNumericTextBox<decimal?> _tnumSalary;
-        protected Guid _tnumSalaryGuid;
         protected TelerikDatePicker<DateTime?> _tdpDateOfBirth;
         protected Guid _tdpDateOfBirthGuid;
         protected TelerikDateTimePicker<DateTime?> _tdtpAvailableFrom;
@@ -104,7 +102,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnInitializedAsync()
         {
             _editContext = new MyEditContext(_employee);
-            _tnumSalaryGuid = _tnumSalaryGuid == Guid.Empty ? Guid.NewGuid() : _tnumSalaryGuid;
             _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
             _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
@@ -117,16 +114,14 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnAfterFirstRenderAsync()
         {
             // fix sync padding group for every non-native input
-            await FixNonNativeComponentSyncPaddingGroupAsync(_tnumSalaryGuid);
-            _editContext.BindValidationStateChangedForNonNativeComponent(_tnumSalary, () => _employee.Salary, this);
-            await FixNonNativeComponentSyncPaddingGroupAsync(_tdpDateOfBirthGuid);
+            await FixInputSyncPaddingGroupAsync(_tdpDateOfBirthGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdpDateOfBirth, () => _employee.DateOfBirth, this);
-            await FixNonNativeComponentSyncPaddingGroupAsync(_tdtpAvailableFromGuid);
+            await FixInputSyncPaddingGroupAsync(_tdtpAvailableFromGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
-            await FixNonNativeComponentSyncPaddingGroupAsync(_tacAssetGuid);
+            await FixInputSyncPaddingGroupAsync(_tacAssetGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
             
-            _allControls = GetInputControls().Cast<IComponent>().Concat(_tnumSalary, _tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
+            _allControls = GetInputControls().Cast<IComponent>().Concat(_tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

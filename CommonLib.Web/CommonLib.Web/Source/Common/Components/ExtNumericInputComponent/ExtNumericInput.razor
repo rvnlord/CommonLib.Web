@@ -1,0 +1,24 @@
+﻿@using Telerik.Blazor
+@using Telerik.Blazor.Components.Editor
+@using CommonLib.Source.Common.Converters
+
+@namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
+@typeparam TProperty
+@inherits ExtNumericInputBase<TProperty>
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <TelerikNumericTextBox @ref="TNum"
+        Class="@_renderClasses"
+        Value="@Value.V"
+        ValueChanged="@(async (TProperty e) => await NumericInput_ValueChanged(e))"
+        Enabled="@InteractionState.V.IsEnabledOrForceEnabled"
+        Format="@Format.V"
+        Decimals="@Decimals.V.ToInt()"
+        Min="@Min.V"
+        Max="@Max.V"
+        Step="@Step.V"
+        Placeholder="@Placeholder.V">
+    </TelerikNumericTextBox>
+
+</CascadingValue>

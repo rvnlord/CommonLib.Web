@@ -70,14 +70,34 @@
         box-sizing: border-box;
     }
 
+    .k-editor:not([disabled]):not(.disabled):not(.k-disabled).my-valid > .k-editor-content,
+    .k-editor:not([disabled]):not(.disabled):not(.k-disabled).k-valid > .k-editor-content {
+        background: @SuccessBackgroundGradient;
+    }
+
+    .k-editor:not([disabled]):not(.disabled):not(.k-disabled).my-invalid > .k-editor-content,
+    .k-editor:not([disabled]):not(.disabled):not(.k-disabled).k-invalid > .k-editor-content {
+        background: @ErrorBackgroundGradient;
+    }
+
     .k-editor.k-disabled > .k-editor-toolbar, .k-editor.k-disabled > .k-toolbar {
         background: linear-gradient(335deg, rgb(16, 16, 16), rgb(0, 0, 0));
         box-shadow: inset 0 1px 0 0 #303030, inset -1px 0 0 #303030, inset 1px 0 0 #303030;
         pointer-events: none;
     }
 
-    .k-editor.k-disabled>.k-editor-content .k-content {
+    .k-editor.k-disabled > .k-editor-content .k-content {
         color: #404040;
+    }
+
+    .k-editor-placeholder {
+        position: absolute;
+        color: #404040;
+        top: 59px;
+        left: 9px;
+        font-style: italic;
+        text-align: left;
+        pointer-events: none;
     }
 
 </style>
