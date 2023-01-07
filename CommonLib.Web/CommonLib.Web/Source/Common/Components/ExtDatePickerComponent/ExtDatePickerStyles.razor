@@ -1,0 +1,222 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.ExtDatePickerComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .k-calendar {
+        color: white;
+        background-color: transparent;
+        border-color: transparent;
+        border-width: 0;
+        border-style: none;
+        box-sizing: border-box;
+        outline: 0;
+        font-family: inherit;
+        font-size: 1rem;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        display: inline-flex;
+        flex-flow: column nowrap;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        gap: 10px
+    }
+
+    .k-calendar .k-nav-today {
+        color: #646464;
+        transition: all 0.5s;
+    }
+
+        .k-calendar .k-nav-today:hover, .k-calendar .k-nav-today.k-hover, .k-calendar .k-nav-today.k-state-hover, .k-calendar .k-nav-today:focus, .k-calendar .k-nav-today.k-state-focus, .k-calendar .k-nav-today.k-focus {
+            color: white;
+        }
+
+    .k-calendar-header {
+        padding: 0;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: 0 0 auto;
+        min-width: auto;
+    }
+
+        .k-calendar-header .k-calendar-nav {
+            display: flex;
+            flex-flow: row nowrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+    .k-calendar-view {
+        margin: auto;
+        padding: 0;
+        min-height: 228px;
+        min-width: 238px;
+        height: 228px;
+        width: 238px;
+        max-height: 228px;
+        max-width: 238px;
+        overflow: visible;
+        align-items: flex-start;
+        transition: all 0.5s;
+    }
+
+    .k-calendar-th {
+        width: 34px;
+        height: 24px;
+        line-height: 1rem;
+    }
+
+    .k-calendar .k-calendar-td.k-other-month {
+        color: #646464;
+    }
+
+    .k-calendar .k-calendar-td.k-state-disabled {
+        color: #404040;
+    }
+
+        .k-calendar .k-calendar-td.k-state-disabled.k-other-month {
+            color: #202020;
+        }
+
+    .k-calendar .k-calendar-td.k-state-selected.k-state-focused .k-link,
+    .k-calendar .k-calendar-td.k-selected.k-focused .k-link,
+    .k-calendar .k-calendar-td.k-state-selected.k-state-focus .k-link,
+    .k-calendar .k-calendar-td.k-selected.k-focus .k-link,
+    .k-calendar .k-calendar-td.k-selected:focus .k-link,
+    .k-calendar .k-calendar-td.k-selected.k-focus .k-link {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+    .k-calendar .k-calendar-td.k-state-focused .k-link,
+    .k-calendar .k-calendar-td.k-focus .k-link,
+    .k-calendar .k-calendar-td.k-state-focus .k-link,
+    .k-calendar .k-calendar-td.k-focus .k-link {
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+    .k-calendar .k-calendar-td.k-state-selected .k-link,
+    .k-calendar .k-calendar-td.k-selected .k-link {
+        border-color: transparent;
+        border-width: 0;
+        background-color: transparent;
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to bottom, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+    .k-calendar .k-calendar-td:hover .k-link,
+    .k-calendar .k-calendar-td.k-state-hover .k-link,
+    .k-calendar .k-calendar-td.k-hover .k-link {
+        border-color: transparent;
+        border-width: 0;
+        background-color: transparent;
+        color: rgb(255, 255, 255);
+        background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+    .k-calendar-td {
+        border-radius: 0;
+        border-width: 0;
+        border-color: transparent;
+    }
+
+    .k-calendar-monthview .k-calendar-td {
+        width: 34px;
+        height: 34px;
+    }
+
+    .k-calendar-monthview .k-link {
+        width: 34px;
+        height: 34px;
+    }
+
+    .k-calendar-yearview .k-link {
+        width: 59.5px;
+        height: 59.5px;
+    }
+
+    .k-calendar-decadeview .k-link {
+        width: 59.5px;
+        height: 59.5px;
+    }
+
+    .k-calendar-centuryview .k-link {
+        width: 59.5px;
+        height: 59.5px;
+        text-align: left;
+    }
+
+    .k-calendar-view .k-link {
+        border-radius: 0;
+        padding: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.5s;
+    }
+
+    .k-calendar .k-calendar-th, .k-calendar .k-calendar-caption, .k-calendar .k-meta-header, .k-calendar .k-month-header {
+        color: #808080;
+    }
+
+    .k-animation-container {
+        border-radius: 0;
+    }
+
+    .k-datetime-wrap {
+        width: auto;
+        overflow: hidden;
+        margin: -10px;
+        padding: 10px;
+    }
+
+        .k-datetime-wrap .k-datetime-buttongroup {
+            padding: 0 0 10px 0;
+        }
+
+    .k-actions, .k-edit-buttons, .k-action-buttons, .k-columnmenu-actions, .k-form-buttons {
+        padding: 0;
+        box-sizing: border-box;
+        border-width: 0;
+        border-style: solid;
+        border-color: inherit;
+        flex-shrink: 0;
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        gap: 10px;
+        overflow: hidden;
+        clear: both;
+    }
+
+    .k-datetime-selector {
+        display: flex;
+        transition: transform .2s;
+        margin: 0 -10px 0 -10px;
+    }
+
+    .k-datetime-calendar-wrap, .k-datetime-time-wrap {
+        text-align: center;
+        flex: 0 0 100%;
+        padding: 0 10px 0 10px;
+        box-sizing: border-box;
+    }
+
+</style>

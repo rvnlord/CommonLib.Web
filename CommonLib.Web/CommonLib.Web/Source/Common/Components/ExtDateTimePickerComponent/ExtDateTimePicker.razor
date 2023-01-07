@@ -1,0 +1,19 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
+@typeparam TProperty
+@using CommonLib.Source.Common.Converters
+@inherits ExtDateTimePickerBase<TProperty>
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <TelerikDateTimePicker @ref="Tdtp"
+        Class="@_renderClasses"
+        Value="@Value.V"
+        ValueChanged="@(async (TProperty e) => await DateTimePicker_ValueChanged(e))"
+        Enabled="@InteractionState.V.IsEnabledOrForceEnabled"
+        Format="@Format.V"
+        Min="@Min.V.ToDateTime()"
+        Max="@Max.V.ToDateTime()">
+        <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="1" Second="1" />
+    </TelerikDateTimePicker>
+
+</CascadingValue>

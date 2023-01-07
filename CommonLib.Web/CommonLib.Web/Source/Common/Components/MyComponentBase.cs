@@ -1098,7 +1098,7 @@ namespace CommonLib.Web.Source.Common.Components
                         wereRerenderedAtSomePoint.Add(c);
 
                 return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
-            }, 25, 10000);
+            }, 25, 12000);
             ClearControlsRerenderingStatus(arrControls);
         }
 

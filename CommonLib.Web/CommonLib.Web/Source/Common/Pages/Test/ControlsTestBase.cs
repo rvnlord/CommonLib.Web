@@ -50,10 +50,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected FluentValidationValidator _fvTestDataValidator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
-        protected TelerikDatePicker<DateTime?> _tdpDateOfBirth;
-        protected Guid _tdpDateOfBirthGuid;
-        protected TelerikDateTimePicker<DateTime?> _tdtpAvailableFrom;
-        protected Guid _tdtpAvailableFromGuid;
         protected TelerikAutoComplete<TestAsset> _tacAsset;
         protected Guid _tacAssetGuid;
         protected TelerikGrid<TestDataVM> _gvTestData;
@@ -102,8 +98,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnInitializedAsync()
         {
             _editContext = new MyEditContext(_employee);
-            _tdpDateOfBirthGuid = _tdpDateOfBirthGuid == Guid.Empty ? Guid.NewGuid() : _tdpDateOfBirthGuid;
-            _tdtpAvailableFromGuid = _tdtpAvailableFromGuid == Guid.Empty ? Guid.NewGuid() : _tdtpAvailableFromGuid;
             _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
             _gTestGuid = _gTestGuid == Guid.Empty ? Guid.NewGuid() : _gTestGuid;
             _syncPaddingGroup = "controls-test-panel";
@@ -113,15 +107,10 @@ namespace CommonLib.Web.Source.Common.Pages.Test
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            // fix sync padding group for every non-native input
-            await FixInputSyncPaddingGroupAsync(_tdpDateOfBirthGuid);
-            _editContext.BindValidationStateChangedForNonNativeComponent(_tdpDateOfBirth, () => _employee.DateOfBirth, this);
-            await FixInputSyncPaddingGroupAsync(_tdtpAvailableFromGuid);
-            _editContext.BindValidationStateChangedForNonNativeComponent(_tdtpAvailableFrom, () => _employee.AvailableFrom, this);
             await FixInputSyncPaddingGroupAsync(_tacAssetGuid);
             _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
             
-            _allControls = GetInputControls().Cast<IComponent>().Concat(_tdpDateOfBirth, _tdtpAvailableFrom, _tacAsset).ToArray();
+            _allControls = GetInputControls().Cast<IComponent>().Append_(_tacAsset).ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

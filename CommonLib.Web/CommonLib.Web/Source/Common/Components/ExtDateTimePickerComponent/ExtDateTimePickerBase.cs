@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.Interfaces;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
+using MessagePack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Telerik.Blazor.Components;
 
-namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
+namespace CommonLib.Web.Source.Common.Components.ExtDateTimePickerComponent
 {
-    public class ExtNumericInputBase : MyComponentBase
+    public class ExtDateTimePickerBase : MyComponentBase
     {
         [Parameter]
         public BlazorParameter<string> Placeholder { get; set; }
@@ -24,17 +24,14 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
         
         [Parameter]
         public BlazorParameter<string> Format { get; set; }
-
-        [Parameter]
-        public BlazorParameter<int?> Decimals { get; set; }
     }
     
-    public class ExtNumericInputBase<TProperty> : ExtNumericInputBase, IValidable, IModelable<TProperty>
+    public class ExtDateTimePickerBase<TProperty> : ExtDateTimePickerBase, IValidable, IModelable<TProperty>
     {
         private string _displayName;
         private string _propName;
         
-        public TelerikNumericTextBox<TProperty> TNum { get; set; }
+        public TelerikDateTimePicker<TProperty> Tdtp { get; set; }
 
         [Parameter]
         public BlazorParameter<object> Model { get; set; }
@@ -49,13 +46,10 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
         public BlazorParameter<bool?> Validate { get; set; }
         
         [Parameter]
-        public BlazorParameter<TProperty> Min { get; set; }
+        public BlazorParameter<DateTime?> Min { get; set; }
         
         [Parameter]
-        public BlazorParameter<TProperty> Max { get; set; }
-        
-        [Parameter]
-        public BlazorParameter<TProperty> Step { get; set; }
+        public BlazorParameter<DateTime?> Max { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -66,7 +60,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-numericinput", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
+                SetMainCustomAndUserDefinedClasses("ext-datetimepicker", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
@@ -82,39 +76,17 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
 
             if (Placeholder.HasChanged())
                 Placeholder.ParameterValue = !Placeholder.V.IsNullOrWhiteSpace() ? Placeholder.V : !_displayName.IsNullOrWhiteSpace() ? $"{_displayName}..." : null;
-
-            var isNullable = typeof(TProperty).IsGenericType && typeof(TProperty).GetGenericTypeDefinition() == typeof(Nullable<>);
-            var directType = isNullable ? Nullable.GetUnderlyingType(typeof(TProperty)) ?? throw new NullReferenceException() : typeof(TProperty);
-            var nullableType = typeof(Nullable<>).MakeGenericType(directType);
-
+            
             if (Min.HasChanged())
-            {
-                var nnDefMin = directType.GetConstructor(new[] { typeof(int) })?.Invoke(new object[] { 0 });
-                var defNin = (TProperty) (isNullable ? nullableType.GetConstructor(new[] { directType })?.Invoke(new[] { nnDefMin }) : nnDefMin);
-                Min.ParameterValue ??= defNin;
-            }
+                Min.ParameterValue ??= DateTime.UtcNow;
 
             if (Max.HasChanged())
-            {
-                var nnDefMax = directType.GetConstructor(new[] { typeof(int) })?.Invoke(new object[] { int.MaxValue });
-                var defMax = (TProperty) (isNullable ? nullableType.GetConstructor(new[] { directType })?.Invoke(new[] { nnDefMax }) : nnDefMax);
-                Max.ParameterValue ??= defMax;
-            }
-
-            if (Step.HasChanged())
-            {
-                var nnDefStep = directType.GetConstructor(new[] { typeof(int) })?.Invoke(new object[] { 1 });
-                var defStep = (TProperty) (isNullable ? nullableType.GetConstructor(new[] { directType })?.Invoke(new[] { nnDefStep }) : nnDefStep);
-                Max.ParameterValue ??= defStep;
-            }
+                Max.ParameterValue ??= DateTime.UtcNow + TimeSpanUtils.FromApproximateMonths(4);
 
             if (Format.HasChanged())
-                Format.ParameterValue ??= 0.00.ToString();
-
-            if (Decimals.HasChanged())
-                Decimals.ParameterValue ??= 2;
-
-            CascadedEditContext.BindInputValidationStateChanged<ExtNumericInputBase<TProperty>, TProperty>(this);
+                Format.ParameterValue ??= "dd-MM-yyyy HH:mm:ss";
+            
+            CascadedEditContext.BindInputValidationStateChanged<ExtDateTimePickerBase<TProperty>, TProperty>(this);
             
             await Task.CompletedTask;
         }
@@ -124,7 +96,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
             await FixInputSyncPaddingGroupAsync();
         }
 
-        protected async Task NumericInput_ValueChanged(TProperty value)
+        protected async Task DateTimePicker_ValueChanged(TProperty value)
         {
             if (InteractionState.V.IsDisabledOrForceDisabled)
                 return;

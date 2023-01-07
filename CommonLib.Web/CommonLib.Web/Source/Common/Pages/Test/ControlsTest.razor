@@ -126,19 +126,7 @@
                     </MyCssGridItem>
                     <MyCssGridItem>
                         <MyInputGroup>
-                            <TelerikDatePicker @ref="_tdpDateOfBirth"
-                                Class="@(_tdpDateOfBirth is null ? $"my-guid_{_tdpDateOfBirthGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tdpDateOfBirth.Class)"
-                                Value="_employee.DateOfBirth"
-                                ValueChanged="@(async (DateTime? value) => {
-                                    _employee.DateOfBirth = value;
-                                    await _editContext.NotifyFieldChangedAsync(() => _employee.DateOfBirth, true); })"
-                                Enabled="@(_tdpDateOfBirth is not null && _tdpDateOfBirth.Enabled)"
-                                Format="dd-MM-yyyy"
-                                Min="new DateTime(1900, 1, 1)"
-                                Max="DateTime.Now - TimeSpanUtils.FromApproximateYears(18)"
-                                Placeholder="@_employee.GetPropertyDisplayName(e => e.DateOfBirth).Append("...")">
-                                <DatePickerSteps Year="1" Month="1" Day="1" />
-                            </TelerikDatePicker>
+                            <ExtDatePicker For="@BP(() => _employee.DateOfBirth)" SyncPaddingGroup="@BP("controls-test-panel")"></ExtDatePicker>
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.Calendar)"></MyIcon>
                             </MyInputGroupPrepend>
@@ -157,19 +145,7 @@
                     </MyCssGridItem>
                     <MyCssGridItem>
                         <MyInputGroup>
-                            <TelerikDateTimePicker @ref="_tdtpAvailableFrom"
-                                Class="@(_tdtpAvailableFrom is null ? $"my-guid_{_tdtpAvailableFromGuid} my-input-sync-padding-group_{_syncPaddingGroup}" : _tdtpAvailableFrom.Class)"
-                                Value="_employee.AvailableFrom"
-                                ValueChanged="@(async (DateTime? value) => {
-                                    _employee.AvailableFrom = value;
-                                    await _editContext.NotifyFieldChangedAsync(() => _employee.AvailableFrom, true); })"
-                                Enabled="@(_tdtpAvailableFrom is not null && _tdtpAvailableFrom.Enabled)"
-                                Format="dd-MM-yyyy HH:mm:ss"
-                                Min="DateTime.UtcNow"
-                                Max="DateTime.UtcNow + TimeSpanUtils.FromApproximateMonths(4)"
-                                Placeholder="@_employee.GetPropertyDisplayName(e => e.AvailableFrom).Append("...")">
-                                <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="1" Second="1" />
-                            </TelerikDateTimePicker>
+                            <ExtDateTimePicker For="@BP(() => _employee.AvailableFrom)" SyncPaddingGroup="@BP("controls-test-panel")"></ExtDateTimePicker>
                             <MyInputGroupPrepend>
                                 <MyIcon IconType="IconType.From(LightIconType.Calendar)"></MyIcon>
                             </MyInputGroupPrepend>
@@ -203,7 +179,7 @@
                                     {
                                         var left = (await jqTacAsset.CssAsync("padding-left")).ToDouble() + 5;
                                         if ((await jqTacAsset.FindAsync(".k-input-inner")).Single().Classes.Contains("my-ml--5px"))
-                                            left -=  5;
+                                            left -= 5;
                                         var symbolContent = $"<div class=\"k-autocomplete-symbol\" style=\"background-image: url('{_employee.Asset.Image.ToBase64ImageString()}'); width: 24px; height: 24px; border-radius: 50%; background-size: contain; background-repeat: no-repeat; background-position: center center; box-sizing: border-box; top: 5px; left: {left}px; z-index: 2; position: absolute\"></div>";
                                         await jqTacAsset.PrependAsync(symbolContent);
                                     }

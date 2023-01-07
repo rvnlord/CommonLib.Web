@@ -1,0 +1,106 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.ExtDatePickerComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .k-datetime-wrap .k-calendar, .k-datetime-wrap .k-timeselector {
+        width: 100%;
+        border-width: 0;
+        overflow: visible;
+        box-sizing: border-box;
+    }
+
+    .k-timeselector {
+        border-color: transparent;
+        border-width: 0;
+        color: white;
+        background-color: transparent;
+    }
+
+    .k-time-list::before, .k-time-list::after {
+        box-shadow: none; /* 0 0 48px 24px #000000; */
+    }
+
+    .k-time-highlight {
+        border-color: transparent;
+        border-width: 0;
+        background-color: transparent;
+        overflow: visible;
+        transition: all 0.5s;
+        box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
+        background: linear-gradient(162deg, rgb(0, 0, 82), rgb(0, 0, 0));
+    }
+
+    .k-datetime-time-wrap:hover .k-time-highlight {
+    }
+
+    .k-time-header, .k-time-selector-header {
+        padding: 0px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: 0 0 auto;
+        margin-bottom: 10px;
+        gap: 10px;
+    }
+
+        .k-time-header .k-title, .k-time-header .k-time-selector-header-title, .k-time-selector-header .k-title, .k-time-selector-header .k-time-selector-header-title {
+            padding: 0;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+    .k-time-list-wrapper {
+        min-width: 64px;
+        height: 228px;
+        box-sizing: content-box;
+        display: inline-flex;
+        flex-flow: column nowrap;
+        align-items: stretch;
+        overflow: hidden;
+        position: relative;
+        text-align: center;
+        flex: 1 1 auto;
+    }
+
+        .k-time-list-wrapper .k-title {
+            color: #808080;
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: bold;
+            text-align: center;
+            text-transform: capitalize;
+            display: block;
+            transition: all 0.5s;
+        }
+
+        .k-time-list-wrapper.k-state-focused .k-title, .k-time-list-wrapper.k-focus .k-title {
+            color: white;
+        }
+
+    .k-time-highlight, .k-time-list-highlight {
+        width: 100%;
+        height: 34px;
+        border-width: 0;
+        border-style: solid;
+        box-sizing: border-box;
+        position: absolute;
+        top: calc(50% + 12px);
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+
+    .k-time-list-item, .k-time-list .k-item {
+        padding: 5px;
+        color: #808080;
+        transition: all 0.5s;
+    }
+
+</style>
