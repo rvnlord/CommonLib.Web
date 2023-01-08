@@ -247,15 +247,6 @@
         cursor: default;
     }
 
-    .k-calendar-header > .k-calendar-title.k-button {
-        width: 100%;
-        margin-right: 10px; /* can't use gap, because there is also a spacer element */
-    }
-
-    .k-time-header > .k-time-now.k-button {
-        width: auto;
-    }
-
     .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
     .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
     .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
@@ -376,48 +367,6 @@
 
     span.k-list-item-text {
         display: flex;
-    }
-
-    .k-autocomplete > .k-input-md .k-input-inner {
-        padding: 5px 0 5px 9px;
-    }
-
-    .k-no-data, .k-nodata {
-        min-height: 34px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: normal;
-        text-align: center;
-        white-space: normal;
-        font-style: italic;
-    }
-
-    .my-k-autocomplete-asset:not([disabled]):not(.disabled):not(.k-disabled) > .k-input-inner {
-        background-size: 24px 24px;
-        background-repeat: no-repeat;
-        background-image: radial-gradient(circle at center, #050505 0%, #101010 35%, #000050 60%, transparent 70%);
-        background-position: center left 5px;
-        text-transform: uppercase;
-        padding-left: 34px;
-    }
-
-    .my-k-autocomplete-asset > .k-input-inner::placeholder {
-        text-transform: none;
-    }
-
-    .my-k-autocomplete-asset:disabled > .k-input-inner, .my-k-autocomplete-asset.disabled > .k-input-inner, .my-k-autocomplete-asset.k-disabled > .k-input-inner {
-        background-size: 24px 24px;
-        background-repeat: no-repeat;
-        background-image: radial-gradient(circle at center, #050505 0%, #060606 35%, #000015 60%, transparent 70%);
-        background-position: center left 5px;
-        text-transform: uppercase;
-        padding-left: 34px;
-    }
-
-    .my-k-autocomplete-asset:disabled > .k-autocomplete-symbol, .my-k-autocomplete-asset.disabled > .k-autocomplete-symbol, .my-k-autocomplete-asset.k-disabled > .k-autocomplete-symbol {
-        opacity: 0.25;
     }
 
     .k-animation-container > .k-popup.k-list-container {

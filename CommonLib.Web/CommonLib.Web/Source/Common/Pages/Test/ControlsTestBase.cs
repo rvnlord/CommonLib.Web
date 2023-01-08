@@ -50,9 +50,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected FluentValidationValidator _fvTestDataValidator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
-        protected TelerikAutoComplete<TestAsset> _tacAsset;
-        protected Guid _tacAssetGuid;
-        protected TelerikGrid<TestDataVM> _gvTestData;
         protected TelerikRadialGauge _gTest;
         protected Guid _gTestGuid;
         protected ExtEditor<string> _teMessage;
@@ -79,14 +76,14 @@ namespace CommonLib.Web.Source.Common.Pages.Test
             Avatar = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-avatar.png").PathToFileData(true),
             AvailableAssets = new()
             {
-                new TestAsset { Name = "BTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/bitcoin.png").PathToFileData(true) },
-                new TestAsset { Name = "ETH", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum.png").PathToFileData(true) },
-                new TestAsset { Name = "LTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/litecoin.png").PathToFileData(true) },
-                new TestAsset { Name = "NEO", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/neo.png").PathToFileData(true) },
-                new TestAsset { Name = "XMR", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/monero.png").PathToFileData(true) },
-                new TestAsset { Name = "XTZ", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/tezos.png").PathToFileData(true) },
-                new TestAsset { Name = "DOGE", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/dogecoin.png").PathToFileData(true) },
-                new TestAsset { Name = "ETC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum-classic.png").PathToFileData(true) }
+                new NameWithImage { Name = "BTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/bitcoin.png").PathToFileData(true) },
+                new NameWithImage { Name = "ETH", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum.png").PathToFileData(true) },
+                new NameWithImage { Name = "LTC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/litecoin.png").PathToFileData(true) },
+                new NameWithImage { Name = "NEO", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/neo.png").PathToFileData(true) },
+                new NameWithImage { Name = "XMR", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/monero.png").PathToFileData(true) },
+                new NameWithImage { Name = "XTZ", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/tezos.png").PathToFileData(true) },
+                new NameWithImage { Name = "DOGE", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/dogecoin.png").PathToFileData(true) },
+                new NameWithImage { Name = "ETC", Image = PathUtils.Combine(PathSeparator.BSlash, _testImgsDir, "images/test-assets/ethereum-classic.png").PathToFileData(true) }
             }
         };
 
@@ -98,7 +95,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnInitializedAsync()
         {
             _editContext = new MyEditContext(_employee);
-            _tacAssetGuid = _tacAssetGuid == Guid.Empty ? Guid.NewGuid() : _tacAssetGuid;
             _gTestGuid = _gTestGuid == Guid.Empty ? Guid.NewGuid() : _gTestGuid;
             _syncPaddingGroup = "controls-test-panel";
             await UpdateGvTestDataAsync();
@@ -107,10 +103,7 @@ namespace CommonLib.Web.Source.Common.Pages.Test
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await FixInputSyncPaddingGroupAsync(_tacAssetGuid);
-            _editContext.BindValidationStateChangedForNonNativeComponent(_tacAsset, () => _employee.Asset, this);
-            
-            _allControls = GetInputControls().Cast<IComponent>().Append_(_tacAsset).ToArray();
+            _allControls = GetInputControls().ToArray();
             _btnSave = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.SubmitsForm.V == true);
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }

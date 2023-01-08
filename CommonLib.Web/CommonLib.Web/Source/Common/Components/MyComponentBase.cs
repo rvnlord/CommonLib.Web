@@ -21,6 +21,9 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent;
+using CommonLib.Web.Source.Common.Components.ExtDatePickerComponent;
+using CommonLib.Web.Source.Common.Components.ExtDateTimePickerComponent;
 using CommonLib.Web.Source.Common.Components.ExtEditorComponent;
 using CommonLib.Web.Source.Common.Components.ExtGridComponent;
 using CommonLib.Web.Source.Common.Components.ExtNumericInputComponent;
@@ -1162,7 +1165,7 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;

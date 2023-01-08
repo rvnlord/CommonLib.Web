@@ -25,8 +25,6 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 {
     public class MyDropDownBase : MyComponentBase
     {
-        private Task<IJSObjectReference> _inputModuleAsync;
-
         protected string _propName { get; set; }
         protected List<DdlItem> _ddlItems { get; set; }
         protected ElementReference _jsDropdown { get; set; }
