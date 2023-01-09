@@ -280,7 +280,7 @@
                     </MyCssGridItem>
 
                     <MyCssGridItem Area="CssGridArea.C1SpanAll">
-                        <TelerikRadialGauge @ref="_gTest" Class="@(_gTest is null ? $"my-guid_{_gTestGuid} disabled" : _gTest.Class)">
+                        <ExtRadialGauge>
                             <RadialGaugeScales>
                                 <RadialGaugeScale Min="0" Max="50" MajorUnit="5" MinorUnit="1" StartAngle="-60" EndAngle="240" RangePlaceholderColor="#404040" RangeSize="10" RangeDistance="-3">
                                     <RadialGaugeScaleRanges>
@@ -306,7 +306,7 @@
                                     </RadialGaugePointerCap>
                                 </RadialGaugePointer>
                             </RadialGaugePointers>
-                        </TelerikRadialGauge>
+                        </ExtRadialGauge>
                     </MyCssGridItem>
 
                 </MyCssGrid>

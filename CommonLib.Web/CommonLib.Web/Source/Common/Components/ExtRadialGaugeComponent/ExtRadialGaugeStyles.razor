@@ -1,0 +1,36 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .k-gauge > div > svg > g > g:nth-child(2) > g > path { /* ticks */
+        stroke: white;
+    }
+
+    .k-gauge {
+        width: 200px;
+        height: 200px;
+        background: black;
+        background-size: 200px 200px;
+        background-repeat: no-repeat;
+        background-image: radial-gradient(circle at center, #000090 0%, #000000 15%, #000000 40%, #050505 45%, #000040 65%, transparent 72%);
+        background-position: center center;
+    }
+
+    .k-gauge.disabled {
+        pointer-events: none;
+        filter: grayscale(0.4) opacity(0.3);
+    }
+
+        .k-gauge > div {
+            overflow: hidden;
+            position: absolute;
+            top: -7px;
+            transform: scale(1.05);
+        }
+
+</style>

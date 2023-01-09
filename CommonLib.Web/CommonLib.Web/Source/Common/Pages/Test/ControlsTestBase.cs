@@ -50,8 +50,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected FluentValidationValidator _fvTestDataValidator;
         protected MyEditFormBase _editForm;
         protected MyEditContext _editContext;
-        protected TelerikRadialGauge _gTest;
-        protected Guid _gTestGuid;
         protected ExtEditor<string> _teMessage;
 
         protected string _syncPaddingGroup;
@@ -95,7 +93,6 @@ namespace CommonLib.Web.Source.Common.Pages.Test
         protected override async Task OnInitializedAsync()
         {
             _editContext = new MyEditContext(_employee);
-            _gTestGuid = _gTestGuid == Guid.Empty ? Guid.NewGuid() : _gTestGuid;
             _syncPaddingGroup = "controls-test-panel";
             await UpdateGvTestDataAsync();
             await Task.CompletedTask;
