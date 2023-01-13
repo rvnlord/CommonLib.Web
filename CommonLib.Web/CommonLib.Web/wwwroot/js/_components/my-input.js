@@ -114,6 +114,16 @@ export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
     InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single()); // .find("input.k-input-inner")
 }
 
+export function blazor_ExtEditor_FixPlaceholder(guid) {
+    const $editor = $(guid.guidToSelector());
+    const $placeholder = $(guid.guidToSelector()).next(".k-editor-placeholder");
+    if ($placeholder.length === 1) {
+        const $editorContent = $editor.children(".k-editor-content").first();
+        $placeholder.appendTo($editorContent);
+        $placeholder.css("opacity", "1");
+    }
+}
+
 export async function blazor_BindOverlayScrollBarToGridView(guid) {
     await utils.waitUntilAsync(() => $(guid.guidToSelector()).length > 0);
     const $kGridContent = $(guid.guidToSelector()).find(".k-grid-content").first();

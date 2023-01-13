@@ -9,6 +9,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
@@ -78,6 +79,11 @@ namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             await Task.CompletedTask;
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtEditor_FixPlaceholder", _guid);
         }
 
         protected async Task Editor_ValueChanged(string value)

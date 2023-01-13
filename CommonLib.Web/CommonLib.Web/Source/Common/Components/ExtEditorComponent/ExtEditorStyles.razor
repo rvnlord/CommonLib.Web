@@ -42,12 +42,17 @@
             padding: 10px;
         }
 
+    .k-editor > .k-toolbar .k-button {
+        gap: 0;
+    }
+
     .k-editor-content {
         flex: 1 1 auto;
         overflow-y: auto;
         background: linear-gradient(to bottom, #303030, #000000);
         box-shadow: inset 0 0 0 1px #404040;
         padding: 5px 9px;
+        position: relative;
     }
 
         .k-editor-content > .ProseMirror {
@@ -93,11 +98,12 @@
     .k-editor-placeholder {
         position: absolute;
         color: #404040;
-        top: 59px;
+        top: 5px;
         left: 9px;
         font-style: italic;
         text-align: left;
         pointer-events: none;
+        opacity: 0;
     }
 
 </style>

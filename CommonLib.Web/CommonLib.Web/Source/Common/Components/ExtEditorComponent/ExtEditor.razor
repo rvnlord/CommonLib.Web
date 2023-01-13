@@ -11,7 +11,7 @@
     <TelerikEditor @ref="Te"
         Class="@_renderClasses"
         Value="@Value.V?.ToString()"
-        Tools="@(Tools.V is not null && ExtEditorCustomTools is not null ? Tools.V : new List<IEditorTool> { new CustomTool("TextDecoration") })"
+        
         EditMode="@EditorEditMode.Div"
         ValueChanged="Editor_ValueChanged"
         Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
@@ -22,13 +22,14 @@
             }
             else
             {
-                <EditorCustomTool Name="TextDecoration">
+@*Tools="@(Tools.V is not null && ExtEditorCustomTools is not null ? Tools.V : new List<IEditorTool> {  })"*@
+@* new CustomTool("TextDecoration") <EditorCustomTool Name="TextDecoration">
                     <TelerikButtonGroup>
                         <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("italic")))" Icon="italic" />
                         <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("bold")))" Icon="bold" />
                         <ButtonGroupButton Class="my-k-button-icon-only" OnClick="@(async () => await Te.ExecuteAsync(new ToolCommandArgs("underline")))" Icon="underline" />
                     </TelerikButtonGroup>
-                </EditorCustomTool>
+                </EditorCustomTool>*@
             }
         </EditorCustomTools>
     </TelerikEditor>
