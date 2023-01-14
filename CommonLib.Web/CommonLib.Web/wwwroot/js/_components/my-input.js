@@ -74,24 +74,21 @@ class InputUtils {
             const paddingRight = rightPaddings[guid] + (IsLeftMostAppendedItemAnIcon ? 0 : rightInitInputPadding) - (IsKInputWithAppendedBtn && IsLeftMostAppendedItemABtn ? 1 : 0);
 
             // ------- TEST -------
-            if ($ti.classes().contains("k-datepicker")) {
+            if ($ti.classes().contains("k-dropdownlist")) {
                 let cc = $ti.classes();
                 let t = 0;
             }
 
             if ($ti.find(".k-input-inner").length > 0) {
                 const $kInputInner = $ti.find(".k-input-inner").first();
-                if ($inputGroupPrepend.children().length > 0) {
-                    if ($kInputInner.parents().is(".my-k-autocomplete-asset")) {
-                        if (!$kInputInner.is(".my-ml--5px")) {
-                            $kInputInner.addClass("my-ml--5px");
-                        }
-                        //$kInputInner.css("margin-left", "-5px");
-                    } else {
-                        $kInputInner.css("padding-left", "0");
+                if ($kInputInner.parents().is(".my-k-autocomplete-asset") && $inputGroupPrepend.children().length > 0) {
+                    if (!$kInputInner.is(".my-ml--5px")) {
+                        $kInputInner.addClass("my-ml--5px");
                     }
+                    //$kInputInner.css("margin-left", "-5px");
+                } else {
+                    $kInputInner.css("padding-left", "0");
                 }
-
             }
 
             ($ddlConteiner || $ti).css("padding-left", paddingLeft.px());

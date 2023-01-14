@@ -45,6 +45,12 @@ namespace CommonLib.Web.Source.ViewModels
         None,
         IT,
         HR,
-        Payroll
+        Payroll,
+        Outsourcing,
+        Management,
+        Hiring,
+        Experiments,
+        Testers,
+        Contractors
     }
 }

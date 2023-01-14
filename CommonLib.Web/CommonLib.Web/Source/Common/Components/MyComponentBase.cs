@@ -24,6 +24,7 @@ using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent;
 using CommonLib.Web.Source.Common.Components.ExtDatePickerComponent;
 using CommonLib.Web.Source.Common.Components.ExtDateTimePickerComponent;
+using CommonLib.Web.Source.Common.Components.ExtDropDownComponent;
 using CommonLib.Web.Source.Common.Components.ExtEditorComponent;
 using CommonLib.Web.Source.Common.Components.ExtGridComponent;
 using CommonLib.Web.Source.Common.Components.ExtNumericInputComponent;
@@ -1102,7 +1103,7 @@ namespace CommonLib.Web.Source.Common.Components
                         wereRerenderedAtSomePoint.Add(c);
 
                 return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
-            }, 25, 12000);
+            }, 25, 15000);
             ClearControlsRerenderingStatus(arrControls);
         }
 
@@ -1166,7 +1167,7 @@ namespace CommonLib.Web.Source.Common.Components
         
         protected MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;

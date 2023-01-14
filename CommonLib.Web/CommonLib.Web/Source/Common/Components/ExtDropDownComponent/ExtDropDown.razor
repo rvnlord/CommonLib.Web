@@ -1,0 +1,37 @@
+﻿@namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
+@typeparam TProperty
+@using CommonLib.Source.Common.Converters
+@inherits ExtDropDownBase<TProperty>
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    @if (Icon.HasValue()) 
+    {
+        <MyInputGroup class="ext-dropdown-input-group">
+            <TelerikDropDownList @ref="Tddl" TItem="object" TValue="TProperty"
+                 Class="@_renderClasses"
+                 Value="@Value.V"
+                 Data="@Data.V"
+                 ValueField="@ValueField.V"
+                 TextField="@TextField.V"
+                 ValueChanged="@(async (TProperty e) => await DropDown_ValueChanged(e))"
+                 Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+            </TelerikDropDownList>
+            <MyInputGroupPrepend>
+                <MyIcon IconType="Icon.V"></MyIcon>
+            </MyInputGroupPrepend>
+        </MyInputGroup>
+    }
+    else
+    {
+        <TelerikDropDownList @ref="Tddl" TItem="object" TValue="TProperty"
+             Class="@_renderClasses"
+             Value="@Value.V"
+             Data="@Data.V"
+             ValueField="@ValueField.V"
+             TextField="@TextField.V"
+             ValueChanged="@(async (TProperty e) => await DropDown_ValueChanged(e))"
+             Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+        </TelerikDropDownList>
+    }
+</CascadingValue>

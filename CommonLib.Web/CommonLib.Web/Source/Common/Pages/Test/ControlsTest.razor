@@ -76,7 +76,8 @@
                         <MyLabel For="@(() => _employee.Department)" Align="@HorizontalAlignment.Right" />
                     </MyCssGridItem>
                     <MyCssGridItem>
-                        <MyDropDown Icon="IconType.From(LightIconType.Box)" For="@(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
+                        @*<MyDropDown Icon="IconType.From(LightIconType.Box)" For="@(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />*@
+                        <ExtDropDown Icon="IconType.From(LightIconType.Box)" For="@BP(() => _employee.Department)" SyncPaddingGroup="@("controls-test-panel".ToBp())" />
                     </MyCssGridItem>
                     <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                         <MyValidationMessage For="@(() => _employee.Department)" />

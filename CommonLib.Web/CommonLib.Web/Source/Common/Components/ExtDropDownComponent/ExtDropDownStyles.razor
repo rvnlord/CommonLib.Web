@@ -1,0 +1,83 @@
+﻿@using CommonLib.Source.Common.Converters
+@using static CommonLib.Web.Source.Common.Components.StylesConfig;
+
+@namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
+
+@inherits MyComponentStylesBase
+
+<style class="@_renderClasses" my-guid="@_guid">
+
+    .k-picker {
+        background: @InputBackgroundGradient;
+        box-shadow: inset 0 0 0 1px #404040;
+        border-width: 0;
+        border-style: unset;
+        border-color: transparent;
+        border-radius: 0;
+        color: white;
+        background-color: transparent;
+        transition: all .15s ease-in-out;
+        overflow: visible;
+        outline: none !important;
+    }
+
+    .k-picker.k-disabled, 
+    .k-input.k-disabled .k-picker,
+    .k-editor.k-disabled .k-picker {
+        background: @InputDisabledBackgroundGradient;
+        box-shadow: inset 0 0 0 1px #303030;
+        color: #404040;
+        outline: 0 none;
+        resize: none;
+        box-sizing: border-box;
+        pointer-events: none;
+    }
+
+    .k-picker:focus-within, 
+    .k-picker:focus,
+    .k-picker.k-focus {
+        color: white;
+        box-shadow: inset 0 0 0 1px #404040, 0 0 6px 2px blue;
+        outline: none;
+        border-color: inherit;
+        background-color: transparent;
+        outline: none !important;
+    }
+
+    .k-input-value-text::before {
+        content: none;
+        width: 0;
+        overflow: hidden;
+        flex: none;
+        display: none;
+        vertical-align: top;
+    }
+
+    .k-dropdownlist:not([disabled]):not(.disabled):not(.k-disabled).my-valid,
+    .k-dropdownlist:not([disabled]):not(.disabled):not(.k-disabled).k-valid {
+        background: @SuccessBackgroundGradient;
+    }
+
+    .k-dropdownlist:not([disabled]):not(.disabled):not(.k-disabled).my-invalid,
+    .k-dropdownlist:not([disabled]):not(.disabled):not(.k-disabled).k-invalid {
+        background: @ErrorBackgroundGradient;
+    }
+
+    .k-dropdownlist > .k-button, 
+    .k-dropdownlist > .k-button:focus,
+    .k-dropdownlist > .k-button:focus-within,
+    .k-dropdownlist > .k-button.k-focus, 
+    .k-dropdownlist > .k-button:active, 
+    .k-dropdownlist > .k-button:hover,
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly),
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus-within,
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly).k-focus,
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
+    .k-dropdownlist > .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+</style>
