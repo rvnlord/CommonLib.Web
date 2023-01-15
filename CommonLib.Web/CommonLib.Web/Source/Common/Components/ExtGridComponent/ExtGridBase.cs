@@ -83,7 +83,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
         {
             if (!MyJsRuntime.IsInitialized)
                 return;
-            await (await InputModuleAsync).InvokeVoidAsync("blazor_BindOverlayScrollBarToGridView", _guid);
+            await BindOverlayScrollBar();
         }
     }
 }

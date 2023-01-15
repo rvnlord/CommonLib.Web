@@ -84,6 +84,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtEditorComponent
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtEditor_FixPlaceholder", _guid);
+            await BindOverlayScrollBar(); // only for editor itself, k-dropdowns are handled separately on open from jquery
         }
 
         protected async Task Editor_ValueChanged(string value)

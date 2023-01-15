@@ -10,7 +10,7 @@ class InputUtils {
         right: {}
     };
 
-    static _scrollBoundGridViews = {};
+    static _scrollBoundComponents = {};
 
     static fixPaddingForInputGroups($input) {
         if (!$input.parent().is(".my-input-group") && !$input.parents(".k-input").last().parent().is(".my-input-group"))
@@ -101,6 +101,34 @@ class InputUtils {
             }
         }
     }
+
+    static async bindOverlayScrollBarAsync(guidOrComponent) {
+        const $component = utils.is$(guidOrComponent) ? guidOrComponent : $(guidOrComponent.guidToSelector());
+        const popupId = $component.attr("aria-controls");
+        let $scrollableContent = null;
+        if ($component.is(".k-grid")) {
+            $scrollableContent = $component.find(".k-grid-content");
+        } else if ($component.is(".k-dropdownlist")) {    
+            await utils.waitUntilAsync(() => $(`#${popupId}`).find(".k-list-content.k-list-scroller").length > 0);
+            $scrollableContent = $(`#${popupId}`).find(".k-list-content.k-list-scroller").first();
+        } else if ($component.is(".k-editor")) {    
+            $scrollableContent = $component.find(".k-editor-content");
+        }
+
+        const alreadyHasScrollbar = $scrollableContent.is(".os-host");
+        if ($scrollableContent && $scrollableContent.length === 1 && !alreadyHasScrollbar) {
+            $scrollableContent.addClass("os-host-flexbox").overlayScrollbars({
+                className: "os-theme-dark",
+                scrollbars: {
+                    dragScrolling: true
+                },
+                callbacks: {
+                    onScroll: function () { }
+                }
+            }).overlayScrollbars();
+        }
+
+    }
 }
 
 export function blazor_Input_AfterRender(input) {
@@ -121,25 +149,8 @@ export function blazor_ExtEditor_FixPlaceholder(guid) {
     }
 }
 
-export async function blazor_BindOverlayScrollBarToGridView(guid) {
-    await utils.waitUntilAsync(() => $(guid.guidToSelector()).length > 0);
-    const $kGridContent = $(guid.guidToSelector()).find(".k-grid-content").first();
-    
-    if (InputUtils._scrollBoundGridViews[guid]) {
-        return;
-    }
-
-    const scroll = $kGridContent.addClass("os-host-flexbox").overlayScrollbars({
-        className: "os-theme-dark",
-        scrollbars: {
-            clickScrolling: true
-        },
-        callbacks: {
-            onScroll: function () { }
-        }
-    }).overlayScrollbars();
-
-    InputUtils._scrollBoundGridViews[guid] = scroll;
+export async function blazor_ExtComponent_BindOverlayScrollBar(guid) {
+    await InputUtils.bindOverlayScrollBarAsync(guid);
 }
 
 $(document).ready(function () {
@@ -165,7 +176,6 @@ $(document).ready(function () {
         $btn.css("z-index", "3");
         $otherBtns.css("z-index", "0");
     });
-
 
     //const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     //var observer = new MutationObserver(function (mutations, observer) {
@@ -196,7 +206,6 @@ $(document).ready(function () {
     //});
     //observer.observe(document, { subtree: true, attributes: true, childList: true }); // 
 
-
     $(document).on("click", ".k-datepicker > .k-dateinput + .k-button, .k-datetimepicker > .k-dateinput + .k-button", async function (e) {
         if (e.button !== 0 || e.detail > 1) {
             return;
@@ -211,6 +220,14 @@ $(document).ready(function () {
             $container.css("min-width", width.px());
             $container.css("width", width.px()); // or '.k-datetime-wrap' for datetimepicker
         }
+    });
+
+    $(document).on("click", ".k-dropdownlist", async function (e) {
+        if (e.button !== 0 || e.detail > 1) {
+            return;
+        }
+
+         await InputUtils.bindOverlayScrollBarAsync($(this));
     });
 
     $(document).on("input", ".k-autocomplete > .k-input-inner", async function (e) {
@@ -231,6 +248,6 @@ $(document).ready(function () {
 
     $(document).on("click", ".k-grid .k-grid-pager .k-link", async function (e) {
         const guid = $(this).closest(".k-grid").guid();
-        InputUtils._scrollBoundGridViews[guid].scroll({ y: 0 });
+        InputUtils._scrollBoundComponents[guid].scroll({ y: 0 });
     });
 });

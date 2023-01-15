@@ -1203,6 +1203,9 @@ namespace CommonLib.Web.Source.Common.Components
         public async Task FixInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
         public async Task FixInputSyncPaddingGroupAsync() => await FixInputSyncPaddingGroupAsync(_guid);
 
+        public async Task BindOverlayScrollBar(Guid guid) => await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtComponent_BindOverlayScrollBar", _guid); 
+        public async Task BindOverlayScrollBar() => await BindOverlayScrollBar(_guid);
+
         protected virtual async Task DisposeAsync(bool disposing)
         {
             if (IsDisposed)

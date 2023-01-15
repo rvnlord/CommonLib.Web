@@ -14,6 +14,7 @@ using CommonLib.Web.Source.Models;
 using MessagePack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
@@ -110,7 +111,11 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
         
         protected override async Task OnAfterFirstRenderAsync()
         {
+            if (!MyJsRuntime.IsInitialized)
+                return;
+
             await FixInputSyncPaddingGroupAsync();
+            // bind scrollbar on popup open because after render popup containing list items will be empty
         }
 
         protected async Task DropDown_ValueChanged(TProperty value)
