@@ -16,12 +16,6 @@ class InputUtils {
         if (!$input.parent().is(".my-input-group") && !$input.parents(".k-input").last().parent().is(".my-input-group"))
             return;
 
-        //if ($input.parents(".k-input").length > 0 && $input.parents(".k-input").last().classes().contains("k-datepicker")) {
-        if ($input.is(".k-datepicker")) {
-            let cc = $input.parents(".k-input").last().classes();
-            let t = 0;
-        }
-
         const syncPaddingGroup = $input.attr("my-input-sync-padding-group") || $input.classes().singleOrNull(c => c.startsWith("my-input-sync-padding-group_"))?.split("_").last().nullifyIf(x => x === "") || null; //.parents(".k-input").last()
         const $tiToSetPadding = syncPaddingGroup ? $(`[my-input-sync-padding-group="${syncPaddingGroup}"], .my-input-sync-padding-group_${syncPaddingGroup}`).$toArray() : [$input];
         const leftPaddings = {};
