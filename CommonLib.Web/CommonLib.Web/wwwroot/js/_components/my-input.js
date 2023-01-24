@@ -32,12 +32,6 @@ class InputUtils {
             leftPaddings[guid] = prependWidth;
             rightPaddings[guid] = appendWidth;
 
-            // TEST
-            if ($ti.is(".k-autocomplete")) {
-                let cc = $ti.classes();
-                let t = 0;
-            }
-
             if (this.initPaddings.left[guid] === undefined || this.initPaddings.left[guid] === null) { // 0 is valid so can't simply use '!'
                 this.initPaddings.left[guid] = parseFloat($ti.css("padding-left"));
             }
