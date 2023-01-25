@@ -61,12 +61,6 @@ class InputUtils {
             const paddingLeft = leftPaddings.values().max() + (IsRightMostPrependedItemAnIcon ? 0 : leftInitInputPadding);
             const paddingRight = rightPaddings[guid] + (IsLeftMostAppendedItemAnIcon ? 0 : rightInitInputPadding) - (IsKInputWithAppendedBtn && IsLeftMostAppendedItemABtn ? 1 : 0);
 
-            // ------- TEST -------
-            if ($ti.classes().contains("k-dropdownlist")) {
-                let cc = $ti.classes();
-                let t = 0;
-            }
-
             if ($ti.find(".k-input-inner").length > 0) {
                 const $kInputInner = $ti.find(".k-input-inner").first();
                 if ($kInputInner.parents().is(".my-k-autocomplete-asset") && $inputGroupPrepend.children().length > 0) {
