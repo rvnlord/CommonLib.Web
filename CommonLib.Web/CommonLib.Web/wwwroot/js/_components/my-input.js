@@ -67,7 +67,6 @@ class InputUtils {
                     if (!$kInputInner.is(".my-ml--5px")) {
                         $kInputInner.addClass("my-ml--5px");
                     }
-                    //$kInputInner.css("margin-left", "-5px");
                 } else {
                     $kInputInner.css("padding-left", "0");
                 }
