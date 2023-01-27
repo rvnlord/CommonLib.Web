@@ -214,8 +214,7 @@ $(document).ready(function () {
     $(document).on("input", ".k-autocomplete > .k-input-inner", async function (e) {
         const id = $(this).attr("aria-controls");
         const $autoCompleteListContainer = $(`.k-animation-container#${id}`);
-        //const inputOffset = $(this).offset();
-        //$autoCompleteListContainer.attr('style', `left: ${inputOffset.left}px !important; top: ${inputOffset.top + $(this).outerHeight()} !important;`);
+
         await utils.waitUntilAsync(() => $autoCompleteListContainer.find(".k-list-ul > li > *:not(.k-placeholder-line)").length > 0 && $autoCompleteListContainer.css("display") !== "none" || $autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0);
 
         if ($autoCompleteListContainer.find(".k-no-data, .k-nodata").length > 0) {
