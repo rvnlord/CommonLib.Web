@@ -429,11 +429,6 @@ namespace CommonLib.Web.Source.Common.Components
                 InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
                 InteractionState.SetAsUnchanged();
 
-                //if (this is ExtEditorBase)
-                //{
-                //    var t = 0;
-                //}
-
                 //if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("Dollar") == true)
                 //{
                 //    Logger.For<MyIconBase>().Info($"PARAMS: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
