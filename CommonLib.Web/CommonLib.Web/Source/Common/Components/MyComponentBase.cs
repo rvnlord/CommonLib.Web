@@ -418,8 +418,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
             var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
-            //Logger.For(GetType()).Info($"{GetType().Name}: Setting params - state changed: c: {(InteractionState.HasChanged() ? "true" : "false")}, p: {(parentState is not null ? "true" : "false")} | state: c: {InteractionState.V}, P: {parentState}");
-            
+
             if (InteractionState.HasChanged() || parentState is not null)
             {
                 ComponentState thisAsIconState = null;
