@@ -510,7 +510,6 @@ namespace CommonLib.Web.Source.Common.Components
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
 
                 IsRerendered = true;
-                //Logger.For<MyComponentBase>().Info($"{GetType().Name}: Rerendered");
                 _firstRenderAfterInit = false;
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException or JSDisconnectedException)
