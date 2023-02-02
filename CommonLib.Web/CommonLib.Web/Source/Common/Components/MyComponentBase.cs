@@ -578,7 +578,6 @@ namespace CommonLib.Web.Source.Common.Components
             var navBar = await ComponentByTypeAsync<MyNavBarBase>();
             var authResponse = await AccountClient.GetAuthenticatedUserAsync();
             var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM());
-            //Logger.For(GetType()).Info($"Setting Auth user to {authResponse.Result}");
 
             var authPerformed = !authResponse.IsError;
             var authChanged = !authResponse.IsError && !authResponse.Result.Equals(prevAuthUser);
