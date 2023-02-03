@@ -605,8 +605,6 @@ namespace CommonLib.Web.Source.Common.Components
                 //else
                 //    Logger.For(GetType()).Info("Auth User didn't change but state will be force changed, updating this control and navbar state");
             }
-            //else
-            //    Logger.For(GetType()).Info("Auth User didn't change, doing nothing");
 
             return authStatus;
         }
