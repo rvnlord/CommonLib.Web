@@ -1018,10 +1018,7 @@ namespace CommonLib.Web.Source.Common.Components
         public async Task<Guid> GetTemporarySessionIdAsync() // for use when JsInterop is not available i.e.: `OnInitialized`, `OnParametersSet` 
         {
             if (RequestScopedCache.TemporarySessionId == Guid.Empty)
-            {
                 RequestScopedCache.TemporarySessionId = Guid.NewGuid();
-                //Logger.For<MyComponentBase>().Info($"Creating new teemporary session: {RequestScopedCache.TemporarySessionId}");
-            }
 
             return await Task.FromResult(RequestScopedCache.TemporarySessionId);
         }
