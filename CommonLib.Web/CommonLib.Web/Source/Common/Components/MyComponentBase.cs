@@ -1025,9 +1025,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<List<TComponent>> ComponentsByClassAsync<TComponent>(string cssClass) where TComponent : MyComponentBase
         {
-            //await _syncComponentsCache.WaitAsync();
             var componentsByClass = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().OfType<TComponent>().Where(c => cssClass.In(c.Classes)).ToList();
-            //await _syncComponentsCache.ReleaseAsync();
             return await Task.FromResult(componentsByClass);
         }
 
