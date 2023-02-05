@@ -1036,9 +1036,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<TComponent> ComponentByIdAsync<TComponent>(string id) where TComponent : MyComponentBase
         {
-            //await _syncComponentsCache.WaitAsync();
             var componentById = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => id.EqualsInvariant(c._id));
-            //await _syncComponentsCache.ReleaseAsync();
             return await Task.FromResult(componentById);
         }
 
