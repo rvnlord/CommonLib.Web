@@ -1084,9 +1084,7 @@ namespace CommonLib.Web.Source.Common.Components
         protected static Task WaitForControlToRerenderAsync(MyComponentBase control) => WaitForControlsToRerenderAsync(new[] { control });
 
         protected Task WaitForControlToRerenderAsync() => WaitForControlToRerenderAsync(this);
-
-        //protected async Task SetControlStatesAsync(ButtonState state, IEnumerable<MyComponentBase> controlsToChangeState, MyButtonBase btnLoading = null, bool changeRenderingState = true) => await SetControlStatesAsync(state.ToComponentState().State ?? throw new NullReferenceException(), controlsToChangeState, btnLoading, changeRenderingState);
-
+        
         public async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
             var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
