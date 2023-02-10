@@ -1110,7 +1110,6 @@ namespace CommonLib.Web.Source.Common.Components
                 changeStateTasks[this] = async () => await StateHasChangedAsync(true);
 
             ClearControlsRerenderingStatus(changeStateTasks.Keys);
-            //Logger.For(GetType()).Info($"{GetType().Name}: SetControlStatesAsync({state}) - notifying {notifyParamsChangedTasks.Keys.Count} controls parameters changed ({notifyParamsChangedTasks.Keys.Select(c => c.GetType().Name).JoinAsString(", ")})");
             await Task.WhenAll(notifyParamsChangedTasks.Values.Select(t => t.Invoke()));
             await Task.WhenAll(changeStateTasks.Values.Select(t => t.Invoke()));
             await WaitForControlsToRerenderAsync(changeStateTasks.Keys);
