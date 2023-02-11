@@ -599,10 +599,6 @@ namespace CommonLib.Web.Source.Common.Components
                 var page = navBar.Siblings.SingleOrNull(c => c.IsPage);
                 if (page is not null && page != this) // it would be null for a subpage that doesn't definee any 'Page' component, i.e.: empty page
                     await page.StateHasChangedAsync(true);
-                //if (!changeStateEvenIfAuthUserIsTheSame)
-                //    Logger.For(GetType()).Info("Auth User changed, updating this control and navbar state");
-                //else
-                //    Logger.For(GetType()).Info("Auth User didn't change but state will be force changed, updating this control and navbar state");
             }
 
             return authStatus;
