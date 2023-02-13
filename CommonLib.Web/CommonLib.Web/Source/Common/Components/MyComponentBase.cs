@@ -593,11 +593,11 @@ namespace CommonLib.Web.Source.Common.Components
 
             if (!authResponse.IsError && !authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
-                AuthenticatedUser = authResponse.Result; // ta the end because AUthenticatedUser servees as a Parameter in Login.razor so I don't want to cause rerendeer and changing the valuee prematurely
+                AuthenticatedUser = authResponse.Result; // at the end because `AuthenticatedUser` serves as a Parameter in `Login.razor` so I don't want to cause rerender and changing the valuee prematurely
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
                 var page = navBar.Siblings.SingleOrNull(c => c.IsPage);
-                if (page is not null && page != this) // it would be null for a subpage that doesn't definee any 'Page' component, i.e.: empty page
+                if (page is not null && page != this) // it would be null for a subpage that doesn't define any 'Page' component, i.e.: empty page
                     await page.StateHasChangedAsync(true);
             }
 
