@@ -92,7 +92,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                     await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false); //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
                     queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                     queryUser.ExternalLogins = _loginUserVM.ExternalLogins.ToList();
-                    queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName;
+                    queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName ?? queryUser.UserName;
                     Mapper.Map(queryUser, _loginUserVM);
 
                     _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Loading;

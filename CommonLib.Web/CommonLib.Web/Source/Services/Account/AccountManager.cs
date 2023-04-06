@@ -2,30 +2,32 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
-using CommonLib.Web.Source.DbContext;
-using CommonLib.Web.Source.Services.Account.Interfaces;
-using CommonLib.Web.Source.ViewModels.Account;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
-using CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent;
+using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.Security;
+using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Validators.Account;
+using CommonLib.Web.Source.ViewModels.Account;
+using Discord;
+using Discord.Rest;
+using Discord.WebSocket;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using CommonLib.Web.Source.Common.Converters;
-using System.Xml.Linq;
-using Z.Expressions;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -131,13 +133,13 @@ namespace CommonLib.Web.Source.Services.Account
         public Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name) => FindUserAsync(FindUserVM.FromUserName(name));
         public Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email) => FindUserAsync(FindUserVM.FromEmail(email));
         public Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode) => FindUserAsync(FindUserVM.FromEmailActivationToken(confirmationCode));
-        
+
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users.Include(u => u.Avatar), u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
                 return new ApiResponse<FileData>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
-            
+
             var avatar = user.Avatar?.ToFileData();
             return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", null, avatar);
         }
@@ -396,9 +398,9 @@ namespace CommonLib.Web.Source.Services.Account
             if (scheme == null)
                 throw new ArgumentNullException(null, $"{frontEndBaseurl}Account/Login?remoteStatus=Error&remoteMessage={"Provider not Found".UTF8ToBase58()}");
 
-            var reqScheme = _http.HttpContext.Request.Scheme; // we need API url here which is different than the Web App one
-            var host = _http.HttpContext.Request.Host;
-            var pathbase = _http.HttpContext.Request.PathBase;
+            var reqScheme = _http.HttpContext?.Request.Scheme; // we need API url here which is different than the Web App one
+            var host = _http.HttpContext?.Request.Host;
+            var pathbase = _http.HttpContext?.Request.PathBase;
             var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?returnUrl={userToExternalLogin.ReturnUrl}&user={userToExternalLogin.JsonSerialize().UTF8ToBase58()}";
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(userToExternalLogin.ExternalProvider, redirectUrl);
 
@@ -407,7 +409,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError)
         {
-            var userToExternalLogin = _http.HttpContext.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>();
+            var userToExternalLogin = _http.HttpContext?.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>() ?? throw new NullReferenceException("'userToExternalLogin' was null");
             var decodedReturnUrl = returnUrl.Base58ToUTF8();
             var url = decodedReturnUrl.BeforeFirstOrWhole("?");
             var qs = decodedReturnUrl.QueryStringToDictionary();
@@ -415,18 +417,20 @@ namespace CommonLib.Web.Source.Services.Account
 
             try
             {
-                if (remoteError != null)
+                if (remoteError is not null)
                 {
                     qs["remoteMessage"] = remoteError.UTF8ToBase58();
                     return $"{url}?{qs.ToQueryString()}";
                 }
 
                 var externalLoginInfo = await _signInManager.GetExternalLoginInfoAsync();
-                if (externalLoginInfo == null)
+                if (externalLoginInfo is null)
                 {
                     qs["remoteMessage"] = "Error loading external login information".UTF8ToBase58();
                     return $"{url}?{qs.ToQueryString()}";
                 }
+
+                await _signInManager.UpdateExternalAuthenticationTokensAsync(externalLoginInfo); // add ext auth data to the db
 
                 userToExternalLogin.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email);
                 userToExternalLogin.UserName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name) ?? userToExternalLogin.Email.BeforeFirst("@");
@@ -451,7 +455,7 @@ namespace CommonLib.Web.Source.Services.Account
             {
                 var userToRegister = new RegisterUserVM
                 {
-                    UserName = userToExternalLogin.UserName ?? userToExternalLogin.Email.BeforeFirstOrNull("@"), 
+                    UserName = userToExternalLogin.UserName ?? userToExternalLogin.Email.BeforeFirstOrNull("@"),
                     Email = userToExternalLogin.Email,
                     ReturnUrl = userToExternalLogin.ReturnUrl
                 };
@@ -464,8 +468,8 @@ namespace CommonLib.Web.Source.Services.Account
             if (!user.EmailConfirmed && _userManager.Options.SignIn.RequireConfirmedEmail)
             {
                 _mapper.Map(user, userToExternalLogin); // to account for isconfirmed
-                return userAccountNotExist 
-                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", null, userToExternalLogin) 
+                return userAccountNotExist
+                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", null, userToExternalLogin)
                     : new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first", null);
             }
 
@@ -498,6 +502,16 @@ namespace CommonLib.Web.Source.Services.Account
 
             _mapper.Map(user, userToExternalLogin);
             userToExternalLogin.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, userToExternalLogin.RememberMe);
+
+            //var externalAccessToken = await _userManager.GetAuthenticationTokenAsync(user, "Discord", "access_token");
+            //await using var client = new DiscordRestClient();
+            //await client.LoginAsync(TokenType.Bearer, externalAccessToken);
+            //var guilds = await client.GetGuildSummariesAsync().FlattenAsync().ToListAsync();
+
+            //var request = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/users/@me/guilds");
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", externalAccessToken);
+            //var response = await new HttpClient().SendAsync(request);
+            //var content = await response.Content.ReadAsStringAsync();
 
             return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToExternalLogin.ExternalProvider}\" as: \"{userToExternalLogin.UserName}\"", null, userToExternalLogin);
         }
@@ -574,7 +588,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             var user = userToCheckPassword.Id != Guid.Empty ? _db.Users.Single(u => u.Id == userToCheckPassword.Id) : _db.Users.Single(u => u.UserName.ToLower() == userToCheckPassword.UserName.ToLower());
             if (user.PasswordHash is null)
-                return userToCheckPassword.Password is null 
+                return userToCheckPassword.Password is null
                     ? new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is correct", null, true)
                     : new ApiResponse<bool>(StatusCodeType.Status200OK, "Password is incorrect", null, false);
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, userToCheckPassword.Password);
@@ -595,10 +609,10 @@ namespace CommonLib.Web.Source.Services.Account
             var user = await _db.Users.Include(u => u.Avatar).SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
             if (user is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "There is no User with this Id", new[] { new KeyValuePair<string, string>("Id", "There is no DbUser with the supplied Id") }.ToLookup());
-            
+
             var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
             var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
-            
+
             var userNameChanged = !userToEdit.UserName.EqualsIgnoreCase(user.UserName);
             var emailChanged = !userToEdit.Email.EqualsIgnoreCase(user.Email);
             var passwordChanged = !userToEdit.NewPassword.IsNullOrWhiteSpace() && !userToEdit.OldPassword.EqualsInvariant(userToEdit.NewPassword);
@@ -608,7 +622,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
-            
+
             var propsToChange = new List<string>();
 
             if (userNameChanged)
@@ -664,7 +678,7 @@ namespace CommonLib.Web.Source.Services.Account
             }
 
             await _db.SaveChangesAsync();
-            
+
             if (isConfirmationRequired)
             {
                 userToEdit.ReturnUrl = $"{ConfigUtils.FrontendBaseUrl}/Account/ConfirmEmail?email={user.Email}";
@@ -673,11 +687,11 @@ namespace CommonLib.Web.Source.Services.Account
                 var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
                 if (resendConfirmationResult.IsError)
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
-                
+
                 await _signInManager.SignOutAsync();
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}, since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
             }
-            
+
             await _signInManager.SignInAsync(user, authUser.RememberMe);
             return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", null, userToEdit);
         }
