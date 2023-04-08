@@ -9,6 +9,7 @@
 @using CommonLib.Web.Source.ViewModels.Account
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
+@using static CommonLib.Web.Source.Common.Components.StylesConfig
 
 @inherits LoginBase
 
@@ -17,97 +18,124 @@
     @if (HasAnyAuthenticationStatus(AuthStatus.NotAuthenticated, AuthStatus.NotChecked))
     {
         <MyEditForm @ref="_editForm" EditContext="_editContext" OnValidSubmit="FormLogin_ValidSubmitAsync">
-            <div class="my-container">
-                <div class="my-row">
+            <MyCssGrid Padding="0.Px()" Gap="0.Px()"
+                Template="@(new CssGridLayout("4fr", "repeat(3, auto)"))"
+                MDTemplate="@(new CssGridLayout("4fr 4fr", "repeat(2, auto)"))"
+                LGTemplate="@(new CssGridLayout("4fr 4fr 4fr", "auto"))">
 
-                    <div class="my-col-md-7 my-col-12">
-                        <div class="my-container my-container-no-gutter my-login-modal-left-panel-container">
-                            <div class="my-col-12">
-                                <div class="my-container my-container-no-gutter" style="margin-bottom: 0; box-shadow: inset 0 -1px 0 0 #646464">
-                                    <div class="my-col-12">
-                                        <h4>Local Login:</h4>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="my-col-12">
-                                <div class="my-container my-container-no-gutter">
-                                    <div class="my-row">
-                                        <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
-                                            <MyLabel For="@(() => _loginUserVM.UserName)" />
-                                        </div>
-                                        <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
+                <MyCssGridItem class="my-login-modal-left-panel-container">
+                    <MyCssGrid Template="@(new CssGridLayout("1fr", "repeat(2, auto)"))">
+
+                        <MyCssGridItem class="my-login-modal-left-panel-title-container my-modal-header">
+                            Local Login:
+                        </MyCssGridItem>
+
+                        <MyCssGridItem class="my-login-modal-left-panel-body-container">
+                            <MyCssGrid Template="@(new CssGridLayout("auto", "repeat(2, auto)"))">
+
+                                <MyCssGridItem class="my-modal-body">
+                                    <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout("auto", "repeat(3, auto)"))">
+
+                                        <MyCssGridItem>
                                             <MyTextInput For="@(() => _loginUserVM.UserName)" SyncPaddingGroup="login-modal">
                                                 <MyInputGroupPrepend>
                                                     <MyIcon IconType="IconType.From(LightIconType.UserLock)"></MyIcon>
                                                 </MyInputGroupPrepend>
                                             </MyTextInput>
-                                        </div>
-                                    </div>
-                                    <div class="my-row">
-                                        <div class="my-col-md-4 my-col-12 my-mb-0 my-mb-md-5px">
-                                            <MyLabel For="@(() => _loginUserVM.Password)"></MyLabel>
-                                        </div>
-                                        <div class="my-col-md-8 my-col-12 my-mt-0 my-mt-md-5px">
+                                        </MyCssGridItem>
+
+                                        <MyCssGridItem>
                                             <MyPasswordInput For="@(() => _loginUserVM.Password)" SyncPaddingGroup="login-modal"></MyPasswordInput>
-                                        </div>
-                                    </div>
-                                    <div class="my-row">
-                                        <div class="my-col-md-8 my-col-12 my-offset-md-4">
+                                        </MyCssGridItem>
+
+                                        <MyCssGridItem>
                                             <MyCheckBox For="@(() => _loginUserVM.RememberMe)"></MyCheckBox>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="my-col-12">
-                                <div class="my-container my-container-no-gutter" style="box-shadow: inset 0 1px 0 0 #646464; margin-top: 0;">
-                                    <div class="my-offset-md-4 my-col-md-4 my-col-12">
-                                        <MyButton Value="@("Sign In".ToBp())" Icon="IconType.From(LightIconType.SignIn)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnSignIn_ClickAsync"></MyButton>
-                                    </div>
-                                    <div class="my-col-md-4 my-col-12">
-                                        <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync"></MyButton>
-                                    </div>
-                                    <div class="my-col-md-4 my-col-12 my-order-md-0 my-order-1">
-                                        <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close"></MyButton>
-                                    </div>
-                                    <div class="my-col-md-8 my-col-12">
-                                        <MyButton Value="@("Reset Password".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync"></MyButton>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="my-col-md-5 my-col-12">
-                        <div class="my-container my-container-no-gutter">
-                            <div class="my-col-12">
-                                <div class="my-container my-container-no-gutter my-login-modal-right-panel-title-container">
-                                    <div class="my-col-12">
-                                        <h4>External Login:</h4>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="my-col-12">
-                                <div class="my-container my-container-no-gutter">
-                                    @if (_loginUserVM.ExternalLogins.Count == 0)
+                                        </MyCssGridItem>
+
+                                    </MyCssGrid>
+                                </MyCssGridItem>
+
+                                <MyCssGridItem class="my-modal-footer">
+                                    <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout("repeat(2, auto)", "repeat(2, auto)"))">
+
+                                        <MyCssGridItem>
+                                            <MyButton Value="@("Sign In".ToBp())" Icon="IconType.From(LightIconType.SignIn)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnSignIn_ClickAsync"></MyButton>
+                                        </MyCssGridItem>
+
+                                        <MyCssGridItem>
+                                            <MyButton Value="@("Sign Up".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnSignUp_ClickAsync"></MyButton>
+                                        </MyCssGridItem>
+
+                                        <MyCssGridItem>
+                                            <MyButton Value="@("Reset".ToBp())" Icon="IconType.From(LightIconType.Bells)" Styling="ButtonStyling.Secondary" Sizing="ButtonSizing.Fill" OnClick="BtnResetPassword_ClickAsync"></MyButton>
+                                        </MyCssGridItem>
+
+                                        <MyCssGridItem>
+                                            <MyButton Value="@("Dismiss".ToBp())" Icon="IconType.From(LightIconType.TimesHexagon)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="my-close"></MyButton>
+                                        </MyCssGridItem>
+
+                                    </MyCssGrid>
+                                </MyCssGridItem>
+
+                            </MyCssGrid>
+                        </MyCssGridItem>
+
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+                <MyCssGridItem class="my-login-modal-mid-panel-container">
+                    <MyCssGrid Template="@(new CssGridLayout("1fr", "repeat(2, auto)"))">
+
+                        <MyCssGridItem class="my-login-modal-mid-panel-title-container my-modal-header">
+                            External Login:
+                        </MyCssGridItem>
+
+                        <MyCssGridItem class="my-login-modal-mid-panel-body-container">
+                            @if (!_loginUserVM.ExternalLogins.Any())
+                            {
+                                <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout())">
+                                    <MyCssGridItem class="no-providers-message">
+                                        No External Login providers Defined
+                                    </MyCssGridItem>
+                                </MyCssGrid>
+                            }
+                            else
+                            {
+                                <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout("repeat(3, 1fr)", "repeat(auto-fit, minmax(0, max-content))"))">
+                                    @foreach (var provider in _loginUserVM.ExternalLogins)
                                     {
-                                        <div class="my-col-12">
-                                            <div>No External Login providers Defined</div>
-                                        </div>
+                                        <MyCssGridItem>
+                                            <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
+                                        </MyCssGridItem>
                                     }
-                                    else
-                                    {
-                                        foreach (var provider in _loginUserVM.ExternalLogins)
-                                        {
-                                            <div class="my-col-4">
-                                                <MyButton Value="provider.DisplayName" Icon="IconType.From(provider.DisplayName.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.FillAndDoubleHeight" OnClick="@(e => BtnExternalLogin_ClickAsync(e, provider.Name))"></MyButton>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                </MyCssGrid>
+                            }
+                        </MyCssGridItem>
+                        
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+                <MyCssGridItem class="my-login-modal-right-panel-container">
+                    <MyCssGrid Template="@(new CssGridLayout("1fr", "repeat(2, auto)"))">
+
+                        <MyCssGridItem class="my-login-modal-right-panel-title-container my-modal-header">
+                            Wallet Login:
+                        </MyCssGridItem>
+
+                        <MyCssGridItem class="my-login-modal-right-panel-body-container">
+                            <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout("repeat(3, 1fr)", "repeat(auto-fit, minmax(0, max-content))"))">
+
+                                <MyCssGridItem>
+                                    <MyButton Value="@("Metamask")" Icon="IconType.From(BrandsIconType.Metamask)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.FillAndDoubleHeight"></MyButton>
+                                </MyCssGridItem>
+
+                            </MyCssGrid>
+                        </MyCssGridItem>
+                        
+                    </MyCssGrid>
+                </MyCssGridItem>
+
+            </MyCssGrid>
         </MyEditForm>
     }
     else if (HasAuthenticationStatus(AuthStatus.Authenticated))

@@ -12,13 +12,19 @@
         if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("BasketballBall") == true)
         {
             Logger.For<MyIconBase>().Info($"RENDER: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
-            var t = 0;
         }
 
         <div class="@_renderClasses" @onclick="@PrintAndClickCallbackAsync" style="@_renderStyle" @attributes="@_renderAttributes">
-            <svg xmlns="@_svgXmlns" viewBox="@_svgViewBox" style="@_renderSvgStyle">
-                <path d="@_dPath" style="fill: @(InteractionState.V.IsDisabledOrForceDisabled ? "#404040" : Color switch { null => "white", "none" => "", _ => Color })"></path>
-            </svg>
+            @if (_dPath is not null) 
+            {
+                <svg xmlns="@_svgXmlns" viewBox="@_svgViewBox" style="@_renderSvgStyle">
+                    <path d="@_dPath" style="fill: @(InteractionState.V.IsDisabledOrForceDisabled ? "#404040" : Color switch { null => "white", "none" => "", _ => Color })"></path>
+                </svg>
+            }
+            else if (_complexSvg is not null) 
+            {
+                @_complexSvg
+            }
         </div>
     }
 

@@ -35,7 +35,7 @@
     }
 
     .my-modal-header {
-        font-weight: 400;
+        font-weight: 600;
         font-size: @((FontSize * 1.5).Px());
         line-height: @((FontSize * 2.25).Px());
         vertical-align: middle;
@@ -57,31 +57,57 @@
     }
 
     .my-login-modal {
-        width: 768px;
+        width: 972px;
     }
 
-    .my-login-modal-right-panel-title-container {
+    .my-login-modal-left-panel-title-container {
         margin-bottom: 0;
-        box-shadow: inset 0 -1px 0 0 #646464;
+        box-shadow: inset 0 -1px 0 0 #646464;  /* border-bottom */
     }
 
-    @@media (min-width: 768px) {
-        .my-login-modal-left-panel-container {
+    .my-login-modal-mid-panel-title-container, 
+    .my-login-modal-right-panel-title-container {
+        box-shadow: inset 0 -1px 0 0 #646464, inset 0 1px 0 0 #646464; /* border-bottom & top */
+    }
+
+    @@media (min-width: 768px) and (max-width: 991.98px) {
+        .my-login-modal-left-panel-container, 
+        .my-login-modal-right-panel-container {
             margin-right: 0;
-            box-shadow: inset -1px 0 0 #646464;
+            box-shadow: inset -1px 0 0 #646464; /* border-right */
         }
-    }
 
-    @@media (max-width: 767.98px) {
-        .my-modal {
-            width: calc(100% - @((Gutter * 2).Px()));
+        .my-login-modal-mid-panel-title-container {
+            box-shadow: inset 0 -1px 0 0 #646464;  /* border-bottom */
         }
 
         .my-login-modal-right-panel-title-container {
-            margin-bottom: 0;
-            margin-top: 0;
-            box-shadow: inset 0 -1px 0 0 #646464, inset 0 1px 0 0 #646464;
+            box-shadow: inset 0 -1px 0 0 #646464, inset 0 1px 0 0 #646464; /* border-bottom & top */
         }
+    }
+
+    @@media (min-width: 992px) {
+        .my-login-modal-left-panel-container, .my-login-modal-mid-panel-container {
+            margin-right: 0;
+            box-shadow: inset -1px 0 0 #646464; /* border-right */
+        }
+
+        .my-login-modal-mid-panel-title-container, 
+        .my-login-modal-right-panel-title-container {
+            box-shadow: inset 0 -1px 0 0 #646464; /* border-bottom */
+        }
+    }
+    
+    @@media (max-width: 991.98px) {
+        .my-modal {
+            width: calc(100% - @((Gutter * 2).Px()));
+        }
+    }
+
+    .no-providers-message {
+        justify-self: center;
+        font-style: italic;
+        color: @FailureColor;
     }
 
 </style>

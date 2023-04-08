@@ -68,12 +68,10 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
         
         protected async Task CheckBox_ClickAsync(MouseEventArgs e)
         {
-            if (e == null)
+            if (e is null)
                 throw new NullReferenceException(nameof(e));
             if (InteractionState.V.IsDisabledOrForceDisabled)
-            {
                 return;
-            }
             
             Value = !Value;
             Text = Value.ToStringInvariant();
@@ -86,6 +84,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
             }
             
             await Check.InvokeAsync(this, new CheckBoxChangedEventArgs(Value));
+            await StateHasChangedAsync(true);
         }
     }
 

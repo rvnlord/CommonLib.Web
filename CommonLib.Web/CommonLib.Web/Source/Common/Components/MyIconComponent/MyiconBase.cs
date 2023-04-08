@@ -24,6 +24,7 @@ using EnumConverter = CommonLib.Source.Common.Converters.EnumConverter;
 using Logger = CommonLib.Source.Common.Utils.UtilClasses.Logger;
 using StringConverter = CommonLib.Source.Common.Converters.StringConverter;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
+using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 
 namespace CommonLib.Web.Source.Common.Components.MyIconComponent
@@ -41,6 +42,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         protected string _svgXmlns { get; set; }
         protected string _svgViewBox { get; set; }
         protected string _dPath { get; set; }
+        protected RenderFragment _complexSvg { get; set; }
 
         //public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir(); // ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("ContentRootPath");
@@ -139,10 +141,13 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 
                         _svgCache.TryAdd(IconType.ParameterValue, svg);
                     }
-
+                    
                     _svgXmlns = svg.GetAttributeValue("xmlns");
                     _svgViewBox = svg.GetAttributeValue("viewBox");
-                    _dPath = svg.SelectSingleNode("./path").GetAttributeValue("d");
+                    _dPath = svg.SelectSingleNode("./path")?.GetAttributeValue("d");
+
+                    if (_dPath is null) // a complex colored icon, i.e.: metamask
+                        _complexSvg = svg.ToRenderFragment();
                 }
                 catch (TaskCanceledException)
                 {
