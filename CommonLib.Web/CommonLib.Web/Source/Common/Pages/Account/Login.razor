@@ -10,6 +10,7 @@
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
+@using System.Threading
 
 @inherits LoginBase
 
@@ -126,7 +127,7 @@
                             <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout("repeat(3, 1fr)", "repeat(auto-fit, minmax(0, max-content))"))">
 
                                 <MyCssGridItem>
-                                    <MyButton Value="@("Metamask")" Icon="IconType.From(BrandsIconType.Metamask)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.FillAndDoubleHeight"></MyButton>
+                                    <MyButton Value="@("Metamask")" Icon="IconType.From(BrandsIconType.Metamask)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.FillAndDoubleHeight" Click="BtnWalletLogin_ClickAsync"></MyButton>
                                 </MyCssGridItem>
 
                             </MyCssGrid>

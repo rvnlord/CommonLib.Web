@@ -426,6 +426,17 @@ namespace CommonLib.Web.Source.Common.Components
                     thisAsIconState = (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractionState.V;
 
                 InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+
+                if (this is MyIconBase thisAsIcon) // InteeractionState from parent is updated for each component but only after their respective OnParamters methods are called
+                {
+                    if (thisAsIcon.ComplexSvg is not null)
+                    {
+                        thisAsIcon.Svg.SetAttributeValue("style", InteractionState.V?.IsEnabledOrForceEnabled == true ? "filter: none" : "filter: grayscale(1) brightness(0.3);");
+                        Logger.For<MyIconBase>().Info($"InteractionState: {(InteractionState.V?.State.EnumToString() ?? "null")}");
+                        thisAsIcon.ComplexSvg = thisAsIcon.Svg.ToRenderFragment();
+                    }
+                }
+
                 InteractionState.SetAsUnchanged();
 
                 if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)

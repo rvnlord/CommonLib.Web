@@ -34,20 +34,22 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         //private static string _commonWwwRootDir;
         private static string _rootDir;
         //private static bool? _isProduction;
-        private static ConcurrentDictionary<IconType, HtmlNode> _svgCache { get; set; }
+       
         private Dictionary<string, string> _svgStyle { get; set; }
        
-        protected bool _disabled { get; set; }
+        //protected bool _disabled { get; set; }
         protected string _renderSvgStyle { get; set; }
         protected string _svgXmlns { get; set; }
         protected string _svgViewBox { get; set; }
         protected string _dPath { get; set; }
-        protected RenderFragment _complexSvg { get; set; }
-
+       
         //public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir(); // ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("ContentRootPath");
         //public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
-        
+        public HtmlNode Svg { get; set; }
+        public static ConcurrentDictionary<IconType, HtmlNode> SvgCache { get; set; }
+        public RenderFragment ComplexSvg { get; set; }
+
         [Parameter] public BlazorParameter<IconType> IconType { get; set; }
         [Parameter] public string Color { get; set; }
         [Parameter] public BlazorParameter<IconSizeMode> SizeMode { get; set; } = IconSizeMode.InheritFromStyles;
@@ -59,7 +61,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 
         protected override async Task OnInitializedAsync()
         {
-            _svgCache ??= new ConcurrentDictionary<IconType, HtmlNode>();
+            SvgCache ??= new ConcurrentDictionary<IconType, HtmlNode>();
             _svgStyle ??= new Dictionary<string, string>();
             await Task.CompletedTask;
         }
@@ -90,7 +92,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 return;
             }
 
-            var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.InteractionState?.V;
+            //var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.InteractionState?.V;
             
             var cascadingInputHasChanged = CascadingInput.HasChanged();
             if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
@@ -114,47 +116,49 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             //else
             //    _disabled = false; // using State directly now
 
+            var iconEnums = IconType.ParameterValue.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
+            var iconEnumVals = iconEnums.Select(p => p.GetValue(IconType.ParameterValue)).ToArray();
+            var iconEnum = iconEnumVals.Single(v => v != null);
+
+            var iconType = iconEnum.GetType();
+            var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
+
             if (IconType.HasChanged())
             {
-                var iconEnums = IconType.ParameterValue.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
-                var iconEnumVals = iconEnums.Select(p => p.GetValue(IconType.ParameterValue)).ToArray();
-                var iconEnum = iconEnumVals.Single(v => v != null);
 
-                var iconType = iconEnum.GetType();
-                var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
                 var iconSetDirName = iconType.Name.BeforeFirst("IconType");
 
                 try
                 {
-                    var svg = _svgCache.VorN(IconType.ParameterValue);
-                    if (svg == null)
+                    Svg = SvgCache.VorN(IconType.ParameterValue);
+                    if (Svg is null)
                     {
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
                         {
-                            svg = (await UploadClient.GetRenderedIconAsync(IconType.V)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                            Svg = (await UploadClient.GetRenderedIconAsync(IconType.V)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
                         else
                         {
                             var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
-                            svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                            Svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 
-                        _svgCache.TryAdd(IconType.ParameterValue, svg);
+                        SvgCache.TryAdd(IconType.ParameterValue, Svg);
                     }
                     
-                    _svgXmlns = svg.GetAttributeValue("xmlns");
-                    _svgViewBox = svg.GetAttributeValue("viewBox");
-                    _dPath = svg.SelectSingleNode("./path")?.GetAttributeValue("d");
+                    _svgXmlns = Svg?.GetAttributeValue("xmlns");
+                    _svgViewBox = Svg?.GetAttributeValue("viewBox");
+                    _dPath = Svg?.SelectSingleNode("./path")?.GetAttributeValue("d");
 
                     if (_dPath is null) // a complex colored icon, i.e.: metamask
-                        _complexSvg = svg.ToRenderFragment();
+                        ComplexSvg = Svg.ToRenderFragment();
                 }
                 catch (TaskCanceledException)
                 {
                     Logger.For<MyIconBase>().Warn($"Getting Icon [{IconType.ParameterValue}] was canceled, did you refresh the page or validation state message don't need that icon anymore?");
                 }
             }
-
+            
             if (SizeMode.HasChanged() && IconType.HasValue() && _svgXmlns != null && _svgViewBox != null && _dPath != null)
             {
                 if (!_svgViewBox.IsNullOrWhiteSpace())
@@ -185,12 +189,12 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
                 SetUserDefinedAttributes();
             }
         }
-
+        
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
 
         protected async Task PrintAndClickCallbackAsync(MouseEventArgs e)
         {
-            var msg = $"{IconType} Clicked";
+            var msg = $"{IconType.V} Clicked";
             Logger.For<MyIconBase>().Log(LogLevel.Info, msg);
 
             await OnClick.InvokeAsync(e).ConfigureAwait(false);

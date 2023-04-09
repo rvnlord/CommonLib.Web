@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -18,18 +20,24 @@ using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using Nethereum.Hex.HexTypes;
+using Nethereum.UI;
+using Nethereum.Web3;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
 {
-    public class LoginBase : MyComponentBase
+    public class LoginBase : MyComponentBase, IDisposable
     {
         private Task<IJSObjectReference> _modalModuleAsync;
         private MyComponentBase[] _allControls;
         private MyButtonBase _btnLogin;
         private OrderedDictionary<string, MyButtonBase> _btnExternalLogins;
+        private OrderedDictionary<string, MyButtonBase> _btnWalletLogins;
         private MyButtonBase _btnCloseModal;
         private MyButtonBase _btnLogout;
+        private IEthereumHostProvider _ethereumHostProvider;
+        private IWeb3 _web3;
 
         protected MyEditForm _editForm;
         protected MyEditContext _editContext;
@@ -50,6 +58,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         [Inject]
         public IJQueryService JQuery { get; set; }
         
+        [Inject]
+        public SelectedEthereumHostProviderService SelectedEthereumHost { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             var inheritedReturnUrl = NavigationManager.GetQueryString<string>("returnUrl")?.Base58ToUTF8()?.BeforeFirstOrWhole("?");
@@ -60,9 +71,17 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             };
             _editContext ??= new MyEditContext(_loginUserVM);
             _btnExternalLogins ??= new OrderedDictionary<string, MyButtonBase>();
+            _btnWalletLogins ??= new OrderedDictionary<string, MyButtonBase>();
+
+            _ethereumHostProvider = SelectedEthereumHost.SelectedHost;
+            _ethereumHostProvider.SelectedAccountChanged += SelectedEthereumHost_SelectedAccountChangedAsync;
+            _ethereumHostProvider.NetworkChanged += SelectedEthereumHost_NetworkChangedAsync;
+            _ethereumHostProvider.EnabledChanged += SelectedEthereumHost_ChangedAsync;
+            _web3 = await _ethereumHostProvider.GetWeb3Async();
+            
             await Task.CompletedTask;
         }
-        
+
         protected override async Task OnAfterFirstRenderAsync()
         {
             if (!await EnsureAuthenticationPerformedAsync(true, false))
@@ -111,10 +130,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
-        
+
+        // if enabled then it might trigger in the middle of authentication,
+        // if disabled it may leave edit and logout button disabled after authentication
+        // if changed to AuthStateChanged then it might not trigger when it should because sth else already refreshed the logged in panel
         protected override async Task OnAfterRenderAsync(bool isFirstRender)
         {
-            if (isFirstRender || IsDisposed)
+            if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractionState?.V.IsLoadingOrForceLoading == true))
                 return;
 
             if (await EnsureAuthenticationPerformedAsync(false, false)) // not changed because change may be frontrun by components updating it earlier
@@ -188,7 +210,70 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             NavigationManager.NavigateTo($"{url}?{qs.ToQueryString()}", true);
         }
+        
+        protected async Task BtnWalletLogin_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            _loginUserVM.WalletProvider = sender.Value.V; 
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
+            
+            // switch depending wallet, for now only metamask
+            
+            var isHostProviderAvailable = await _ethereumHostProvider.CheckProviderAvailabilityAsync();
+            if (!isHostProviderAvailable)
+            {
+                await PromptMessageAsync(NotificationType.Error, "Metamask is not installed");
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                return;
+            }
 
+            var t = await _ethereumHostProvider.EnableProviderAsync();
+            var accounts = await _web3.Eth.Accounts.SendRequestAsync();
+
+            _loginUserVM.WalletAddress = await _ethereumHostProvider.GetProviderSelectedAccountAsync();
+            _loginUserVM.WalletSignature = await _web3.Eth.AccountSigning.PersonalSign.SendRequestAsync(new HexUTF8String($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\""));
+
+            // take rejections made by the user inside metamask wallet into account
+
+            //var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
+            //if (walletLoginResp.IsError)
+            //{
+            //    await PromptMessageAsync(NotificationType.Error, walletLoginResp.Message); // prompt from modal
+            //    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+            //    return;
+            //}
+
+            //await PromptMessageAsync(NotificationType.Success, walletLoginResp.Message);
+            //if (!walletLoginResp.Result.ReturnUrl.IsNullOrWhiteSpace())
+            //    NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
+
+            //await HideLoginModalAsync();
+
+            //if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
+            //{
+                SetControls();
+                //AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+            //}
+        }
+        
+        private async Task SelectedEthereumHost_ChangedAsync(bool isEnabled)
+        {
+            if (isEnabled)
+                _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
+        }
+
+        private async Task SelectedEthereumHost_NetworkChangedAsync(long chainId)
+        {
+            _loginUserVM.WalletChainId = (int)chainId;
+            await Task.CompletedTask;
+        }
+
+        private async Task SelectedEthereumHost_SelectedAccountChangedAsync(string address)
+        {
+            _loginUserVM.WalletAddress = address;
+            _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
+        }
+        
         protected async Task BtnSignUp_ClickAsync(MouseEventArgs e) => await OnSignUpClick.InvokeAsync(e).ConfigureAwait(false);
 
         protected async Task BtnSignIn_ClickAsync() => await _editForm.SubmitAsync();
@@ -227,6 +312,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             _btnLogin = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign In");
             _btnExternalLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.ExternalLogins.Select(l => l.DisplayName))).ToOrderedDictionary(b => b.Value.V, b => b);
+            _btnWalletLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.WalletLogins.Select(l => l))).ToOrderedDictionary(b => b.Value.V, b => b);
             _btnLogout = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign Out");
         }
 
@@ -241,6 +327,13 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 [nameof(_loginUserVM.Email).PascalCaseToCamelCase()] = _loginUserVM.Email?.UTF8ToBase58(false),
                 [nameof(_loginUserVM.ReturnUrl).PascalCaseToCamelCase()] = _loginUserVM.ReturnUrl?.UTF8ToBase58(false),
             }.Where(kvp => kvp.Value != null).ToQueryString();
+        }
+
+        public void Dispose()
+        {
+            _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
+            _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
+            _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
         }
     }
 }

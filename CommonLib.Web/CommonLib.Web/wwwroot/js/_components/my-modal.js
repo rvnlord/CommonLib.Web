@@ -215,7 +215,20 @@ $(document).ready(function() {
         const $nbs = $(".my-navbar");
         const $searchContainers = $nbs.find(".my-nav-search-container");
         const $otherModals = $(".my-modal").not($modal);
+        const isNavLinkFromNavbar = $btnToggle.is(".my-nav-link") && $btnToggle.closest(".my-navbar").length > 0;
+        const isRendered = ($btnToggle.attr("rendered") || "false").toBool();
+        const isAdjusted = ($btnToggle.attr("adjusted") || "false").toBool();
+        const isDisabled = $btnToggle.is(".disabled") || $btnToggle.attr("disabled") === "disabled";
+
         if (e.which !== 1 || e.detail > 1 || $searchContainers.is(".shown") || $otherModals.is(".shown")) {
+            return;
+        }
+
+        if (isNavLinkFromNavbar && (!isAdjusted || !isRendered)) {
+            return;
+        }
+
+        if (isDisabled) {
             return;
         }
 

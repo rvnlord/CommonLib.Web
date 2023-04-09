@@ -9,10 +9,10 @@
 
     @if (IconType != null)
     {
-        if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("BasketballBall") == true)
+        @*if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("BasketballBall") == true)
         {
             Logger.For<MyIconBase>().Info($"RENDER: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
-        }
+        }*@
 
         <div class="@_renderClasses" @onclick="@PrintAndClickCallbackAsync" style="@_renderStyle" @attributes="@_renderAttributes">
             @if (_dPath is not null) 
@@ -21,9 +21,9 @@
                     <path d="@_dPath" style="fill: @(InteractionState.V.IsDisabledOrForceDisabled ? "#404040" : Color switch { null => "white", "none" => "", _ => Color })"></path>
                 </svg>
             }
-            else if (_complexSvg is not null) 
+            else if (ComplexSvg is not null) 
             {
-                @_complexSvg
+                @ComplexSvg
             }
         </div>
     }
