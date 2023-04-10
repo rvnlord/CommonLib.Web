@@ -77,6 +77,7 @@ namespace CommonLib.Web.Source.Common.Components
         private bool _isInitialized;
         private BlazorParameter<ComponentState> _bpState;
         private bool _preventRenderOnce;
+        private bool _isRerendered;
 
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncClasses = new(1, 1);
@@ -125,7 +126,19 @@ namespace CommonLib.Web.Source.Common.Components
         public bool IsRendered => !_firstRenderAfterInit;
         public bool IsDisposed { get; set; }
         public bool FirstParamSetup => _firstParamSetup;
-        public bool IsRerendered { get; set; } // to be set manually on demand
+
+        public ExtendedTime LastRerender;
+        public bool IsRerendered
+        {
+            get => _isRerendered;
+            set
+            {
+                if (value)
+                    LastRerender = ExtendedTime.UtcNow;
+                _isRerendered = value;
+            }
+        } // to be set manually on demand
+
         public bool IsCommonLayout
         {
             get
@@ -1074,12 +1087,13 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
         {
+            var ts = ExtendedTime.UtcNow;
             var arrControls = controls.ToArray();
             var wereRerenderedAtSomePoint = new List<MyComponentBase>();
             await TaskUtils.WaitUntil(() =>
             {
                 foreach (var c in arrControls)
-                    if (c.IsRerendered && !c.In(wereRerenderedAtSomePoint))
+                    if (c.LastRerender is not null && c.LastRerender >= ts && !c.In(wereRerenderedAtSomePoint))
                         wereRerenderedAtSomePoint.Add(c);
 
                 return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);

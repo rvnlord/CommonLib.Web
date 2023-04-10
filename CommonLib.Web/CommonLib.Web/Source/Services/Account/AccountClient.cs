@@ -160,7 +160,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin)
         {
-            var loginResponse = await _httpClient.PostJTokenAsync<ApiResponse<LoginUserVM>>("api/account/externalloginauthorize", userToExternalLogin);
+            var loginResponse = await HttpClient.PostJTokenAsync<ApiResponse<LoginUserVM>>("api/account/externalloginauthorize", userToExternalLogin);
             if (loginResponse.IsError)
                 return loginResponse;
 
@@ -173,6 +173,27 @@ namespace CommonLib.Web.Source.Services.Account
             {
                 await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", loggedUser.Ticket, new { expires = 365 * 24 * 60 * 60 });
                 await _localStorage.SetItemAsync("Ticket", loginResponse.Result.Ticket);
+            }
+            else
+            {
+                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", loggedUser.Ticket);
+                await _localStorage.RemoveItemAsync("Ticket");
+            }
+
+            return loginResponse;
+        }
+
+        public async Task<ApiResponse<LoginUserVM>> WalletLoginAsync(LoginUserVM userToWalletLogin)
+        {
+            var loginResponse = await HttpClient.PostJTokenAsync<ApiResponse<LoginUserVM>>("api/account/walletloginasync", userToWalletLogin);
+            if (loginResponse.IsError)
+                return loginResponse;
+
+            var loggedUser = loginResponse.Result;
+            if (loggedUser.RememberMe)
+            {
+                await _jsRuntime.InvokeVoidAsync("Cookies.set", "Ticket", loggedUser.Ticket, new { expires = 365 * 24 * 60 * 60 });
+                await _localStorage.SetItemAsync("Ticket", loggedUser.Ticket);
             }
             else
             {

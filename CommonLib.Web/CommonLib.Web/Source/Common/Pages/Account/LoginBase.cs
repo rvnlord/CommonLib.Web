@@ -226,34 +226,30 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
-            var t = await _ethereumHostProvider.EnableProviderAsync();
-            var accounts = await _web3.Eth.Accounts.SendRequestAsync();
+            await _ethereumHostProvider.EnableProviderAsync();
 
             _loginUserVM.WalletAddress = await _ethereumHostProvider.GetProviderSelectedAccountAsync();
-            _loginUserVM.WalletSignature = await _web3.Eth.AccountSigning.PersonalSign.SendRequestAsync(new HexUTF8String($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\""));
+            _loginUserVM.WalletSignature = await _web3.Eth.AccountSigning.PersonalSign.SendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"".UTF8ToByteArray());
 
             // take rejections made by the user inside metamask wallet into account
 
-            //var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
-            //if (walletLoginResp.IsError)
-            //{
-            //    await PromptMessageAsync(NotificationType.Error, walletLoginResp.Message); // prompt from modal
-            //    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-            //    return;
-            //}
-
-            //await PromptMessageAsync(NotificationType.Success, walletLoginResp.Message);
-            //if (!walletLoginResp.Result.ReturnUrl.IsNullOrWhiteSpace())
-            //    NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
-
-            //await HideLoginModalAsync();
-
-            //if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
-            //{
-                SetControls();
-                //AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
+            var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
+            if (walletLoginResp.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, walletLoginResp.Message); // prompt from modal
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-            //}
+                return;
+            }
+
+            await PromptMessageAsync(NotificationType.Success, walletLoginResp.Message);
+            await HideLoginModalAsync();
+
+            if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
+            {
+                SetControls();
+                AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+            }
         }
         
         private async Task SelectedEthereumHost_ChangedAsync(bool isEnabled)

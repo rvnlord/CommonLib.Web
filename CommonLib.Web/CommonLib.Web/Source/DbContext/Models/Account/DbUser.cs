@@ -15,5 +15,6 @@ namespace CommonLib.Web.Source.DbContext.Models.Account
         public virtual ICollection<IdentityUserToken<Guid>> Tokens { get; set; }
         public virtual ICollection<IdentityUserRole<Guid>> Roles { get; set; }
         public virtual List<DbFile> Files { get; set; } = new();
+        public virtual List<DbWallet> Wallets { get; set; } = new();
     } 
 }

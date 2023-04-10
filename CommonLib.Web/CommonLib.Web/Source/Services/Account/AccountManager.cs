@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using CommonLib.Source.Common.Converters;
@@ -28,6 +29,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Nethereum.Signer;
+using Nethereum.Util;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -237,10 +240,11 @@ namespace CommonLib.Web.Source.Services.Account
                 {
                     var i = 1;
                     while (await _db.Users.SingleOrDefaultAsync(u => u.UserName.ToLower() == userToRegister.UserName.ToLower()) is not null)
-                    {
-                        userToRegister.UserName += i++;
-                        user.UserName = userToRegister.UserName;
-                    }
+                        i++;
+
+                    userToRegister.UserName += $"_{i}";
+                    user.UserName = userToRegister.UserName;
+
                     result = userToRegister.Password is not null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
                 }
 
@@ -251,7 +255,8 @@ namespace CommonLib.Web.Source.Services.Account
                 }
             }
 
-            await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
+            if (user.Email is not null) // would be null when registering with wallet provider
+                await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
 
             if (!await _roleManager.RoleExistsAsync("Admin"))
                 await _roleManager.CreateAsync(new IdentityRole<Guid>("Admin"));
@@ -262,7 +267,7 @@ namespace CommonLib.Web.Source.Services.Account
                 await _userManager.AddToRoleAsync(user, "Admin");
             await _userManager.AddToRoleAsync(user, "User");
 
-            if (_userManager.Options.SignIn.RequireConfirmedEmail)
+            if (_userManager.Options.SignIn.RequireConfirmedEmail && user.Email is not null) // if registering from wallet provider email would be null
             {
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var deployingEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToRegister.Email, code, userToRegister.ReturnUrl);
@@ -272,10 +277,12 @@ namespace CommonLib.Web.Source.Services.Account
                     return new ApiResponse<RegisterUserVM>(StatusCodeType.Status500InternalServerError, "Registration had been Successful, but the email wasn't sent. Try again later.", null, userToRegister, deployingEmailResponse.ResponseException);
                 }
 
+                _mapper.Map(user, userToRegister);
                 userToRegister.ReturnUrl = $"/Account/ConfirmEmail?email={userToRegister.Email.UTF8ToBase58()}&returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
                 return new ApiResponse<RegisterUserVM>(StatusCodeType.Status201Created, $"Registration for User \"{userToRegister.UserName}\" has been successful, activation email has been deployed to: \"{userToRegister.Email}\"", null, _mapper.Map(userToRegister, new RegisterUserVM()));
             }
 
+            _mapper.Map(user, userToRegister);
             userToRegister.ReturnUrl = $"/Account/Login?returnUrl={userToRegister.ReturnUrl.UTF8ToBase58()}";
             userToRegister.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, false);
             await _signInManager.SignInAsync(user, false);
@@ -350,7 +357,7 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name can't be empty", new[] { new KeyValuePair<string, string>("UserName", "User Name is required") }.ToLookup());
 
             var user = await _userManager.FindByNameAsync(userToLogin.UserName);
-            if (user == null)
+            if (user is null)
                 return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User Name not found, please Register first", new[] { new KeyValuePair<string, string>("UserName", "There is no DbUser with this UserName") }.ToLookup());
 
             userToLogin.Email = user.Email; // userName if we are sedarching by email but here we are searching for name
@@ -514,6 +521,66 @@ namespace CommonLib.Web.Source.Services.Account
             //var content = await response.Content.ReadAsStringAsync();
 
             return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToExternalLogin.ExternalProvider}\" as: \"{userToExternalLogin.UserName}\"", null, userToExternalLogin);
+        }
+
+        public async Task<ApiResponse<LoginUserVM>> WalletLoginAsync(LoginUserVM userToWalletLogin)
+        {
+            if (userToWalletLogin.WalletAddress.IsNullOrWhiteSpace())
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is required") }.ToLookup());
+            if (userToWalletLogin.WalletSignature.IsNullOrWhiteSpace())
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature can't be empty", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is required") }.ToLookup());
+            
+            if (userToWalletLogin.WalletProvider.EqualsIgnoreCase("Metamask"))
+            {
+                if (!AddressUtil.Current.IsValidEthereumAddressHexFormat(userToWalletLogin.WalletAddress))
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address is invalid", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is invalid") }.ToLookup());
+
+                var message = $"Proving ownership of wallet: \"{userToWalletLogin.WalletAddress}\"";
+                var address = new EthereumMessageSigner().EcRecover(message.UTF8ToByteArray(), userToWalletLogin.WalletSignature);
+                var isSignatureCorrect = address.EqualsIgnoreCase(userToWalletLogin.WalletAddress); // address returned by Nethereum from ECRecover() is actually upper case for some reason
+                if (!isSignatureCorrect)
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature is incorrect", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is incorrect") }.ToLookup());
+            }
+            else
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Provider not supported", new[] { new KeyValuePair<string, string>("WalletProvider", "Wallet Provider not supported") }.ToLookup());
+
+            var user = _db.Users.Include(u => u.Wallets).SingleOrDefault(u => u.Wallets.Any(w => w.Address == userToWalletLogin.WalletAddress && w.Provider.ToLower() == userToWalletLogin.WalletProvider.ToLower()));
+            var userAccountNotExist = user is null;
+            if (userAccountNotExist)
+            {
+                var userToRegister = new RegisterUserVM
+                {
+                    UserName = $"{userToWalletLogin.WalletAddress.Take(6)}...{userToWalletLogin.WalletAddress.TakeLast(4)}",
+                    ReturnUrl = userToWalletLogin.ReturnUrl
+                };
+                var registerUserResponse = await RegisterAsync(userToRegister);
+                if (registerUserResponse.IsError)
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message, null);
+
+                await _db.Wallets.AddAsync(new DbWallet
+                {
+                    Provider = userToWalletLogin.WalletProvider,
+                    Address = userToWalletLogin.WalletAddress,
+                    UserId = registerUserResponse.Result.Id,
+                });
+                await _db.SaveChangesAsync();
+
+                user = _db.Users.Include(u => u.Wallets).Single(u => u.Wallets.Any(w => w.Address == userToWalletLogin.WalletAddress && w.Provider.ToLower() == userToWalletLogin.WalletProvider.ToLower()));
+            }
+            
+            if (user.Email is not null && !user.EmailConfirmed && _userManager.Options.SignIn.RequireConfirmedEmail) // acc registered earlier (not during current login attempt) that wasn't confirmed yet
+            {
+                _mapper.Map(user, userToWalletLogin); // to account for isconfirmed
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first", null);
+            }
+
+            await _signInManager.SignInAsync(user, userToWalletLogin.RememberMe);
+            await _userManager.ResetAccessFailedCountAsync(user);
+
+            _mapper.Map(user, userToWalletLogin);
+            userToWalletLogin.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, userToWalletLogin.RememberMe);
+            
+            return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToWalletLogin.WalletProvider}\" as: \"{userToWalletLogin.UserName}\"", null, userToWalletLogin);
         }
 
         public async Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync()

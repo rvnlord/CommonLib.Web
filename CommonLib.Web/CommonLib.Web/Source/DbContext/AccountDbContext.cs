@@ -13,6 +13,7 @@ namespace CommonLib.Web.Source.DbContext
     {
         public DbSet<DbCryptographyKey> CryptographyKeys { get; set; }
         public DbSet<DbFile> Files { get; set; }
+        public DbSet<DbWallet> Wallets { get; set; }
         
         public AccountDbContext(DbContextOptions<AccountDbContext> options) : base(options) { }
         
@@ -62,6 +63,13 @@ namespace CommonLib.Web.Source.DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Wallets)
+                .WithOne(e => e.User)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
             //mb.Entity<DbFile>().Property(e => e.UserHavingFileAsAvatarId).IsRequired(false);
             //mb.Entity<DbUser>(b => b.Navigation(e => e.Avatar).IsRequired());
 
@@ -72,6 +80,10 @@ namespace CommonLib.Web.Source.DbContext
             mb.Entity<DbFile>()
                 .ToTable("Files")
                 .HasKey(e => e.Hash);
+
+            mb.Entity<DbWallet>()
+                .ToTable("Wallets")
+                .HasKey(e => e.Address);
         }
         
         public static AccountDbContext Create()

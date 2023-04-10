@@ -23,6 +23,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<ResendConfirmationEmailUserVM>> ResendConfirmationEmailAsync(ResendConfirmationEmailUserVM resendConfirmationEmailUser);
         Task<ApiResponse<LoginUserVM>> LoginAsync(LoginUserVM userToLogin);
         Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin);
+        Task<ApiResponse<LoginUserVM>> WalletLoginAsync(LoginUserVM userToWalletLogin);
         Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync();
         Task<ApiResponse<AuthenticateUserVM>> LogoutAsync();
         Task<ApiResponse<ForgotPasswordUserVM>> ForgotPasswordAsync(ForgotPasswordUserVM forgotPasswordUser);

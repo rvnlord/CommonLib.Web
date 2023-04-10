@@ -57,6 +57,9 @@ namespace CommonLib.Web.Source.Controllers
             }
         }
 
+        [HttpPost(nameof(IAccountManager.WalletLoginAsync))] // POST: api/account/login
+        public async Task<JToken> WalletLoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.WalletLoginAsync(user));
+
         [HttpGet("externallogincallback")] // GET: api/account/externallogincallback
         public async Task<IActionResult> ExternalLoginCallbackAsync(string returnUrl = null, string remoteError = null) => Redirect(await _accountManager.ExternalLoginCallbackAsync(returnUrl, remoteError));
 
