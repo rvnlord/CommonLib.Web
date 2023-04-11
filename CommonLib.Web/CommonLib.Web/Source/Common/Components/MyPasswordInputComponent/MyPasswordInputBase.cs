@@ -85,6 +85,8 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
 
             //await Task.WhenAll(notifyParamsChangedTasks);
             //await Task.WhenAll(changeStateTasks);
+
+            await Task.CompletedTask;
         }
 
         protected override async Task OnAfterFirstRenderAsync()

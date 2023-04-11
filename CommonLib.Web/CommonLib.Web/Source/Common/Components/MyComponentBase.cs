@@ -87,11 +87,11 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly SemaphoreSlim _syncAttributes = new(1, 1);
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncStateChanged = new(1, 1);
-        private readonly OrderedSemaphore _syncSettingParameters = new(1, 1);
+        //private readonly OrderedSemaphore _syncSettingParameters = new(1, 1);
         private readonly OrderedSemaphore _syncRender = new(1, 1);
         private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);
-        private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
-        private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
+        //private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
+        //private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
         //private OrderedSemaphore _syncComponentsCache => (_isCommonLayout ? (MyLayoutComponentBase)this : Layout)._syncComponentsCache;
         private MyPromptBase _prompt;
         private Guid _sessionId;
@@ -540,7 +540,7 @@ namespace CommonLib.Web.Source.Common.Components
             {
                 //Logger.For<MyComponentBase>().Warn("'OnAfterRenderAsync' was canceled, disposed component?");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (!IsDisposed)
                     throw;

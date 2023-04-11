@@ -79,23 +79,23 @@ namespace CommonLib.Web.Source.Services.Account
             else if (!userToFind.Email.IsNullOrWhiteSpace())
                 user = await _db.Users.SingleOrDefaultAsync(u => u.EmailActivationToken.ToLower() == userToFind.EmailActivationToken.ToLower());
             else
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status406NotAcceptable, "No property specified can be used to uniquely identify a correct user", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status406NotAcceptable, "No property specified can be used to uniquely identify a correct user");
 
             if (user is null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name");
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
             foundUser.Claims = await _userManager.GetClaimsAsync(user).SelectAsync(async c => (await FindClaimByNameAsync(c.Type)).Result).WhereAsync(c => includeEmailClaim || !c.Name.EqualsIgnoreCase("Email")).OrderByAsync(r => r.Name).ToListAsync();
 
-            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", null, foundUser);
+            return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "Finding User by Name has been Successful", foundUser);
         }
 
         public async Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName)
         {
             var role = await _db.Roles.SingleOrDefaultAsync(r => r.Name.ToLower() == roleName.ToLower());
             if (role is null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Name", null);
+                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Name");
 
             var foundRole = _mapper.Map(role, new FindRoleVM());
             return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Role Found", null, foundRole);
@@ -128,8 +128,8 @@ namespace CommonLib.Web.Source.Services.Account
                 claim.OriginalName = claim.Name; // for 'NotInUse' validation attribute compatibility
 
             return claim is null
-                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "There is no Claim with the given Name", null)
-                : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", null, claim);
+                ? new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "There is no Claim with the given Name")
+                : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", claim);
         }
 
         public Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false) => FindUserAsync(FindUserVM.FromId(id), includeEmailClaim);
@@ -141,10 +141,10 @@ namespace CommonLib.Web.Source.Services.Account
         {
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users.Include(u => u.Avatar), u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
-                return new ApiResponse<FileData>(StatusCodeType.Status200OK, "There is no User with the given Name", null);
+                return new ApiResponse<FileData>(StatusCodeType.Status200OK, "There is no User with the given Name");
 
             var avatar = user.Avatar?.ToFileData();
-            return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", null, avatar);
+            return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Avatar retrieved Successfully", avatar);
         }
 
         public async Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData)
@@ -468,7 +468,7 @@ namespace CommonLib.Web.Source.Services.Account
                 };
                 var registerUserResponse = await RegisterAsync(userToRegister);
                 if (registerUserResponse.IsError)
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message, null);
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message);
                 user = await _userManager.FindByEmailAsync(userToExternalLogin.Email);
             }
 
@@ -476,8 +476,8 @@ namespace CommonLib.Web.Source.Services.Account
             {
                 _mapper.Map(user, userToExternalLogin); // to account for isconfirmed
                 return userAccountNotExist
-                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", null, userToExternalLogin)
-                    : new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first", null);
+                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", userToExternalLogin)
+                    : new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first");
             }
 
             var externalLoginResult = await _signInManager.ExternalLoginSignInAsync(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.RememberMe, true);
@@ -496,12 +496,12 @@ namespace CommonLib.Web.Source.Services.Account
                         message = $"Account Locked, too many failed attempts (try again in: {lockoutTimeLeft.Minutes}m {lockoutTimeLeft.Seconds}s)";
                     }
 
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, message, null);
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, message);
                 }
 
                 var secondAttemptExternalLoginResult = await _signInManager.ExternalLoginSignInAsync(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.RememberMe, true);
                 if (!secondAttemptExternalLoginResult.Succeeded)
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User didn't have an External Login Account so it was added, but Login Attempt has Failed", null);
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User didn't have an External Login Account so it was added, but Login Attempt has Failed");
             }
 
             await _signInManager.SignInAsync(user, userToExternalLogin.RememberMe);
@@ -555,7 +555,7 @@ namespace CommonLib.Web.Source.Services.Account
                 };
                 var registerUserResponse = await RegisterAsync(userToRegister);
                 if (registerUserResponse.IsError)
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message, null);
+                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message);
 
                 await _db.Wallets.AddAsync(new DbWallet
                 {
@@ -571,7 +571,7 @@ namespace CommonLib.Web.Source.Services.Account
             if (user.Email is not null && !user.EmailConfirmed && _userManager.Options.SignIn.RequireConfirmedEmail) // acc registered earlier (not during current login attempt) that wasn't confirmed yet
             {
                 _mapper.Map(user, userToWalletLogin); // to account for isconfirmed
-                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first", null);
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first");
             }
 
             await _signInManager.SignInAsync(user, userToWalletLogin.RememberMe);
@@ -592,7 +592,7 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync(AuthenticateUserVM userToLogout)
         {
             if (userToLogout == null || !userToLogout.HasAuthenticationStatus(AuthStatus.Authenticated))
-                return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized so you can't log out", null);
+                return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized so you can't log out");
 
             await _signInManager.SignOutAsync();
             return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status200OK, $"You (\"{userToLogout.UserName}\") have been successfully logged out", null, userToLogout);
@@ -668,9 +668,9 @@ namespace CommonLib.Web.Source.Services.Account
         {
             authUser = (await GetAuthenticatedUserAsync(null, null, authUser))?.Result;
             if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data", null);
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data");
             if (!(await new EditUserVMValidator(this).ValidateAsync(userToEdit)).IsValid)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
 
             userToEdit.Id = authUser.Id; // to fix the case when malicious user edited the Id manually
             var user = await _db.Users.Include(u => u.Avatar).SingleOrDefaultAsync(u => u.Id == userToEdit.Id);
@@ -688,7 +688,7 @@ namespace CommonLib.Web.Source.Services.Account
             var isConfirmationRequired = emailChanged && _userManager.Options.SignIn.RequireConfirmedEmail;
 
             if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update");
 
             var propsToChange = new List<string>();
 
@@ -753,14 +753,14 @@ namespace CommonLib.Web.Source.Services.Account
 
                 var resendConfirmationResult = await ResendConfirmationEmailAsync(_mapper.Map(userToEdit, new ResendConfirmationEmailUserVM()));
                 if (resendConfirmationResult.IsError)
-                    return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.", null);
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status400BadRequest, "User Details have been Updated buy system can't resend Confirmation Email. Please try again later.");
 
                 await _signInManager.SignOutAsync();
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}, since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", null, userToEdit);
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}, since you have updated your email address the confirmation code has been sent to: \"{userToEdit.Email}\"", userToEdit);
             }
 
             await _signInManager.SignInAsync(user, authUser.RememberMe);
-            return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", null, userToEdit);
+            return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", userToEdit);
         }
 
     }

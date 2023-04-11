@@ -226,12 +226,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
 
-            await _ethereumHostProvider.EnableProviderAsync();
+            _loginUserVM.WalletAddress = await _ethereumHostProvider.EnableProviderAsync();
+            var walletSignatureResp = await _web3.Eth.AccountSigning.PersonalSign.TrySendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"");
+            if (walletSignatureResp.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, walletSignatureResp.Message);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                return;
+            }
 
-            _loginUserVM.WalletAddress = await _ethereumHostProvider.GetProviderSelectedAccountAsync();
-            _loginUserVM.WalletSignature = await _web3.Eth.AccountSigning.PersonalSign.SendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"".UTF8ToByteArray());
-
-            // take rejections made by the user inside metamask wallet into account
+            _loginUserVM.WalletSignature = walletSignatureResp.Result;
 
             var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
             if (walletLoginResp.IsError)

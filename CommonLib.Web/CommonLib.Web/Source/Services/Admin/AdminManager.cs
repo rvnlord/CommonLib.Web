@@ -48,7 +48,7 @@ namespace CommonLib.Web.Source.Services.Admin
         public async Task<ApiResponse<List<FindUserVM>>> GetAllUsersAsync(AuthenticateUserVM authUser)
         {
             if (authUser is null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<List<FindUserVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Users' Data", null);
+                return new ApiResponse<List<FindUserVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Users' Data");
 
             var users = await _userManager.Users.Include(u => u.Avatar).ToListAsync();
             var userToFind = new List<FindUserVM>();
@@ -60,44 +60,44 @@ namespace CommonLib.Web.Source.Services.Admin
                 userToFind.Add(userToEditByAdmin);
             }
 
-            return new ApiResponse<List<FindUserVM>>(StatusCodeType.Status201Created, "Successfully Retrieved Users", null, userToFind);
+            return new ApiResponse<List<FindUserVM>>(StatusCodeType.Status201Created, "Successfully Retrieved Users", userToFind);
         }
 
         public async Task<ApiResponse<AdminEditUserVM>> DeleteUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToDelete)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Users", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Users");
             if (authUser.Id == userToDelete.Id)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You can't Delete yourself", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You can't Delete yourself");
             if (userToDelete.Id == default)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, "Id for the User was not supplied, as it is done automatically it should never happen", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, "Id for the User was not supplied, as it is done automatically it should never happen");
 
             var user = await _userManager.FindByIdAsync(userToDelete.Id.ToString());
             if (user == null)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToDelete.Id}\" was not found, it should never happen", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToDelete.Id}\" was not found, it should never happen");
 
             var deleteUserResponse = await _userManager.DeleteAsync(user);
             if (!deleteUserResponse.Succeeded)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Deleting User with Id: \"{userToDelete.Id}\" Failed. ({deleteUserResponse.FirstError()})", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Deleting User with Id: \"{userToDelete.Id}\" Failed. ({deleteUserResponse.FirstError()})");
 
             userToDelete.IsDeleted = true;
-            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Deleted User: \"{userToDelete.UserName}\"", null, userToDelete);
+            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully Deleted User: \"{userToDelete.UserName}\"", userToDelete);
         }
 
         public async Task<ApiResponse<AdminEditUserVM>> EditUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdminEdit)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Users", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Users");
             if (userToAdminEdit.Id == authUser.Id && !userToAdminEdit.HasRole("Admin"))
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove \"Admin\" Role from your own Account", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove \"Admin\" Role from your own Account");
             if (userToAdminEdit.Id == default)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, "Id for the User was not supplied, as it is done automatically it should never happen", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, "Id for the User was not supplied, as it is done automatically it should never happen");
             if (!(await new AdminEditUserVMValidator(_accountManager).ValidateAsync(userToAdminEdit)).IsValid)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
 
             var user = await _db.Users.SingleOrDefaultAsync(u => u.Id == userToAdminEdit.Id);
             if (user is null)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToAdminEdit.Id}\" was not found, it should never happen", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User with Id: \"{userToAdminEdit.Id}\" was not found, it should never happen");
 
             var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars"); // on purpose if editing other user avatar the _teemp file should be stored within admin user's foldeer not within the destination user's folder 
             var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
@@ -116,7 +116,7 @@ namespace CommonLib.Web.Source.Services.Admin
             var claimsChanged = !newClaims.Select(c => c.Type).CollectionEqual(existingClaims.Select(c => c.Type));
 
             if (!userNameChanged && !emailChanged && !passwordChanged && !avatarChanged && !avatarShouldBeRemoved && !rolesChanged && !claimsChanged)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "User data has not changed so there is nothing to update");
 
             if (user.SecurityStamp.IsNullOrWhiteSpace())
                 await _userManager.UpdateSecurityStampAsync(user);
@@ -166,7 +166,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 var removeRolesResp = await _userManager.RemoveFromRolesAsync(user, existingRoles);
                 var editRolesResp = await _userManager.AddToRolesAsync(user, newRoles);
                 if (!removeRolesResp.Succeeded || !editRolesResp.Succeeded)
-                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Roles Failed. ({(!removeRolesResp.Succeeded ? removeRolesResp.FirstError() : editRolesResp.FirstError())})", null);
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Roles Failed. ({(!removeRolesResp.Succeeded ? removeRolesResp.FirstError() : editRolesResp.FirstError())})");
                 propsToChange.Add(nameof(user.Roles));
             }
 
@@ -175,7 +175,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 var removeClaimsResp = await _userManager.RemoveClaimsAsync(user, existingClaims);
                 var editClaimsResp = await _userManager.AddClaimsAsync(user, newClaims); // we don't consider values for simplicity sake so we can tak any (first) available
                 if (!removeClaimsResp.Succeeded || !editClaimsResp.Succeeded)
-                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Claims Failed. ({(!removeClaimsResp.Succeeded ? removeClaimsResp.FirstError() : editClaimsResp.FirstError())})", null);
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"Editing User with Id: \"{userToAdminEdit.Id}\" Succeeded, but modifying Claims Failed. ({(!removeClaimsResp.Succeeded ? removeClaimsResp.FirstError() : editClaimsResp.FirstError())})");
                 propsToChange.Add(nameof(user.Claims));
             }
 
@@ -185,7 +185,7 @@ namespace CommonLib.Web.Source.Services.Admin
         public async Task<ApiResponse<List<FindRoleVM>>> GetRolesAsync(AuthenticateUserVM authUser)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<List<FindRoleVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Roles", null);
+                return new ApiResponse<List<FindRoleVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Roles");
 
             var foundRoles = (await _roleManager.Roles.ToListAsync()).Select(rl => new FindRoleVM
             {
@@ -205,7 +205,7 @@ namespace CommonLib.Web.Source.Services.Admin
         public async Task<ApiResponse<List<FindClaimVM>>> GetClaimsAsync(AuthenticateUserVM authUser)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<List<FindClaimVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Claims", null);
+                return new ApiResponse<List<FindClaimVM>>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Access Claims");
 
             var claims = (
                 from uc in await _db.UserClaims.ToListAsync()
@@ -235,9 +235,9 @@ namespace CommonLib.Web.Source.Services.Admin
         public async Task<ApiResponse<AdminEditUserVM>> AddUserAsync(AuthenticateUserVM authUser, AdminEditUserVM userToAdminAdd)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Users", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Users");
             if (!(await new AdminEditUserVMValidator(_accountManager).ValidateAsync(userToAdminAdd)).IsValid)
-                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
 
             var tempAvatarDir = PathUtils.Combine(PathSeparator.BSlash, FileUtils.GetEntryAssemblyDir(), "UserFiles", authUser.UserName, "_temp/Avatars");
             var newAvatar = Directory.GetFiles(tempAvatarDir).NullifyIf(fs => !fs.Any())?.MaxBy_(f => new FileInfo(f).CreationTimeUtc)?.Last()?.PathToFileData(true);
@@ -276,85 +276,85 @@ namespace CommonLib.Web.Source.Services.Admin
             {
                 var addRolesResp = await _userManager.AddToRolesAsync(user, userToAdminAdd.Roles.Select(r => r.Name));
                 if (!addRolesResp.Succeeded)
-                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addRolesResp.FirstError()})", null);
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addRolesResp.FirstError()})");
             }
 
             if (claimsSet)
             {
                 var addClaimsResp = await _userManager.AddClaimsAsync(user, userToAdminAdd.Claims.Select(c => new Claim(c.Name, c.Values.First().Value)));
                 if (!addClaimsResp.Succeeded)
-                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addClaimsResp.FirstError()})", null);
+                    return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status400BadRequest, $"User: \"{userToAdminAdd.UserName}\" was added Successfully, but adding Roles Failed. ({addClaimsResp.FirstError()})");
             }
 
-            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully added User: \"{userToAdminAdd.UserName}\" ", null, userToAdminAdd);
+            return new ApiResponse<AdminEditUserVM>(StatusCodeType.Status201Created, $"Successfully added User: \"{userToAdminAdd.UserName}\" ", userToAdminAdd);
 
         }
 
         public async Task<ApiResponse<AdminEditRoleVM>> DeleteRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToDelete)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Roles", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Roles");
             if (roleToDelete.Name.IsNullOrWhiteSpace())
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "Name for the Role was not supplied, as it is done automatically it should never happen", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "Name for the Role was not supplied, as it is done automatically it should never happen");
             if (roleToDelete.Name.EqualsIgnoreCase("Admin"))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "You can't remove \"Admin\" role, it would be just dumb", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "You can't remove \"Admin\" role, it would be just dumb");
             var role = await _roleManager.FindByNameAsync(roleToDelete.Name);
             if (role == null)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Role \"{roleToDelete.Name}\" was not found, it should never happen", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Role \"{roleToDelete.Name}\" was not found, it should never happen");
 
             var deleteRoleResponse = await _roleManager.DeleteAsync(role);
             if (!deleteRoleResponse.Succeeded)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Deleting Role \"{roleToDelete.Name}\" Failed. ({deleteRoleResponse.FirstError()})", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Deleting Role \"{roleToDelete.Name}\" Failed. ({deleteRoleResponse.FirstError()})");
 
-            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Deleted Role \"{roleToDelete.Name}\"", null, roleToDelete);
+            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Deleted Role \"{roleToDelete.Name}\"", roleToDelete);
         }
 
         public async Task<ApiResponse<AdminEditRoleVM>> AddRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToAdd)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Roles", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Roles");
             if (!(await new AdminEditRoleVMValidator(_accountManager, this).ValidateAsync(roleToAdd)).IsValid)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
 
             var role = new IdentityRole<Guid> { Name = roleToAdd.Name };
 
             var addRoleResp = await _roleManager.CreateAsync(role);
             if (!addRoleResp.Succeeded)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" Failed. ({addRoleResp.FirstError()})", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" Failed. ({addRoleResp.FirstError()})");
 
             foreach (var userName in roleToAdd.UserNames)
             {
                 var user = await _userManager.FindByNameAsync(userName);
                 if (user == null)
-                    return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" to User \"{userName}\" Failed, there is no such User", null);
+                    return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" to User \"{userName}\" Failed, there is no such User");
 
                 var addRoleToUserResp = await _userManager.AddToRoleAsync(user, role.Name);
                 if (!addRoleToUserResp.Succeeded)
-                    return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" to User \"{userName}\" Failed. ({addRoleResp.FirstError()})", null);
+                    return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToAdd.Name}\" to User \"{userName}\" Failed. ({addRoleResp.FirstError()})");
             }
 
-            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Added Role: \"{roleToAdd.Name}\"", null, roleToAdd);
+            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Added Role: \"{roleToAdd.Name}\"", roleToAdd);
         }
 
         public async Task<ApiResponse<AdminEditRoleVM>> EditRoleAsync(AuthenticateUserVM authUser, AdminEditRoleVM roleToEdit)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Roles", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Roles");
             if (roleToEdit.Id == default)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "Role Id is Empty, it should never happen", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, "Role Id is Empty, it should never happen");
             var role = await _roleManager.FindByIdAsync(roleToEdit.Id.ToString());
             if (role.Name.EqualsIgnoreCase("Admin") && !role.Name.EqualsIgnoreCase(roleToEdit.Name))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't change \"{role.Name}\" Role Name", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't change \"{role.Name}\" Role Name");
             if (role.Name.EqualsIgnoreCase("Admin") && !authUser.UserName.EqAnyIgnoreCase(roleToEdit.UserNames))
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't remove \"{role.Name}\" Role from yourself", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"You can't remove \"{role.Name}\" Role from yourself");
             if (!(await new AdminEditRoleVMValidator(_accountManager, this).ValidateAsync(roleToEdit)).IsValid)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
             
             _mapper.Map(roleToEdit, role);
 
             var updateRoleResp = await _roleManager.UpdateAsync(role);
             if (!updateRoleResp.Succeeded)
-                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Editing Role \"{roleToEdit.Name}\" Failed. ({updateRoleResp.FirstError()})", null);
+                return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Editing Role \"{roleToEdit.Name}\" Failed. ({updateRoleResp.FirstError()})");
 
             var users = await _userManager.Users.ToListAsync();
             foreach (var user in users)
@@ -363,25 +363,25 @@ namespace CommonLib.Web.Source.Services.Admin
                 {
                     var addUserToRoleResp = await _userManager.AddToRoleAsync(user, roleToEdit.Name);
                     if (!addUserToRoleResp.Succeeded)
-                        return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToEdit.Name}\" to User \"{user.UserName}\" Failed. ({updateRoleResp.FirstError()})", null);
+                        return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Adding Role \"{roleToEdit.Name}\" to User \"{user.UserName}\" Failed. ({updateRoleResp.FirstError()})");
                 }
 
                 if (!user.UserName.In(roleToEdit.UserNames) && await _userManager.IsInRoleAsync(user, roleToEdit.Name))
                 {
                     var removeUserfromRoleResp = await _userManager.RemoveFromRoleAsync(user, roleToEdit.Name);
                     if (!removeUserfromRoleResp.Succeeded)
-                        return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Removing Role \"{roleToEdit.Name}\" from User \"{user.UserName}\" Failed. ({updateRoleResp.FirstError()})", null);
+                        return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status400BadRequest, $"Removing Role \"{roleToEdit.Name}\" from User \"{user.UserName}\" Failed. ({updateRoleResp.FirstError()})");
                 }
             }
 
-            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Updated Role: \"{roleToEdit.Name}\"", null, roleToEdit);
+            return new ApiResponse<AdminEditRoleVM>(StatusCodeType.Status201Created, $"Successfully Updated Role: \"{roleToEdit.Name}\"", roleToEdit);
         }
 
         public async Task<ApiResponse<FindRoleVM>> FindRoleByIdAsync(Guid id)
         {
             var role = await _db.Roles.SingleOrDefaultAsync(u => u.Id == id);
             if (role == null)
-                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Id", null);
+                return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "There is no Role with the given Id");
 
             var foundRole = _mapper.Map(role, new FindRoleVM());
             foundRole.UserNames = await (
@@ -391,7 +391,7 @@ namespace CommonLib.Web.Source.Services.Admin
                 where r.Id == id
                 select u.UserName).ToListAsync(); // this is way clearer with query approach and not a method chain
 
-            return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Finding Role by Id has been Successful", null, foundRole);
+            return new ApiResponse<FindRoleVM>(StatusCodeType.Status200OK, "Finding Role by Id has been Successful", foundRole);
         }
         
         public async Task<ApiResponse<bool>> HasClaimAsync(FindUserVM user, string claimName)
@@ -404,35 +404,35 @@ namespace CommonLib.Web.Source.Services.Admin
         public async Task<ApiResponse<AdminEditClaimVM>> DeleteClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToDelete)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Claims", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Delete Claims");
             if (claimToDelete.Name.IsNullOrWhiteSpace())
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Name for the Claim was not supplied, as it is done automatically it should never happen", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Name for the Claim was not supplied, as it is done automatically it should never happen");
             var claimResp = await _accountManager.FindClaimByNameAsync(claimToDelete.Name);
             if (claimResp.IsError)
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Claim \"{claimToDelete.Name}\" was not found, it should never happen", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Claim \"{claimToDelete.Name}\" was not found, it should never happen");
 
             _db.UserClaims.RemoveBy(c => c.ClaimType.ToLower() == claimToDelete.Name.ToLower());
             await _db.SaveChangesAsync();
 
-            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Deleted Claim \"{claimToDelete.Name}\"", null, claimToDelete);
+            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Deleted Claim \"{claimToDelete.Name}\"", claimToDelete);
         }
 
         public async Task<ApiResponse<AdminEditClaimVM>> AddClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToAdd)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Claims", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Add Claims");
             if (claimToAdd.Name.IsNullOrWhiteSpace())
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be Empty", new[] { new KeyValuePair<string, string>("Name", "You need to provide Claim Name") }.ToLookup());
             var claimsResp = await GetClaimsAsync(authUser);
             if (claimsResp.IsError)
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Unable to retrieve other Claims", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Unable to retrieve other Claims");
             var otherClaims = claimsResp.Result.Where(c => !c.Name.EqualsIgnoreCase(claimToAdd.OriginalName));
             if (claimToAdd.Name.EqAnyIgnoreCase(otherClaims.Select(c => c.Name)))
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be a Duplicate", new[] { new KeyValuePair<string, string>("Name", "Claim Name is a Duplicate") }.ToLookup());
             if (!claimToAdd.GetUserNames().Any())
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users");
             if (!(await new AdminEditClaimVMValidator(_accountManager, this).ValidateAsync(claimToAdd)).IsValid)
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
 
             foreach (var claimVal in claimToAdd.Values) // claims have no table, they exist in thew context of users only so if sb removes a claim from all users, the claim is no longer stored anywhere
             {
@@ -440,41 +440,41 @@ namespace CommonLib.Web.Source.Services.Admin
                 {
                     var user = await _userManager.FindByNameAsync(userName);
                     if (user is null)
-                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Adding Claim \"{claimToAdd.Name}\" to User \"{userName}\" Failed, there is no such User", null);
+                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Adding Claim \"{claimToAdd.Name}\" to User \"{userName}\" Failed, there is no such User");
 
                     var hasClaimResp = await HasClaimAsync(_mapper.Map(user, new FindUserVM()), claimToAdd.Name);
                     if (hasClaimResp.IsError)
-                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Checking Claim \"{claimToAdd.Name}\" existence for User \"{userName}\" Failed", null);
+                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Checking Claim \"{claimToAdd.Name}\" existence for User \"{userName}\" Failed");
 
                     var hasClaim = hasClaimResp.Result;
                     if (!hasClaim)
                     {
                         var addClaimToUserResp = await _userManager.AddClaimAsync(user, new Claim(claimToAdd.Name, claimVal.Value));
                         if (!addClaimToUserResp.Succeeded)
-                            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Adding Claim \"{claimToAdd.Name}\" to User \"{userName}\" Failed. ({addClaimToUserResp.FirstError()})", null);
+                            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Adding Claim \"{claimToAdd.Name}\" to User \"{userName}\" Failed. ({addClaimToUserResp.FirstError()})");
                     }
                 }
             }
 
-            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Added Claim: \"{claimToAdd.Name}\"", null, claimToAdd);
+            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Added Claim: \"{claimToAdd.Name}\"", claimToAdd);
         }
         
         public async Task<ApiResponse<AdminEditClaimVM>> EditClaimAsync(AuthenticateUserVM authUser, AdminEditClaimVM claimToEdit)
         {
             if (authUser == null || !authUser.HasAuthenticationStatus(AuthStatus.Authenticated) || !authUser.HasRole("Admin"))
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Claims", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit Claims");
             if (claimToEdit.Name.IsNullOrWhiteSpace())
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be Empty", new[] { new KeyValuePair<string, string>("Name", "You need to provide Claim Name") }.ToLookup());
             var claimsResp = await GetClaimsAsync(authUser);
             if (claimsResp.IsError)
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Unable to retrieve other Claims", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Unable to retrieve other Claims");
             var otherClaims = claimsResp.Result.Where(c => !c.Name.EqualsIgnoreCase(claimToEdit.OriginalName));
             if (claimToEdit.Name.EqAnyIgnoreCase(otherClaims.Select(c => c.Name)))
                 return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "Claim Name cannot be a Duplicate", new[] { new KeyValuePair<string, string>("Name", "Claim Name is a Duplicate") }.ToLookup());
             if (!claimToEdit.GetUserNames().Any())
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, "You need to choose at least one User because Claims exist soloely in the context of users");
             if (!(await new AdminEditClaimVMValidator(_accountManager, this).ValidateAsync(claimToEdit)).IsValid)
-                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid", null);
+                return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
             
             _db.UserClaims.RemoveBy(c => c.ClaimType.ToLower() == claimToEdit.OriginalName.ToLower()); // as much as I'd love to add 'EqualsInvariantIgnoreCase' in all these 'Queryable' backed places, I can't :/.
             await _db.SaveChangesAsync();
@@ -484,22 +484,22 @@ namespace CommonLib.Web.Source.Services.Admin
                 {
                     var user = await _userManager.FindByNameAsync(userName);
                     if (user == null)
-                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Editing Claim \"{claimToEdit.Name}\" for User \"{userName}\" Failed, there is no such User", null);
+                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Editing Claim \"{claimToEdit.Name}\" for User \"{userName}\" Failed, there is no such User");
                     var hasClaimResp = await HasClaimAsync(_mapper.Map(user, new FindUserVM()), claimToEdit.Name);
                     if (hasClaimResp.IsError)
-                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Checking Claim \"{claimToEdit.Name}\" existence for User \"{userName}\" Failed", null);
+                        return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Checking Claim \"{claimToEdit.Name}\" existence for User \"{userName}\" Failed");
                     var hasClaim = hasClaimResp.Result;
 
                     if (!hasClaim)
                     {
                         var addClaimToUserResp = await _userManager.AddClaimAsync(user, new Claim(claimToEdit.Name, claimVal.Value));
                         if (!addClaimToUserResp.Succeeded)
-                            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Editing Claim \"{claimToEdit.Name}\" for User \"{userName}\" Failed. ({addClaimToUserResp.FirstError()})", null);
+                            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status400BadRequest, $"Editing Claim \"{claimToEdit.Name}\" for User \"{userName}\" Failed. ({addClaimToUserResp.FirstError()})");
                     }
                 }
             }
 
-            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Edited Claim: \"{claimToEdit.Name}\"", null, claimToEdit);
+            return new ApiResponse<AdminEditClaimVM>(StatusCodeType.Status201Created, $"Successfully Edited Claim: \"{claimToEdit.Name}\"", claimToEdit);
         }
     }
 }

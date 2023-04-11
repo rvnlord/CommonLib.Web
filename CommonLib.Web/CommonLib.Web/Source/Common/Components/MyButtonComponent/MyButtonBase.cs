@@ -142,6 +142,8 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             //    changeStateTasks.Add(icon.StateHasChangedAsync(true));
             //}
             //await Task.WhenAll(changeStateTasks);
+
+            await Task.CompletedTask;
         }
         
         protected override async Task OnAfterFirstRenderAsync()
