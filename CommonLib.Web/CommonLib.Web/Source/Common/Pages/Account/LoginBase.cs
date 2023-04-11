@@ -87,7 +87,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
 
-            _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
+            _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result.OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
             // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
             await StateHasChangedAsync(true); // to re-render External Login Buttons and get their references using @ref in .razor file
             SetControls();
