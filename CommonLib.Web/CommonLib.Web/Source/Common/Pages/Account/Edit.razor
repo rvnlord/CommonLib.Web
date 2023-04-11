@@ -6,6 +6,7 @@
 @using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Source.Common.Converters
 @using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Source.Common.Extensions
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using static CommonLib.Web.Source.Models.BlazorParameter
 
@@ -140,7 +141,7 @@
                     foreach (var externalLogin in _editUserVM.ExternalLogins)
                     {
                         <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
-                            <MyLabel Value="@externalLogin.LoginProvider" TProperty="string" Align="@HorizontalAlignment.Right" @key=externalLogin />
+                            <MyLabel Value="@externalLogin.LoginProvider.Append(":")" TProperty="string" Align="@HorizontalAlignment.Right" @key=externalLogin />
                         </MyCssGridItem>
                         <MyCssGridItem>
                             <MyTextInput Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" For="@(() => externalLogin.ExternalUserName)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" InteractionState="ComponentState.ForceDisabled" @key=externalLogin />
