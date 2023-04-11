@@ -40,6 +40,9 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("findavatarsinuse")] // POST: api/account/findavatarsinuse
         public async Task<JToken> FindAvatarsInUseAsync(JToken jIncludeData) => await EnsureResponseAsync(async () => await _accountManager.FindAvatarsInUseAsync(jIncludeData is JValue ? jIncludeData.ToBool() : jIncludeData["IncludeData"].ToBool()));
 
+        [HttpPost(nameof(IAccountManager.GetExternalLoginsAsync))] // POST: api/account/GetExternalLoginsAsync
+        public async Task<JToken> GetExternalLoginsAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.GetExternalLoginsAsync(jName is JValue ? jName.ToString() : jName["Name"].ToString()));
+
         [HttpPost("login")] // POST: api/account/login
         public async Task<JToken> LoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.LoginAsync(user));
 

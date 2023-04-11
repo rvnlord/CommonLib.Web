@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace CommonLib.Web.Source.DbContext
 {
-    public class AccountDbContext : IdentityDbContext<DbUser, IdentityRole<Guid>, Guid>
+    public class AccountDbContext : IdentityDbContext<DbUser, IdentityRole<Guid>, Guid, IdentityUserClaim<Guid>, IdentityUserRole<Guid>, DbUserLogin, IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
     {
         public DbSet<DbCryptographyKey> CryptographyKeys { get; set; }
         public DbSet<DbFile> Files { get; set; }
@@ -67,11 +67,33 @@ namespace CommonLib.Web.Source.DbContext
                 .HasMany(e => e.Wallets)
                 .WithOne(e => e.User)
                 .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired();
+
+            mb.Entity<DbUser>()
+                .HasMany(e => e.Logins)
+                .WithOne(e => e.User)
+                .HasForeignKey(e => e.UserId)
+                .IsRequired();
+
+            //mb.Entity<DbUserLogin>()
+            //    .HasOne(e => e.User)
+            //    .WithMany(e => e.Logins)
+            //    .HasForeignKey(l => l.UserId)
+            //    .IsRequired();
+
+            //mb.Entity<DbUserLogin>().HasKey(l => new { l.LoginProvider, l.ProviderKey });
+            //mb.Entity<DbUserLogin>().Property(l => l.LoginProvider).HasMaxLength(128);
+            //mb.Entity<DbUserLogin>().Property(l => l.ProviderKey).HasMaxLength(128);
 
             //mb.Entity<DbFile>().Property(e => e.UserHavingFileAsAvatarId).IsRequired(false);
             //mb.Entity<DbUser>(b => b.Navigation(e => e.Avatar).IsRequired());
+
+            //mb.Entity<DbUserLogin>()
+            //    .HasOne(e => e.User)
+            //    .WithMany(e => e.UserLogins)
+            //    .HasForeignKey(e => e.UserId)
+            //    .OnDelete(DeleteBehavior.Restrict)
+            //    .IsRequired();
 
             mb.Entity<DbCryptographyKey>()
                 .ToTable("CryptographyKeys")

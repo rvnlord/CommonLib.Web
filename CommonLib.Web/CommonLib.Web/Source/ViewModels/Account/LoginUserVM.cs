@@ -18,6 +18,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
         public string ExternalProvider { get; set; }
         public string ExternalProviderKey { get; set; }
+        public string ExternalProviderUserName { get; set; }
 
         public IList<string> WalletLogins { get; set; } = new List<string>();
         public string WalletProvider { get; set; }

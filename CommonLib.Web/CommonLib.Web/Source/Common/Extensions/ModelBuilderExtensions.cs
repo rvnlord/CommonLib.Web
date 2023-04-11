@@ -24,7 +24,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             mb.Entity<IdentityRole<Guid>>().ToTable("Roles");
             mb.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
             mb.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
-            mb.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+            mb.Entity<DbUserLogin>().ToTable("UserLogins");
             mb.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
             mb.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
         }

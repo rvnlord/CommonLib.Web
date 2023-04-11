@@ -82,7 +82,7 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<FindUserVM>(StatusCodeType.Status406NotAcceptable, "No property specified can be used to uniquely identify a correct user");
 
             if (user is null)
-                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User with the given Name");
+                return new ApiResponse<FindUserVM>(StatusCodeType.Status200OK, "There is no User that can be identified by the supplied property");
 
             var foundUser = _mapper.Map(user, new FindUserVM());
             foundUser.Roles = await _userManager.GetRolesAsync(user).SelectAsync(async r => (await FindRoleByNameAsync(r)).Result).OrderByAsync(r => r.Name).ToListAsync();
@@ -131,11 +131,22 @@ namespace CommonLib.Web.Source.Services.Account
                 ? new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "There is no Claim with the given Name")
                 : new ApiResponse<FindClaimVM>(StatusCodeType.Status200OK, "Claim Found", claim);
         }
-
+        
         public Task<ApiResponse<FindUserVM>> FindUserByIdAsync(Guid id, bool includeEmailClaim = false) => FindUserAsync(FindUserVM.FromId(id), includeEmailClaim);
         public Task<ApiResponse<FindUserVM>> FindUserByNameAsync(string name) => FindUserAsync(FindUserVM.FromUserName(name));
         public Task<ApiResponse<FindUserVM>> FindUserByEmailAsync(string email) => FindUserAsync(FindUserVM.FromEmail(email));
         public Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode) => FindUserAsync(FindUserVM.FromEmailActivationToken(confirmationCode));
+
+        public async Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLoginsAsync(string name)
+        {
+            var user = await _db.Users.Include(u => u.Logins).SingleOrDefaultAsync(u => u.UserName.ToLower() == name.ToLower());
+            if (user is null)
+                return new ApiResponse<List<ExternalLoginVM>>(StatusCodeType.Status404NotFound, "There is no User with the given Name");
+            var externalLogins = _mapper.Map(user.Logins, new List<ExternalLoginVM>()).OrderByWith(a => a.LoginProvider, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();;
+            var allExternalAuthSchemes = (await _signInManager.GetExternalAuthenticationSchemesAsync()).OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
+            externalLogins = allExternalAuthSchemes.Select(a => externalLogins.SingleOrDefault(el => el.LoginProvider.EqualsIgnoreCase(a.Name)) ?? new ExternalLoginVM { LoginProvider = a.Name, Connected = false }).ToList();
+            return new ApiResponse<List<ExternalLoginVM>>(externalLogins);
+        }
 
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
         {
@@ -439,8 +450,17 @@ namespace CommonLib.Web.Source.Services.Account
 
                 await _signInManager.UpdateExternalAuthenticationTokensAsync(externalLoginInfo); // add ext auth data to the db
 
+                var externalName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name);
                 userToExternalLogin.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email);
-                userToExternalLogin.UserName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name) ?? userToExternalLogin.Email.BeforeFirst("@");
+                userToExternalLogin.UserName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name)?.ToLowerInvariant().RemoveWhiteSpace() ?? userToExternalLogin.Email.BeforeFirst("@");
+                userToExternalLogin.ExternalProviderUserName = userToExternalLogin.ExternalProvider.ToLowerInvariant() switch
+                {
+                    "discord" => $"{externalName}#{externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:discord:user:discriminator")).Value}",
+                    "twitter" => $"@{externalName} ({externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:twitter:userid")).Value})",
+                    "google" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    "facebook" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    _ => throw new ArgumentException("Invalid provider")
+                };
                 userToExternalLogin.ExternalProvider = externalLoginInfo.LoginProvider;
                 userToExternalLogin.ExternalProviderKey = externalLoginInfo.ProviderKey;
                 qs["user"] = userToExternalLogin.JsonSerialize().UTF8ToBase58();
@@ -503,6 +523,10 @@ namespace CommonLib.Web.Source.Services.Account
                 if (!secondAttemptExternalLoginResult.Succeeded)
                     return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User didn't have an External Login Account so it was added, but Login Attempt has Failed");
             }
+
+            var dbUserLogin = _db.UserLogins.Single(ul => ul.UserId == user.Id && ul.LoginProvider.ToLower() == userToExternalLogin.ExternalProvider.ToLower());
+            dbUserLogin.ExternalUserName = userToExternalLogin.ExternalProviderUserName;
+            await _db.SaveChangesAsync();
 
             await _signInManager.SignInAsync(user, userToExternalLogin.RememberMe);
             await _userManager.ResetAccessFailedCountAsync(user);
@@ -585,7 +609,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync()
         {
-            var externalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            var externalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
             return new ApiResponse<IList<AuthenticationScheme>>(StatusCodeType.Status200OK, "External Authentication Schemes Returned", null, externalLogins);
         }
 

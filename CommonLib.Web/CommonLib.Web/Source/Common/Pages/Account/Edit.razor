@@ -125,6 +125,43 @@
                     </MyCssGrid>
                 </MyCssGridItem>
 
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <h4>External Login Providers</h4>
+                </MyCssGridItem>
+
+                @if (!_editUserVM.ExternalLogins.Any())
+                {
+                    <MyCssGridItem Area="CssGridArea.C1SpanAll" class="no-providers-message">
+                        No External Login providers Defined
+                    </MyCssGridItem>
+                }
+                else
+                {
+                    foreach (var externalLogin in _editUserVM.ExternalLogins)
+                    {
+                        <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
+                            <MyLabel Value="@externalLogin.LoginProvider" TProperty="string" Align="@HorizontalAlignment.Right" @key=externalLogin />
+                        </MyCssGridItem>
+                        <MyCssGridItem>
+                            <MyTextInput Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" For="@(() => externalLogin.ExternalUserName)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" InteractionState="ComponentState.ForceDisabled" @key=externalLogin />
+                        </MyCssGridItem>
+                        <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                            <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("150px", "auto"))">
+                                <MyCssGridItem>  
+                                    @if (!externalLogin.Connected)
+                                    {
+                                        <MyButton Value="@("Connect".ToBp())" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.Fill" class="@($"my-btn-connect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
+                                    }
+                                    else 
+                                    {
+                                        <MyButton Value="@("Disconnect".ToBp())" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-diconnect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
+                                    }
+                                </MyCssGridItem>
+                            </MyCssGrid>
+                        </MyCssGridItem>
+                    }
+                }
+                
             </MyCssGrid>
         </MyEditForm>
     }

@@ -16,6 +16,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string activationCode);
         Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName);
         Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string claimName);
+        Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLogins(string name);
         Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue);
         Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync();
         Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister);

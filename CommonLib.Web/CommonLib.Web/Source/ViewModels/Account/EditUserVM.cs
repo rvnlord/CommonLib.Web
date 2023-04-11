@@ -26,5 +26,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public bool ShouldLogout { get; set; }
         [DisplayName("Potential Avatars")]
         public FileDataList PotentialAvatars { get; set; }
+
+        public List<ExternalLoginVM> ExternalLogins { get; set; } = new();
     }
 }

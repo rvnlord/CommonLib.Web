@@ -42,17 +42,19 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!await EnsureAuthenticatedAsync(true, true))
                 return;
             
+            Mapper.Map(AuthenticatedUser, _editUserVM);
+            _editUserVM.ExternalLogins = (await AccountClient.GetExternalLogins(_editUserVM.UserName)).Result;
+            _editUserVM.Avatar = (await AccountClient.GetUserAvatarByNameAsync(_editUserVM.UserName)).Result;
+            if (!_editUserVM.HasPassword)
+                _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
+            
+            await StateHasChangedAsync();
+
             _allControls = GetInputControls();
             _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
             _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
 
-            Mapper.Map(AuthenticatedUser, _editUserVM);
-            _editUserVM.Avatar = (await AccountClient.GetUserAvatarByNameAsync(_editUserVM.UserName)).Result;
-            if (!_editUserVM.HasPassword)
-                _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
-
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-            //await StateHasChangedAsync(true);
         }
 
         protected async Task BtnSubmit_ClickAsync()

@@ -86,6 +86,11 @@ namespace CommonLib.Web.Source.Services.Account
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<FileDataList>>($"api/account/{nameof(AccountApiController.FindAvatarsInUseAsync).BeforeLast("Async")}", includeFileData);
         }
+        
+        public async Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLogins(string name)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<List<ExternalLoginVM>>>($"api/account/{nameof(AccountApiController.GetExternalLoginsAsync)}", name);
+        }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
         {
