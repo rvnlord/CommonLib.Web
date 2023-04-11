@@ -216,17 +216,25 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.WalletProvider = sender.Value.V; 
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
             
-            // switch depending wallet, for now only metamask
-            
-            var isHostProviderAvailable = await _ethereumHostProvider.CheckProviderAvailabilityAsync();
-            if (!isHostProviderAvailable)
+            if (_loginUserVM.WalletProvider.EqualsIgnoreCase("Metamask"))
             {
-                await PromptMessageAsync(NotificationType.Error, "Metamask is not installed");
+                var isHostProviderAvailable = await _ethereumHostProvider.CheckProviderAvailabilityAsync();
+                if (!isHostProviderAvailable)
+                {
+                    await PromptMessageAsync(NotificationType.Error, "Metamask is not installed");
+                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                    return;
+                }
+
+                _loginUserVM.WalletAddress = await _ethereumHostProvider.EnableProviderAsync();
+            }
+            else
+            {
+                await PromptMessageAsync(NotificationType.Error, $"{ _loginUserVM.WalletProvider} Wallet Provider is not supported");
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
-
-            _loginUserVM.WalletAddress = await _ethereumHostProvider.EnableProviderAsync();
+            
             var walletSignatureResp = await _web3.Eth.AccountSigning.PersonalSign.TrySendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"");
             if (walletSignatureResp.IsError)
             {
