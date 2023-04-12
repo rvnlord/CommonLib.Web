@@ -1239,7 +1239,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         ~MyComponentBase() => _ = DisposeAsync(false);
 
-        public override string ToString() => $"{GetType().Name} [{_guid.ToString().Take(4)}...{_guid.ToString().TakeLast(4)}] {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
+        public override string ToString() => $"{GetType().Name} [{_guid.ToString().Take(4)}...{_guid.ToString().TakeLast(4)}] {{{InteractionState.V}}} {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
 
         public bool Equals(MyComponentBase other)
         {

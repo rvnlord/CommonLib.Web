@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -14,6 +16,7 @@ using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
@@ -98,6 +101,26 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await SetControlStatesAsync(ComponentState.Disabled, _allControls);
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail/?{GetNavQueryStrings()}"); // TODO: test it
             }
+        }
+
+        protected async Task BtnDisconnectEExternalLogin_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
+        {
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
+            _editUserVM.ExternalLoginToDisconnect = ((ExternalLoginVM) sender.Model.V).LoginProvider.ToLowerInvariant();
+            var disconnectResult = await AccountClient.DisconnectExternalLoginAsync(_editUserVM);
+            if (disconnectResult.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, disconnectResult.Message);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                return;
+            }
+
+            _editUserVM = disconnectResult.Result;
+
+            await PromptMessageAsync(NotificationType.Success, disconnectResult.Message);
+            await StateHasChangedAsync(true); // to re-loop providers
+            _allControls = GetInputControls(); // to update providers controls to remove the disconnected one
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         private string GetNavQueryStrings()

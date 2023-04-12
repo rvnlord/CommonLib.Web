@@ -163,7 +163,7 @@ namespace CommonLib.Web.Source.Services.Account
             var files = (await _db.Files.WhereAsync(f => f.UserHavingFileAsAvatarId != null)).ToFileDataList(false);
             return new ApiResponse<FileDataList>(StatusCodeType.Status200OK, "Getting Avatars in Use was Successful", null, files);
         }
-
+        
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
         {
             await Task.CompletedTask;
@@ -240,6 +240,8 @@ namespace CommonLib.Web.Source.Services.Account
             userToAuthenticate.Claims = (await _userManager.GetClaimsAsync(user)).Select(c => new FindClaimVM { Name = c.Type }).Where(c => !c.Name.EqualsIgnoreCase("Email")).ToList();
             return new ApiResponse<AuthenticateUserVM>(StatusCodeType.Status200OK, "Getting Authenticated User was Successful", null, userToAuthenticate);
         }
+
+        private Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync(AuthenticateUserVM userToAuthenticate) => GetAuthenticatedUserAsync(null, null, userToAuthenticate);
 
         public async Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister)
         {
@@ -452,13 +454,13 @@ namespace CommonLib.Web.Source.Services.Account
 
                 var externalName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name);
                 userToExternalLogin.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email);
-                userToExternalLogin.UserName = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Name)?.ToLowerInvariant().RemoveWhiteSpace() ?? userToExternalLogin.Email.BeforeFirst("@");
+                userToExternalLogin.UserName = externalName?.ToLowerInvariant().RemoveWhiteSpace() ?? userToExternalLogin.Email.BeforeFirst("@");
                 userToExternalLogin.ExternalProviderUserName = userToExternalLogin.ExternalProvider.ToLowerInvariant() switch
                 {
-                    "discord" => $"{externalName}#{externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:discord:user:discriminator")).Value}",
-                    "twitter" => $"@{externalName} ({externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:twitter:userid")).Value})",
-                    "google" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
-                    "facebook" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    "discord" => $"{userToExternalLogin.UserName}#{externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:discord:user:discriminator")).Value}",
+                    "twitter" => $"@{userToExternalLogin.UserName} ({externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:twitter:userid")).Value})",
+                    "google" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    "facebook" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
                     _ => throw new ArgumentException("Invalid provider")
                 };
                 userToExternalLogin.ExternalProvider = externalLoginInfo.LoginProvider;
@@ -690,8 +692,8 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
         {
-            authUser = (await GetAuthenticatedUserAsync(null, null, authUser))?.Result;
-            if (authUser == null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Edit User Data");
             if (!(await new EditUserVMValidator(this).ValidateAsync(userToEdit)).IsValid)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Supplied data is invalid");
@@ -787,5 +789,28 @@ namespace CommonLib.Web.Source.Services.Account
             return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", userToEdit);
         }
 
+        public async Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
+        {
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
+            userToEdit.Id = authUser.Id;
+            
+            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
+            if (!connectedLogins.Any(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalLoginToDisconnect)))
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "The External Login you are trying to disconnect is not connected");
+
+            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalLoginToDisconnect)).ToList();
+            var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
+            if (!connectedLoginsExceptDisconnectingOne.Any() && !hasPassword)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all Exterenal Logins if useer has no password");
+
+            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalLoginToDisconnect);
+            await _db.SaveChangesAsync();
+            userToEdit.ExternalLoginToDisconnect = null;
+            userToEdit.ExternalLogins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
+
+            return new ApiResponse<EditUserVM>("External Login has been successfully Disconnected", userToEdit);
+        }
     }
 }

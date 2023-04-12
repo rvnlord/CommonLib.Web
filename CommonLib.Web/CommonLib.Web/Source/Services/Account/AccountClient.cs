@@ -282,5 +282,25 @@ namespace CommonLib.Web.Source.Services.Account
             return editResp;
         }
 
+        public async Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(EditUserVM editUser)
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.DisconnectExternalLoginAsync)}", new
+            {
+                AuthenticatedUser = authUser, 
+                UserToEdit = editUser
+            });
+
+            if (editResp.IsError)
+                return editResp;
+
+            if (editResp.Result.ShouldLogout)
+            {
+                await _jsRuntime.InvokeVoidAsync("Cookies.expire", "Ticket");
+                await _localStorage.RemoveItemAsync("Ticket");
+            }
+
+            return editResp;
+        }
     }
 }

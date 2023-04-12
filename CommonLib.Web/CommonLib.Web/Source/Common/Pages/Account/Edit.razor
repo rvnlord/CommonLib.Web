@@ -9,6 +9,7 @@
 @using CommonLib.Source.Common.Extensions
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using static CommonLib.Web.Source.Models.BlazorParameter
+@using System.Threading
 
 @inherits EditBase
 
@@ -151,11 +152,11 @@
                                 <MyCssGridItem>  
                                     @if (!externalLogin.Connected)
                                     {
-                                        <MyButton Value="@("Connect".ToBp())" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.Fill" class="@($"my-btn-connect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
+                                        <MyButton Value="@("Connect".ToBp())" Model="externalLogin" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Success" Sizing="ButtonSizing.Fill" class="@($"my-btn-connect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
                                     }
                                     else 
                                     {
-                                        <MyButton Value="@("Disconnect".ToBp())" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-diconnect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
+                                        <MyButton Value="@("Disconnect".ToBp())" Model="externalLogin" Click="BtnDisconnectEExternalLogin_ClickAsync" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-diconnect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
                                     }
                                 </MyCssGridItem>
                             </MyCssGrid>

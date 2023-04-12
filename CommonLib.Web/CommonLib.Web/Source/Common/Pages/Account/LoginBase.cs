@@ -161,13 +161,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, externalLoginResponse.Message);
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
-            await EnsureAuthenticationPerformedAsync(false, false);
+           
+            await EnsureAuthenticationPerformedAsync(false, true);
+            AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
             SetControls();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+           
             if (!_loginUserVM.IsConfirmed)
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}");
-            else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace())
-                NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
+            //else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace()) // login is in the modal, page should never be changed
+            //    NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
         }
 
         protected async Task FormLogin_ValidSubmitAsync()
@@ -182,8 +185,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             await PromptMessageAsync(NotificationType.Success, loginResult.Message);
-            if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace())
-                NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
+            //if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace()) // login is in the modal, page should never bee changed
+            //    NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
             
             await HideLoginModalAsync();
 

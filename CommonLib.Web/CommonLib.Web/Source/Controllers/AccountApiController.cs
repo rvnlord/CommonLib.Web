@@ -114,5 +114,8 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("checkuserpassword")] // POST: api/account/checkuserpassword
         public async Task<JToken> CheckUserPasswordAsync(JToken jCheckPasswordUser) => await EnsureResponseAsync(async () => await _accountManager.CheckUserPasswordAsync(jCheckPasswordUser.To<CheckPasswordUserVM>()));
 
+        [HttpPost(nameof(IAccountManager.DisconnectExternalLoginAsync))] // POST: api/account/edit
+        public async Task<JToken> DisconnectExternalLoginAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectExternalLoginAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
+
     }
 }

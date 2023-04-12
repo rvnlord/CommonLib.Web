@@ -39,5 +39,6 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
         Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name);
         Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData);
+        Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
     }
 }
