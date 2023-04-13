@@ -595,7 +595,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected bool HasAnyAuthenticationStatus(params AuthStatus[] authStatuses) => AuthenticatedUser == null && AuthStatus.NotChecked.In(authStatuses) || AuthenticatedUser != null && AuthenticatedUser.HasAnyAuthenticationStatus(authStatuses);
 
-        protected async Task<ComponentAuthenticationStatus> AuthenticateAsync(bool changeStateEvenIfAuthUserIsTheSame)
+        protected async Task<ComponentAuthenticationStatus> AuthenticateAsync(bool changeStateEvenIfAuthUserIsTheSame, bool includeUserAvatar = false)
         {
             if (IsDisposed)
                 throw new ObjectDisposedException(GetType().Name);
@@ -618,6 +618,8 @@ namespace CommonLib.Web.Source.Common.Components
             if (!authResponse.IsError && !authResponse.Result.Equals(prevAuthUser) || changeStateEvenIfAuthUserIsTheSame)
             {
                 AuthenticatedUser = authResponse.Result; // at the end because `AuthenticatedUser` serves as a Parameter in `Login.razor` so I don't want to cause rerender and changing the valuee prematurely
+                if (includeUserAvatar)
+                    AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 await StateHasChangedAsync(true);
                 await navBar.StateHasChangedAsync(true);
                 var page = navBar.Siblings.SingleOrNull(c => c.IsPage);
@@ -628,25 +630,25 @@ namespace CommonLib.Web.Source.Common.Components
             return authStatus;
         }
 
-        protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if user authenticated
+        protected async Task<bool> EnsureAuthenticatedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame, bool includeUserAvatar = false) // true if user authenticated
         {
-            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame, includeUserAvatar);
             if ((authStatus.AuthenticationFailed || authStatus.ResponseMessage is not null) && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "You are not Authenticated");
             return authStatus.AuthenticationSuccessful;
         }
 
-        protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication didn't throw, regardless if user is authenticated
+        protected async Task<bool> EnsureAuthenticationPerformedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame, bool includeUserAvatar = false) // true if authentication didn't throw, regardless if user is authenticated
         {
-            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame, includeUserAvatar);
             if ((authStatus.AuthenticationNotPerformed || authStatus.ResponseMessage is not null) && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "Authentication was not performed");
             return authStatus.AuthenticationPerformed;
         }
 
-        protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame) // true if authentication state changed, regardless if user is authenticated
+        protected async Task<bool> EnsureAuthenticationChangedAsync(bool displayErrorMessage, bool changeStateEvenIfAuthUserIsTheSame, bool includeUserAvatar = false) // true if authentication state changed, regardless if user is authenticated
         {
-            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame);
+            var authStatus = await AuthenticateAsync(changeStateEvenIfAuthUserIsTheSame, includeUserAvatar);
             if ((authStatus.AuthenticationNotChanged || authStatus.ResponseMessage is not null) && displayErrorMessage)
                 await PromptMessageAsync(NotificationType.Error, authStatus.ResponseMessage ?? "Authentication State didn't change");
             return authStatus.AuthenticationChanged;

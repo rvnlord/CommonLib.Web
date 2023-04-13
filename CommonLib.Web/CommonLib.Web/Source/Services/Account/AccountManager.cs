@@ -142,10 +142,19 @@ namespace CommonLib.Web.Source.Services.Account
             var user = await _db.Users.Include(u => u.Logins).SingleOrDefaultAsync(u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
                 return new ApiResponse<List<ExternalLoginVM>>(StatusCodeType.Status404NotFound, "There is no User with the given Name");
-            var externalLogins = _mapper.Map(user.Logins, new List<ExternalLoginVM>()).OrderByWith(a => a.LoginProvider, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();;
+            var externalLogins = _mapper.Map(user.Logins, new List<ExternalLoginVM>()).OrderByWith(a => a.LoginProvider, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
             var allExternalAuthSchemes = (await _signInManager.GetExternalAuthenticationSchemesAsync()).OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
             externalLogins = allExternalAuthSchemes.Select(a => externalLogins.SingleOrDefault(el => el.LoginProvider.EqualsIgnoreCase(a.Name)) ?? new ExternalLoginVM { LoginProvider = a.Name, Connected = false }).ToList();
             return new ApiResponse<List<ExternalLoginVM>>(externalLogins);
+        }
+
+        public async Task<ApiResponse<List<WalletVM>>> GetWalletsAsync(string name)
+        {
+            var user = await _db.Users.Include(u => u.Wallets).SingleOrDefaultAsync(u => u.UserName.ToLower() == name.ToLower());
+            if (user is null)
+                return new ApiResponse<List<WalletVM>>(StatusCodeType.Status404NotFound, "There is no User with the given Name");
+            var wallets = _mapper.Map(user.Wallets, new List<WalletVM>()).ToList();
+            return new ApiResponse<List<WalletVM>>(wallets);
         }
 
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
@@ -460,7 +469,7 @@ namespace CommonLib.Web.Source.Services.Account
                     "discord" => $"{userToExternalLogin.UserName}#{externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:discord:user:discriminator")).Value}",
                     "twitter" => $"@{userToExternalLogin.UserName} ({externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:twitter:userid")).Value})",
                     "google" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
-                    "facebook" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    "facebook" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
                     _ => throw new ArgumentException("Invalid provider")
                 };
                 userToExternalLogin.ExternalProvider = externalLoginInfo.LoginProvider;
@@ -797,20 +806,84 @@ namespace CommonLib.Web.Source.Services.Account
             userToEdit.Id = authUser.Id;
             
             var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
-            if (!connectedLogins.Any(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalLoginToDisconnect)))
+            var loginToDisconnect = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect));
+            if (loginToDisconnect is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "The External Login you are trying to disconnect is not connected");
 
-            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalLoginToDisconnect)).ToList();
+            
+            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect)).ToList();
             var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
-            if (!connectedLoginsExceptDisconnectingOne.Any() && !hasPassword)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all Exterenal Logins if useer has no password");
+            var wallets = (await GetWalletsAsync(authUser.UserName)).Result;
+            if (!connectedLoginsExceptDisconnectingOne.Any() && !wallets.Any() && !hasPassword)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all External Logins and Wallets if user has no password");
 
-            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalLoginToDisconnect);
+            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalProviderToDisconnect);
             await _db.SaveChangesAsync();
-            userToEdit.ExternalLoginToDisconnect = null;
+            userToEdit.ExternalProviderToDisconnect = null;
             userToEdit.ExternalLogins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
 
-            return new ApiResponse<EditUserVM>("External Login has been successfully Disconnected", userToEdit);
+            return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.ExternalUserName}\" ({loginToDisconnect.LoginProvider}) has been successfully Disconnected", userToEdit);
+        }
+
+        public async Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin)
+        {
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
+            userToEdit.Id = authUser.Id;
+            
+            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
+            var sameProviderLogin = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToLogin.ExternalProvider));
+            if (sameProviderLogin is not null)
+            {
+                // 1. same external login for this provider is already connected to this user
+                if (sameProviderLogin.ExternalUserName.EqualsIgnoreCase(userToLogin.ExternalProviderUserName))
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"\"{userToLogin.ExternalProviderUserName}\" {userToLogin.ExternalProvider} Profile is already connected to \"{userToEdit.UserName}\" Account");
+                // 2. different external login for this provider is already connected to this user
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"Can't connect \"{userToLogin.ExternalProviderUserName}\" {userToLogin.ExternalProvider} Profile because \"{sameProviderLogin.ExternalUserName}\" {sameProviderLogin.LoginProvider} is already connected to \"{userToEdit.UserName}\" Account");
+            }
+
+            // 3. this external login is already connected to another user
+            var dbSameLoginConnectedToAnotherUser = _db.UserLogins.SingleOrDefault(l => l.LoginProvider.ToLower() == userToLogin.ExternalProvider.ToLower() && l.ExternalUserName.ToLower() == userToLogin.ExternalProviderUserName.ToLower() && l.UserId != authUser.Id);
+            if (dbSameLoginConnectedToAnotherUser is not null)
+            {
+                // - disconnect from previous owner and connect to the current account
+                var prevOwnerId = dbSameLoginConnectedToAnotherUser.UserId;
+                dbSameLoginConnectedToAnotherUser.UserId = authUser.Id;
+                await _db.SaveChangesAsync();
+
+                // - delete previous owner account if this social profile is the only identifying social profile or wallet and user has no password
+                var dbPrevOwner = _db.Users.Single(u => u.Id == prevOwnerId);
+                var prevOwnerhasPassword = dbPrevOwner.PasswordHash is not null;
+                var prevOwnerWallets = (await GetWalletsAsync(dbPrevOwner.UserName)).Result;
+                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.Connected).ToList();
+                if (!prevOwnerConnectedLogins.Any() && !prevOwnerWallets.Any() && !prevOwnerhasPassword)
+                {
+                    _db.Files.RemoveBy(f => f.UserOwningFileId == dbPrevOwner.Id);
+                    await _db.SaveChangesAsync();
+                    _db.Users.Remove(dbPrevOwner);
+                    await _db.SaveChangesAsync();
+                }
+
+                userToEdit.ExternalLogins = (await GetExternalLoginsAsync(userToEdit.UserName)).Result;
+
+                return new ApiResponse<EditUserVM>($"External Login \"{userToLogin.ExternalProviderUserName}\" ({userToLogin.ExternalProvider.StartWithUpper()}) has been successfully Reconnected from \"{dbPrevOwner.UserName}\" to \"{userToEdit.UserName}\"", userToEdit);
+            }
+
+            // 4. this external login has not yet been connected to any user
+            _db.UserLogins.Add(new DbUserLogin
+            {
+                LoginProvider = userToLogin.ExternalProvider.StartWithUpper(),
+                ProviderKey = userToLogin.ExternalProviderKey,
+                ProviderDisplayName = userToLogin.ExternalProvider.StartWithUpper(),
+                UserId = userToEdit.Id,
+                ExternalUserName = userToLogin.ExternalProviderUserName,
+            });
+            await _db.SaveChangesAsync();
+
+            userToEdit.ExternalLogins = (await GetExternalLoginsAsync(userToEdit.UserName)).Result;
+           
+            return new ApiResponse<EditUserVM>($"External Login \"{userToLogin.ExternalProviderUserName}\" ({userToLogin.ExternalProvider.StartWithUpper()}) has been successfully Connected", userToEdit);
         }
     }
 }

@@ -106,7 +106,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
                 var queryUser = NavigationManager.GetQueryString<string>("user")?.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
 
-                if (queryUser != null)
+                if (queryUser is not null)
                 {
                     await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false); //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
                     queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
@@ -136,14 +136,14 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         // if changed to AuthStateChanged then it might not trigger when it should because sth else already refreshed the logged in panel
         protected override async Task OnAfterRenderAsync(bool isFirstRender)
         {
-            if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractionState?.V.IsLoadingOrForceLoading == true))
-                return;
+            //if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractionState?.V.IsLoadingOrForceLoading == true))
+            //    return;
 
-            if (await EnsureAuthenticationPerformedAsync(false, false)) // not changed because change may be frontrun by components updating it earlier
-            {
-                SetControls();
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
-            }
+            //if (await EnsureAuthenticationPerformedAsync(false, false)) // not changed because change may be frontrun by components updating it earlier
+            //{
+            //    SetControls();
+            //    await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
+            //}
         }
 
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
@@ -162,8 +162,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
            
-            await EnsureAuthenticationPerformedAsync(false, true);
-            AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
+            await EnsureAuthenticationPerformedAsync(false, true, true);
             SetControls();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
            
@@ -190,10 +189,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             await HideLoginModalAsync();
 
-            if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
+            if (await EnsureAuthenticationPerformedAsync(true, true, true)) // not changed because change may be frontrun by components updating it earlier
             {
                 SetControls();
-                AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
@@ -259,10 +257,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, walletLoginResp.Message);
             await HideLoginModalAsync();
 
-            if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
+            if (await EnsureAuthenticationPerformedAsync(true, true, true)) // not changed because change may be frontrun by components updating it earlier
             {
                 SetControls();
-                AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             }
         }

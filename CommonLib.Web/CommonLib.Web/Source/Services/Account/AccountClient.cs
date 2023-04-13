@@ -16,6 +16,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Controllers;
+using CommonLib.Web.Source.Common.Pages.Admin;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -90,6 +91,11 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLogins(string name)
         {
             return await HttpClient.PostJTokenAsync<ApiResponse<List<ExternalLoginVM>>>($"api/account/{nameof(AccountApiController.GetExternalLoginsAsync)}", name);
+        }
+
+        public async Task<ApiResponse<List<WalletVM>>> GetWalletsAsync(string userName)
+        {
+            return await HttpClient.PostJTokenAsync<ApiResponse<List<WalletVM>>>($"api/account/{nameof(AccountApiController.GetWalletsAsync)}", userName);
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
@@ -290,16 +296,20 @@ namespace CommonLib.Web.Source.Services.Account
                 AuthenticatedUser = authUser, 
                 UserToEdit = editUser
             });
+            
+            return editResp;
+        }
 
-            if (editResp.IsError)
-                return editResp;
-
-            if (editResp.Result.ShouldLogout)
+        public async Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(EditUserVM editUser, LoginUserVM loginUser)
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.ConnectExternalLoginAsync)}", new
             {
-                await _jsRuntime.InvokeVoidAsync("Cookies.expire", "Ticket");
-                await _localStorage.RemoveItemAsync("Ticket");
-            }
-
+                AuthenticatedUser = authUser, 
+                UserToEdit = editUser,
+                UserToLogin = loginUser
+            });
+            
             return editResp;
         }
     }

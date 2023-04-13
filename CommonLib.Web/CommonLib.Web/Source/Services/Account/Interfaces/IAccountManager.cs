@@ -18,7 +18,8 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<FindUserVM>> FindUserByConfirmationCodeAsync(string confirmationCode);
         Task<ApiResponse<FindRoleVM>> FindRoleByNameAsync(string roleName);
         Task<ApiResponse<FindClaimVM>> FindClaimByNameAsync(string claimName);
-        Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLoginsAsync(string name);
+        Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLoginsAsync(string userName);
+        Task<ApiResponse<List<WalletVM>>> GetWalletsAsync(string userName);
         Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue);
         Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync(HttpContext http, ClaimsPrincipal principal, AuthenticateUserVM user);
         Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister);
@@ -40,5 +41,6 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name);
         Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData);
         Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
+        Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin);
     }
 }

@@ -41,7 +41,10 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> FindAvatarsInUseAsync(JToken jIncludeData) => await EnsureResponseAsync(async () => await _accountManager.FindAvatarsInUseAsync(jIncludeData is JValue ? jIncludeData.ToBool() : jIncludeData["IncludeData"].ToBool()));
 
         [HttpPost(nameof(IAccountManager.GetExternalLoginsAsync))] // POST: api/account/GetExternalLoginsAsync
-        public async Task<JToken> GetExternalLoginsAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.GetExternalLoginsAsync(jName is JValue ? jName.ToString() : jName["Name"].ToString()));
+        public async Task<JToken> GetExternalLoginsAsync(JToken jName) => await EnsureResponseAsync(async () => await _accountManager.GetExternalLoginsAsync(jName is JValue ? jName.ToString() : jName["UserName"]?.ToString()));
+
+        [HttpPost(nameof(IAccountManager.GetWalletsAsync))] // POST: api/account/GetWalletsAsync
+        public async Task<JToken> GetWalletsAsync(JToken jUserName) => await EnsureResponseAsync(async () => await _accountManager.GetWalletsAsync(jUserName is JValue ? jUserName.ToString() : jUserName["UserName"]?.ToString()));
 
         [HttpPost("login")] // POST: api/account/login
         public async Task<JToken> LoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.LoginAsync(user));
@@ -116,6 +119,9 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost(nameof(IAccountManager.DisconnectExternalLoginAsync))] // POST: api/account/edit
         public async Task<JToken> DisconnectExternalLoginAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectExternalLoginAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
+
+        [HttpPost(nameof(IAccountManager.ConnectExternalLoginAsync))] // POST: api/account/edit
+        public async Task<JToken> ConnectExternalLoginAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectExternalLoginAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
 
     }
 }
