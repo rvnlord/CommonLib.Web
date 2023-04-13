@@ -28,25 +28,22 @@ namespace CommonLib.Web.Source.DbContext
             mb.Entity<DbUser>()
                 .HasMany(e => e.Claims)
                 .WithOne()
-                .HasForeignKey(uc => uc.UserId)
-                .IsRequired();
-            
-            mb.Entity<DbUser>()
-                .HasMany(e => e.Logins)
-                .WithOne()
-                .HasForeignKey(ul => ul.UserId)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
             
             mb.Entity<DbUser>()
                 .HasMany(e => e.Tokens)
                 .WithOne()
-                .HasForeignKey(ut => ut.UserId)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
             
             mb.Entity<DbUser>()
                 .HasMany(e => e.Roles)
                 .WithOne()
-                .HasForeignKey(ur => ur.UserId)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
 
             mb.Entity<DbUser>()
@@ -60,20 +57,24 @@ namespace CommonLib.Web.Source.DbContext
                 .HasOne(e => e.Avatar)
                 .WithOne(e => e.UserHavingFileAsAvatar)
                 .HasForeignKey<DbFile>(e => e.UserHavingFileAsAvatarId)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
             mb.Entity<DbUser>()
                 .HasMany(e => e.Wallets)
                 .WithOne(e => e.User)
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired();
 
             mb.Entity<DbUser>()
                 .HasMany(e => e.Logins)
                 .WithOne(e => e.User)
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired();
+
+
 
             //mb.Entity<DbUserLogin>()
             //    .HasOne(e => e.User)
