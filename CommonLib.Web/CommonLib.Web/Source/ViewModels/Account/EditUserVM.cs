@@ -28,6 +28,6 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public FileDataList PotentialAvatars { get; set; }
 
         public List<ExternalLoginVM> ExternalLogins { get; set; } = new();
-        public string ExternalLoginToDisconnect { get; set; }
+        public string ExternalProviderToDisconnect { get; set; }
     }
 }
