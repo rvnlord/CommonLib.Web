@@ -18,7 +18,9 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
                 .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed));
             CreateMap<LoginUserVM, LoginUserVM>()
                 .ForMember(d => d.ExternalLogins, o => o.Condition(s => s.ExternalLogins?.Any() == true))
-                .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()));
+                .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()))
+                .ForMember(d => d.WalletLogins, o => o.Condition(s => s.WalletLogins?.Any() == true))
+                .ForMember(d => d.WalletLogins, o => o.MapFrom(s => s.WalletLogins.ToList()));
             CreateMap<AuthenticateUserVM, AuthenticateUserVM>()
                 .ForMember(d => d.Avatar, o => o.Condition(s => s.Avatar is not null))
                 .ForMember(d => d.Roles, o => o.Condition(s => s.Roles?.Any() == true))
@@ -37,7 +39,11 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<DbUser, EditUserVM>();
             CreateMap<EditUserVM, DbUser>();
             CreateMap<AuthenticateUserVM, EditUserVM>();
-            CreateMap<EditUserVM, EditUserVM>(); // if this is not set the mapping for same objects will work but will not update the existing dest object only create a new one
+            CreateMap<EditUserVM, EditUserVM>() // if this is not set the mapping for same objects will work but will not update the existing dest object only create a new one
+                .ForMember(d => d.ExternalLogins, o => o.Condition(s => s.ExternalLogins?.Any() == true))
+                .ForMember(d => d.ExternalLogins, o => o.MapFrom(s => s.ExternalLogins.ToList()))
+                .ForMember(d => d.Wallets, o => o.Condition(s => s.Wallets?.Any() == true))
+                .ForMember(d => d.Wallets, o => o.MapFrom(s => s.Wallets.ToList()));
             CreateMap<DbUser, FindUserVM>()
                 .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed))
                 .ForMember(d => d.Avatar, o => o.MapFrom(s => s.Avatar.ToFileDataOrNull()));
