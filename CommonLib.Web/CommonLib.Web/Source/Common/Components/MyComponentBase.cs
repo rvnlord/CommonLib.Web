@@ -440,12 +440,14 @@ namespace CommonLib.Web.Source.Common.Components
 
                 InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
 
+                // `thisAsIcon.Svg.SetAttributeValue("style", InteractionState.V?.IsEnabledOrForceEnabled == true ? "filter: none" : "filter: grayscale(1) brightness(0.3);");`
+                // wouldn't work - it would change the state of all icons of the same type because I am caching svgs in local storage
                 if (this is MyIconBase thisAsIcon) // InteeractionState from parent is updated for each component but only after their respective OnParamters methods are called
                 {
                     if (thisAsIcon.ComplexSvg is not null)
                     {
-                        thisAsIcon.Svg.SetAttributeValue("style", InteractionState.V?.IsEnabledOrForceEnabled == true ? "filter: none" : "filter: grayscale(1) brightness(0.3);");
-                        Logger.For<MyIconBase>().Info($"InteractionState: {(InteractionState.V?.State.EnumToString() ?? "null")}");
+                        AddStyle("filter", InteractionState.V?.IsEnabledOrForceEnabled == true ? "none" : "grayscale(1) brightness(0.3)");
+                        //Logger.For<MyIconBase>().Info($"{thisAsIcon.IconType.V}: {(InteractionState.V?.State.EnumToString() ?? "null")}");
                         thisAsIcon.ComplexSvg = thisAsIcon.Svg.ToRenderFragment();
                     }
                 }
@@ -1095,7 +1097,7 @@ namespace CommonLib.Web.Source.Common.Components
             await TaskUtils.WaitUntil(() =>
             {
                 foreach (var c in arrControls)
-                    if (c.LastRerender is not null && c.LastRerender >= ts && !c.In(wereRerenderedAtSomePoint))
+                    if ((c.IsRerendered || (c.LastRerender is not null && c.LastRerender >= ts)) && !c.In(wereRerenderedAtSomePoint)) // it can alreeady be rerendered before the timer is set (1st condition), but be changeed back to not rereendered by sth else that's why the timer needs to be there (2nd condition)
                         wereRerenderedAtSomePoint.Add(c);
 
                 return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);

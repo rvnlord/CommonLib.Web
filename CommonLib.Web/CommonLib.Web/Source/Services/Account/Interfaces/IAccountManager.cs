@@ -22,7 +22,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<List<WalletVM>>> GetWalletsAsync(string userName);
         Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue);
         Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync(HttpContext http, ClaimsPrincipal principal, AuthenticateUserVM user);
-        Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister);
+        Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister, bool autoConfirmEmail = false);
         Task<ApiResponse<ConfirmUserVM>> ConfirmEmailAsync(ConfirmUserVM userToConfirm);
         Task<string> GenerateLoginTicketAsync(Guid id, string passwordHash, bool rememberMe);
         Task<ApiResponse<ResendConfirmationEmailUserVM>> ResendConfirmationEmailAsync(ResendConfirmationEmailUserVM userToResendConfirmationEmail);
@@ -40,7 +40,8 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<EditUserVM>> EditAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
         Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name);
         Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeData);
-        Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
         Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin);
+        Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit);
+        Task<ApiResponse<EditUserVM>> ConnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin);
     }
 }

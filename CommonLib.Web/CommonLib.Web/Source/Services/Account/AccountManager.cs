@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using CommonLib.Source.Common.Converters;
@@ -15,16 +12,13 @@ using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.Common.Converters;
+using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.Security;
 using CommonLib.Web.Source.Services.Account.Interfaces;
 using CommonLib.Web.Source.Validators.Account;
 using CommonLib.Web.Source.ViewModels.Account;
-using Discord;
-using Discord.Rest;
-using Discord.WebSocket;
-using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -252,7 +246,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         private Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync(AuthenticateUserVM userToAuthenticate) => GetAuthenticatedUserAsync(null, null, userToAuthenticate);
 
-        public async Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister)
+        public async Task<ApiResponse<RegisterUserVM>> RegisterAsync(RegisterUserVM userToRegister, bool autoConfirmEmail = false)
         {
             var user = new DbUser { UserName = userToRegister.UserName, Email = userToRegister.Email };
             var result = userToRegister.Password is not null ? await _userManager.CreateAsync(user, userToRegister.Password) : await _userManager.CreateAsync(user);
@@ -289,7 +283,7 @@ namespace CommonLib.Web.Source.Services.Account
                 await _userManager.AddToRoleAsync(user, "Admin");
             await _userManager.AddToRoleAsync(user, "User");
 
-            if (_userManager.Options.SignIn.RequireConfirmedEmail && user.Email is not null) // if registering from wallet provider email would be null
+            if (_userManager.Options.SignIn.RequireConfirmedEmail && user.Email is not null && !autoConfirmEmail) // if registering from wallet provider email would be null
             {
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var deployingEmailResponse = await _emailSender.SendConfirmationEmailAsync(userToRegister.Email, code, userToRegister.ReturnUrl);
@@ -485,61 +479,59 @@ namespace CommonLib.Web.Source.Services.Account
             }
         }
 
+        // TODO: stop relying on Identity Framework, its useless with decentralised or client based flows
         public async Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin)
         {
-            var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToExternalLogin.Email.ToLower());
-            var userAccountNotExist = user is null;
-            if (userAccountNotExist)
+            var user = await _db.Users.Include(u => u.Logins).SingleOrDefaultAsync(u => u.Logins.Any(ul => ul.LoginProvider.ToLower() == userToExternalLogin.ExternalProvider.ToLower() && ul.ProviderKey.ToLower() == userToExternalLogin.ExternalProviderKey.ToLower()));
+            var IsExternalLoginConnected = user is not null;
+            if (!IsExternalLoginConnected)
             {
-                var userToRegister = new RegisterUserVM
+                user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == userToExternalLogin.Email.ToLower());
+                var accountExists = user is not null;
+                if (!accountExists)
                 {
-                    UserName = userToExternalLogin.UserName ?? userToExternalLogin.Email.BeforeFirstOrNull("@"),
-                    Email = userToExternalLogin.Email,
-                    ReturnUrl = userToExternalLogin.ReturnUrl
-                };
-                var registerUserResponse = await RegisterAsync(userToRegister);
-                if (registerUserResponse.IsError)
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResponse.Message);
-                user = await _userManager.FindByEmailAsync(userToExternalLogin.Email);
-            }
-
-            if (!user.EmailConfirmed && _userManager.Options.SignIn.RequireConfirmedEmail)
-            {
-                _mapper.Map(user, userToExternalLogin); // to account for isconfirmed
-                return userAccountNotExist
-                    ? new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"Your account has been successfully created, confirmation email has been sent to: \"{userToExternalLogin.Email}\"", userToExternalLogin)
-                    : new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "Please confirm your email first");
-            }
-
-            var externalLoginResult = await _signInManager.ExternalLoginSignInAsync(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.RememberMe, true);
-            if (!externalLoginResult.Succeeded)
-            {
-                var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.ExternalProvider));
-                if (!addLoginResult.Succeeded)
-                {
-                    var message = "There was an Unknown Error during External User Login";
-                    if (externalLoginResult == SignInResult.NotAllowed)
-                        message = "You don't have permission to Sign-In with an External Provider";
-                    if (externalLoginResult == SignInResult.LockedOut)
+                    var userToRegister = new RegisterUserVM
                     {
-                        var lockoutEndDate = await _userManager.GetLockoutEndDateAsync(user) ?? new DateTimeOffset(); // never null because lockout flag is true at this point
-                        var lockoutTimeLeft = lockoutEndDate - DateTime.UtcNow;
-                        message = $"Account Locked, too many failed attempts (try again in: {lockoutTimeLeft.Minutes}m {lockoutTimeLeft.Seconds}s)";
-                    }
-
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, message);
+                        UserName = userToExternalLogin.UserName ?? userToExternalLogin.Email.BeforeFirstOrNull("@"),
+                        Email = userToExternalLogin.Email,
+                        ReturnUrl = userToExternalLogin.ReturnUrl
+                    };
+                    var registerUserResp = await RegisterAsync(userToRegister, true);
+                    if (registerUserResp.IsError)
+                        return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, registerUserResp.Message);
+                    user = await _db.Users.SingleAsync(u => u.Email.ToLower() == userToExternalLogin.Email.ToLower());
                 }
 
-                var secondAttemptExternalLoginResult = await _signInManager.ExternalLoginSignInAsync(userToExternalLogin.ExternalProvider, userToExternalLogin.ExternalProviderKey, userToExternalLogin.RememberMe, true);
-                if (!secondAttemptExternalLoginResult.Succeeded)
-                    return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, "User didn't have an External Login Account so it was added, but Login Attempt has Failed");
+                _db.UserLogins.Add(new DbUserLogin
+                {
+                    LoginProvider = userToExternalLogin.ExternalProvider.StartWithUpper(),
+                    ProviderKey = userToExternalLogin.ExternalProviderKey,
+                    ProviderDisplayName = userToExternalLogin.ExternalProvider.StartWithUpper(),
+                    UserId = user.Id,
+                    ExternalUserName = userToExternalLogin.ExternalProviderUserName,
+                });
+                await _db.SaveChangesAsync();
             }
-
+            
             var dbUserLogin = _db.UserLogins.Single(ul => ul.UserId == user.Id && ul.LoginProvider.ToLower() == userToExternalLogin.ExternalProvider.ToLower());
-            dbUserLogin.ExternalUserName = userToExternalLogin.ExternalProviderUserName;
-            await _db.SaveChangesAsync();
+            if (!dbUserLogin.ExternalUserName.EqualsIgnoreCase(userToExternalLogin.ExternalProviderUserName))
+            {
+                dbUserLogin.ExternalUserName = userToExternalLogin.ExternalProviderUserName;
+                await _db.SaveChangesAsync();
+            }
+          
+            var isLocked = _userManager.SupportsUserLockout && await _userManager.IsLockedOutAsync(user);
+            if (isLocked)
+            {
+                var lockoutEndDate = await _userManager.GetLockoutEndDateAsync(user) ?? new DateTimeOffset(); // never null because lockout flag is true at this point
+                var lockoutTimeLeft = lockoutEndDate - DateTime.UtcNow;
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, $"Account Locked, too many failed attempts (try again in: {lockoutTimeLeft.Minutes}m {lockoutTimeLeft.Seconds}s)");
+            }
+            
+            var signInResult = await _signInManager.SignInOrTwoFactorAsync(user, userToExternalLogin.RememberMe, userToExternalLogin.ExternalProvider, true); // OR await _signInManager.SignInAsync(user, userToExternalLogin.RememberMe);
+            if (!signInResult.Succeeded)
+                return new ApiResponse<LoginUserVM>(StatusCodeType.Status401Unauthorized, $"External Login failed with message: {signInResult.ToString().AddSpacesToPascalCase()}");
 
-            await _signInManager.SignInAsync(user, userToExternalLogin.RememberMe);
             await _userManager.ResetAccessFailedCountAsync(user);
 
             _mapper.Map(user, userToExternalLogin);
@@ -798,33 +790,6 @@ namespace CommonLib.Web.Source.Services.Account
             return new ApiResponse<EditUserVM>(StatusCodeType.Status202Accepted, $"Successfully updated User \"{userToEdit.UserName}\" with new {propsToChange.Select(p => $"\"{p}\"").JoinAsString(", ").ReplaceLast(",", " and")}", userToEdit);
         }
 
-        public async Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
-        {
-            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
-            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
-            userToEdit.Id = authUser.Id;
-            
-            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
-            var loginToDisconnect = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect));
-            if (loginToDisconnect is null)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "The External Login you are trying to disconnect is not connected");
-
-            
-            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect)).ToList();
-            var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
-            var wallets = (await GetWalletsAsync(authUser.UserName)).Result;
-            if (!connectedLoginsExceptDisconnectingOne.Any() && !wallets.Any() && !hasPassword)
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all External Logins and Wallets if user has no password");
-
-            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalProviderToDisconnect);
-            await _db.SaveChangesAsync();
-            userToEdit.ExternalProviderToDisconnect = null;
-            userToEdit.ExternalLogins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
-
-            return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.ExternalUserName}\" ({loginToDisconnect.LoginProvider}) has been successfully Disconnected", userToEdit);
-        }
-
         public async Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin)
         {
             authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
@@ -884,6 +849,110 @@ namespace CommonLib.Web.Source.Services.Account
             userToEdit.ExternalLogins = (await GetExternalLoginsAsync(userToEdit.UserName)).Result;
            
             return new ApiResponse<EditUserVM>($"External Login \"{userToLogin.ExternalProviderUserName}\" ({userToLogin.ExternalProvider.StartWithUpper()}) has been successfully Connected", userToEdit);
+        }
+        
+        public async Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
+        {
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
+            userToEdit.Id = authUser.Id;
+            
+            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
+            var loginToDisconnect = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect));
+            if (loginToDisconnect is null)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "The External Login you are trying to disconnect is not connected");
+
+            
+            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect)).ToList();
+            var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
+            var wallets = (await GetWalletsAsync(authUser.UserName)).Result;
+            if (!connectedLoginsExceptDisconnectingOne.Any() && !wallets.Any() && !hasPassword)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all External Logins and Wallets if user has no password");
+
+            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalProviderToDisconnect);
+            await _db.SaveChangesAsync();
+            userToEdit.ExternalProviderToDisconnect = null;
+            userToEdit.ExternalLogins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
+
+            return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.ExternalUserName}\" ({loginToDisconnect.LoginProvider}) has been successfully Disconnected", userToEdit);
+        }
+        
+        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin)
+        {
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
+            userToEdit.Id = authUser.Id;
+
+            if (userToLogin.WalletAddress.IsNullOrWhiteSpace())
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is required") }.ToLookup());
+            if (userToLogin.WalletSignature.IsNullOrWhiteSpace())
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature can't be empty", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is required") }.ToLookup());
+            
+            if (userToLogin.WalletProvider.EqualsIgnoreCase("Metamask"))
+            {
+                if (!AddressUtil.Current.IsValidEthereumAddressHexFormat(userToLogin.WalletAddress))
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address is invalid", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is invalid") }.ToLookup());
+
+                var message = $"Proving ownership of wallet: \"{userToLogin.WalletAddress}\"";
+                var address = new EthereumMessageSigner().EcRecover(message.UTF8ToByteArray(), userToLogin.WalletSignature);
+                var isSignatureCorrect = address.EqualsIgnoreCase(userToLogin.WalletAddress); // address returned by Nethereum from ECRecover() is actually upper case for some reason
+                if (!isSignatureCorrect)
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature is incorrect", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is incorrect") }.ToLookup());
+            }
+            else
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Provider not supported", new[] { new KeyValuePair<string, string>("WalletProvider", "Wallet Provider not supported") }.ToLookup());
+            
+            var connectedWallets = userToEdit.Wallets;
+            var sameProviderWallets = connectedWallets.Where(l => l.Provider.EqualsIgnoreCase(userToLogin.WalletProvider)).ToList();
+            if (sameProviderWallets.Any())
+            {
+                // 1. same wallet for this provider is already connected to this user
+                if (userToLogin.WalletAddress.InIgnoreCase(sameProviderWallets.Select(w => w.Address)))
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"\"{userToLogin.WalletAddress} ({userToLogin.WalletProvider})\" is already connected to \"{userToEdit.UserName}\" Account");
+            }
+
+            // 2. this wallet is already connected to another user
+            var dbSameWalletConnectedToAnotherUser = _db.Wallets.SingleOrDefault(l => l.Provider.ToLower() == userToLogin.WalletProvider.ToLower() && l.Address.ToLower() == userToLogin.WalletAddress.ToLower() && l.UserId != authUser.Id);
+            if (dbSameWalletConnectedToAnotherUser is not null)
+            {
+                // - disconnect from previous owner and connect to the current account
+                var prevOwnerId = dbSameWalletConnectedToAnotherUser.UserId;
+                dbSameWalletConnectedToAnotherUser.UserId = authUser.Id;
+                await _db.SaveChangesAsync();
+
+                // - delete previous owner account if this social profile is the only identifying social profile or wallet and user has no password
+                var dbPrevOwner = _db.Users.Single(u => u.Id == prevOwnerId);
+                var prevOwnerhasPassword = dbPrevOwner.PasswordHash is not null;
+                var prevOwnerWallets = (await GetWalletsAsync(dbPrevOwner.UserName)).Result;
+                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.Connected).ToList();
+                if (!prevOwnerConnectedLogins.Any() && !prevOwnerWallets.Any() && !prevOwnerhasPassword)
+                {
+                    _db.Files.RemoveBy(f => f.UserOwningFileId == dbPrevOwner.Id);
+                    await _db.SaveChangesAsync();
+                    _db.Users.Remove(dbPrevOwner);
+                    await _db.SaveChangesAsync();
+                }
+
+                userToEdit.Wallets = (await GetWalletsAsync(userToEdit.UserName)).Result;
+
+                return new ApiResponse<EditUserVM>($"Wallet \"{userToLogin.WalletAddress} ({userToLogin.WalletProvider.StartWithUpper()})\" has been successfully reconnected from \"{dbPrevOwner.UserName}\" to \"{userToEdit.UserName}\"", userToEdit);
+            }
+            
+            // 3. this wallet has not yet been connected to any user
+            _db.Wallets.Add(new DbWallet()
+            {
+                Provider = userToLogin.WalletProvider.StartWithUpper(),
+                Address = userToLogin.WalletAddress,
+                UserId = userToEdit.Id,
+             
+            });
+            await _db.SaveChangesAsync();
+
+            userToEdit.Wallets = (await GetWalletsAsync(userToEdit.UserName)).Result;
+           
+            return new ApiResponse<EditUserVM>($"Wallet \"{userToLogin.WalletAddress} ({userToLogin.WalletProvider.StartWithUpper()})\" has been successfully Connected", userToEdit);
         }
     }
 }

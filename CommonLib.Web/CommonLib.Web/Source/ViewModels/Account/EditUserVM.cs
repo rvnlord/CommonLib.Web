@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using CommonLib.Source.Common.Utils.UtilClasses;
@@ -29,5 +30,8 @@ namespace CommonLib.Web.Source.ViewModels.Account
 
         public List<ExternalLoginVM> ExternalLogins { get; set; } = new();
         public string ExternalProviderToDisconnect { get; set; }
+        public List<WalletVM> Wallets { get; set; } = new();
+        public string WalletProviderToConnect { get; set; }
+        public string WalletProviderToDisonnect { get; set; }
     }
 }

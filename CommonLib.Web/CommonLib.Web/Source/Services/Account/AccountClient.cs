@@ -177,7 +177,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             var loggedUser = loginResponse.Result;
 
-            if (!loggedUser.IsConfirmed)
+            if (loggedUser.Email is not null && !loggedUser.IsConfirmed)
                 return loginResponse;
 
             if (loggedUser.RememberMe)
@@ -288,6 +288,19 @@ namespace CommonLib.Web.Source.Services.Account
             return editResp;
         }
 
+        public async Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(EditUserVM editUser, LoginUserVM loginUser)
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.ConnectExternalLoginAsync)}", new
+            {
+                AuthenticatedUser = authUser, 
+                UserToEdit = editUser,
+                UserToLogin = loginUser
+            });
+            
+            return editResp;
+        }
+
         public async Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(EditUserVM editUser)
         {
             var authUser = (await GetAuthenticatedUserAsync())?.Result;
@@ -300,14 +313,14 @@ namespace CommonLib.Web.Source.Services.Account
             return editResp;
         }
 
-        public async Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(EditUserVM editUser, LoginUserVM loginUser)
+        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(EditUserVM userToEdit, LoginUserVM userToLogin)
         {
             var authUser = (await GetAuthenticatedUserAsync())?.Result;
-            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.ConnectExternalLoginAsync)}", new
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.ConnectWalletAsync)}", new
             {
                 AuthenticatedUser = authUser, 
-                UserToEdit = editUser,
-                UserToLogin = loginUser
+                UserToEdit = userToEdit,
+                UserToLogin = userToLogin
             });
             
             return editResp;

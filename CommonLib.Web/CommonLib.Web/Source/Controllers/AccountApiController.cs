@@ -117,11 +117,14 @@ namespace CommonLib.Web.Source.Controllers
         [HttpPost("checkuserpassword")] // POST: api/account/checkuserpassword
         public async Task<JToken> CheckUserPasswordAsync(JToken jCheckPasswordUser) => await EnsureResponseAsync(async () => await _accountManager.CheckUserPasswordAsync(jCheckPasswordUser.To<CheckPasswordUserVM>()));
 
-        [HttpPost(nameof(IAccountManager.DisconnectExternalLoginAsync))] // POST: api/account/edit
+        [HttpPost(nameof(IAccountManager.ConnectExternalLoginAsync))] // POST: api/account/ConnectExternalLoginAsync
+        public async Task<JToken> ConnectExternalLoginAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectExternalLoginAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
+
+        [HttpPost(nameof(IAccountManager.DisconnectExternalLoginAsync))] // POST: api/account/DisconnectExternalLoginAsync
         public async Task<JToken> DisconnectExternalLoginAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectExternalLoginAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
 
-        [HttpPost(nameof(IAccountManager.ConnectExternalLoginAsync))] // POST: api/account/edit
-        public async Task<JToken> ConnectExternalLoginAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectExternalLoginAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
+        [HttpPost(nameof(IAccountManager.ConnectWalletAsync))] // POST: api/account/ConnectWalletAsync
+        public async Task<JToken> ConnectWalletAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectWalletAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
 
     }
 }

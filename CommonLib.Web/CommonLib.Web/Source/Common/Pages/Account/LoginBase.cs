@@ -149,26 +149,26 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
         {
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnExternalLogins[queryUser.ExternalProvider]);
-            var externalLoginResponse = await AccountClient.ExternalLoginAuthorizeAsync(_loginUserVM);
-            if (externalLoginResponse.IsError)
+            var externalLoginResp = await AccountClient.ExternalLoginAuthorizeAsync(_loginUserVM);
+            if (externalLoginResp.IsError)
             {
-                await PromptMessageAsync(NotificationType.Error, externalLoginResponse.Message);
+                await PromptMessageAsync(NotificationType.Error, externalLoginResp.Message);
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
 
-            Mapper.Map(externalLoginResponse.Result, _loginUserVM);
-            await PromptMessageAsync(NotificationType.Success, externalLoginResponse.Message);
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            Mapper.Map(externalLoginResp.Result, _loginUserVM);
+            await PromptMessageAsync(NotificationType.Success, externalLoginResp.Message);
+            await HideLoginModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
            
             await EnsureAuthenticationPerformedAsync(false, true, true);
             SetControls();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
            
-            if (!_loginUserVM.IsConfirmed)
-                NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}");
-            //else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace()) // login is in the modal, page should never be changed
+            if (!_loginUserVM.IsConfirmed && _loginUserVM.Email is not null) // email is null if for instance external login profile was connected to an account that was previously using only wallet login
+                NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}"); // login is in the modal, page should be changed if email confirmation is required
+            //else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace()) 
             //    NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
         }
 
@@ -184,9 +184,9 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             await PromptMessageAsync(NotificationType.Success, loginResult.Message);
-            //if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace()) // login is in the modal, page should never bee changed
+            //if (!loginResult.Result.ReturnUrl.IsNullOrWhiteSpace()) // login is in the modal, page should be changed if email confirmation is required
             //    NavigationManager.NavigateTo(loginResult.Result.ReturnUrl);
-            
+
             await HideLoginModalAsync();
 
             if (await EnsureAuthenticationPerformedAsync(true, true, true)) // not changed because change may be frontrun by components updating it earlier
@@ -227,7 +227,23 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                     return;
                 }
 
-                _loginUserVM.WalletAddress = await _ethereumHostProvider.EnableProviderAsync();
+                var enableWalletResp = await _ethereumHostProvider.TryEnableProviderAsync();
+                if (enableWalletResp.IsError)
+                {
+                    await PromptMessageAsync(NotificationType.Error, "Metamask was not enabled");
+                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                    return;
+                }
+                _loginUserVM.WalletAddress = enableWalletResp.Result;
+
+                var walletSignatureResp = await _web3.Eth.AccountSigning.PersonalSign.TrySendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"");
+                if (walletSignatureResp.IsError)
+                {
+                    await PromptMessageAsync(NotificationType.Error, walletSignatureResp.Message);
+                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                    return;
+                }
+                _loginUserVM.WalletSignature = walletSignatureResp.Result;
             }
             else
             {
@@ -236,16 +252,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 return;
             }
             
-            var walletSignatureResp = await _web3.Eth.AccountSigning.PersonalSign.TrySendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"");
-            if (walletSignatureResp.IsError)
-            {
-                await PromptMessageAsync(NotificationType.Error, walletSignatureResp.Message);
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                return;
-            }
-
-            _loginUserVM.WalletSignature = walletSignatureResp.Result;
-
             var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
             if (walletLoginResp.IsError)
             {

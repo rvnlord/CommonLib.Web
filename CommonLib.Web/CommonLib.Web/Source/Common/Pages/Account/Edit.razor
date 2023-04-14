@@ -156,13 +156,48 @@
                                     }
                                     else 
                                     {
-                                        <MyButton Value="@("Disconnect".ToBp())" Model="externalLogin" Click="BtnDisconnectExternalLogin_ClickAsync" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-diconnect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
+                                        <MyButton Value="@("Disconnect".ToBp())" Model="externalLogin" Click="BtnDisconnectExternalLogin_ClickAsync" Icon="IconType.From(externalLogin.LoginProvider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-disconnect-{externalLogin.LoginProvider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=externalLogin />
                                     }
                                 </MyCssGridItem>
                             </MyCssGrid>
                         </MyCssGridItem>
                     }
                 }
+
+                <MyCssGridItem Area="CssGridArea.C1SpanAll">
+                    <h4>Wallet Providers</h4>
+                </MyCssGridItem>
+                
+                @foreach (var wallet in _editUserVM.Wallets)
+                {
+                    <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
+                        <MyLabel Value="@wallet.Provider.Append(":")" TProperty="string" Align="@HorizontalAlignment.Right" @key=wallet />
+                    </MyCssGridItem>
+                    <MyCssGridItem>
+                        <MyTextInput Icon="IconType.From(wallet.Provider.ToEnum<BrandsIconType>())" For="@(() => wallet.Address)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" InteractionState="ComponentState.ForceDisabled" @key=wallet />
+                    </MyCssGridItem>
+                    <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                        <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("150px", "auto"))">
+                            <MyCssGridItem>
+                                <MyButton Value="@("Disconnect".ToBp())" Model="wallet" Click="BtnDisconnectWallet_ClickAsync" Icon="IconType.From(wallet.Provider.ToEnum<BrandsIconType>())" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" class="@($"my-btn-disconnect-{wallet.Provider.ToLower()}")" IconPlacement="ButtonIconPlacement.Right" @key=wallet />
+                            </MyCssGridItem>
+                        </MyCssGrid>
+                    </MyCssGridItem>
+                }
+
+                <MyCssGridItem Area="CssGridArea.C1" Gap="CssGridAreaGap.OnlyNegatedDefaultBottom" SMGap="CssGridAreaGap.Auto">
+                    <MyLabel Value="Connect New:" TProperty="string" Align="@HorizontalAlignment.Right" class="label-connect-new" />
+                </MyCssGridItem>
+                <MyCssGridItem>
+                    <MyDropDown For="@(() => _editUserVM.WalletProviderToConnect)" Icon="IconType.From(LightIconType.Wallet)" PossibleValues="@(new[] { "Metamask" })" EmptyItem="@(new DdlItem(null, "(Select Wallet)"))" SyncPaddingGroup="@("edit-panel".ToBp())" />
+                </MyCssGridItem>
+                <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
+                    <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("150px", "auto"))">
+                        <MyCssGridItem>
+                            <MyButton Value="@("Connect".ToBp())" Click="BtnConnectWallet_ClickAsync" Icon="IconType.From(LightIconType.Wallet)" Styling="ButtonStyling.Success" Sizing="ButtonSizing.Fill" class="@($"my-btn-connect-wallet")" IconPlacement="ButtonIconPlacement.Right" />
+                        </MyCssGridItem>
+                    </MyCssGrid>
+                </MyCssGridItem>
                 
             </MyCssGrid>
         </MyEditForm>
