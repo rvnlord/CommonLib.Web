@@ -47,7 +47,10 @@ namespace CommonLib.Web.Source.MappingProfiles.Account
             CreateMap<DbUser, FindUserVM>()
                 .ForMember(d => d.IsConfirmed, o => o.MapFrom(s => s.EmailConfirmed))
                 .ForMember(d => d.Avatar, o => o.MapFrom(s => s.Avatar.ToFileDataOrNull()));
-            CreateMap<DbUserLogin, ExternalLoginVM>();
+            CreateMap<DbUserLogin, ExternalLoginVM>()
+                .ForMember(d => d.Provider, o => o.MapFrom(s => s.LoginProvider))
+                .ForMember(d => d.UserName, o => o.MapFrom(s => s.ExternalUserName))
+                .ForMember(d => d.IsConnected, o => o.MapFrom(s => true));
             CreateMap<DbWallet, WalletVM>();
         }
     }
