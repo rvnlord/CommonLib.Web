@@ -29,5 +29,12 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string ReturnUrl { get; set; }
         public string Ticket { get; set; }
         public bool IsConfirmed { get; set; }
+        public ExternalLoginUsageMode Mode { get; set; }
+    }
+
+    public enum ExternalLoginUsageMode
+    {
+        Connection,
+        Login
     }
 }

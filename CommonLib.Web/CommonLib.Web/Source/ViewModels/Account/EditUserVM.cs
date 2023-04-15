@@ -32,6 +32,6 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public string ExternalProviderToDisconnect { get; set; }
         public List<WalletVM> Wallets { get; set; } = new();
         public string WalletProviderToConnect { get; set; }
-        public string WalletProviderToDisonnect { get; set; }
+        public WalletVM WalletToDisconnect { get; set; }
     }
 }

@@ -109,7 +109,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 if (queryUser is not null)
                 {
                     await (await ModalModuleAsync).InvokeVoidAsync("blazor_Modal_ShowAsync", ".my-login-modal", false).ConfigureAwait(false); //await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).ShowModalAsync(false); // it isn't guranteed that at this point Modal is loaded to ComponentsCache
-                    queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                     queryUser.ExternalLogins = _loginUserVM.ExternalLogins.ToList();
                     queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName ?? queryUser.UserName;
                     Mapper.Map(queryUser, _loginUserVM);
@@ -168,8 +167,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
            
             if (!_loginUserVM.IsConfirmed && _loginUserVM.Email is not null) // email is null if for instance external login profile was connected to an account that was previously using only wallet login
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}"); // login is in the modal, page should be changed if email confirmation is required
-            //else if (!externalLoginResponse.Result.ReturnUrl.IsNullOrWhiteSpace()) 
-            //    NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
+            else if (!externalLoginResp.Result.ReturnUrl.IsNullOrWhiteSpace())
+                NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
         }
 
         protected async Task FormLogin_ValidSubmitAsync()
@@ -199,17 +198,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected async Task BtnExternalLogin_ClickAsync(MouseEventArgs e, string provider)
         {
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnExternalLogins[provider]);
-
+            _loginUserVM.ReturnUrl = NavigationManager.Uri;
             _loginUserVM.ExternalProvider = provider;
+            _loginUserVM.Mode = ExternalLoginUsageMode.Login;
             var url = $"{ConfigUtils.BackendBaseUrl}/api/account/externallogin";
-            var qs = new Dictionary<string, string>
-            {
-                ["provider"] = _loginUserVM.ExternalProvider,
-                ["returnUrl"] = _loginUserVM.ReturnUrl.UTF8ToBase58(),
-                ["rememberMe"] = _loginUserVM.RememberMe.ToString().ToLowerInvariant()
-            };
-            
-            NavigationManager.NavigateTo($"{url}?{qs.ToQueryString()}", true);
+            NavigationManager.NavigateTo($"{url}?user={_loginUserVM.JsonSerialize().UTF8ToBase58()}", true);
         }
         
         protected async Task BtnWalletLogin_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
@@ -306,6 +299,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, logoutResult.Message);
             _loginUserVM.UserName = null;
             _loginUserVM.Password = null;
+            //AuthenticatedUser = AuthenticateUserVM.NotAuthenticated;
 
             await HideLoginModalAsync();
 

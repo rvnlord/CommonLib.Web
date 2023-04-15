@@ -33,6 +33,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         private IEthereumHostProvider _ethereumHostProvider;
         private IWeb3 _web3;
         private LoginUserVM _loginUserVM;
+        private AuthenticateUserVM _prevAuthUser; // for this sub page
 
         protected MyFluentValidator _validator { get; set; }
         protected MyEditForm _editForm { get; set; }
@@ -57,8 +58,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!await EnsureAuthenticatedAsync(true, true))
+            var queryUser = NavigationManager.GetQueryString<string>("user")?.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
+            if (!await EnsureAuthenticatedAsync(queryUser is null || queryUser.Mode == ExternalLoginUsageMode.Connection, true)) // I don't want message before potentially logging in with query user
                 return;
+            _prevAuthUser = AuthenticatedUser;
             
             Mapper.Map(AuthenticatedUser, _editUserVM);
             _editUserVM.ExternalLogins = (await AccountClient.GetExternalLogins(_editUserVM.UserName)).Result;
@@ -73,10 +76,10 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!_editUserVM.HasPassword)
                 _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
 
-            var queryUser = NavigationManager.GetQueryString<string>("user")?.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
-            if (queryUser is not null)
+            
+            if (queryUser is not null && queryUser.Mode == ExternalLoginUsageMode.Connection)
             {
-                queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
+                //queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                 queryUser.UserName = _editUserVM.UserName;
 
                 await ConnectExternalLoginAsync(queryUser);
@@ -84,6 +87,18 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender) 
+                return;
+            if (AuthenticatedUser == _prevAuthUser)
+                return;
+
+            if (HasAuthenticationStatus(AuthStatus.Authenticated))
+                await OnAfterFirstRenderAsync();
+            _prevAuthUser = AuthenticatedUser;
         }
 
         protected async Task BtnSubmit_ClickAsync()
@@ -134,19 +149,20 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
             
             var url = $"{ConfigUtils.BackendBaseUrl}/api/account/externallogin";
-            var qs = new OrderedDictionary<string, string>
+            var user = new LoginUserVM
             {
-                ["provider"] = ((ExternalLoginVM) sender.Model.V).LoginProvider.ToLowerInvariant(),
-                ["returnUrl"] = NavigationManager.Uri.BeforeFirstOrWhole("?").UTF8ToBase58(),
-                ["rememberMe"] = AuthenticatedUser.RememberMe.ToString().ToLowerInvariant()
+                ExternalProvider = ((ExternalLoginVM) sender.Model.V).Provider.ToLowerInvariant(),
+                ReturnUrl = NavigationManager.Uri.BeforeFirstOrWhole("?"),
+                RememberMe = AuthenticatedUser.RememberMe,
+                Mode = ExternalLoginUsageMode.Connection
             };
             
-            NavigationManager.NavigateTo($"{url}?{qs.ToQueryString()}", true);
+            NavigationManager.NavigateTo($"{url}?user={user.JsonSerialize().UTF8ToBase58()}", true);
         }
 
         private async Task ConnectExternalLoginAsync(LoginUserVM queryUser)
         {
-            var btnCurrentExternalLoginConnect = (await ComponentsByTypeAsync<MyButtonBase>()).Single(b => (b.Model?.V as ExternalLoginVM)?.LoginProvider.EqualsIgnoreCase_(queryUser.ExternalProvider) == true);
+            var btnCurrentExternalLoginConnect = (await ComponentsByTypeAsync<MyButtonBase>()).Single(b => (b.Model?.V as ExternalLoginVM)?.Provider.EqualsIgnoreCase_(queryUser.ExternalProvider) == true);
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, btnCurrentExternalLoginConnect);
             var connectResp = await AccountClient.ConnectExternalLoginAsync(_editUserVM, queryUser);
             if (connectResp.IsError)
@@ -167,7 +183,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected async Task BtnDisconnectExternalLogin_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
-            _editUserVM.ExternalProviderToDisconnect = ((ExternalLoginVM) sender.Model.V).LoginProvider.ToLowerInvariant();
+            _editUserVM.ExternalProviderToDisconnect = ((ExternalLoginVM) sender.Model.V).Provider.ToLowerInvariant();
             var disconnectResp = await AccountClient.DisconnectExternalLoginAsync(_editUserVM);
             if (disconnectResp.IsError)
             {
@@ -179,8 +195,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             Mapper.Map(disconnectResp.Result, _editUserVM);
 
             await PromptMessageAsync(NotificationType.Success, disconnectResp.Message);
-            await StateHasChangedAsync(true); // to re-loop providers
-            _allControls = GetInputControls(); // to update providers controls to remove the disconnected one
+            await StateHasChangedAsync(true);
+            _allControls = GetInputControls();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
@@ -250,7 +266,22 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task BtnDisconnectWallet_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            await Task.CompletedTask;
+            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
+            _editUserVM.WalletToDisconnect = (WalletVM) sender.Model.V;
+            var disconnectWalletResp = await AccountClient.DisconnectWalletAsync(_editUserVM);
+            if (disconnectWalletResp.IsError)
+            {
+                await PromptMessageAsync(NotificationType.Error, disconnectWalletResp.Message);
+                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+                return;
+            }
+
+            Mapper.Map(disconnectWalletResp.Result, _editUserVM);
+
+            await PromptMessageAsync(NotificationType.Success, disconnectWalletResp.Message);
+            await StateHasChangedAsync(true);
+            _allControls = GetInputControls();
+            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
 
         private string GetNavQueryStrings()

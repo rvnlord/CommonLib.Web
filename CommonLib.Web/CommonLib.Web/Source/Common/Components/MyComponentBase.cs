@@ -90,6 +90,7 @@ namespace CommonLib.Web.Source.Common.Components
         //private readonly OrderedSemaphore _syncSettingParameters = new(1, 1);
         private readonly OrderedSemaphore _syncRender = new(1, 1);
         private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);
+        private readonly OrderedSemaphore _syncAuthUserChange = new(1, 1);
         //private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
         //private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
         //private OrderedSemaphore _syncComponentsCache => (_isCommonLayout ? (MyLayoutComponentBase)this : Layout)._syncComponentsCache;
@@ -97,6 +98,7 @@ namespace CommonLib.Web.Source.Common.Components
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
         private AuthenticateUserVM _authenticatedUser;
+        private AuthenticateUserVM _prevAuthUser;
         private bool _isFirstRenderAfterAuthorization = true;
 
         protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
@@ -262,20 +264,37 @@ namespace CommonLib.Web.Source.Common.Components
 
         public List<MyComponentBase> Siblings => Parent is not null ? Parent.Children.Except(this).ToList() : Layout.Components.Values.Where(c => !c.IsLayout && !c.IsCommonLayout && c.Parent is null && c != this).ToList();
 
+        //public AuthenticateUserVM PreviouslyAuthenticatedUser
+        //{
+        //    get => !IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
+        //    set
+        //    {
+        //        var prevAuthUser = (!IsCommonLayout ? Layout.PreviouslyAuthenticatedUser : _prevAuthUser) ?? AuthenticateUserVM.NotAuthenticated;
+        //        prevAuthUser = Mapper.Map(value, prevAuthUser);
+        //        if (!IsCommonLayout)
+        //            Layout.PreviouslyAuthenticatedUser = prevAuthUser;
+        //        else
+        //            _prevAuthUser = prevAuthUser;
+        //    }
+        //}
+
         public AuthenticateUserVM AuthenticatedUser
         {
             get => !IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
             set
             {
-                var authUser = (!IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
-                authUser = Mapper.Map(value, authUser);
+                var prevAuthUser = (!IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
+                //PreviouslyAuthenticatedUser = Mapper.Map(prevAuthUser, PreviouslyAuthenticatedUser);
+
+                var authUser = prevAuthUser.UserName.EqualsIgnoreCase(value.UserName) ? Mapper.Map(value, prevAuthUser) : value; // mapping to old user because I want to retain the avatar
                 if (!IsCommonLayout)
                     Layout.AuthenticatedUser = authUser;
                 else
                     _authenticatedUser = authUser;
+                // don't use OnAuthChanged here
             }
         }
-
+        
         public MyNavBarBase NavBar => Layout.Components.Values.OfType<MyNavBarBase>().Single();
 
         public bool AdditionalAttributesHaveChanged { get; private set; }
@@ -309,8 +328,8 @@ namespace CommonLib.Web.Source.Common.Components
         public IBackendInfoClient BackendInfoClient { get; set; }
 
         [Inject]
-        public AuthenticationStateProvider AuthStateProvider { get; set; }
-        public UserAuthenticationStateProvider UserAuthStateProvider => (UserAuthenticationStateProvider)AuthStateProvider;
+        public AuthenticationStateProvider AuthState { get; set; }
+        public UserAuthenticationStateProvider UserAuthState => (UserAuthenticationStateProvider)AuthState;
 
         [Inject]
         public IParametersCacheService ParametersCache { get; set; }
@@ -579,7 +598,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected virtual async Task OnLayoutSessionIdSetAsync() => await Task.CompletedTask;
         protected virtual async Task OnLayoutAfterRenderFinishedAsync(Guid sessionId, DeviceSizeKind deviceSize) => await Task.CompletedTask;
-
+        
         private async Task Layout_DeviceSizeChanged(MyLayoutComponentBase sender, MyMediaQueryChangedEventArgs e, CancellationToken token)
         {
             await OnDeviceSizeChangedAsync(e.DeviceSize);

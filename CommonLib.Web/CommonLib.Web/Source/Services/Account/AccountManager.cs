@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Nethereum.Signer;
 using Nethereum.Util;
+using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Services.Account
 {
@@ -136,9 +137,9 @@ namespace CommonLib.Web.Source.Services.Account
             var user = await _db.Users.Include(u => u.Logins).SingleOrDefaultAsync(u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
                 return new ApiResponse<List<ExternalLoginVM>>(StatusCodeType.Status404NotFound, "There is no User with the given Name");
-            var externalLogins = _mapper.Map(user.Logins, new List<ExternalLoginVM>()).OrderByWith(a => a.LoginProvider, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
+            var externalLogins = _mapper.Map(user.Logins, new List<ExternalLoginVM>()).OrderByWith(a => a.Provider, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
             var allExternalAuthSchemes = (await _signInManager.GetExternalAuthenticationSchemesAsync()).OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
-            externalLogins = allExternalAuthSchemes.Select(a => externalLogins.SingleOrDefault(el => el.LoginProvider.EqualsIgnoreCase(a.Name)) ?? new ExternalLoginVM { LoginProvider = a.Name, Connected = false }).ToList();
+            externalLogins = allExternalAuthSchemes.Select(a => externalLogins.SingleOrDefault(el => el.Provider.EqualsIgnoreCase(a.Name)) ?? new ExternalLoginVM { Provider = a.Name, IsConnected = false }).ToList();
             return new ApiResponse<List<ExternalLoginVM>>(externalLogins);
         }
 
@@ -424,7 +425,8 @@ namespace CommonLib.Web.Source.Services.Account
             var reqScheme = _http.HttpContext?.Request.Scheme; // we need API url here which is different than the Web App one
             var host = _http.HttpContext?.Request.Host;
             var pathbase = _http.HttpContext?.Request.PathBase;
-            var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?returnUrl={userToExternalLogin.ReturnUrl}&user={userToExternalLogin.JsonSerialize().UTF8ToBase58()}";
+            var qs = new OrderedDictionary<string, string> { ["user"] = userToExternalLogin.JsonSerialize().UTF8ToBase58() };
+            var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?{qs.ToQueryString()}";
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(userToExternalLogin.ExternalProvider, redirectUrl);
 
             return (properties, scheme.Name);
@@ -433,9 +435,8 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError)
         {
             var userToExternalLogin = _http.HttpContext?.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>() ?? throw new NullReferenceException("'userToExternalLogin' was null");
-            var decodedReturnUrl = returnUrl.Base58ToUTF8();
-            var url = decodedReturnUrl.BeforeFirstOrWhole("?");
-            var qs = decodedReturnUrl.QueryStringToDictionary();
+            var url = userToExternalLogin.ReturnUrl.BeforeFirstOrWhole("?");
+            var qs = userToExternalLogin.ReturnUrl.QueryStringToDictionary();
             qs["remoteStatus"] = "Error";
 
             try
@@ -797,15 +798,15 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
             userToEdit.Id = authUser.Id;
             
-            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
-            var sameProviderLogin = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToLogin.ExternalProvider));
+            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.IsConnected).ToList();
+            var sameProviderLogin = connectedLogins.SingleOrDefault(l => l.Provider.EqualsIgnoreCase(userToLogin.ExternalProvider));
             if (sameProviderLogin is not null)
             {
                 // 1. same external login for this provider is already connected to this user
-                if (sameProviderLogin.ExternalUserName.EqualsIgnoreCase(userToLogin.ExternalProviderUserName))
+                if (sameProviderLogin.UserName.EqualsIgnoreCase(userToLogin.ExternalProviderUserName))
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"\"{userToLogin.ExternalProviderUserName}\" {userToLogin.ExternalProvider} Profile is already connected to \"{userToEdit.UserName}\" Account");
                 // 2. different external login for this provider is already connected to this user
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"Can't connect \"{userToLogin.ExternalProviderUserName}\" {userToLogin.ExternalProvider} Profile because \"{sameProviderLogin.ExternalUserName}\" {sameProviderLogin.LoginProvider} is already connected to \"{userToEdit.UserName}\" Account");
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"Can't connect \"{userToLogin.ExternalProviderUserName}\" {userToLogin.ExternalProvider} Profile because \"{sameProviderLogin.UserName}\" {sameProviderLogin.Provider} is already connected to \"{userToEdit.UserName}\" Account");
             }
 
             // 3. this external login is already connected to another user
@@ -821,7 +822,7 @@ namespace CommonLib.Web.Source.Services.Account
                 var dbPrevOwner = _db.Users.Single(u => u.Id == prevOwnerId);
                 var prevOwnerhasPassword = dbPrevOwner.PasswordHash is not null;
                 var prevOwnerWallets = (await GetWalletsAsync(dbPrevOwner.UserName)).Result;
-                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.Connected).ToList();
+                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.IsConnected).ToList();
                 if (!prevOwnerConnectedLogins.Any() && !prevOwnerWallets.Any() && !prevOwnerhasPassword)
                 {
                     _db.Files.RemoveBy(f => f.UserOwningFileId == dbPrevOwner.Id);
@@ -858,24 +859,23 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
             userToEdit.Id = authUser.Id;
             
-            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.Connected).ToList();
-            var loginToDisconnect = connectedLogins.SingleOrDefault(l => l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect));
+            var connectedLogins = userToEdit.ExternalLogins.Where(l => l.IsConnected).ToList();
+            var loginToDisconnect = connectedLogins.SingleOrDefault(l => l.Provider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect));
             if (loginToDisconnect is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "The External Login you are trying to disconnect is not connected");
-
             
-            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.LoginProvider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect)).ToList();
+            var connectedLoginsExceptDisconnectingOne = connectedLogins.Where(l => !l.Provider.EqualsIgnoreCase(userToEdit.ExternalProviderToDisconnect)).ToList();
             var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
             var wallets = (await GetWalletsAsync(authUser.UserName)).Result;
             if (!connectedLoginsExceptDisconnectingOne.Any() && !wallets.Any() && !hasPassword)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all External Logins and Wallets if user has no password");
 
-            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalProviderToDisconnect);
+            _db.UserLogins.RemoveBy(l => l.UserId == authUser.Id && l.LoginProvider.ToLower() == userToEdit.ExternalProviderToDisconnect.ToLower());
             await _db.SaveChangesAsync();
             userToEdit.ExternalProviderToDisconnect = null;
             userToEdit.ExternalLogins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
 
-            return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.ExternalUserName}\" ({loginToDisconnect.LoginProvider}) has been successfully Disconnected", userToEdit);
+            return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.UserName}\" ({loginToDisconnect.Provider}) has been successfully Disconnected", userToEdit);
         }
         
         public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin)
@@ -886,14 +886,16 @@ namespace CommonLib.Web.Source.Services.Account
             userToEdit.Id = authUser.Id;
 
             if (userToLogin.WalletAddress.IsNullOrWhiteSpace())
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is required") }.ToLookup());
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty");
             if (userToLogin.WalletSignature.IsNullOrWhiteSpace())
-                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature can't be empty", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is required") }.ToLookup());
-            
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature can't be empty");
+            if (userToLogin.WalletProvider.IsNullOrWhiteSpace())
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet Provider was not specified");
+
             if (userToLogin.WalletProvider.EqualsIgnoreCase("Metamask"))
             {
                 if (!AddressUtil.Current.IsValidEthereumAddressHexFormat(userToLogin.WalletAddress))
-                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address is invalid", new[] { new KeyValuePair<string, string>("WalletAddress", "Wallet Address is invalid") }.ToLookup());
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address is invalid");
 
                 var message = $"Proving ownership of wallet: \"{userToLogin.WalletAddress}\"";
                 var address = new EthereumMessageSigner().EcRecover(message.UTF8ToByteArray(), userToLogin.WalletSignature);
@@ -926,7 +928,7 @@ namespace CommonLib.Web.Source.Services.Account
                 var dbPrevOwner = _db.Users.Single(u => u.Id == prevOwnerId);
                 var prevOwnerhasPassword = dbPrevOwner.PasswordHash is not null;
                 var prevOwnerWallets = (await GetWalletsAsync(dbPrevOwner.UserName)).Result;
-                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.Connected).ToList();
+                var prevOwnerConnectedLogins = (await GetExternalLoginsAsync(dbPrevOwner.UserName)).Result.Where(l => l.IsConnected).ToList();
                 if (!prevOwnerConnectedLogins.Any() && !prevOwnerWallets.Any() && !prevOwnerhasPassword)
                 {
                     _db.Files.RemoveBy(f => f.UserOwningFileId == dbPrevOwner.Id);
@@ -953,6 +955,45 @@ namespace CommonLib.Web.Source.Services.Account
             userToEdit.Wallets = (await GetWalletsAsync(userToEdit.UserName)).Result;
            
             return new ApiResponse<EditUserVM>($"Wallet \"{userToLogin.WalletAddress} ({userToLogin.WalletProvider.StartWithUpper()})\" has been successfully Connected", userToEdit);
+        }
+
+        public async Task<ApiResponse<EditUserVM>> DisconnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
+        {
+            authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
+            if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
+            userToEdit.Id = authUser.Id;
+            
+            if (userToEdit.WalletToDisconnect is null)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet was not provided");
+            if (userToEdit.WalletToDisconnect.Address.IsNullOrWhiteSpace())
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty");
+            if (userToEdit.WalletToDisconnect.Provider.IsNullOrWhiteSpace())
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet Provider was not specified");
+            var connectedWallets = (await GetWalletsAsync(authUser.UserName)).Result; 
+            if (!connectedWallets.CollectionEqual(userToEdit.Wallets))
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Provided Wallets are invalid");
+            var logins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
+            if (!logins.CollectionEqual(userToEdit.ExternalLogins))
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Provided External Logins are invalid");
+
+            var walletToDisconnect = userToEdit.WalletToDisconnect;
+            var isWalletToDisconnectConnected = connectedWallets.Any(w => w == walletToDisconnect);
+            if (!isWalletToDisconnectConnected)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Wallet you are trying to disconnect is not connected");
+            
+            var hasPassword = (await FindUserByIdAsync(authUser.Id)).Result.PasswordHash is not null;
+            var connectedWalletsExceptDisconnectingOne = connectedWallets.Except(walletToDisconnect).ToList();
+            var connectedLogins = logins.Where(l => l.IsConnected).ToList();
+            if (!connectedWalletsExceptDisconnectingOne.Any() && !connectedLogins.Any() && !hasPassword)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You can't remove all Wallets and External Logins if user has no password");
+
+            _db.Wallets.RemoveBy(w => w.UserId == authUser.Id && w.Provider.ToLower() == walletToDisconnect.Provider.ToLower() && w.Address.ToLower() == walletToDisconnect.Address.ToLower());
+            await _db.SaveChangesAsync();
+            userToEdit.WalletToDisconnect = null;
+            userToEdit.Wallets = (await GetWalletsAsync(authUser.UserName)).Result;
+
+            return new ApiResponse<EditUserVM>($"Wallet \"{walletToDisconnect.Address} ({walletToDisconnect.Provider})\" has been successfully Disconnected", userToEdit);
         }
     }
 }

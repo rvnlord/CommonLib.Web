@@ -50,11 +50,14 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> LoginAsync(LoginUserVM user) => await EnsureResponseAsync(async () => await _accountManager.LoginAsync(user));
 
         [HttpGet("externallogin")] // GET: api/account/externallogin
-        public async Task<IActionResult> ExternalLoginAsync(string provider, string returnUrl, string rememberMe)
+        public async Task<IActionResult> ExternalLoginAsync(string user)
         {
             try
             {
-                var (authenticationProperties, schemaName) = await _accountManager.ExternalLoginAsync(new LoginUserVM { ExternalProvider = provider, ReturnUrl = returnUrl.HtmlDecode(), RememberMe = Convert.ToBoolean(rememberMe) });
+                var decodedUser = user.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
+                if (decodedUser is null)
+                    throw new NullReferenceException("User cannot be null");
+                var (authenticationProperties, schemaName) = await _accountManager.ExternalLoginAsync(decodedUser);
                 return Challenge(authenticationProperties, schemaName);
             }
             catch (ArgumentNullException ex)
@@ -125,6 +128,9 @@ namespace CommonLib.Web.Source.Controllers
 
         [HttpPost(nameof(IAccountManager.ConnectWalletAsync))] // POST: api/account/ConnectWalletAsync
         public async Task<JToken> ConnectWalletAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectWalletAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
+
+        [HttpPost(nameof(IAccountManager.DisconnectWalletAsync))] // POST: api/account/DisconnectWalletAsync
+        public async Task<JToken> DisconnectWalletAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectWalletAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
 
     }
 }

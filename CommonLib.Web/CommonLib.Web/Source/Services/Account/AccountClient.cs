@@ -325,5 +325,17 @@ namespace CommonLib.Web.Source.Services.Account
             
             return editResp;
         }
+
+        public async Task<ApiResponse<EditUserVM>> DisconnectWalletAsync(EditUserVM userToEdit)
+        {
+            var authUser = (await GetAuthenticatedUserAsync())?.Result;
+            var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.DisconnectWalletAsync)}", new
+            {
+                AuthenticatedUser = authUser, 
+                UserToEdit = userToEdit
+            });
+            
+            return editResp;
+        }
     }
 }
