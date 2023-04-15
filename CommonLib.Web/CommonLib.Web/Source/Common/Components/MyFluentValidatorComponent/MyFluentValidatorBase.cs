@@ -124,13 +124,13 @@ namespace CommonLib.Web.Source.Common.Components.MyFluentValidatorComponent
             await _syncValidation.WaitAsync(); // to prevent UI updating with incorrect messages, especially for other fields when this one changed
 
             var validator = GetFieldValidator(_currentEditContext, fieldIdentifier);
-            validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
-            validator.SetProperty("RuleLevelCascadeMode", CascadeMode.Continue);
             if (validator is null) // not supposed to be validated
             {
                 await _syncValidation.ReleaseAsync();
                 return true;
             }
+            validator.SetProperty("ClassLevelCascadeMode", CascadeMode.Continue);
+            validator.SetProperty("RuleLevelCascadeMode", CascadeMode.Continue);
             
             var model = _currentEditContext.Model; 
             var allModelFields = fieldIdentifier.Model.GetPropertyNames().Select(p => new FieldIdentifier(fieldIdentifier.Model, p)).ToList();
