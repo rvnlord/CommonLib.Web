@@ -1,6 +1,7 @@
 ﻿@using CommonLib.Source.Common.Converters
 @using CommonLib.Source.Common.Extensions
 @using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Common.Converters
 
 @namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 @inherits MyIconBase
@@ -14,17 +15,8 @@
             Logger.For<MyIconBase>().Info($"RENDER: {this}, {icon2.IconType.V.LightIcon.EnumToString()}: {InteractionState.V.State.EnumToString()}");
         }*@
 
-        <div class="@_renderClasses" @onclick="@PrintAndClickCallbackAsync" style="@_renderStyle" @attributes="@_renderAttributes">
-            @if (_dPath is not null) 
-            {
-                <svg xmlns="@_svgXmlns" viewBox="@_svgViewBox" style="@_renderSvgStyle">
-                    <path d="@_dPath" style="fill: @(InteractionState.V.IsDisabledOrForceDisabled ? "#404040" : Color switch { null => "white", "none" => "", _ => Color })"></path>
-                </svg>
-            }
-            else if (ComplexSvg is not null) 
-            {
-                @ComplexSvg
-            }
+        <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Icon_ClickAsync">
+            @Svg.ToRenderFragment()
         </div>
     }
 

@@ -1,5 +1,6 @@
 ﻿@using CommonLib.Web.Source.Common.Components.MyInputComponent
 @using CommonLib.Web.Source.Models
+@using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 @inherits MyTextInputBase
@@ -22,7 +23,7 @@
                            @oninput="@InputText_Input"
                            @attributes="@_renderAttributes" />
                     <MyInputGroupPrepend>
-                        <MyIcon IconType="Icon.V"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="Icon.V"></MyIcon>
                     </MyInputGroupPrepend>
                 </MyInputGroup>
             }

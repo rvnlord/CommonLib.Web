@@ -3,6 +3,8 @@
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Extensions
+@using CommonLib.Web.Source.Models
+@using SixLabors.ImageSharp
 @inherits MyNavLinkBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
@@ -19,7 +21,7 @@
         }
         else if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)
         {
-            <MyIcon Color="none" IconType="@(_icon.ToBp())" class="@iconClasses" SizeMode="@(IconSizeMode.Contain.ToBp())"></MyIcon>
+            <MyIcon Color="null" IconType="@(_icon.ToBp())" class="@iconClasses" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
         @if (ChildContent != null)
         {
@@ -31,23 +33,23 @@
         }
         else if (_icon != null && IconPlacement == NavLinkIconPlacement.Right)
         {
-            <MyIcon Color="none" IconType="@_icon" class="my-nav-link-icon my-pl-10px my-d-flex" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            <MyIcon Color="null" IconType="@_icon" class="my-nav-link-icon my-pl-10px my-d-flex" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
         @if (_openIcon != null)
         {
-            <MyIcon Color="none" IconType="@_openIcon" class="my-nav-link-open-icon my-pl-10px my-ml-auto my-d-flex" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            <MyIcon Color="null" IconType="@_openIcon" class="my-nav-link-open-icon my-pl-10px my-ml-auto my-d-flex" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
         @if (_closeIcon != null)
         {
-            <MyIcon Color="none" IconType="@_closeIcon" class="my-nav-link-close-icon my-pl-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            <MyIcon Color="null" IconType="@_closeIcon" class="my-nav-link-close-icon my-pl-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
         @if (_openIconXs != null)
         {
-            <MyIcon Color="none" IconType="@_openIconXs" class="my-nav-link-open-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            <MyIcon Color="null" IconType="@_openIconXs" class="my-nav-link-open-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
         @if (_closeIconXs != null)
         {
-            <MyIcon Color="none" IconType="@_closeIconXs" class="my-nav-link-close-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="IconSizeMode.Contain.ToBp()"></MyIcon>
+            <MyIcon Color="null" IconType="@_closeIconXs" class="my-nav-link-close-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
     </a>
 

@@ -11,6 +11,7 @@
 @using Telerik.Blazor.Components
 @using static CommonLib.Web.Source.Common.Components.StylesConfig
 @using System.Threading
+@using SixLabors.ImageSharp
 
 @inherits LoginBase
 
@@ -150,7 +151,7 @@
                     <div class="logged-user-avatar-container">
                         @if (AuthenticatedUser.Avatar is null)
                         {
-                            <MyIcon IconType="IconType.From(LightIconType.User)" Color="blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
+                            <MyIcon IconType="IconType.From(LightIconType.User)" Color="Color.Blue" SizeMode="@IconSizeMode.Contain" class="logged-user-no-avatar"></MyIcon>
                         }
                         else 
                         {

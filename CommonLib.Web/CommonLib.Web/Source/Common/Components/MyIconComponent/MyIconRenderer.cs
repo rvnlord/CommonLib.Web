@@ -40,7 +40,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             _iconComponent = iconComponent;
         }
 
-        public IconRendererConfig Color(string color)
+        public IconRendererConfig Color(SixLabors.ImageSharp.Color color)
         {
             _iconComponent.Color = color;
             return this;

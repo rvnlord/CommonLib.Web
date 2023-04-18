@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.Threading;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using SixLabors.ImageSharp;
 
 namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
 {
@@ -24,7 +25,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
         protected string _alignIconClass { get; set; }
         protected string _validationMessage { get; set; }
         protected IconType _iconType { get; set; }
-        protected string _iconColor { get; set; }
+        protected Color _iconColor { get; set; }
         protected string _strImageCss { get; set; }
         protected string _alignContainerClass { get; set; }
         protected ElementReference _jsValidationMessage { get; set; }
@@ -152,13 +153,13 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
             
             if ((wasValidationSuccessful || isCurrentFieldValid) && wasCurrentFieldValidated)
             {
-                _iconColor = StylesConfig.SuccessColor;
+                _iconColor = StylesConfig.SuccessColor.HexToColor();
                 _iconType = IconType.From(DuotoneIconType.Check);
                 Status = ValidationMessageStatus.Success;
             }
             else if (validationFailed && wasCurrentFieldValidated)
             {
-                _iconColor = StylesConfig.FailureColor;
+                _iconColor = StylesConfig.FailureColor.HexToColor();
                 _iconType = IconType.From(SolidIconType.Times);
                 _validationMessage = CascadedEditContext.ParameterValue.GetValidationMessages(_propName).FirstOrDefault();
                 Status = ValidationMessageStatus.Failure;

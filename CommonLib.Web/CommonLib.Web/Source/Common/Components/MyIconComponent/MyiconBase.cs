@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyInputComponent;
@@ -24,8 +26,11 @@ using EnumConverter = CommonLib.Source.Common.Converters.EnumConverter;
 using Logger = CommonLib.Source.Common.Utils.UtilClasses.Logger;
 using StringConverter = CommonLib.Source.Common.Converters.StringConverter;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
+using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
+using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
+using Color = SixLabors.ImageSharp.Color;
 
 namespace CommonLib.Web.Source.Common.Components.MyIconComponent
 {
@@ -35,14 +40,6 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         private static string _rootDir;
         //private static bool? _isProduction;
        
-        private Dictionary<string, string> _svgStyle { get; set; }
-       
-        //protected bool _disabled { get; set; }
-        protected string _renderSvgStyle { get; set; }
-        protected string _svgXmlns { get; set; }
-        protected string _svgViewBox { get; set; }
-        protected string _dPath { get; set; }
-       
         //public static string CommonWwwRootDir => _commonWwwRootDir ??= FileUtils.GetAspNetWwwRootDir<MyIconBase>();
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir(); // ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("ContentRootPath");
         //public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
@@ -50,156 +47,209 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         public static ConcurrentDictionary<IconType, HtmlNode> SvgCache { get; set; }
         public RenderFragment ComplexSvg { get; set; }
 
-        [Parameter] public BlazorParameter<IconType> IconType { get; set; }
-        [Parameter] public string Color { get; set; }
-        [Parameter] public BlazorParameter<IconSizeMode> SizeMode { get; set; } = IconSizeMode.InheritFromStyles;
-        [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
-        [CascadingParameter] public BlazorParameter<MyInputBase> CascadingInput { get; set; }
-        [CascadingParameter] public BlazorParameter<MyButtonBase> CascadingButton { get; set; }
+        [Parameter] 
+        public BlazorParameter<IconType> IconType { get; set; }
 
-        [Inject] public IUploadClient UploadClient { get; set; }
+        [Parameter] 
+        public BlazorParameter<Color?> Color { get; set; }
+
+        [Parameter] 
+        public BlazorParameter<Color?> SecondaryColor { get; set; }
+
+        [Parameter] 
+        public BlazorParameter<IconSizeMode?> SizeMode { get; set; }
+
+        [Parameter] 
+        public MyAsyncEventHandler<MyIconBase, MouseEventArgs> Click { get; set; }
+
+        [Inject] 
+        public IUploadClient UploadClient { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
             SvgCache ??= new ConcurrentDictionary<IconType, HtmlNode>();
-            _svgStyle ??= new Dictionary<string, string>();
             await Task.CompletedTask;
         }
 
         protected override async Task OnParametersSetAsync()
         {
-            if (IsFirstParamSetup())
+            if (FirstParamSetup)
             {
-                // Pre-Render
-                _renderStyle = new Dictionary<string, string>
-                {
-                    ["width"] = StylesConfig.FontSize.Px(),
-                    ["height"] = StylesConfig.FontSize.Px(),
-                    ["max-width"] = StylesConfig.FontSize.Px(),
-                    ["max-height"] = StylesConfig.FontSize.Px(),
-                    ["margin"] = (StylesConfig.FontSize / 4).Px(),
-                    ["overflow"] = "hidden",
-                    ["opacity"] = "0"
-                }.CssDictionaryToString();
-                _renderClasses = new List<string> { "my-icon", "pre-render" }.JoinAsString(" ");
-            }
-
-            if (IconType.ParameterValue == null)
-            {
-                _svgXmlns = null;
-                _svgViewBox = null;
-                _dPath = null;
-                return;
-            }
-
-            //var parentDropDownState = Ancestors.OfType<MyDropDownBase>().FirstOrDefault()?.InteractionState?.V;
-            
-            var cascadingInputHasChanged = CascadingInput.HasChanged();
-            if (cascadingInputHasChanged && CascadingInput.HasValue() && !CascadingButton.HasValue())
-            {
-                CascadingInput.ParameterValue.InputGroupIcons.AddIfNotExists(this);
-                CascadingInput.SetAsUnchanged(); // so the notify won't end up here again
-            }
-
-            var cascadingButtonHasChanged = CascadingButton.HasChanged();
-            if (cascadingButtonHasChanged && CascadingButton.HasValue())
-            {
-                if (!_guid.In(new [] { CascadingButton.ParameterValue.IconBefore?._guid, CascadingButton.ParameterValue.IconAfter?._guid }.Where(i => i is not null).Cast<Guid>()))
-                    CascadingButton.ParameterValue.OtherIcons[IconType.ParameterValue] = this;
-                CascadingButton.SetAsUnchanged(); // so the notify won't end up here again
+                var customClasses = new List<string> { "my-icon" }; // "pre-render"
+                SetMainCustomAndUserDefinedClasses("my-icon", customClasses);
+                SetUserDefinedStyles();
+                SetUserDefinedAttributes();
             }
             
-            //if (CascadingButton.ParameterValue?.InteractionState?.HasValue() == true && CascadingButton.ParameterValue?.InteractionState.ParameterValue == ComponentState.Disabled
-            //    || CascadingInput.ParameterValue?.InteractionState?.HasValue() == true && CascadingInput.ParameterValue?.InteractionState.ParameterValue.IsDisabledOrForceDisabled == true
-            //    || parentDropDownState?.IsDisabledOrForceDisabled == true)
-            //    _disabled = true;
-            //else
-            //    _disabled = false; // using State directly now
-
             var iconEnums = IconType.ParameterValue.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
             var iconEnumVals = iconEnums.Select(p => p.GetValue(IconType.ParameterValue)).ToArray();
             var iconEnum = iconEnumVals.Single(v => v != null);
-
             var iconType = iconEnum.GetType();
             var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
 
             if (IconType.HasChanged())
             {
-
                 var iconSetDirName = iconType.Name.BeforeFirst("IconType");
 
                 try
                 {
-                    Svg = SvgCache.VorN(IconType.ParameterValue);
-                    if (Svg is null)
+                    var svg = SvgCache.VorN(IconType.ParameterValue);
+                    if (svg is null)
                     {
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
-                        {
-                            Svg = (await UploadClient.GetRenderedIconAsync(IconType.V)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
-                        }
+                            svg = (await UploadClient.GetRenderedIconAsync(IconType.V)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         else
                         {
                             var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
-                            Svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+                            svg = (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
                         }
 
-                        SvgCache.TryAdd(IconType.ParameterValue, Svg);
+                        SvgCache.TryAdd(IconType.ParameterValue, svg);
                     }
-                    
-                    _svgXmlns = Svg?.GetAttributeValue("xmlns");
-                    _svgViewBox = Svg?.GetAttributeValue("viewBox");
-                    _dPath = Svg?.SelectSingleNode("./path")?.GetAttributeValue("d");
 
-                    if (_dPath is null) // a complex colored icon, i.e.: metamask
-                        ComplexSvg = Svg.ToRenderFragment();
+                    Svg = svg?.CloneNode(true);
                 }
                 catch (TaskCanceledException)
                 {
                     Logger.For<MyIconBase>().Warn($"Getting Icon [{IconType.ParameterValue}] was canceled, did you refresh the page or validation state message don't need that icon anymore?");
                 }
             }
-            
-            if (SizeMode.HasChanged() && IconType.HasValue() && _svgXmlns != null && _svgViewBox != null && _dPath != null)
-            {
-                if (!_svgViewBox.IsNullOrWhiteSpace())
-                {
-                    // enforce quadratic and over
-                    var vbWidth = _svgViewBox.Split(" ")[2].ToInt();
-                    var vbHeight = _svgViewBox.Split(" ")[3].ToInt();
-                    var sizeMode = SizeMode?.ParameterValue;
 
-                    if (sizeMode == IconSizeMode.Contain && vbWidth >= vbHeight
-                        || sizeMode is IconSizeMode.Cover or IconSizeMode.EnforceQuadraticAndCover && vbWidth < vbHeight
-                        || sizeMode == IconSizeMode.FillWidth)
-                        _svgStyle.ReplaceAll(new Dictionary<string, string> { ["width"] = "100%", ["height"] = "auto" });
-                    else if (sizeMode == IconSizeMode.Contain && vbWidth < vbHeight
-                             || sizeMode == IconSizeMode.Cover && vbWidth >= vbHeight
-                             || sizeMode == IconSizeMode.FillHeight)
-                        _svgStyle.ReplaceAll(new Dictionary<string, string> { ["width"] = "auto", ["height"] = "100%" });
-                    else if (sizeMode == IconSizeMode.InheritFromStyles)
-                        _svgStyle.Clear();
-                    _renderSvgStyle = _svgStyle.CssDictionaryToString();
+            //if (Color.HasChanged() && !InteractionState.HasChanged() && InteractionState.V?.IsEnabledButNotForced == true)
+            //{
+            //    if (Svg is null)
+            //        throw new NullReferenceException("Svg Icon is null");
+
+            //    if (Color.HasValue())
+            //        SetPrimaryColorPath(Color.V);
+            //}
+
+            //if (SecondaryColor.HasChanged() && !InteractionState.HasChanged() && InteractionState.V?.IsEnabledButNotForced == true)
+            //{
+            //    if (Svg is null)
+            //        throw new NullReferenceException("Svg Icon is null");
+
+            //    if (SecondaryColor.HasValue())
+            //        SetSecondaryColorPath(SecondaryColor.V);
+            //}
+
+            if (IconType.V == CommonLib.Source.Common.Utils.UtilClasses.IconType.From(LightIconType.Key))
+            {
+                var t = 0;
+            }
+
+            if (InteractionState.HasChanged() || Color.HasChanged() || SecondaryColor.HasChanged() || IconType.HasChanged()) // There are edge cases when IconType changes thus reloading unstyled SVG from cache even when neither InteractionState nor Colors changed, in such case styling the icon again is necessary
+            {
+                var isEnabled = InteractionState.V?.IsEnabledOrForceEnabled == true;
+                var pathsCount = Svg?.SelectNodes("./path")?.Count ?? 0;
+
+                if (isEnabled)
+                {
+                    if (pathsCount.In(1, 2))
+                    {
+                        SetPrimaryColorPath(Color.V);
+                        SetSecondaryColorPath(SecondaryColor.V);
+                    }
+                    else
+                    {
+                        AddStyle("filter", "none");
+                    }
+                }
+                else
+                {
+                    if (pathsCount.In(1, 2))
+                    {
+                        var disabledColor = "#404040".HexToColor();
+                        SetPrimaryColorPath(disabledColor);
+                        SetSecondaryColorPath(disabledColor);
+                    }
+                    else
+                    {
+                        AddStyle("filter", "grayscale(1) brightness(0.2)");
+                    }
                 }
             }
 
-            if (IsFirstParamSetup() || _renderClasses.Split(" ").Contains("pre-render")) // 2nd condition for when the component was disposed before the styles were set
+            if (SizeMode.HasChanged()) // && IconType.HasValue() && _svgXmlns != null && _svgViewBox != null && _dPath != null)
             {
-                SetMainCustomAndUserDefinedClasses("my-icon", SizeMode?.ParameterValue == IconSizeMode.EnforceQuadraticAndCover ? new[] { "my-quadratic" } : null);
-                SetUserDefinedStyles();
-                SetUserDefinedAttributes();
+                if (Svg is null)
+                    throw new NullReferenceException("Svg Icon is null");
+
+                SizeMode.ParameterValue ??= IconSizeMode.InheritFromStyles;
+
+                if (SizeMode?.ParameterValue == IconSizeMode.EnforceQuadraticAndCover)
+                    AddClass("my-quadratic");
+                
+                var svgViewBox = Svg.GetAttributeValue("viewBox");
+                var vbWidth = svgViewBox.Split(" ")[2].ToInt();
+                var vbHeight = svgViewBox.Split(" ")[3].ToInt();
+                var sizeMode = SizeMode?.ParameterValue;
+                var sizeSvgStyle = new Dictionary<string, string>();
+
+                switch (sizeMode)
+                {
+                    case IconSizeMode.Contain when vbWidth >= vbHeight:
+                    case IconSizeMode.Cover or IconSizeMode.EnforceQuadraticAndCover when vbWidth < vbHeight:
+                    case IconSizeMode.FillWidth:
+                        sizeSvgStyle.ReplaceAll(new Dictionary<string, string> { ["width"] = "100%", ["height"] = "auto" });
+                        break;
+                    case IconSizeMode.Contain when vbWidth < vbHeight:
+                    case IconSizeMode.Cover when vbWidth >= vbHeight:
+                    case IconSizeMode.FillHeight:
+                        sizeSvgStyle.ReplaceAll(new Dictionary<string, string> { ["width"] = "auto", ["height"] = "100%" });
+                        break;
+                    case IconSizeMode.InheritFromStyles:
+                        sizeSvgStyle.Clear();
+                        break;
+                }
+
+                var svgStyle = Svg.GetAttributeValue("style").CssStringToDictionary();
+                svgStyle.AddRange(sizeSvgStyle);
+                Svg.SetAttributeValue("style", svgStyle.CssDictionaryToString());
             }
         }
         
-        protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
-
-        protected async Task PrintAndClickCallbackAsync(MouseEventArgs e)
+        protected async Task Icon_ClickAsync(MouseEventArgs e)
         {
             var msg = $"{IconType.V} Clicked";
             Logger.For<MyIconBase>().Log(LogLevel.Info, msg);
-
-            await OnClick.InvokeAsync(e).ConfigureAwait(false);
+            await Click.InvokeAsync(this, e).ConfigureAwait(false);
         }
 
+        private void SetPrimaryColorPath(Color? color)
+        {
+            var paths = Svg.SelectNodes("./path");
+            var primaryPath = paths?.Count switch
+            {
+                1 => paths.SingleOrNull(),
+                2 => paths.SingleOrNull(p => p.HasClass("fa-primary")),
+                _ => null
+            };
+
+            if (primaryPath is not null)
+            {
+                var primaryPathStyle = primaryPath.GetAttributeValue("style").CssStringToDictionary();
+                primaryPathStyle["fill"] = color?.ToHex().ToLower().Prepend("#");
+                primaryPath.SetAttributeValue("style", primaryPathStyle.CssDictionaryToString());
+            }
+        }
+
+        private void SetSecondaryColorPath(Color? color)
+        {
+            var paths = Svg.SelectNodes("./path");
+            var secondaryPath = paths?.Count switch
+            {
+                2 => paths.SingleOrNull(p => p.HasClass("fa-secondary")),
+                _ => null
+            };
+
+            if (secondaryPath is not null)
+            {
+                var secondaryPathStyle = secondaryPath.GetAttributeValue("style").CssStringToDictionary();
+                secondaryPathStyle["fill"] = color?.ToHex().ToLower().Prepend("#");
+                secondaryPath.SetAttributeValue("style", secondaryPathStyle.CssDictionaryToString());
+            }
+        }
     }
 
     public enum IconSizeMode

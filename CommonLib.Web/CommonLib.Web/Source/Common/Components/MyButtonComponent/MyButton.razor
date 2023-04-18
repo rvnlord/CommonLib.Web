@@ -2,6 +2,7 @@
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonBase
@@ -18,7 +19,7 @@
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
                     }
                     @if (!Value.ParameterValue.IsNullOrWhiteSpace())
                     {
@@ -26,7 +27,7 @@
                     }
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
                 </button>
@@ -36,7 +37,7 @@
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
                     }
                     @if (!Value.ParameterValue.IsNullOrWhiteSpace())
                     {
@@ -44,7 +45,7 @@
                     }
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
                 </button>
@@ -54,7 +55,7 @@
                 <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
                     }
                     @if (!Value.ParameterValue.IsNullOrWhiteSpace())
                     {
@@ -62,10 +63,10 @@
                     }
                     @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
                     {
-                        <MyIcon Color="none" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
-                    <MyImage Path="@("~/images/content-loader.gif".ToBp())" class="my-btn-loader" style="padding-top: 0"></MyImage>
+                    <MyImage InteractionState="ComponentState.ForceEnabled" InheritState="false" Path="@("~/images/content-loader.gif".ToBp())" class="my-btn-loader" style="padding-top: 0"></MyImage>
                 </button>
             }
         </CascadingValue>

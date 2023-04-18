@@ -168,7 +168,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (!_loginUserVM.IsConfirmed && _loginUserVM.Email is not null) // email is null if for instance external login profile was connected to an account that was previously using only wallet login
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}"); // login is in the modal, page should be changed if email confirmation is required
             else if (!externalLoginResp.Result.ReturnUrl.IsNullOrWhiteSpace())
-                NavigationManager.NavigateTo(_loginUserVM.ReturnUrl);
+                NavigationManager.NavigateTo(_loginUserVM.ReturnUrl); // this is to remove the `loginUserVm` query string from the address
         }
 
         protected async Task FormLogin_ValidSubmitAsync()

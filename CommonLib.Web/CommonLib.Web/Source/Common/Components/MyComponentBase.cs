@@ -48,6 +48,7 @@ using CommonLib.Web.Source.Common.Components.MyCheckBoxComponent;
 using CommonLib.Web.Source.Common.Components.MyDropDownComponent;
 using CommonLib.Web.Source.Common.Components.MyFileUploadComponent;
 using CommonLib.Web.Source.Common.Components.MyIconComponent;
+using CommonLib.Web.Source.Common.Components.MyImageComponent;
 using CommonLib.Web.Source.Common.Components.MyInputGroupComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
 using CommonLib.Web.Source.Common.Components.MyPasswordInputComponent;
@@ -55,6 +56,7 @@ using CommonLib.Web.Source.Common.Components.MyTextInputComponent;
 using CommonLib.Web.Source.Common.Components.MyMediaQueryComponent;
 using CommonLib.Web.Source.Common.Components.MyProgressBarComponent;
 using CommonLib.Web.Source.Common.Components.MyRadioButtonComponent;
+using CommonLib.Web.Source.Common.Components.MyTileComponent;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.Services.Admin.Interfaces;
 using Keras;
@@ -438,10 +440,7 @@ namespace CommonLib.Web.Source.Common.Components
 
             AdditionalAttributesHaveChanged = !AdditionalAttributes.Keys.CollectionEqual(_prevAdditionalAttributes.Keys) || !AdditionalAttributes.Values.CollectionEqual(_prevAdditionalAttributes.Values);
             _prevAdditionalAttributes = AdditionalAttributes.ToOrderedDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-
-            OnParametersSet();
-            await OnParametersSetAsync();
-
+            
             if (InheritState.HasChanged())
                 InheritState.ParameterValue ??= InheritState.V ?? true;
 
@@ -449,30 +448,29 @@ namespace CommonLib.Web.Source.Common.Components
                 DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
 
             var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
+            if (parentState is not null && !InteractionState.HasChanged())
+                InteractionState.SetAsChanged();
             var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
-
-            if (InteractionState.HasChanged() || parentState is not null)
+            
+            if (InteractionState.HasChanged())
             {
-                ComponentState thisAsIconState = null;
-                if (this is MyIconBase)
-                    thisAsIconState = (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractionState.V;
+                ComponentState thisAsIconOrImageState = null;
+                if (this is MyIconBase or MyImageBase)
+                    thisAsIconOrImageState = InheritState.V == true ? (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase or MyNavLinkBase or MyTile) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractionState.V : null;
 
-                InteractionState.ParameterValue = thisAsIconState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+                InteractionState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+            }
 
-                // `thisAsIcon.Svg.SetAttributeValue("style", InteractionState.V?.IsEnabledOrForceEnabled == true ? "filter: none" : "filter: grayscale(1) brightness(0.3);");`
-                // wouldn't work - it would change the state of all icons of the same type because I am caching svgs in local storage
-                if (this is MyIconBase thisAsIcon) // InteeractionState from parent is updated for each component but only after their respective OnParamters methods are called
-                {
-                    if (thisAsIcon.ComplexSvg is not null)
-                    {
-                        AddStyle("filter", InteractionState.V?.IsEnabledOrForceEnabled == true ? "none" : "grayscale(1) brightness(0.3)");
-                        //Logger.For<MyIconBase>().Info($"{thisAsIcon.IconType.V}: {(InteractionState.V?.State.EnumToString() ?? "null")}");
-                        thisAsIcon.ComplexSvg = thisAsIcon.Svg.ToRenderFragment();
-                    }
-                }
+            //if (this is MyIconBase icon && icon.IconType.V == IconType.From(BrandsIconType.Metamask) && Ancestors.FirstOrNull(a => a is MyTextInputBase) is not null)
+            //{
+            //    var t = 0;
+            //}
 
-                InteractionState.SetAsUnchanged();
+            OnParametersSet();
+            await OnParametersSetAsync();
 
+            if (InteractionState.HasChanged())
+            {
                 if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
                 {
                     RemoveClasses("my-loading");

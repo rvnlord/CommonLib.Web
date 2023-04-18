@@ -1,6 +1,8 @@
 ﻿@using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Models
+@using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
 @inherits MyDropDownBase<TProperty>
@@ -32,11 +34,11 @@
             </ul>
         </div>
         <MyInputGroupPrepend>
-            <MyIcon IconType="Icon.V"></MyIcon>
+            <MyIcon Color="Color.White" IconType="Icon.V"></MyIcon>
         </MyInputGroupPrepend>
         <MyInputGroupAppend>
-            <MyIcon IconType="IconType.From(LightIconType.ChevronDown)" SizeMode="@IconSizeMode.Contain.ToBp()" class="my-dropdown-open-icon" />
-            <MyIcon IconType="IconType.From(LightIconType.ChevronUp)" SizeMode="@IconSizeMode.Contain.ToBp()" class="my-dropdown-close-icon" style="display: none" />
+            <MyIcon Color="Color.White" IconType="IconType.From(LightIconType.ChevronDown)" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))" class="my-dropdown-open-icon" />
+            <MyIcon Color="Color.White" IconType="IconType.From(LightIconType.ChevronUp)" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))" class="my-dropdown-close-icon" style="display: none" />
         </MyInputGroupAppend>
     </MyInputGroup>
 

@@ -1,5 +1,6 @@
 ﻿@using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Source.Common.Utils.UtilClasses
+@using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyModalComponent
 @inherits MyModalBase
@@ -12,7 +13,7 @@
             <div @ref="@JsModal" my-guid="@_guid" id="@_id" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
                 <div class="my-modal-titlebar">
                     <MyButton @ref="_btnCloseModal" Styling="@ButtonStyling.Clear" Sizing="ButtonSizing.Quadratic" class="my-close my-font-sized my-mt-10px my-mr-10px">
-                        <MyIcon Color="none" IconType="@IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.EnforceQuadraticAndCover"></MyIcon>
+                        <MyIcon Color="null" IconType="@IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.EnforceQuadraticAndCover"></MyIcon>
                     </MyButton>
                 </div>
                 <CascadingValue Value="_btnCloseModal">

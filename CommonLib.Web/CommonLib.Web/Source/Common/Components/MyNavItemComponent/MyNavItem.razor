@@ -3,6 +3,7 @@
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.ViewModels.Account
+@using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
 @inherits MyNavItemBase
@@ -31,7 +32,7 @@
                 else if (Type == NavItemType.Search)
                 {
                     <MyNavLink To="null" MatchEmptyRoute="false"></MyNavLink>
-                    <MyIcon Color="none" IconType="IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.Cover" class="my-nav-link-icon my-close my-d-none"></MyIcon>
+                    <MyIcon Color="null" IconType="IconType.From(LightIconType.Times)" SizeMode="IconSizeMode.Cover" class="my-nav-link-icon my-close my-d-none"></MyIcon>
                     <div class="my-nav-search-container">
                         <MyTextInput Model="Search" For="(() => Search.SearchTerm)">
                             <MyInputGroupPrepend>
