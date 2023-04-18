@@ -148,6 +148,11 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                     _syncImageLoad.Release();
                 }
             }
+
+            if (InteractionState.HasChanged())
+            {
+                AddStyle("filter", InteractionState.V.IsEnabledOrForceEnabled ? "none" : "grayscale(1) brightness(0.2)");
+            }
         }
 
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
