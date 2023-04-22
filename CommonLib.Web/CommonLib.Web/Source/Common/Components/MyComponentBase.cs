@@ -80,6 +80,7 @@ namespace CommonLib.Web.Source.Common.Components
         private BlazorParameter<ComponentState> _bpState;
         private bool _preventRenderOnce;
         private bool _isRerendered;
+        private bool _authUserChanged;
 
         [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed asynchronously")]
         private readonly SemaphoreSlim _syncClasses = new(1, 1);
@@ -100,7 +101,7 @@ namespace CommonLib.Web.Source.Common.Components
         private Guid _sessionId;
         private bool _sessionIdAlreadySet;
         private AuthenticateUserVM _authenticatedUser;
-        private AuthenticateUserVM _prevAuthUser;
+        private AuthenticateUserVM _prevAuthUser; // for a particular component, i.e.: sub page
         private bool _isFirstRenderAfterAuthorization = true;
 
         protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
@@ -544,9 +545,12 @@ namespace CommonLib.Web.Source.Common.Components
                     _isFirstRenderAfterAuthorization = false;
                     await OnAfterFirstRenderAfterAutthorizationAsync();
                 }
-                OnAfterRender(_firstRenderAfterInit);
-                await OnAfterRenderAsync(_firstRenderAfterInit);
-                await OnAfterRenderFinishingAsync(_firstRenderAfterInit);
+
+                _authUserChanged = AuthenticatedUser != _prevAuthUser;
+
+                OnAfterRender(_firstRenderAfterInit, _authUserChanged);
+                await OnAfterRenderAsync(_firstRenderAfterInit, _authUserChanged);
+                await OnAfterRenderFinishingAsync(_firstRenderAfterInit, _authUserChanged);
 
                 //if (LayoutParameter.HasValue() && SessionId != Guid.Empty && Layout.DeviceSize is not null && isFirstRenderAfterInit) // it means component was loaded some time after layout which means layout couldn't trigger the event for it because it wasn't aavailable at the time
                 if (_firstRenderAfterInit && Layout?.IsRendered == true)
@@ -554,6 +558,8 @@ namespace CommonLib.Web.Source.Common.Components
 
                 IsRerendered = true;
                 _firstRenderAfterInit = false;
+                _authUserChanged = false;
+                _prevAuthUser = AuthenticatedUser;
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException or JSDisconnectedException)
             {
@@ -590,8 +596,8 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         protected virtual async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
-        protected virtual void OnAfterRender(bool firstRender) { }
-        protected virtual async Task OnAfterRenderAsync(bool firstRender) => await Task.CompletedTask;
+        protected virtual void OnAfterRender(bool firstRender, bool authUserChanged) { }
+        protected virtual async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged) => await Task.CompletedTask;
         protected virtual async Task OnAfterFirstRenderAfterAutthorizationAsync() => await Task.CompletedTask;
 
         protected virtual async Task OnLayoutSessionIdSetAsync() => await Task.CompletedTask;
@@ -1177,7 +1183,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         public Task SetControlStateAsync(ComponentState state, IComponent controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
         
-        protected MyComponentBase[] GetInputControls()
+        protected internal MyComponentBase[] GetInputControls()
         {
             var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
@@ -1286,7 +1292,7 @@ namespace CommonLib.Web.Source.Common.Components
             await AfterRenderFinished.InvokeAsync(this, e);
             await OnAfterRenderFinishedAsync(e.IsFirstRender);
         }
-        private async Task OnAfterRenderFinishingAsync(bool isFirstRender) => await OnAfterRenderFinishingAsync(new AfterRenderFinishedEventArgs(isFirstRender));
+        private async Task OnAfterRenderFinishingAsync(bool isFirstRender, bool authUserChanged) => await OnAfterRenderFinishingAsync(new AfterRenderFinishedEventArgs(isFirstRender));
         public class AfterRenderFinishedEventArgs : EventArgs
         {
             public bool IsFirstRender { get; }
