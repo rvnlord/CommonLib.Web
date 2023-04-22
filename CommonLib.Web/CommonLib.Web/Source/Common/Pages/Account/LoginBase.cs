@@ -7,6 +7,7 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
+using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components;
 using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyCssGridItemComponent;
@@ -53,7 +54,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         public EventCallback<MouseEventArgs> OnResetPasswordClick { get; set; }
         
         [Parameter] 
-        public EventCallback<MouseEventArgs> OnEditClick { get; set; }
+        public MyAsyncEventHandler<MyButtonBase, MouseEventArgs> OnEditClick { get; set; }
         
         [Inject]
         public IJQueryService JQuery { get; set; }
@@ -133,7 +134,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         // if enabled then it might trigger in the middle of authentication,
         // if disabled it may leave edit and logout button disabled after authentication
         // if changed to AuthStateChanged then it might not trigger when it should because sth else already refreshed the logged in panel
-        protected override async Task OnAfterRenderAsync(bool isFirstRender)
+        protected override async Task OnAfterRenderAsync(bool isFirstRender, bool authUserChanged)
         {
             //if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractionState?.V.IsLoadingOrForceLoading == true))
             //    return;
@@ -285,7 +286,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task BtnSignIn_ClickAsync() => await _editForm.SubmitAsync();
 
-        protected async Task BtnSignOut_ClickAsync()
+        protected async Task BtnSignOut_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, _btnLogout);
             var logoutResult = await AccountClient.LogoutAsync();
@@ -326,7 +327,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
         protected async Task BtnResetPassword_ClickAsync(MouseEventArgs e) => await OnResetPasswordClick.InvokeAsync(e).ConfigureAwait(false);
 
-        protected async Task BtnEdit_ClickAsync(MouseEventArgs e) => await OnEditClick.InvokeAsync(e).ConfigureAwait(false);
+        protected async Task BtnEdit_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token) => await OnEditClick.InvokeAsync(sender, e, token).ConfigureAwait(false);
 
         private string GetConfirmEmailNavQueryStrings()
         {
