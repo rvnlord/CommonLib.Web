@@ -155,7 +155,7 @@
                         }
                         else 
                         {
-                            <MyImage Path="AuthenticatedUser.Avatar"></MyImage>
+                            <MyImage DisabledByDefault="false" InheritState="false" Path="AuthenticatedUser.Avatar"></MyImage>
                         }
                     </div>
                 </div>
@@ -222,10 +222,10 @@
                     MDTemplate="@(new CssGridLayout("repeat(2, max-content)", "auto"))"
                     class="logged-user-actions">
                     <MyCssGridItem>  
-                        <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" OnClick="BtnSignOut_ClickAsync"></MyButton>
+                        <MyButton Value="@("Sign Out".ToBp())" Icon="IconType.From(LightIconType.SignOut)" Styling="ButtonStyling.Danger" Sizing="ButtonSizing.Fill" Click="BtnSignOut_ClickAsync"></MyButton>
                     </MyCssGridItem>
                     <MyCssGridItem>  
-                        <MyButton Value="@("Edit".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" OnClick="BtnEdit_ClickAsync"></MyButton>
+                        <MyButton Value="@("Edit".ToBp())" Icon="IconType.From(LightIconType.Edit)" Styling="ButtonStyling.Primary" Sizing="ButtonSizing.Fill" Click="BtnEdit_ClickAsync"></MyButton>
                     </MyCssGridItem>
                 </MyCssGrid>
             </MyCssGridItem>
