@@ -18,11 +18,14 @@ using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Components.MyButtonComponent;
 using CommonLib.Web.Source.Common.Components.MyNavItemComponent;
 using CommonLib.Web.Source.Common.Components.MyNavLinkComponent;
+using CommonLib.Web.Source.Common.Pages.Account;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
@@ -129,7 +132,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             await Task.CompletedTask;
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
             if (firstRender || IsDisposed)
                 return;
@@ -186,15 +189,22 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
                 await jqContentContainer.RemoveClassAsync("disable-css-transition");
         }
         
-        protected async Task BtnEdit_ClickAsync()
+        protected async Task BtnEdit_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            await (await ComponentByClassAsync<MyModalBase>("my-login-modal")).HideModalAsync();
+            var loginControls = sender.Ancestors.First(a => a is LoginBase).GetInputControls();
+            await SetControlStatesAsync(ComponentState.Disabled, loginControls, sender);
+            await HideLoginModalAsync();
             var editurl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
-            await NavigateAndUpdateActiveNavLinksAsync(editurl);
 
-            var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
-            if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
-                await jqContentContainer.RemoveClassAsync("disable-css-transition");
+            if (editurl.EqualsIgnoreCase(NavigationManager.Uri))
+                await SetControlStatesAsync(ComponentState.Enabled, loginControls);
+            else // setting control states for `else` is handled within `EditPage` OnAfterFirstRender
+            {
+                await NavigateAndUpdateActiveNavLinksAsync(editurl);
+                var jqContentContainer = await JQuery.QueryOneAsync(".my-page-container > .my-page-content > .my-container");
+                if ((await jqContentContainer.ClassesAsync()).Contains("disable-css-transition"))
+                    await jqContentContainer.RemoveClassAsync("disable-css-transition");
+            }
         }
 
         public async Task<StringRange> GetSlideClipPathAsync(bool show, string dropClass, double width, double height)
