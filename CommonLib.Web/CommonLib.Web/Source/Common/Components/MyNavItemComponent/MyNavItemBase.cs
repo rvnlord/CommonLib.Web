@@ -56,7 +56,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
             await Task.CompletedTask;
         }
         
-        protected override async Task OnAfterRenderAsync(bool _)
+        protected override async Task OnAfterRenderAsync(bool _, bool authUserChanged)
         {
             if (Type == NavItemType.Login)
             {
