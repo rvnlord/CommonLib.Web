@@ -151,7 +151,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             // can't enable some buttons directly here because every control should wait for being explicitly enabled after page render
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
             if (firstRender)
                 return;
