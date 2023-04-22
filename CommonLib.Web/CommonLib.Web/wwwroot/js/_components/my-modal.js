@@ -178,7 +178,7 @@ $(document).ready(function() {
         const $btnClose = $modalToHide.find(".my-close").first(); // it will find all (`dismiss` and `x`)
         const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $btnClose.guid());
 
-        if (isDisabled || e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") || $btnClose.is(":disabled")) {
+        if (isDisabled || e.which !== 1 || e.detail > 1 || !$(this).equals($(e.target)) || $btnClose.is(":disabled")) { // $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") 
             return;
         }
 
