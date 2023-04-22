@@ -12,7 +12,16 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBrandComponent
         public string AltImage { get; set; }
 
         protected override async Task OnInitializedAsync() => await Task.CompletedTask;
-        protected override async Task OnParametersSetAsync() => await Task.CompletedTask;
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (FirstParamSetup)
+            {
+                SetMainAndUserDefinedClasses("my-nav-brand");
+            }
+
+            await Task.CompletedTask;
+        }
         protected override async Task OnAfterFirstRenderAsync() => await Task.CompletedTask;
     }
 }
