@@ -33,7 +33,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         private IEthereumHostProvider _ethereumHostProvider;
         private IWeb3 _web3;
         private LoginUserVM _loginUserVM;
-        private AuthenticateUserVM _prevAuthUser; // for this sub page
 
         protected MyFluentValidator _validator { get; set; }
         protected MyEditForm _editForm { get; set; }
@@ -61,7 +60,6 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var queryUser = NavigationManager.GetQueryString<string>("user")?.Base58ToUTF8OrNull()?.JsonDeserializeOrNull()?.To<LoginUserVM>();
             if (!await EnsureAuthenticatedAsync(queryUser is null || queryUser.Mode == ExternalLoginUsageMode.Connection, true)) // I don't want message before potentially logging in with query user
                 return;
-            _prevAuthUser = AuthenticatedUser;
             
             Mapper.Map(AuthenticatedUser, _editUserVM);
             _editUserVM.ExternalLogins = (await AccountClient.GetExternalLogins(_editUserVM.UserName)).Result;
@@ -79,26 +77,26 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             
             if (queryUser is not null && queryUser.Mode == ExternalLoginUsageMode.Connection)
             {
-                //queryUser.ReturnUrl = queryUser.ReturnUrl.Base58ToUTF8();
                 queryUser.UserName = _editUserVM.UserName;
-
                 await ConnectExternalLoginAsync(queryUser);
                 return;
             }
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
+            var loginControls = (await ComponentByTypeAsync<LoginBase>()).GetInputControls(); // re-enable controls disabled when clicking `edit` nav link (button)
+            if (loginControls.All(c => c.InteractionState.V.In(ComponentState.Disabled, ComponentState.Loading)) && loginControls.Count(c => c.InteractionState.V == ComponentState.Loading) == 1)
+                await SetControlStatesAsync(ComponentState.Enabled, loginControls);
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
             if (firstRender) 
                 return;
-            if (AuthenticatedUser == _prevAuthUser)
+            if (!authUserChanged)
                 return;
 
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
                 await OnAfterFirstRenderAsync();
-            _prevAuthUser = AuthenticatedUser;
         }
 
         protected async Task BtnSubmit_ClickAsync()
