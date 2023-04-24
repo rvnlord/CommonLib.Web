@@ -97,7 +97,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_PasswordInput_AfterFirstRender", Text, _guid, _passwordInputDotNetRef).ConfigureAwait(false);
         }
 
-        protected override async Task OnAfterRenderAsync(bool _)
+        protected override async Task OnAfterRenderAsync(bool _, bool authUserChanged)
         {
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_PasswordInput_AfterRender", Text, _guid).ConfigureAwait(false);
         }
