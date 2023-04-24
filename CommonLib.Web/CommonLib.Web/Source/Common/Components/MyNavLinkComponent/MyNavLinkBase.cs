@@ -104,7 +104,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
             await JQuery.QueryOneAsync(_guid).AttrAsync("rendered", "true");
             //await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterRender", _guid);
