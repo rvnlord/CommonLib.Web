@@ -105,7 +105,7 @@ namespace CommonLib.Web.Source.Common.Components.MyValidationMessageComponent
             await Task.CompletedTask;
         }
 
-        protected override async Task OnAfterRenderAsync(bool isFirstRender)
+        protected override async Task OnAfterRenderAsync(bool isFirstRender, bool authUserChanged)
         {
             //if (_iconType == null && _validationMessage == null)
             if (Status == ValidationMessageStatus.NotValidated)
