@@ -1,4 +1,5 @@
 ﻿import _ from "../libs/libman/underscore/underscore-esm.js";
+import Wrapper from "./wrapper.js";
 
 export default class utils {
     static guid = () => {
@@ -65,11 +66,11 @@ export default class utils {
 
     static getIconAsync = async (iconSet, iconName) => {
         const iconsCache = localStorage.getItem("IconsCache").jsonDeserialize();
-        iconsCache.addIfNotExistsAndGet(iconSet, {}).addIfNotExistsAndGet(iconName, null);
+        Wrapper.object(iconsCache).addIfNotExistsAndGet(iconSet, {}).addIfNotExistsAndGet(iconName, null).unwrap();
 
         if (!iconsCache[iconSet][iconName]) {
             const backendBaseUrl = sessionStorage.getItem("BackendBaseUrl");
-            const icon = await $.ajax({
+            const iconResp = await $.ajax({
                 url: `${backendBaseUrl}/api/upload/GetRenderedIconAsync`,
                 contentType: "application/json",
                 dataType: 'text',
@@ -79,16 +80,24 @@ export default class utils {
                 }.jsonSerialize(),
                 type: "POST"
             });
-            var jIcon = icon.jsonDeserialize();
-            iconsCache[iconSet][iconName] = jIcon["Result"];
+            var jIcon = iconResp.jsonDeserialize();
+            iconsCache[iconSet][iconName] = Wrapper.string(jIcon["Result"]).trimMultiline();
             localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
+        } else {
+            const icon = iconsCache[iconSet][iconName];
+            const iconHasHTMLComments = Wrapper.string(icon).containsHTMLComments().unwrap();
+
+            if (iconHasHTMLComments) {
+                iconsCache[iconSet][iconName] = Wrapper.string(icon).trimMultiline().unwrap();
+                localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
+            }
         }
 
         return iconsCache[iconSet][iconName];
     };
 
     static $getIconAsync = async (iconSet, iconName) => {
-        return await $(this.getIconAsync(iconSet, iconName));
+        return $(await this.getIconAsync(iconSet, iconName));
     };
 
     static toTimeDateString(date) {
@@ -211,7 +220,7 @@ export default class utils {
             if (obj && typeof obj === "object" && obj !== null) {
                 return true;
             }
-        } catch (ex) { 
+        } catch (ex) {
             return false;
         }
     }

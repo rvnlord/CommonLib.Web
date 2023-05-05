@@ -61,7 +61,7 @@ export class Notification {
         }
     }
 
-    async renderAsync(promptId) { // TODO: start here
+    async renderAsync(promptId) {
         const decorationIcon = await utils.getIconAsync("light", "grip-lines");
         const timeStamp = utils.toTimeDateString(this._timeStamp);
 
