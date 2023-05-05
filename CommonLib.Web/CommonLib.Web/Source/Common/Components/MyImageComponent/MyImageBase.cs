@@ -99,10 +99,7 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                             var path = Path.V.ToString();
                             if (IsWebAssembly)
                             {
-                                var commonAbsoluteVirtualPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, @"_content\CommonLib.Web");
-                                var localAbsoluteVirtualPath = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri);
-                                var isCommonResource = (await HttpClient.GetAsync(commonAbsoluteVirtualPath)).IsSuccessStatusCode;
-                                imgData = (await HttpClient.GetByteArrayAsync(isCommonResource ? commonAbsoluteVirtualPath : localAbsoluteVirtualPath)).ToFileData(path.PathToExtension(), path.PathToName());
+                                imgData = (await UploadClient.GetRenderedImage(path)).Result;
                             }
                             else
                             {
