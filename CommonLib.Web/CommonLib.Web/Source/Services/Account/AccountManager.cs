@@ -12,7 +12,6 @@ using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
 using CommonLib.Web.Source.Common.Converters;
-using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.DbContext.Models.Account;
 using CommonLib.Web.Source.Security;
@@ -23,6 +22,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Nethereum.Signer;
 using Nethereum.Util;
 using Truncon.Collections;
@@ -40,6 +40,8 @@ namespace CommonLib.Web.Source.Services.Account
         private readonly IPasswordHasher<DbUser> _passwordHasher;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly CustomPasswordResetTokenProvider<DbUser> _passwordResetTokenProvider;
+        //private readonly TwitterAuthenticationOptions _twitterOptions;
+        //private readonly DiscordAuthenticationOptions _discordOptions;
 
         public AccountManager(UserManager<DbUser> userManager,
             SignInManager<DbUser> signInManager,
@@ -50,6 +52,8 @@ namespace CommonLib.Web.Source.Services.Account
             IPasswordHasher<DbUser> passwordHasher,
             RoleManager<IdentityRole<Guid>> roleManager,
             CustomPasswordResetTokenProvider<DbUser> passwordResetTokenProvider)
+            //IOptionsMonitor<TwitterAuthenticationOptions> twitterOptionsMonitor,
+            //IOptionsMonitor<DiscordAuthenticationOptions> discordOptionsMonitor)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -60,6 +64,8 @@ namespace CommonLib.Web.Source.Services.Account
             _passwordHasher = passwordHasher;
             _roleManager = roleManager;
             _passwordResetTokenProvider = passwordResetTokenProvider;
+            //_twitterOptions = twitterOptionsMonitor.CurrentValue;
+            //_discordOptions = discordOptionsMonitor.CurrentValue;
         }
 
         private async Task<ApiResponse<FindUserVM>> FindUserAsync(FindUserVM userToFind, bool includeEmailClaim = false)
@@ -154,6 +160,8 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<FileData>> GetUserAvatarByNameAsync(string name)
         {
+            if (name.IsNullOrWhiteSpace())
+                return new ApiResponse<FileData>(StatusCodeType.Status200OK, "Provided Name was empty");
             var user = await IEnumerableExtensions.SingleOrDefaultAsync(_db.Users.Include(u => u.Avatar), u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
                 return new ApiResponse<FileData>(StatusCodeType.Status200OK, "There is no User with the given Name");
@@ -333,7 +341,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<string> GenerateLoginTicketAsync(Guid id, string passwordHash, bool rememberMe)
         {
-            var key = (await _db.CryptographyKeys.AsNoTracking().SingleOrDefaultAsync(k => k.Name.ToLower() == "LoginTicket"))?.Value;
+            var key = (await _db.CryptographyKeys.AsNoTracking().SingleOrDefaultAsync(k => k.Name.ToLower() == "LoginTicket".ToLower()))?.Value;
             if (key == null)
             {
                 key = CryptoUtils.GenerateCamelliaKey().ToBase58String();
@@ -416,25 +424,27 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<(AuthenticationProperties authenticationProperties, string schemaName)> ExternalLoginAsync(LoginUserVM userToExternalLogin)
         {
-            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-            var scheme = schemes.SingleOrDefault(s => s.Name.EqualsIgnoreCase(userToExternalLogin.ExternalProvider));
+            //var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            var scheme = await userToExternalLogin.ExternalLogins.SingleOrDefaultAsync(s => s.Name.EqualsIgnoreCase(userToExternalLogin.ExternalProvider));
             var frontEndBaseurl = ConfigUtils.FrontendBaseUrl;
-            if (scheme == null)
+            if (scheme is null)
                 throw new ArgumentNullException(null, $"{frontEndBaseurl}Account/Login?remoteStatus=Error&remoteMessage={"Provider not Found".UTF8ToBase58()}");
 
             var reqScheme = _http.HttpContext?.Request.Scheme; // we need API url here which is different than the Web App one
             var host = _http.HttpContext?.Request.Host;
             var pathbase = _http.HttpContext?.Request.PathBase;
-            var qs = new OrderedDictionary<string, string> { ["user"] = userToExternalLogin.JsonSerialize().UTF8ToBase58() };
-            var redirectUrl = $"{reqScheme}://{host}{pathbase}/api/account/externallogincallback?{qs.ToQueryString()}";
+            var qs = new OrderedDictionary<string, string> { ["user"] = userToExternalLogin.Nullify(u => u.ExternalLogins).JsonSerialize().UTF8ToBase58() }; // some providers: i.e: twitter have 500 bytes limit for "state" query string value and microsoft is basically encrypting all properties and storing them in "state" query variable, including "redirectUrl" which has entire user object base58 encoded in its own query string
+            var backendUrl = $"{reqScheme}://{host}{pathbase}/";
+            var redirectUrl = $"{backendUrl}api/account/externallogincallback?{qs.ToQueryString()}";
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(userToExternalLogin.ExternalProvider, redirectUrl);
-
+            
             return (properties, scheme.Name);
         }
 
         public async Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError)
         {
             var userToExternalLogin = _http.HttpContext?.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>() ?? throw new NullReferenceException("'userToExternalLogin' was null");
+            userToExternalLogin.ExternalLogins = await _signInManager.GetExternalAuthenticationSchemesAsync().ToListAsync();
             var url = userToExternalLogin.ReturnUrl.BeforeFirstOrWhole("?");
             var qs = userToExternalLogin.ReturnUrl.QueryStringToDictionary();
             qs["remoteStatus"] = "Error";
@@ -462,8 +472,8 @@ namespace CommonLib.Web.Source.Services.Account
                 userToExternalLogin.ExternalProviderUserName = userToExternalLogin.ExternalProvider.ToLowerInvariant() switch
                 {
                     "discord" => $"{userToExternalLogin.UserName}#{externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:discord:user:discriminator")).Value}",
-                    "twitter" => $"@{userToExternalLogin.UserName} ({externalLoginInfo.Principal.Claims.First(c => c.Type.EqualsInvariant("urn:twitter:userid")).Value})",
-                    "google" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
+                    "twitter" => $"@{userToExternalLogin.UserName} ({externalLoginInfo.Principal.Claims.FirstOrNull(c => c.Type.EqualsInvariant("urn:twitter:userid"))?.Value ?? externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "< id not found >"})",
+                    "google" => $"{userToExternalLogin.UserName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "< id not found >"})",
                     "facebook" => $"{externalName} ({externalLoginInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier)})",
                     _ => throw new ArgumentException("Invalid provider")
                 };
@@ -539,15 +549,13 @@ namespace CommonLib.Web.Source.Services.Account
             userToExternalLogin.Ticket = await GenerateLoginTicketAsync(user.Id, user.PasswordHash, userToExternalLogin.RememberMe);
 
             //var externalAccessToken = await _userManager.GetAuthenticationTokenAsync(user, "Discord", "access_token");
-            //await using var client = new DiscordRestClient();
-            //await client.LoginAsync(TokenType.Bearer, externalAccessToken);
-            //var guilds = await client.GetGuildSummariesAsync().FlattenAsync().ToListAsync();
-
-            //var request = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/users/@me/guilds");
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", externalAccessToken);
-            //var response = await new HttpClient().SendAsync(request);
-            //var content = await response.Content.ReadAsStringAsync();
-
+            //await using (var client = new DiscordRestClient())
+            //{
+            //    await client.LoginAsync(TokenType.Bearer, externalAccessToken);
+            //    var guilds = await client.GetGuildSummariesAsync().FlattenAsync().ToListAsync();
+            //    var simetriUserGuild = guilds.Single(g => g.Name.ContainsIgnoreCase("simetri"));
+            //}
+            
             return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToExternalLogin.ExternalProvider}\" as: \"{userToExternalLogin.UserName}\"", null, userToExternalLogin);
         }
 
