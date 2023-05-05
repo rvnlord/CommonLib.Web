@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http.Headers;
-using System.Net.Http;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Threading.Tasks;
 using AspNet.Security.OAuth.Twitter;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
@@ -23,9 +17,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using Base64UrlTextEncoder = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder;
 
-namespace CommonLib.Web.Source.Security
+namespace CommonLib.Web.Server.Source.Security
 {
     public class MyTwitterHandler : TwitterAuthenticationHandler
     {
@@ -36,7 +29,7 @@ namespace CommonLib.Web.Source.Security
             var query = Request.Query;
             var stateHash = query["state"].ToString();
             var state = Response.HttpContext.Session.Get("state")?.ToUTF8String().JsonDeserialize().To<Dictionary<string, string>>();
-            var properties = state is null ? null : new AuthenticationProperties(state);
+            var properties = state is null ? null : new AuthenticationProperties(state!);
             if (properties is null || !stateHash.EqualsInvariant(state.JsonSerialize().TrimMultiline().Keccak256().HexToBase58()))
                 return HandleRequestResult.Fail("The oauth state was missing or invalid.");
             if (!ValidateCorrelationId(properties))
@@ -171,7 +164,7 @@ namespace CommonLib.Web.Source.Security
                 var errorMessage = $"OAuth token endpoint failure: Status: {response.StatusCode};Headers: {response.Headers};Body: {body};";
                 return OAuthTokenResponse.Failed(new Exception(errorMessage));
 
-                static Exception GetStandardErrorException(JsonDocument response)
+                static Exception? GetStandardErrorException(JsonDocument response)
                 {
                     var root = response.RootElement;
                     var error = root.GetString("error");
