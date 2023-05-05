@@ -85,6 +85,7 @@ class InputUtils {
 
     static async bindOverlayScrollBarAsync(guidOrComponent) {
         const $component = utils.is$(guidOrComponent) ? guidOrComponent : $(guidOrComponent.guidToSelector());
+        const guid = $component.guid();
         const popupId = $component.attr("aria-controls");
         let $scrollableContent = null;
         if ($component.is(".k-grid")) {
@@ -98,7 +99,7 @@ class InputUtils {
 
         const alreadyHasScrollbar = $scrollableContent.is(".os-host");
         if ($scrollableContent && $scrollableContent.length === 1 && !alreadyHasScrollbar) {
-            $scrollableContent.addClass("os-host-flexbox").overlayScrollbars({
+            this._scrollBoundComponents[guid] = $scrollableContent.addClass("os-host-flexbox").overlayScrollbars({
                 className: "os-theme-dark",
                 scrollbars: {
                     dragScrolling: true
@@ -108,7 +109,6 @@ class InputUtils {
                 }
             }).overlayScrollbars();
         }
-
     }
 }
 
