@@ -16,7 +16,8 @@ namespace CommonLib.Web.Source.DbContext
         public DbSet<DbWallet> Wallets { get; set; }
         
         public AccountDbContext(DbContextOptions<AccountDbContext> options) : base(options) { }
-        
+        protected AccountDbContext(DbContextOptions options) : base(options) { } // to solve inheritance where deriving classes constructors would require options with base class context: https://github.com/dotnet/efcore/issues/7533#issuecomment-353669263
+
         protected override void OnModelCreating(ModelBuilder mb)
         {
             if (mb == null)
