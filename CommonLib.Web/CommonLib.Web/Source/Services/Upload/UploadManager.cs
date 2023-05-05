@@ -117,29 +117,15 @@ namespace CommonLib.Web.Source.Services.Upload
 
         public async Task<ApiResponse<FileData>> GetRenderedImageAsync(string imagePath)
         {
-            FileData imgData = null;
-            var productionLocalAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir);
-            var productionCommonAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, WwwRootDir, @"_content\CommonLib.Web");
-            var devLocalAbsolutePhysicalDir = productionLocalAbsolutePhysicalDir;
-            var devCommonAbsolutePhysicalDir = PathUtils.Combine(PathSeparator.BSlash, CommonWwwRootDir);
-            var sourceFilesMatcher = new Matcher().AddInclude(imagePath);
-
-            if (!IsProduction)
-            {
-                if (Directory.Exists(devCommonAbsolutePhysicalDir))
-                    imgData = sourceFilesMatcher.GetResultsInFullPath(devCommonAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
-                if (Directory.Exists(devLocalAbsolutePhysicalDir) && imgData is null)
-                    imgData = sourceFilesMatcher.GetResultsInFullPath(devLocalAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
-            }
-            else
-            {
-                if (Directory.Exists(productionCommonAbsolutePhysicalDir))
-                    imgData = sourceFilesMatcher.GetResultsInFullPath(productionCommonAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
-                if (Directory.Exists(productionLocalAbsolutePhysicalDir) && imgData is null)
-                    imgData = sourceFilesMatcher.GetResultsInFullPath(productionLocalAbsolutePhysicalDir).SingleOrDefault()?.PathToFileData(true);
-            }
-
-            return await Task.FromResult(new ApiResponse<FileData>(StatusCodeType.Status200OK, "Successfully retrieved image", null, imgData));
+            var fixesImagePath = imagePath.AfterFirstOrWholeIgnoreCase("images\\").AfterFirstOrWholeIgnoreCase("images/");
+            var wwwRootPath = PathUtils.Combine(PathSeparator.FSlash, "wwwroot/images", fixesImagePath);
+            var wwwRootCommonPath = PathUtils.Combine(PathSeparator.FSlash, "wwwroot/_content/CommonLib.Web/images", fixesImagePath);
+            var myContentCommonPath =  PathUtils.Combine(PathSeparator.FSlash, "_myContent/CommonLib.Web/images", fixesImagePath);
+            var sourceFilesMatcher = new Matcher().AddInclude(wwwRootPath).AddInclude(wwwRootCommonPath).AddInclude(myContentCommonPath);
+            var imgData = sourceFilesMatcher.GetResultsInFullPath(RootDir).FirstOrDefault()?.PathToFileData(true);
+            if (imgData is null)
+                return await Task.FromResult(new ApiResponse<FileData>(StatusCodeType.Status404NotFound, "File not Found"));
+            return await Task.FromResult(new ApiResponse<FileData>(StatusCodeType.Status200OK, "Successfully retrieved image", imgData));
         }
     }
 }
