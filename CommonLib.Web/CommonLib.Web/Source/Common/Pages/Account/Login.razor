@@ -93,7 +93,7 @@
                         </MyCssGridItem>
 
                         <MyCssGridItem class="my-login-modal-mid-panel-body-container">
-                            @if (!_loginUserVM.ExternalLogins.Any())
+                            @if (_loginUserVM?.ExternalLogins?.Any() != true)
                             {
                                 <MyCssGrid Padding="@Gutter.Px()" Gap="@Gutter.Px()" Template="@(new CssGridLayout())">
                                     <MyCssGridItem class="no-providers-message">

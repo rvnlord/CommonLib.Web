@@ -91,7 +91,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
             await StateHasChangedAsync(true); // to re-render External Login Buttons and get their references using @ref in .razor file
-            SetControls();
+            await SetControlsAsync();
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, null, ChangeRenderingStateMode.AllSpecified); // disable External Login Buttons
 
             if (!HasAuthenticationStatus(AuthStatus.Authenticated)) // try to authorize with what is present in queryStrings, possibly from an external provider
@@ -163,7 +163,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
            
             await EnsureAuthenticationPerformedAsync(false, true, true);
-            SetControls();
+            await SetControlsAsync();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
            
             if (!_loginUserVM.IsConfirmed && _loginUserVM.Email is not null) // email is null if for instance external login profile was connected to an account that was previously using only wallet login
@@ -191,7 +191,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             if (await EnsureAuthenticationPerformedAsync(true, true, true)) // not changed because change may be frontrun by components updating it earlier
             {
-                SetControls();
+                await SetControlsAsync();
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
@@ -259,7 +259,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             if (await EnsureAuthenticationPerformedAsync(true, true, true)) // not changed because change may be frontrun by components updating it earlier
             {
-                SetControls();
+                await SetControlsAsync();
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             }
         }
@@ -306,15 +306,17 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             if (await EnsureAuthenticationPerformedAsync(true, true)) // not changed because change may be frontrun by components updating it earlier
             {
-                SetControls();
+                await SetControlsAsync();
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             }
         }
 
-        private void SetControls()
+        private async Task SetControlsAsync()
         {
             if (IsDisposed)
                 return;
+
+            var externalLogins = _loginUserVM?.ExternalLogins ?? (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
 
             _btnCloseModal = Parent.Parent.Children.OfType<MyButtonBase>().Single(d => d.Classes.Contains("my-close"));
             _allControls = GetInputControls().Append_(_btnCloseModal).AppendIfNotNull(_giAvatarContainer).ToArray();
