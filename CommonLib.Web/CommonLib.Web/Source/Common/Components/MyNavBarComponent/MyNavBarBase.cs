@@ -81,13 +81,11 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             {
                 //await MyJsRuntime.JsVoidFromComponent(nameof(MyNavBar), "blazor_NavBar_AfterRender");
                 await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterFirstRender");
-                var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent
                 var authResp = await AccountClient.GetAuthenticatedUserAsync();
                 if (!authResp.IsError)
                 {
                     AuthenticatedUser = authResp.Result;
-                    if (!AuthenticatedUser.Equals(prevAuthUser))
-                        await StateHasChangedAsync(true);
+                    await StateHasChangedAsync(true); // user is always changed on first render
                 }
                 //Logger.For<MyNavBarBase>().Info("JS 'blazor_NavBar_AfterRender' executed");
             }

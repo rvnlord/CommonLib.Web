@@ -15,6 +15,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
+using Nethereum.Contracts.QueryHandlers.MultiCall;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
 {
@@ -56,17 +57,23 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
             await Task.CompletedTask;
         }
         
-        protected override async Task OnAfterRenderAsync(bool _, bool authUserChanged)
+        protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
             if (Type == NavItemType.Login)
             {
-                var prevAuthUser = Mapper.Map(AuthenticatedUser, new AuthenticateUserVM()); // to prevent  
                 var authResp = await AccountClient.GetAuthenticatedUserAsync();
                 if (!authResp.IsError)
                 {
+                    if (authResp.Result != AuthenticateUserVM.NotAuthenticated)
+                    {
+                        var t = 0;
+                    }
+
                     AuthenticatedUser = authResp.Result;
-                    AuthenticatedUser.Avatar = (await AccountClient.GetUserAvatarByNameAsync(AuthenticatedUser.UserName))?.Result;
-                    if (!AuthenticatedUser.Equals(prevAuthUser))
+                    var userName = AuthenticatedUser.UserName;
+                    var avatarResp = await AccountClient.GetUserAvatarByNameAsync(userName);
+                    AuthenticatedUser.Avatar = avatarResp?.Result;
+                    if (firstRender || authUserChanged)
                         await StateHasChangedAsync(true);
                     if (_disabledNavLinkAndIcons.Any())
                         await SetControlStatesAsync(ComponentState.Enabled, _disabledNavLinkAndIcons);
