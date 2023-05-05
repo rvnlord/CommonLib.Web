@@ -283,7 +283,12 @@ namespace CommonLib.Web.Source.Common.Components
 
         public AuthenticateUserVM AuthenticatedUser
         {
-            get => !IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
+            get
+            {
+                if (IsDisposed || (!IsCommonLayout && Layout is null))
+                    return AuthenticateUserVM.NotAuthenticated;
+                return !IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser;
+            }
             set
             {
                 var prevAuthUser = (!IsCommonLayout ? Layout.AuthenticatedUser : _authenticatedUser) ?? AuthenticateUserVM.NotAuthenticated;
@@ -297,7 +302,7 @@ namespace CommonLib.Web.Source.Common.Components
                 // don't use OnAuthChanged here
             }
         }
-        
+
         public MyNavBarBase NavBar => Layout.Components.Values.OfType<MyNavBarBase>().Single();
 
         public bool AdditionalAttributesHaveChanged { get; private set; }
@@ -343,8 +348,8 @@ namespace CommonLib.Web.Source.Common.Components
         //[Inject]
         //public ISessionCacheService SessionCache { get; set; }
 
-        [Inject]
-        public IHttpContextAccessor HttpContextAccessor { get; set; }
+        //[Inject]
+        //public IHttpContextAccessor HttpContextAccessor { get; set; } // NOT in WASM
 
         [Inject]
         public IRequestScopedCacheService RequestScopedCache { get; set; }
@@ -1124,7 +1129,7 @@ namespace CommonLib.Web.Source.Common.Components
                         wereRerenderedAtSomePoint.Add(c);
 
                 return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
-            }, 25, 15000);
+            }, 25, 2500000);
             ClearControlsRerenderingStatus(arrControls);
         }
 
