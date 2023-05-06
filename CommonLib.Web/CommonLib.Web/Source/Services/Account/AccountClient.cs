@@ -110,7 +110,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync()
         {
-            var isInitialized = _jsRuntime.GetProperty<bool>("IsInitialized");
+            var isInitialized = _jsRuntime.IsInitialized();
             var cookieTIcket = isInitialized ? await _jsRuntime.InvokeAndCatchCancellationAsync<string>("Cookies.get", "Ticket") : null;
             var localStorageTicket = isInitialized ? await _localStorage.GetItemAsStringAsync("Ticket") : null;
             //var sessionId = isInitialized ? await _myJsRuntime.GetSessionIdOrEmptyAsync() : Guid.Empty;
