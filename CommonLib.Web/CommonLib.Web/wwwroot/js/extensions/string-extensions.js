@@ -41,6 +41,34 @@ export default class StringExtensions {
         }
     }
 
+    static removeHTMLComments(str) {
+        if (!str) {
+            throw new Error("Empty string");
+        }
+        return str.replace(/<!--[\s\S]*?-->/g, "");
+    }
+
+    static containsHTMLComments(str) {
+        if (!str) {
+            throw new Error('Input string cannot be null or undefined');
+        }
+  
+        return /<!--.*?-->/.test(str);
+    }
+
+    static trimMultiline(str, removeHTMLComments = true) {
+        if (!str) {
+            throw new TypeError("trimMultiline() called on null or undefined");
+        }
+
+        let trimmed = str.split(/\r?\n/).map(line => line.trim()).join("").trim();
+        if (removeHTMLComments) {
+            trimmed = trimmed.replace(/<!--[\s\S]*?-->/g, "");
+        }
+
+        return trimmed;
+    }
+
     static isGuid(str) {
         return /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi.test(str);
     }
