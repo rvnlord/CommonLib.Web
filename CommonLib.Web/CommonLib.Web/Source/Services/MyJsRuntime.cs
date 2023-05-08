@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RestSharp;
 using CommonLib.Web.Source.Common.Extensions;
-using Google.Protobuf.WellKnownTypes;
 
 namespace CommonLib.Web.Source.Services
 {
@@ -39,7 +38,7 @@ namespace CommonLib.Web.Source.Services
         public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
         public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
 
-        public bool IsInitialized => _jsRuntime.GetProperty<bool>("IsInitialized");
+        public bool IsInitialized => _jsRuntime.IsInitialized();
 
         public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager, ISessionStorageService sessionStorage)
         {
@@ -153,7 +152,7 @@ namespace CommonLib.Web.Source.Services
 
         private async Task<Guid> ParseSessionIdAsync()
         {
-            var isInitialized = _jsRuntime.GetProperty<bool>("IsInitialized");
+            var isInitialized = _jsRuntime.IsInitialized();
             if (!isInitialized)
                 return Guid.Empty;
 
