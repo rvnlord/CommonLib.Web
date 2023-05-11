@@ -8,7 +8,7 @@
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
-    @if (IconType != null)
+    @if (IconType is not null && Svg is not null)
     {
         @*if (this is MyIconBase icon2 && icon2.IconType.V.LightIcon?.EnumToString().Contains("BasketballBall") == true)
         {
@@ -16,7 +16,7 @@
         }*@
 
         <div class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Icon_ClickAsync">
-            @Svg.ToRenderFragment()
+            @Svg?.ToRenderFragment()
         </div>
     }
 
