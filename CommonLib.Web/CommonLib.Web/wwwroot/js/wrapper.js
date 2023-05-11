@@ -75,6 +75,8 @@ export class ObjectWrapper extends Wrapper {
     asString = () => Wrapper.string(this._o);
 
     nullifyIf = (condition) => Wrapper.object(ObjectExtensions.nullifyIf(this._o, condition));
+    addIfNotExists = (key, value) => Wrapper.object(ObjectExtensions.addIfNotExists(this._o, key, value));
+    addIfNotExistsAndGet = (key, value) => Wrapper.object(ObjectExtensions.addIfNotExistsAndGet(this._o, key, value));
 }
 
 export class ArrayWrapper extends Wrapper {
@@ -137,6 +139,9 @@ export class StringWrapper extends Wrapper {
     trimEnd = (strToTrimFromEnd) => Wrapper.string(StringExtensions.trimEnd(this._str, Wrapper.enforceString(strToTrimFromEnd)));
     isGuid = () => Wrapper.bool(StringExtensions.isGuid(this._str));
     split = (splitBy) => Wrapper.array(StringExtensions.split(this._str, Wrapper.enforceString(splitBy)));
+    removeHTMLComments = () => Wrapper.string(StringExtensions.removeHTMLComments(this._str));
+    containsHTMLComments = () => Wrapper.bool(StringExtensions.containsHTMLComments(this._str));
+    trimMultiline = (removeHTMLComments = true) => Wrapper.string(StringExtensions.removeHTMLComments(this._str, removeHTMLComments));
 }
 
 export class BoolWrapper extends Wrapper {
