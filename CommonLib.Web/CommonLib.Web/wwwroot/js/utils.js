@@ -81,7 +81,7 @@ export default class utils {
                 type: "POST"
             });
             var jIcon = iconResp.jsonDeserialize();
-            iconsCache[iconSet][iconName] = Wrapper.string(jIcon["Result"]).trimMultiline();
+            iconsCache[iconSet][iconName] = Wrapper.string(jIcon["Result"]).trimMultiline().unwrap();
             localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
         } else {
             const icon = iconsCache[iconSet][iconName];
