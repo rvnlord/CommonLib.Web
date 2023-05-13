@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Source.ViewModels.Account;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError);
         Task<ApiResponse<LoginUserVM>> ExternalLoginAuthorizeAsync(LoginUserVM userToExternalLogin);
         Task<ApiResponse<LoginUserVM>> WalletLoginAsync(LoginUserVM userToWalletLogin);
-        Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync();
+        Task<ApiResponse<IList<AuthenticationSchemeVM>>> GetExternalAuthenticationSchemesAsync();
         Task<ApiResponse<AuthenticateUserVM>> LogoutAsync(AuthenticateUserVM userToLogout);
         Task<ApiResponse<ForgotPasswordUserVM>> ForgotPasswordAsync(ForgotPasswordUserVM userWithForgottenPassword);
         Task<ApiResponse<ResetPasswordUserVM>> ResetPasswordAsync(ResetPasswordUserVM userToResetPassword);

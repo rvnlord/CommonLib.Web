@@ -11,6 +11,7 @@ using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Source.Models;
+using CommonLib.Source.ViewModels.Account;
 using CommonLib.Web.Source.Common.Converters;
 using CommonLib.Web.Source.DbContext;
 using CommonLib.Web.Source.DbContext.Models.Account;
@@ -444,7 +445,7 @@ namespace CommonLib.Web.Source.Services.Account
         public async Task<string> ExternalLoginCallbackAsync(string returnUrl, string remoteError)
         {
             var userToExternalLogin = _http.HttpContext?.Request.Query["user"].ToString().Base58ToUTF8().JsonDeserialize().To<LoginUserVM>() ?? throw new NullReferenceException("'userToExternalLogin' was null");
-            userToExternalLogin.ExternalLogins = await _signInManager.GetExternalAuthenticationSchemesAsync().ToListAsync();
+            userToExternalLogin.ExternalLogins = (await GetExternalAuthenticationSchemesAsync()).Result;
             var url = userToExternalLogin.ReturnUrl.BeforeFirstOrWhole("?");
             var qs = userToExternalLogin.ReturnUrl.QueryStringToDictionary();
             qs["remoteStatus"] = "Error";
@@ -619,10 +620,10 @@ namespace CommonLib.Web.Source.Services.Account
             return new ApiResponse<LoginUserVM>(StatusCodeType.Status200OK, $"You have been successfully logged in with \"{userToWalletLogin.WalletProvider}\" as: \"{userToWalletLogin.UserName}\"", null, userToWalletLogin);
         }
 
-        public async Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync()
+        public async Task<ApiResponse<IList<AuthenticationSchemeVM>>> GetExternalAuthenticationSchemesAsync()
         {
             var externalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).OrderByWith(a => a.Name, new[] { "Discord", "Twitter", "Google", "Facebook" }).ToList();
-            return new ApiResponse<IList<AuthenticationScheme>>(StatusCodeType.Status200OK, "External Authentication Schemes Returned", null, externalLogins);
+            return new ApiResponse<IList<AuthenticationSchemeVM>>(StatusCodeType.Status200OK, "External Authentication Schemes Returned", null, externalLogins.ToAuthenticationSchemeVMs());
         }
 
         public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync(AuthenticateUserVM userToLogout)

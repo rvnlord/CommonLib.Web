@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Source.ViewModels.Account;
 using CommonLib.Web.Source.Controllers;
 using CommonLib.Web.Source.Common.Pages.Admin;
 
@@ -110,7 +111,7 @@ namespace CommonLib.Web.Source.Services.Account
 
         public async Task<ApiResponse<AuthenticateUserVM>> GetAuthenticatedUserAsync()
         {
-            var isInitialized = _jsRuntime.IsInitialized();
+            var isInitialized = await _jsRuntime.IsInitializedAsync();
             var cookieTIcket = isInitialized ? await _jsRuntime.InvokeAndCatchCancellationAsync<string>("Cookies.get", "Ticket") : null;
             var localStorageTicket = isInitialized ? await _localStorage.GetItemAsStringAsync("Ticket") : null;
             //var sessionId = isInitialized ? await _myJsRuntime.GetSessionIdOrEmptyAsync() : Guid.Empty;
@@ -215,9 +216,9 @@ namespace CommonLib.Web.Source.Services.Account
             return loginResponse;
         }
 
-        public async Task<ApiResponse<IList<AuthenticationScheme>>> GetExternalAuthenticationSchemesAsync()
+        public async Task<ApiResponse<List<AuthenticationSchemeVM>>> GetExternalAuthenticationSchemesAsync()
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<IList<AuthenticationScheme>>>("api/account/getexternalauthenticationschemes"); // or IApiResponse .ToGeneric(jt => jt.To<IList<AuthenticationScheme>>());
+            return await HttpClient.PostJTokenAsync<ApiResponse<List<AuthenticationSchemeVM>>>("api/account/getexternalauthenticationschemes"); // or IApiResponse .ToGeneric(jt => jt.To<IList<AuthenticationScheme>>());
         }
 
         public async Task<ApiResponse<AuthenticateUserVM>> LogoutAsync()
