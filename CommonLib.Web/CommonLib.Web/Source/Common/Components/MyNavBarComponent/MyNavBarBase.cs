@@ -132,7 +132,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
 
         protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
-            if (firstRender || IsDisposed)
+            if (IsDisposed) // firstRender || WASM navbar loads only once by my design
                 return;
             
             //var navitems = Descendants.OfType<MyNavItemBase>().Where(c => c.InteractionState.V.State != ComponentStateKind.Enabled).ToArray();

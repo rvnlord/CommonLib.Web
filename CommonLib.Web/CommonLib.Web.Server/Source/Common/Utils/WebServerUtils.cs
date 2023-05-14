@@ -128,10 +128,11 @@ namespace CommonLib.Web.Server.Source.Common.Utils
 
         public static async Task ConfigureBackendUrlAsync()
         {
-            if (BackendUrl != null)
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (BackendUrl is not null)
                 return;
 
-            var backendUrls = Configuration.GetSection("BackendUrls").Get<string[]>();
+            var backendUrls = Configuration.GetSection("BackendUrls").Get<string[]>() ?? Array.Empty<string>();
             foreach (var backendUrl in backendUrls)
             {
                 var backendInfoClient = new BackendInfoClient(new HttpClient { BaseAddress = new Uri(backendUrl) }, null);
