@@ -33,8 +33,8 @@
 
         var iconPath = $@"{WebServerUtils.GetAbsolutePhysicalContentPath()}\Content\Icons\Icon.ico";
 
-        Electron.Tray.Show(iconPath, Array.Empty<MenuItem>());
-        Electron.Tray.DisplayBalloon(new DisplayBalloonOptions
+        await Electron.Tray.Show(iconPath, Array.Empty<MenuItem>());
+        await Electron.Tray.DisplayBalloon(new DisplayBalloonOptions
         {
             Icon = iconPath,
             Title = AppTitle,
@@ -49,7 +49,7 @@
         var wnd = await ElectronUtils.GetWindowOrNullAsync().ConfigureAwait(false);
         wnd.Show();
         Electron.Tray.OnClick -= TrayOnClick;
-        Electron.Tray.Destroy();
+        await Electron.Tray.Destroy();
     }
 
     private static async Task MinimizeWindowAsync()
