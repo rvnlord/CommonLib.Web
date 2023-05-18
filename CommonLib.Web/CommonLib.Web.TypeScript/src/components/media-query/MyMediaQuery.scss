@@ -1,0 +1,11 @@
+@import "../../content/css/theme";
+
+.my-media-query-test-container {
+    background: linear-gradient(150deg, rgba(30, 30, 30, 0.95) 0, rgba(8, 8, 8, 0.95) 40%);
+    box-shadow: inset 0 0 0 1px #404040;
+    font-size: $font-size * 1.25;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 120px;
+}
