@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using CommonLib.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication;
 
 namespace CommonLib.Web.Source.ViewModels.Account
@@ -15,7 +16,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         [DisplayName("Remember Me")]
         public bool RememberMe { get; set; }
 
-        public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
+        public IList<AuthenticationSchemeVM> ExternalLogins { get; set; } = new List<AuthenticationSchemeVM>();
         public string ExternalProvider { get; set; }
         public string ExternalProviderKey { get; set; }
         public string ExternalProviderUserName { get; set; }
