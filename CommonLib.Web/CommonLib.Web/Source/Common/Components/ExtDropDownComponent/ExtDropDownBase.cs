@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
-using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.Interfaces;
 using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
-using MessagePack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
 using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
@@ -111,7 +107,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!MyJsRuntime.IsInitialized)
+            if (!await MyJsRuntime.IsInitializedAsync())
                 return;
 
             await FixInputSyncPaddingGroupAsync();
