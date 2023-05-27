@@ -81,7 +81,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            if (!MyJsRuntime.IsInitialized)
+            if (!await MyJsRuntime.IsInitializedAsync())
                 return;
             await BindOverlayScrollBar();
         }
