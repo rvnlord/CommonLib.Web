@@ -19,7 +19,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             var routingFeature = httpContext.Features.Get<IRoutingFeature>();
             var actionContext = new ActionContext(
                 httpContext,
-                routingFeature.RouteData,
+                routingFeature?.RouteData ?? throw new NullReferenceException("'routeData' of 'routingFeature' from 'httpContext' was null"),
                 new ActionDescriptor());
 
             return new UrlHelper(actionContext).Content("~").SkipLast(1);
