@@ -192,7 +192,7 @@ namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
             _syncValidationStateBeingChanged.Release();
         }
 
-        public async Task WaitWhileValidationStateIsBeingChanged() => await TaskUtils.WaitWhile(() => IsValidationStateBeingChanged);
+        public async Task WaitWhileValidationStateIsBeingChanged() => await TaskUtils.WaitWhileAsync(() => IsValidationStateBeingChanged);
     }
 
     public enum ButtonStyling
