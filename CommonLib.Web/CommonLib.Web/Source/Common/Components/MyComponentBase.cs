@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using CommonLib.Web.Source.Common.Components.MyPromptComponent;
 using CommonLib.Web.Source.Common.Extensions;
@@ -65,7 +66,7 @@ using Telerik.Blazor.Components.Common;
 
 namespace CommonLib.Web.Source.Common.Components
 {
-    public abstract class MyComponentBase : IAsyncDisposable, IComponent, IHandleEvent, IHandleAfterRender, IEquatable<MyComponentBase> // LayoutComponentBase
+    public abstract class MyComponentBase : IAsyncDisposable, IDisposable, IComponent, IHandleEvent, IHandleAfterRender, IEquatable<MyComponentBase> // LayoutComponentBase
     {
         private readonly RenderFragment _renderFragment;
         private RenderHandle _renderHandle;
@@ -96,6 +97,7 @@ namespace CommonLib.Web.Source.Common.Components
         private readonly OrderedSemaphore _syncAuthUserChange = new(1, 1);
         //private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
         //private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
+        private readonly OrderedSemaphore _syncSettingComponentState = new(1, 1);
         //private OrderedSemaphore _syncComponentsCache => (_isCommonLayout ? (MyLayoutComponentBase)this : Layout)._syncComponentsCache;
         private MyPromptBase _prompt;
         private Guid _sessionId;
@@ -345,6 +347,9 @@ namespace CommonLib.Web.Source.Common.Components
         [Inject]
         public ISessionStorageService SessionStorage { get; set; }
 
+        [Inject]
+        public ILocalStorageService LocalStorage { get; set; }
+
         //[Inject]
         //public ISessionCacheService SessionCache { get; set; }
 
@@ -467,6 +472,11 @@ namespace CommonLib.Web.Source.Common.Components
                 InteractionState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
             }
 
+            if (this is MyIconBase icon && icon.IconType.V == IconType.From(LightIconType.Box) && InteractionState.HasChanged()) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
+            {
+                var t = 0;
+            }
+
             //if (this is MyIconBase icon && icon.IconType.V == IconType.From(BrandsIconType.Metamask) && Ancestors.FirstOrNull(a => a is MyTextInputBase) is not null)
             //{
             //    var t = 0;
@@ -509,10 +519,20 @@ namespace CommonLib.Web.Source.Common.Components
         {
             if (IsDisposed || JsRuntime is null)
                 return;
-
+            
             try
             {
+                if (this is MyTextInputBase)
+                {
+                    Logger.For<MyTextInputBase>().Info($"{this} Will wait for semaphore");
+                }
+
                 await _syncRender.WaitAsync(); // if `State` is being changed manually by calling `StateHasChangedAsync` also block render | For instance first render may enter this method and subsequent render can enter as well before the first render finished thus leaving some parts like session not initialized properly
+
+                if (this is MyTextInputBase)
+                {
+                    Logger.For<MyTextInputBase>().Info($"{this} Entered semaphore");
+                }
 
                 if (_firstRenderAfterInit)
                 {
@@ -561,6 +581,11 @@ namespace CommonLib.Web.Source.Common.Components
                 if (_firstRenderAfterInit && Layout?.IsRendered == true)
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
 
+                if (this is MyTextInputBase)
+                {
+                    Logger.For<MyTextInputBase>().Info($"{this} Setting 'IsRerendered' to true");
+                }
+
                 IsRerendered = true;
                 _firstRenderAfterInit = false;
                 _authUserChanged = false;
@@ -569,16 +594,34 @@ namespace CommonLib.Web.Source.Common.Components
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException or JSDisconnectedException)
             {
                 //Logger.For<MyComponentBase>().Warn("'OnAfterRenderAsync' was canceled, disposed component?");
+                if (this is MyTextInputBase)
+                {
+                    Logger.For<MyTextInputBase>().Info($"{this} TaskCanceledException or ObjectDisposedException or JSDisconnectedException caught");
+                }
             }
             catch (Exception)
             {
                 if (!IsDisposed)
                     throw;
+
+                if (this is MyTextInputBase)
+                {
+                    Logger.For<MyTextInputBase>().Info($"{this} Other Exception caught, Component was disposed");
+                }
             }
             finally
             {
-                if (!IsDisposed && _syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
-                    await _syncRender.ReleaseAsync();
+                //if (!IsDisposed && _syncRender.CurrentCount == 0) // Release render if we are changing `State` manually so `StateHasChanged` knows about it
+                var semaphoreNeedsReleasing = _syncRender.CurrentCount == 0;
+                await _syncRender.ReleaseSafelyAsync();
+
+                if (this is MyTextInputBase)
+                {
+                    if (semaphoreNeedsReleasing)
+                        Logger.For<MyTextInputBase>().Info($"{this} Released semaphore");
+                    else
+                        Logger.For<MyTextInputBase>().Info($"{this} Semaphore was supposed to be released but it was already released by something else");
+                }
             }
         }
 
@@ -996,9 +1039,10 @@ namespace CommonLib.Web.Source.Common.Components
             if (waitForRerender)
                 ClearControlRerenderingStatus();
 
+            var tsBeforeCallingStateChange = ExtendedTime.UtcNow;
             await InvokeAsync(() => StateHasChanged(force));
             if (waitForRerender)
-                await WaitForControlToRerenderAsync();
+                await WaitForControlToRerenderAsync(tsBeforeCallingStateChange);
             return this;
         }
 
@@ -1117,54 +1161,65 @@ namespace CommonLib.Web.Source.Common.Components
 
         protected void ClearControlRerenderingStatus() => ClearControlRerenderingStatus(this);
 
-        protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls)
+        protected static async Task WaitForControlsToRerenderAsync(IEnumerable<MyComponentBase> controls, ExtendedTime tsBeforeCallingStateChange)
         {
-            var ts = ExtendedTime.UtcNow;
             var arrControls = controls.ToArray();
             var wereRerenderedAtSomePoint = new List<MyComponentBase>();
-            await TaskUtils.WaitUntil(() =>
+            await TaskUtils.WaitUntilAsync(() =>
             {
                 foreach (var c in arrControls)
-                    if ((c.IsRerendered || (c.LastRerender is not null && c.LastRerender >= ts)) && !c.In(wereRerenderedAtSomePoint)) // it can alreeady be rerendered before the timer is set (1st condition), but be changeed back to not rereendered by sth else that's why the timer needs to be there (2nd condition)
+                    if ((c.IsRerendered || (c.LastRerender is not null && c.LastRerender >= tsBeforeCallingStateChange)) && !c.In(wereRerenderedAtSomePoint)) // it can alreeady be rerendered before the timer is set (1st condition), but be changeed back to not rereendered by sth else that's why the timer needs to be there (2nd condition)
                         wereRerenderedAtSomePoint.Add(c);
 
-                return wereRerenderedAtSomePoint.Count == arrControls.Length || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
-            }, 25, 2500000);
+                var componentsLeftToRerender = arrControls.Except(wereRerenderedAtSomePoint).ToArray();
+                return !componentsLeftToRerender.Any() || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
+            }, 1000, TimeSpan.FromSeconds(300));
             ClearControlsRerenderingStatus(arrControls);
         }
 
-        protected static Task WaitForControlToRerenderAsync(MyComponentBase control) => WaitForControlsToRerenderAsync(new[] { control });
+        protected static Task WaitForControlToRerenderAsync(MyComponentBase control, ExtendedTime tsBeforeCallingStateChange) => WaitForControlsToRerenderAsync(new[] { control }, tsBeforeCallingStateChange);
 
-        protected Task WaitForControlToRerenderAsync() => WaitForControlToRerenderAsync(this);
+        protected Task WaitForControlToRerenderAsync(ExtendedTime tsBeforeCallingStateChange) => WaitForControlToRerenderAsync(this, tsBeforeCallingStateChange);
         
         public async Task SetControlStatesAsync(ComponentState state, IEnumerable<MyComponentBase> controlsToChangeState, MyComponentBase componentLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null)
         { // including Current should generally fail during AfterRender because after rendering happens inside sempahore
-            var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
-            if (!arrControlsToChangeState.Any())
-                return;
-            if (componentLoading is not null && !componentLoading.InteractionState.V.IsForced)
-                componentLoading.InteractionState.ParameterValue = ComponentState.Loading;
-
-            var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => new Func<Task<MyComponentBase>>(async () => await c.NotifyParametersChangedAsync()));
-            var changeStateTasks = new Dictionary<MyComponentBase, Func<Task<MyComponentBase>>>();
-            foreach (var control in arrControlsToChangeState)
+            try
             {
-                var c = control;
-                if (c.InteractionState is not null && !c.InteractionState.V.IsForced && c != componentLoading)
-                    c.InteractionState.ParameterValue = state;
-                if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
-                    continue;
+                if (changeRenderingState == ChangeRenderingStateMode.AllSpecified)
+                    await _syncSettingComponentState.WaitAsync(TimeSpan.FromMinutes(2));
 
-                changeStateTasks[c] = async () => await c.StateHasChangedAsync(true);
+                var tsBeforeCallingStateChange = ExtendedTime.UtcNow;
+                var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
+                if (!arrControlsToChangeState.Any())
+                    return;
+                if (componentLoading is not null && !componentLoading.InteractionState.V.IsForced)
+                    componentLoading.InteractionState.ParameterValue = ComponentState.Loading;
+
+                var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => new Func<Task<MyComponentBase>>(async () => await c.NotifyParametersChangedAsync()));
+                var changeStateTasks = new Dictionary<MyComponentBase, Func<Task<MyComponentBase>>>();
+                foreach (var control in arrControlsToChangeState)
+                {
+                    var c = control;
+                    if (c.InteractionState is not null && !c.InteractionState.V.IsForced && c != componentLoading)
+                        c.InteractionState.ParameterValue = state;
+                    if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
+                        continue;
+
+                    changeStateTasks[c] = async () => await c.StateHasChangedAsync(true);
+                }
+
+                if (changeRenderingState.In(ChangeRenderingStateMode.Current, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
+                    changeStateTasks[this] = async () => await StateHasChangedAsync(true);
+
+                ClearControlsRerenderingStatus(changeStateTasks.Keys);
+                await Task.WhenAll(notifyParamsChangedTasks.Values.Select(t => t.Invoke()));
+                await Task.WhenAll(changeStateTasks.Values.Select(t => t.Invoke()));
+                await WaitForControlsToRerenderAsync(changeStateTasks.Keys, tsBeforeCallingStateChange);
             }
-
-            if (changeRenderingState.In(ChangeRenderingStateMode.Current, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
-                changeStateTasks[this] = async () => await StateHasChangedAsync(true);
-
-            ClearControlsRerenderingStatus(changeStateTasks.Keys);
-            await Task.WhenAll(notifyParamsChangedTasks.Values.Select(t => t.Invoke()));
-            await Task.WhenAll(changeStateTasks.Values.Select(t => t.Invoke()));
-            await WaitForControlsToRerenderAsync(changeStateTasks.Keys);
+            finally
+            {
+                await _syncSettingComponentState.ReleaseSafelyAsync();
+            }
         }
 
         public Task SetControlStateAsync(ComponentState state, MyComponentBase controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
@@ -1268,6 +1323,8 @@ namespace CommonLib.Web.Source.Common.Components
             await DisposeAsync(true);
             GC.SuppressFinalize(this);
         }
+
+        public void Dispose() => _ = DisposeAsync(false);
 
         ~MyComponentBase() => _ = DisposeAsync(false);
 
