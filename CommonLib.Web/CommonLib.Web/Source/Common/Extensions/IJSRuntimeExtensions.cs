@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Services;
 using Microsoft.JSInterop;
+using Microsoft.JSInterop.WebAssembly;
 
 namespace CommonLib.Web.Source.Common.Extensions
 {
@@ -16,7 +19,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 try
                 {
-                    if (!jsRuntime.IsInitialized())
+                    if (!await jsRuntime.IsInitializedAsync())
                         return null;
 
                     return await jsRuntime.InvokeAsync<IJSObjectReference>("import", modulePath).AsTask();
@@ -64,7 +67,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 try
                 {
-                    if (!jsRuntime.IsInitialized())
+                    if (!await jsRuntime.IsInitializedAsync())
                         return;
 
                     await jsRuntime.InvokeVoidAsync(identifier, TimeSpan.FromSeconds(1), args).AsTask();
@@ -92,7 +95,7 @@ namespace CommonLib.Web.Source.Common.Extensions
             {
                 try
                 {
-                    if (!jsRuntime.IsInitialized())
+                    if (!await jsRuntime.IsInitializedAsync())
                         return (TValue)(object)null;
 
                     return await jsRuntime.InvokeAsync<TValue>(identifier, TimeSpan.FromSeconds(1), args).AsTask();
@@ -112,9 +115,30 @@ namespace CommonLib.Web.Source.Common.Extensions
             throw new NotSupportedException("Module not imported, error not thrown - it shouldn't happen");
         }
 
-        public static bool IsInitialized(this IJSRuntime jsRuntime)
+        public static async Task<bool> IsInitializedAsync(this IJSRuntime jsRuntime)
         {
-            return (bool?) jsRuntime?.GetPropertyOrNull("IsInitialized") ?? (bool?) jsRuntime?.GetPropertyOrNull("IsInitializedForReflectionSerializer") ?? false;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser")))
+            {
+                try
+                {
+                    //var type = Type.GetType("Microsoft.AspNetCore.Components.WebAssembly.Services.DefaultWebAssemblyJSRuntime, Microsoft.AspNetCore.Components.WebAssembly");
+                    //var field = type?.GetField("_trackedRefsById", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                    //var val = field?.GetValue(jsRuntime);
+                    //var t = jsRuntime.GetField("_trackedRefsById");
+                    //var ua = await jsRuntime.InvokeAsync<string>("eval", "window.navigator.userAgent");
+                    var eval = await jsRuntime.InvokeAsync<int>("eval", "1 + 1");
+                    return eval == 2;
+                    //return !ua.IsNullOrWhiteSpace();
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return (bool?) jsRuntime?.GetPropertyOrNull("IsInitialized") ?? false;
+            }
         }
     }
 }
