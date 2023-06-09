@@ -62,7 +62,7 @@ namespace CommonLib.Web.Source.Common.Components.MyInputComponent
                 return;
             if (Validate.V != true)
                 return;
-            if (InteractionState.ParameterValue?.IsForced == true)
+            if (InteractivityState.V?.IsForced == true)
                 return;
 
             var fi = Model is not null && !_propName.IsNullOrWhiteSpace() ? new FieldIdentifier(Model, _propName) : (FieldIdentifier?)null;

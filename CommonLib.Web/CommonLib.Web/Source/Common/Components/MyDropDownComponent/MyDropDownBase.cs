@@ -134,14 +134,14 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Dropdown_AfterFirstRender", _guid, DotNetObjectReference.Create(this)); // keep await ModuleAsync; if program don't need top call the module but JQyery events need to be available
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Dropdown_AfterFirstRender", Guid, DotNetObjectReference.Create(this)); // keep await ModuleAsync; if program don't need top call the module but JQyery events need to be available
             await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsDropdown);
         }
 
         [JSInvokable]
         public async Task DdlOption_ClickAsync(int? index) // , Guid ddlGuid
         {
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
             //await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_DdlOption_ClickAsync", e, index, ddlGuid);
@@ -181,7 +181,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
-            if (InteractionState.ParameterValue?.IsForced == true)
+            if (InteractivityState.V?.IsForced == true)
                 return;
 
             if (e.ValidationMode == ValidationMode.Model || fi.In(e.NotValidatedFields) || fi.In(e.ValidatedFields))

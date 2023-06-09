@@ -2,74 +2,77 @@
 @using CommonLib.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Common.Converters
 @using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Models
 @using SixLabors.ImageSharp
 
 @namespace CommonLib.Web.Source.Common.Components.MyButtonComponent
 @inherits MyButtonBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
-    @if (InteractionState.ParameterValue is not null)
+    @if (InteractivityState.HasValue())
     {
         @*Logger.For<MyButton>().Info($"[{Icon.ParameterValue}] Rendering: State = {State.ParameterValue}");*@
         @* Icons are physically swapped with interaction stateee so they need to have stateee set explicitly not to remain disabled. Swapped icon would always have initial statee null that would always be corrected on parameters set to disabled because parent didn't change | done in MyComponentbase' *@
         <CascadingValue Value="_bpBtn">
-            @if (InteractionState.ParameterValue == ComponentState.Enabled)
+            @if (InteractivityState.V == ComponentState.Enabled)
             {
-                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                <button id="@_id" my-guid="@Guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" @onclick="@Button_ClickAsync" @onclick:preventDefault>
+                    @if (Icon.V is not null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
                     {
                         <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
                     }
-                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    @if (!Value.V.IsNullOrWhiteSpace())
                     {
                         <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
                     }
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    @if (Icon.V is not null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
                     {
                         <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
                 </button>
             }
-            else if (InteractionState.ParameterValue == ComponentState.Disabled)
+            else if (InteractivityState.V == ComponentState.Disabled)
             {
-                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                <button id="@_id" my-guid="@Guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                    @if (Icon.V is not null && IconPlacement.V == ButtonIconPlacement.Left)
                     {
-                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.V" @ref="IconBefore"></MyIcon>
                     }
-                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    @if (!Value.V.IsNullOrWhiteSpace())
                     {
                         <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
                     }
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    @if (Icon.V is not null && IconPlacement.V == ButtonIconPlacement.Right)
                     {
                         <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
                 </button>
             }
-            else if (InteractionState.ParameterValue == ComponentState.Loading)
+            else if (InteractivityState.V == ComponentState.Loading)
             {
-                <button id="@_id" my-guid="@_guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Left)
+                <button id="@_id" my-guid="@Guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes" disabled>
+                    @if (Icon.V is not null && IconPlacement.V == ButtonIconPlacement.Left)
                     {
                         <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconBefore"></MyIcon>
                     }
-                    @if (!Value.ParameterValue.IsNullOrWhiteSpace())
+                    @if (!Value.V.IsNullOrWhiteSpace())
                     {
-                        <MyButtonDescription>@Value.ParameterValue</MyButtonDescription>
+                        <MyButtonDescription>@Value.V</MyButtonDescription>
                     }
-                    @if (Icon.ParameterValue != null && IconPlacement.ParameterValue == ButtonIconPlacement.Right)
+                    @if (Icon.V is not null && IconPlacement.V == ButtonIconPlacement.Right)
                     {
-                        <MyIcon Color="Color.White" IconType="@Icon.ParameterValue" @ref="IconAfter"></MyIcon>
+                        <MyIcon Color="Color.White" IconType="@Icon.V" @ref="IconAfter"></MyIcon>
                     }
                     @ChildContent
-                    <MyImage InteractionState="ComponentState.ForceEnabled" InheritState="false" Path="@("~/images/content-loader.gif".ToBp())" class="my-btn-loader" style="padding-top: 0"></MyImage>
+                    <MyImage Interactivity="ComponentState.ForceEnabled" InheritCascadedInteractivity="false" Path="@("~/images/content-loader.gif".ToBp())" class="my-btn-loader" style="padding-top: 0"></MyImage>
                 </button>
             }
         </CascadingValue>
     }
 
+</CascadingValue>
 </CascadingValue>

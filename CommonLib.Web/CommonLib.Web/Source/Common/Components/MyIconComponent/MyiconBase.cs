@@ -34,10 +34,8 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir(); // ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("ContentRootPath");
         public HtmlNode Svg { get; set; }
      
-        public RenderFragment ComplexSvg { get; set; }
-
         [Parameter] 
-        public BlazorParameter<IconType> IconType { get; set; }
+        public BlazorParameter<IconTypeT> IconType { get; set; }
 
         [Parameter] 
         public BlazorParameter<Color?> Color { get; set; }
@@ -80,7 +78,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             
             if (Svg is not null)
             {
-                if (InteractionState.HasChanged() || Color.HasChanged() || SecondaryColor.HasChanged() || IconType.HasChanged() || !IsIconColorSet()) // There are edge cases when IconType changes thus reloading unstyled SVG from cache even when neither InteractionState nor Colors changed, in such case styling the icon again is necessary
+                if (InteractivityState.HasChanged() || Color.HasChanged() || SecondaryColor.HasChanged() || IconType.HasChanged() || !IsIconColorSet()) // There are edge cases when IconType changes thus reloading unstyled SVG from cache even when neither InteractivityState nor Colors changed, in such case styling the icon again is necessary
                 {
                     SeticonColors();
                 }
@@ -159,7 +157,7 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
         
         private void SeticonColors()
         {
-            var isEnabled = InteractionState.V?.IsEnabledOrForceEnabled == true;
+            var isEnabled = InteractivityState.V?.IsEnabledOrForceEnabled == true;
             var pathsCount = Svg?.SelectNodes("./path")?.Count ?? 0;
 
             if (isEnabled)

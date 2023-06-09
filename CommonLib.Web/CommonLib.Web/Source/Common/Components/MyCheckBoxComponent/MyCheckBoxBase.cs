@@ -70,7 +70,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCheckBoxComponent
         {
             if (e is null)
                 throw new NullReferenceException(nameof(e));
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
             
             Value = !Value;

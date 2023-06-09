@@ -66,7 +66,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-numericinput", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
+                SetMainCustomAndUserDefinedClasses("ext-numericinput", new [] { $"my-guid_{Guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
@@ -126,7 +126,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
 
         protected async Task NumericInput_ValueChanged(TProperty value)
         {
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
             if (Model.HasValue())

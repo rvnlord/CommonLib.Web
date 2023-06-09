@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RazorLangVersion>3.0</RazorLangVersion>
@@ -16,12 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-        <PackageReference Include="AspNet.Security.OAuth.Discord" Version="6.0.15" />
-    <PackageReference Include="AspNet.Security.OAuth.Twitter" Version="6.0.15" />
-    <PackageReference Include="ElectronNET.API" Version="13.5.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.6" />
-    <PackageReference Include="Selenium.Support" Version="4.9.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.9.0" />
+        <PackageReference Include="AspNet.Security.OAuth.Discord" Version="7.0.2" />
+    <PackageReference Include="AspNet.Security.OAuth.Twitter" Version="7.0.2" />
+    <PackageReference Include="ElectronNET.API" Version="23.6.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="7.0.5" />
+    <PackageReference Include="Selenium.Support" Version="4.9.1" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.9.1" />
     <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="113.0.5672.6300" />
   </ItemGroup>
 
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
   </ItemGroup>
 
   <ItemGroup>

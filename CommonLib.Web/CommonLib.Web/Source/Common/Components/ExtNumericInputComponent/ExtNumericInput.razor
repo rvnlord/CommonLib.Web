@@ -12,7 +12,7 @@
         Class="@_renderClasses"
         Value="@Value.V"
         ValueChanged="@(async (TProperty e) => await NumericInput_ValueChanged(e))"
-        Enabled="@InteractionState.V.IsEnabledOrForceEnabled"
+        Enabled="@InteractivityState.V.IsEnabledOrForceEnabled"
         Format="@Format.V"
         Decimals="@Decimals.V.ToInt()"
         Min="@Min.V"

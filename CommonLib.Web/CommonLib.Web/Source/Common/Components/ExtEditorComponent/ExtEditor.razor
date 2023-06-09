@@ -14,7 +14,7 @@
         
         EditMode="@EditorEditMode.Div"
         ValueChanged="Editor_ValueChanged"
-        Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+        Enabled="@InteractivityState.V.IsEnabledOrForceEnabled">
         <EditorCustomTools>
             @if (Tools.V is not null && ExtEditorCustomTools is not null)
             {

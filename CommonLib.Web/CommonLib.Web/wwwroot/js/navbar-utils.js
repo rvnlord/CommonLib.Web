@@ -888,7 +888,7 @@ export class NavBarUtils {
     static getNavBarHeight($nb) {
         const windowWidth = $(window).width();
 
-        let nbHeight = $nb.find(".my-nav-item.my-toggler").first().outerHeight(); // get toggler height in order to always get init navbar height and not opened height
+        let nbHeight = ($nb.find(".my-nav-item.my-toggler").firstOrNull() || $nb.children(".my-nav-item").firstOrNull()).outerHeight(); // get toggler height in order to always get init navbar height and not opened height
 
         const nbWidth = $nb.outerWidth();
         const $nbAllNavItems = $nb.children(".my-nav-item").not(".my-toggler");

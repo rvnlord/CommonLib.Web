@@ -71,7 +71,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-grid", new [] { $"my-guid_{_guid}" });
+                SetMainCustomAndUserDefinedClasses("ext-grid", new [] { $"my-guid_{Guid}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }

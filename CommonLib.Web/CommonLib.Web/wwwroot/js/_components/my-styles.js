@@ -1,4 +1,4 @@
-﻿/// <reference path="../../libs/libman/jquery/jquery.js" />
+﻿/// <reference path="../../libs/libman/jquery/dist/jquery.js" />
 
 import "../extensions.js";
 

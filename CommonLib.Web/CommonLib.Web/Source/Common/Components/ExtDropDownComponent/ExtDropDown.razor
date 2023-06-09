@@ -15,7 +15,7 @@
                  ValueField="@ValueField.V"
                  TextField="@TextField.V"
                  ValueChanged="@(async (TProperty e) => await DropDown_ValueChanged(e))"
-                 Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+                 Enabled="@InteractivityState.V.IsEnabledOrForceEnabled">
             </TelerikDropDownList>
             <MyInputGroupPrepend>
                 <MyIcon IconType="Icon.V"></MyIcon>
@@ -31,7 +31,7 @@
              ValueField="@ValueField.V"
              TextField="@TextField.V"
              ValueChanged="@(async (TProperty e) => await DropDown_ValueChanged(e))"
-             Enabled="@InteractionState.V.IsEnabledOrForceEnabled">
+             Enabled="@InteractivityState.V.IsEnabledOrForceEnabled">
         </TelerikDropDownList>
     }
 </CascadingValue>

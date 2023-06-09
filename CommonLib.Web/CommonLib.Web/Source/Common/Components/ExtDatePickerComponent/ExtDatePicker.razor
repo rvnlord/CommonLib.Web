@@ -9,7 +9,7 @@
         Class="@_renderClasses"
         Value="@Value.V"
         ValueChanged="@(async (TProperty e) => await DatePicker_ValueChanged(e))"
-        Enabled="@InteractionState.V.IsEnabledOrForceEnabled"
+        Enabled="@InteractivityState.V.IsEnabledOrForceEnabled"
         Format="@Format.V"
         Min="@Min.V.ToDateTime()"
         Max="@Max.V.ToDateTime()">

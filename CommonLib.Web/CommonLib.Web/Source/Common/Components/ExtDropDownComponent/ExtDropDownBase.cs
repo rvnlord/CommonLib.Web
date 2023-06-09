@@ -70,7 +70,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-dropdown", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
+                SetMainCustomAndUserDefinedClasses("ext-dropdown", new [] { $"my-guid_{Guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
                 //_extDdlType = typeof(TProperty);
@@ -116,7 +116,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
 
         protected async Task DropDown_ValueChanged(TProperty value)
         {
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
             if (Model.HasValue())

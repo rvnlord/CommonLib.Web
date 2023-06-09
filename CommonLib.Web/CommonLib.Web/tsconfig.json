@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "composite": false,
+    "sourceMap": true,
+    //"rootDirs": [ "./wwwroot/ts" ],
+    "baseUrl": "./wwwroot",
+    "paths": {
+      "*": [
+        "*",
+        "libs/custom/*",
+        "libs/libman/*",
+        "libs/custom/@types/*",
+        "libs/libman/@types/*"
+      ]
+    },
+    "traceResolution": true,
+    "noEmitOnError": true
+  },
+  "compileOnSave": true,
+  "include": [
+    "wwwroot/ts/**/*"
+  ],
+  "exclude": [
+    "wwwroot/libs/**/*"
+  ]
+}

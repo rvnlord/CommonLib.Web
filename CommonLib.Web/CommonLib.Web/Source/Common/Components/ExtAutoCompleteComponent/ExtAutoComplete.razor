@@ -14,7 +14,7 @@
         Value="@_valueFieldValue"
         ValueField="@ValueField.V"
         ValueChanged="@(async value => await AutoComplete_ValueChanged(value))"
-        Enabled="@InteractionState.V.IsEnabledOrForceEnabled"
+        Enabled="@InteractivityState.V.IsEnabledOrForceEnabled"
         Placeholder="@Placeholder.V">
         <ItemTemplate>
             @if (Mode.V == AutoCompleteMode.Asset)

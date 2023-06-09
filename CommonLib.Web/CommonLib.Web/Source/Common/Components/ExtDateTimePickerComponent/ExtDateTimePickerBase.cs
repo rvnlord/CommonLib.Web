@@ -59,7 +59,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDateTimePickerComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-datetimepicker", new [] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
+                SetMainCustomAndUserDefinedClasses("ext-datetimepicker", new [] { $"my-guid_{Guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
@@ -97,7 +97,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDateTimePickerComponent
 
         protected async Task DateTimePicker_ValueChanged(TProperty value)
         {
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
             if (Model.HasValue())

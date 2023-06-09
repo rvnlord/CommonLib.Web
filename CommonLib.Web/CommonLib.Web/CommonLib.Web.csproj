@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RazorLangVersion>3.0</RazorLangVersion>
     <Platforms>AnyCPU;x64</Platforms>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <RuntimeFrameworkVersion>6.0.3</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>7.0.5</RuntimeFrameworkVersion>
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
 
@@ -26,45 +26,53 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazored.FluentValidation" Version="2.0.3" />
-    <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
-    <PackageReference Include="Blazored.SessionStorage" Version="2.2.0" />
+    <TypeScriptCompile Remove="wwwroot\ts\components\my-test-ts.ts" />
+    <TypeScriptCompile Remove="wwwroot\ts\string-extensions.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+    <PackageReference Include="Blazored.SessionStorage" Version="2.3.0" />
     <PackageReference Include="Discord.Net" Version="3.10.0" />
-    <PackageReference Include="FluentValidation" Version="11.2.2" />
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.2.2" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.2.2" />
-    <PackageReference Include="MathParser.org-mXparser" Version="5.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="6.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.6" />
+    <PackageReference Include="FluentValidation" Version="11.5.2" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
+    <PackageReference Include="MathParser.org-mXparser" Version="5.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="7.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
+    <PackageReference Include="Microsoft.Experimental.Collections" Version="1.0.6-e190117-3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="7.0.5" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.6" />
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
+    <PackageReference Include="Nethereum.Metamask.Blazor" Version="4.14.0" />
+    <PackageReference Include="Selenium.Support" Version="4.9.1" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.9.1" />
+    <PackageReference Include="SimpleInjector" Version="5.4.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Interactive.Async" Version="6.0.1" />
+    <PackageReference Include="Telerik.UI.for.Blazor" Version="3.3.0" />
+    <PackageReference Include="Truncon.Collections" Version="1.0.0" />
+    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="7.21.1" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="7.21.1" />
+    <PackageReference Include="Z.Expressions.Eval" Version="5.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.6" />
-    <PackageReference Include="Microsoft.Experimental.Collections" Version="1.0.6-e190117-3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="6.0.6" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.6" />
-    <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.174" />
-    <PackageReference Include="Nethereum.Metamask.Blazor" Version="4.14.0" />
-    <PackageReference Include="Selenium.Support" Version="4.9.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.9.0" />
-    <PackageReference Include="SimpleInjector" Version="5.3.3" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-    <PackageReference Include="System.Interactive.Async" Version="6.0.1" />
-    <PackageReference Include="Telerik.UI.for.Blazor" Version="3.3.0" />
-    <PackageReference Include="Truncon.Collections" Version="1.0.0" />
-    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="6.14.2" />
-    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.14.1" />
-    <PackageReference Include="Z.Expressions.Eval" Version="4.0.85" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,6 +82,11 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\images\test-assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\ts\components\my-test-ts.ts" />
+    <None Include="wwwroot\ts\extensions\string-extensions.ts" />
   </ItemGroup>
 
   <UsingTask TaskName="CopyToReferencingProjectsMSBuildTask" AssemblyFile="G:\Moje Pliki\Programowanie\CSharp\Projects\MSBuildTasks\MSBuildTasks\MSBuildTasks\bin\Debug\netstandard2.0\MSBuildTasks.dll" />

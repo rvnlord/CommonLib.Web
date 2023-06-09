@@ -62,7 +62,7 @@ namespace CommonLib.Web.Source.Common.Extensions
                 return;
             if (component.Validate.V != true)
                 return;
-            if (component.InteractionState.ParameterValue?.IsForced == true)
+            if (component.InteractivityState.V?.IsForced == true)
                 return;
 
             var propName = component.For.V?.GetPropertyName();

@@ -68,7 +68,7 @@ namespace CommonLib.Web.Source.Common.Components.MyPromptComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Prompt_AfterFirstRenderAsync", _guid, _id, _newFor.TotalSeconds, _removeAfter.TotalSeconds, _max, _renderClasses, _renderStyle, _renderAttributes);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Prompt_AfterFirstRenderAsync", Guid, _id, _newFor.TotalSeconds, _removeAfter.TotalSeconds, _max, _renderClasses, _renderStyle, _renderAttributes);
         }
 
         public async Task AddNotificationAsync(NotificationType type, IconType icon, string message)

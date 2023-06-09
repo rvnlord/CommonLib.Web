@@ -8,22 +8,29 @@
 @inherits MyNavLinkBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
     @{
         var iconClasses = ChildContent is null ? "my-nav-link-icon my-d-flex" : "my-nav-link-icon my-pr-10px my-d-flex";
-        var disabled = InteractionState.V.In(null, ComponentState.Disabled);
+        var disabled = InteractivityState.V.In(null, ComponentState.Disabled);
     }
 
-    <a class="@_renderClasses" href="@(disabled ? null : _absoluteVirtualLink)" @ref="_jsNavLink" my-guid="@_guid" @onclick:preventDefault my-opens-modal="@(NavItemType == NavItemType.Login ? $"[my-guid='{NavBar.LoginModalGuid}']" : null)" style="@_renderStyle" @attributes="@_renderAttributes">
+    <a class="@_renderClasses" 
+        href="@(disabled ? null : _absoluteVirtualLink)" 
+        @ref="_jsNavLink" my-guid="@Guid" 
+        @onclick:preventDefault 
+        my-opens-modal="@(CascadingNavItemType == NavItemType.Login ? $"[my-guid='{NavBar.LoginModalGuid}']" : null)" 
+        style="@_renderStyle" 
+        @attributes="@_renderAttributes">
         @if (Image is not null && ImagePlacement == NavLinkImagePlacement.Left)
         {
             <MyImage Path="Image"></MyImage>
         }
-        else if (_icon != null && IconPlacement == NavLinkIconPlacement.Left)
+        else if (IconState is not null && IconPlacement == NavLinkIconPlacement.Left)
         {
-            <MyIcon Color="null" IconType="@(_icon.ToBp())" class="@iconClasses" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
+            <MyIcon Color="null" IconType="@(IconState.ToBp())" class="@iconClasses" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
-        @if (ChildContent != null)
+        @if (ChildContent is not null)
         {
             <div class="my-nav-link-content">@ChildContent</div>
         }
@@ -31,26 +38,27 @@
         {
             <MyImage Path="Image"></MyImage>
         }
-        else if (_icon != null && IconPlacement == NavLinkIconPlacement.Right)
+        else if (IconState is not null && IconPlacement == NavLinkIconPlacement.Right)
         {
-            <MyIcon Color="null" IconType="@_icon" class="my-nav-link-icon my-pl-10px my-d-flex" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
+            <MyIcon Color="null" IconType="@IconState" class="my-nav-link-icon my-pl-10px my-d-flex" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
-        @if (_openIcon != null)
+        @if (_openIcon is not null)
         {
             <MyIcon Color="null" IconType="@_openIcon" class="my-nav-link-open-icon my-pl-10px my-ml-auto my-d-flex" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
-        @if (_closeIcon != null)
+        @if (_closeIcon is not null)
         {
             <MyIcon Color="null" IconType="@_closeIcon" class="my-nav-link-close-icon my-pl-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
-        @if (_openIconXs != null)
+        @if (_openIconXs is not null)
         {
             <MyIcon Color="null" IconType="@_openIconXs" class="my-nav-link-open-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
-        @if (_closeIconXs != null)
+        @if (_closeIconXs is not null)
         {
             <MyIcon Color="null" IconType="@_closeIconXs" class="my-nav-link-close-icon-xs my-px-10px my-ml-auto my-d-none" SizeMode="@(new BlazorParameter<IconSizeMode?>(IconSizeMode.Contain))"></MyIcon>
         }
     </a>
 
+</CascadingValue>
 </CascadingValue>

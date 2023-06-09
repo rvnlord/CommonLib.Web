@@ -24,15 +24,19 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         protected IconType _closeIcon { get; set; }
         protected IconType _closeIconXs { get; set; }
         protected IconType _openIconXs { get; set; }
-        protected IconType _icon { get; set; }
-
+        
         protected string _absoluteVirtualLink { get; set; }
+
+        public IconType IconState { get; set; }
 
         [Inject]
         public IJQueryService JQuery { get; set; }
 
-        [CascadingParameter]
-        public IconType CascadedIcon { get; set; }
+        [CascadingParameter(Name = "CascadingIconType")]
+        public IconType CascadingIconType { get; set; }
+
+        [CascadingParameter(Name = "CascadingNavItemType")]
+        public NavItemType CascadingNavItemType { get; set; }
 
         [Parameter]
         public IconType Icon { get; set; }
@@ -51,10 +55,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
         [Parameter]
         public bool MatchEmptyRoute { get; set; }
-        
-        [CascadingParameter]
-        public NavItemType NavItemType { get; set; }
-        
+
         protected override async Task OnInitializedAsync()
         {
             await Task.CompletedTask;
@@ -62,17 +63,16 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
 
         protected override async Task OnParametersSetAsync()
         {
-            if (IsFirstParamSetup())
+            if (FirstParamSetup)
             {
-                if (NavItemType.In(NavItemType.Link, NavItemType.Home))
+                if (CascadingNavItemType.In(NavItemType.Link, NavItemType.Home))
                     _absoluteVirtualLink = To == null ? null : PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, To);
                 
                 SetMainAndUserDefinedClasses("my-nav-link");
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
-
-                _icon = Icon ?? CascadedIcon;
-                _openIcon = NavItemType switch
+                
+                _openIcon = CascadingNavItemType switch
                 {
                     NavItemType.Link => null,
                     NavItemType.DropDown => IconType.From(LightIconType.ChevronCircleDown),
@@ -81,7 +81,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
                     NavItemType.DropRight => IconType.From(LightIconType.ChevronCircleRight),
                     _ => null
                 };
-                _closeIcon = NavItemType switch
+                _closeIcon = CascadingNavItemType switch
                 {
                     NavItemType.Link => null,
                     NavItemType.DropDown => IconType.From(LightIconType.ChevronCircleUp),
@@ -90,9 +90,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
                     NavItemType.DropRight => IconType.From(LightIconType.ChevronCircleLeft),
                     _ => null
                 };
-                _openIconXs = NavItemType == NavItemType.Link ? null : IconType.From(LightIconType.ChevronCircleDown);
-                _closeIconXs = NavItemType == NavItemType.Link ? null : IconType.From(LightIconType.ChevronCircleUp);
+                _openIconXs = CascadingNavItemType == NavItemType.Link ? null : IconType.From(LightIconType.ChevronCircleDown);
+                _closeIconXs = CascadingNavItemType == NavItemType.Link ? null : IconType.From(LightIconType.ChevronCircleUp);
             }
+
+            if (Icon is not null && Icon != IconState || CascadingIconType is not null && CascadingIconType != IconState)
+                IconState = Icon ?? CascadingIconType;
 
             CascadedEditContext.BindValidationStateChanged(CurrentEditContext_ValidationStateChangedAsync);
 
@@ -101,12 +104,12 @@ namespace CommonLib.Web.Source.Common.Components.MyNavLinkComponent
         
         protected override async Task OnAfterFirstRenderAsync() // this is executed before outer component after render but the outer component won't wait until this is finished unless forced
         {
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterFirstRender", Guid, DotNetObjectReference.Create(this));
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender, bool authUserChanged)
         {
-            await JQuery.QueryOneAsync(_guid).AttrAsync("rendered", "true");
+            await JQuery.QueryOneAsync(Guid).AttrAsync("rendered", "true");
             //await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NavLink_AfterRender", _guid);
         }
 

@@ -74,7 +74,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-autocomplete", new[] { $"my-guid_{_guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
+                SetMainCustomAndUserDefinedClasses("ext-autocomplete", new[] { $"my-guid_{Guid}", $"my-placeholder_{Placeholder.V}", $"my-input-sync-padding-group_{SyncPaddingGroup.V}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
@@ -116,7 +116,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent
 
         protected async Task AutoComplete_ValueChanged(string valueFieldValue)
         {
-            if (InteractionState.V.IsDisabledOrForceDisabled)
+            if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
             if (Model.HasValue())
@@ -147,7 +147,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent
                     var piPropertyImageField = piProperty?.PropertyType.GetProperty(nameof(NameWithImage.Image));
                     piPropertyImageField?.SetValue(propValue, image);
 
-                    var jqTacAsset = await JQuery.QueryOneAsync(_guid);
+                    var jqTacAsset = await JQuery.QueryOneAsync(Guid);
                     await jqTacAsset.RemoveAsync(".k-autocomplete-symbol");
                     if (image is not null)
                     {

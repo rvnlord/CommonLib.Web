@@ -146,9 +146,9 @@ namespace CommonLib.Web.Source.Common.Components.MyImageComponent
                 }
             }
 
-            if (InteractionState.HasChanged())
+            if (InteractivityState.HasChanged())
             {
-                AddStyle("filter", InteractionState.V.IsEnabledOrForceEnabled ? "none" : "grayscale(1) brightness(0.2)");
+                AddStyle("filter", InteractivityState.V.IsEnabledOrForceEnabled ? "none" : "grayscale(1) brightness(0.2)");
             }
         }
 

@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtRadialGaugeComponent
         {
             if (FirstParamSetup)
             {
-                SetMainCustomAndUserDefinedClasses("ext-radialgauge", new [] { $"my-guid_{_guid}" });
+                SetMainCustomAndUserDefinedClasses("ext-radialgauge", new [] { $"my-guid_{Guid}" });
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }

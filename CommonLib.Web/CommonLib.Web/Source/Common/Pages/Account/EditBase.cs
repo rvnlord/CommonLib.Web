@@ -72,8 +72,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _btnSave = _allControls.OfType<MyButtonBase>().Single(b => b.SubmitsForm.V == true);
             _pwdOldPassword = _allControls.OfType<MyPasswordInputBase>().Single(p => p.For.GetPropertyName().EqualsInvariant(nameof(_editUserVM.OldPassword)));
             if (!_editUserVM.HasPassword)
-                _pwdOldPassword.InteractionState.ParameterValue = ComponentState.ForceDisabled;
-
+                _pwdOldPassword.InteractivityState.StateValue = ComponentState.ForceDisabled;
             
             if (queryUser is not null && queryUser.Mode == ExternalLoginUsageMode.Connection)
             {
@@ -84,7 +83,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
 
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             var loginControls = (await ComponentByTypeAsync<LoginBase>()).GetInputControls(); // re-enable controls disabled when clicking `edit` nav link (button)
-            if (loginControls.All(c => c.InteractionState.V.In(ComponentState.Disabled, ComponentState.Loading)) && loginControls.Count(c => c.InteractionState.V == ComponentState.Loading) == 1)
+            if (loginControls.All(c => c.InteractivityState.V.In(ComponentState.Disabled, ComponentState.Loading)) && loginControls.Count(c => c.InteractivityState.V == ComponentState.Loading) == 1)
                 await SetControlStatesAsync(ComponentState.Enabled, loginControls);
         }
 
@@ -131,8 +130,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await EnsureAuthenticationPerformedAsync(false, true);
             if (HasAuthenticationStatus(AuthStatus.Authenticated))
             {
-                if (_editUserVM.HasPassword && _pwdOldPassword.InteractionState.V == ComponentState.ForceDisabled)
-                    _pwdOldPassword.InteractionState.ParameterValue = ComponentState.Enabled;
+                if (_editUserVM.HasPassword && _pwdOldPassword.InteractivityState.V == ComponentState.ForceDisabled)
+                    _pwdOldPassword.InteractivityState.StateValue = ComponentState.Enabled;
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             }
             else

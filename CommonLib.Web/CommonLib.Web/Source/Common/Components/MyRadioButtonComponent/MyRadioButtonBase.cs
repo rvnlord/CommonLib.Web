@@ -102,7 +102,7 @@ namespace CommonLib.Web.Source.Common.Components.MyRadioButtonComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode == ValidationMode.Property && e.ValidatedFields == null)
                 throw new NullReferenceException(nameof(e.ValidatedFields));
-            if (InteractionState.ParameterValue?.IsForced == true)
+            if (InteractivityState.V?.IsForced == true)
                 return;
             if (Ancestors.Any(a => a is MyInputBase))
                 return;

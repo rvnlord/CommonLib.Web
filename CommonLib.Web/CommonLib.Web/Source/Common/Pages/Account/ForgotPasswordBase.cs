@@ -64,7 +64,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var forgotPasswordResponse = await AccountClient.ForgotPasswordAsync(_forgotPasswordUserVM);
             if (forgotPasswordResponse.IsError)
             {
-                _btnForgotPassword.InteractionState.ParameterValue = ComponentState.Enabled;
+                _btnForgotPassword.InteractivityState.StateValue = ComponentState.Enabled;
                 await _validator.AddValidationMessages(forgotPasswordResponse.ValidationMessages).NotifyValidationStateChangedAsync(_validator); ;
                 await PromptMessageAsync(NotificationType.Error, forgotPasswordResponse.Message);
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);

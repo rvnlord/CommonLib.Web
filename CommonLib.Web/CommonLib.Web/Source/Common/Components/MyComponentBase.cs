@@ -107,7 +107,6 @@ namespace CommonLib.Web.Source.Common.Components
         private bool _isFirstRenderAfterAuthorization = true;
 
         protected OrderedDictionary<string, string> _prevAdditionalAttributes = new();
-        protected Guid _guid { get; set; }
         protected string _id { get; set; }
         protected string _renderClasses { get; set; } // these properties prevents async component rendering from throwing if clicking sth fast would change the collection before it is iterated properly within the razor file
         protected string _renderStyle { get; set; }
@@ -116,6 +115,8 @@ namespace CommonLib.Web.Source.Common.Components
         protected OrderedDictionary<string, string> _attributes { get; } = new();
         protected BlazorParameter<MyComponentBase> _bpParentToCascade { get; set; }
 
+        public Guid Guid { get; set; }
+        public BlazorState<ComponentState> InteractivityState { get; set; }
         public List<string> Classes { get; } = new();
         public Task<IJSObjectReference> ComponentBaseModuleAsync => _componentBaseModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyComponentBase).BeforeLast("Base"), NavigationManager, HttpClient);
         public Task<IJSObjectReference> ModuleAsync => _moduleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(GetType().BaseType?.Name.BeforeLast("Base"), NavigationManager, HttpClient);
@@ -183,7 +184,7 @@ namespace CommonLib.Web.Source.Common.Components
         public RenderFragment ChildContent { get; set; }
 
         [Parameter]
-        public BlazorParameter<ComponentState> InteractionState
+        public BlazorParameter<ComponentState> Interactivity
         {
             get
             {
@@ -198,8 +199,11 @@ namespace CommonLib.Web.Source.Common.Components
             }
         }
 
+        [CascadingParameter(Name = "CascadingInteractivity")]
+        public CascadingBlazorParameter<ComponentState> CascadingInteractivity { get; set; }
+
         [Parameter]
-        public BlazorParameter<bool?> InheritState { get; set; }
+        public BlazorParameter<bool?> InheritCascadedInteractivity { get; set; }
 
         [Parameter]
         public BlazorParameter<bool?> DisabledByDefault { get; set; }
@@ -207,7 +211,7 @@ namespace CommonLib.Web.Source.Common.Components
         [Parameter(CaptureUnmatchedValues = true)]
         public Dictionary<string, object> AdditionalAttributes { get; set; } = new();
 
-        [CascadingParameter]
+        [CascadingParameter] // TODO: every CascadedParameter should be of CascadingBlazorParameter type
         public BlazorParameter<MyEditContext> CascadedEditContext { get; set; }
 
         [CascadingParameter(Name = "LayoutParameter")]
@@ -223,7 +227,7 @@ namespace CommonLib.Web.Source.Common.Components
             get
             {
                 //_syncComponentsCache.Wait();
-                var children = Layout.Components.SafelyGetValues().Where(c => c.Parent == this && !c.IsDisposed).ToList();
+                var children = Layout?.Components.SafelyGetValues().Where(c => c.Parent == this && !c.IsDisposed).ToList() ?? new List<MyComponentBase>();
                 //_syncComponentsCache.Release();
                 return children;
             }
@@ -371,6 +375,7 @@ namespace CommonLib.Web.Source.Common.Components
                 //OnStateChangedAsync += MyComponentBase_StateChangedAsync;
             };
         }
+        
 
         public async Task<MyPromptBase> GetPromptAsync() => _prompt ??= await ComponentByTypeAsync<MyPromptBase>();
 
@@ -389,7 +394,7 @@ namespace CommonLib.Web.Source.Common.Components
                 SetNullParametersToDefaults(); // due to this, init all params with `=` and not `??=` (or use HasValue())
 
                 await InitializeAsync();
-                await SetParametersAsync(true);
+                await SetParametersAsync(false);
                 await StateHasChangedAsync(true);
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)
@@ -407,8 +412,8 @@ namespace CommonLib.Web.Source.Common.Components
         {
             if (!_isInitialized)
             {
-                if (_guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
-                    _guid = Guid.NewGuid();
+                if (Guid == Guid.Empty) // OnInitializedAsync runs twice by default, once for pre-render and once for the actual render | fixed by using IComponent interface directly
+                    Guid = Guid.NewGuid();
                 _bpParentToCascade = new BlazorParameter<MyComponentBase>(this);
                 if (IsCommonLayout) // set LayoutComponentBase_Layout as generic layout
                 {
@@ -438,7 +443,7 @@ namespace CommonLib.Web.Source.Common.Components
 
                 if (LayoutParameter.HasValue() && !IsDisposed) // Style components would not have Layout value as they are rendered manually to a css file so we need `Layout.HasValue()`, also a specialized layout from an app would have a value and wouldn't be a common layout so I need to account for that lateer, here `&& !_isCommonLayout && !_isSpecialisedLayout` is not needed because MyLayoutComponent utilizes these event | IsDisposed is an edge case, I don't want the component to remain in cache if it was disposed before params were initialised
                 {
-                    Layout.Components[_guid] = this;
+                    Layout.Components[Guid] = this;
                     IsCached = true;
                     Layout.LayoutSessionIdSet -= Layout_SessionIdSet; // also add an event to layout itself as well so app can trigger Rebuild component cache
                     Layout.LayoutSessionIdSet += Layout_SessionIdSet;
@@ -452,28 +457,59 @@ namespace CommonLib.Web.Source.Common.Components
             AdditionalAttributesHaveChanged = !AdditionalAttributes.Keys.CollectionEqual(_prevAdditionalAttributes.Keys) || !AdditionalAttributes.Values.CollectionEqual(_prevAdditionalAttributes.Values);
             _prevAdditionalAttributes = AdditionalAttributes.ToOrderedDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
             
-            if (InheritState.HasChanged())
-                InheritState.ParameterValue ??= InheritState.V ?? true;
+            if (InheritCascadedInteractivity.HasChanged())
+                InheritCascadedInteractivity.ParameterValue ??= true;
 
             if (DisabledByDefault.HasChanged())
-                DisabledByDefault.ParameterValue ??= DisabledByDefault.V ?? true;
+                DisabledByDefault.ParameterValue ??= true;
 
-            var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractionState.HasChanged())?.InteractionState?.V : null;
-            if (parentState is not null && !InteractionState.HasChanged())
-                InteractionState.SetAsChanged();
-            var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
+            //var parentState = InheritState.V == true ? Ancestors.FirstOrNull(a => a.InteractivityState.HasChanged())?.InteractivityState?.V : null;
+            //if (parentState is not null && !InteractivityState.HasChanged())
+            //    InteractivityState.SetAsChanged();
+            //var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
             
-            if (InteractionState.HasChanged())
-            {
-                ComponentState thisAsIconOrImageState = null;
-                if (this is MyIconBase or MyImageBase)
-                    thisAsIconOrImageState = InheritState.V == true ? (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase or MyNavLinkBase or MyTile) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractionState.V : null;
+            //if (InteractivityState.HasChanged())
+            //{
+            //    ComponentState thisAsIconOrImageState = null;
+            //    if (this is MyIconBase or MyImageBase)
+            //        thisAsIconOrImageState = InheritState.V == true ? (Ancestors.FirstOrNull(a => a is MyButtonBase or MyInputBase or MyDropDownBase or MyNavLinkBase or MyTile) ?? Ancestors.FirstOrNull(a => a is MyInputGroupBase))?.InteractivityState.V : null;
 
-                InteractionState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractionState.V.NullifyIf(_ => !InteractionState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+            //    InteractivityState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractivityState.V.NullifyIf(_ => !InteractivityState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
+            //}
+
+            if (this is MyIconBase icon3 && icon3.IconType.V == IconType.From(LightIconType.Home) && CascadingInteractivity.V.IsEnabledOrForceEnabled)
+            {
+                var t = 0;
             }
 
-            if (this is MyIconBase icon && icon.IconType.V == IconType.From(LightIconType.Box) && InteractionState.HasChanged()) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
+            // TODO: set state using different variable, don't change parameters
+            if (Interactivity.HasChanged() || CascadingInteractivity.HasChangedFor(this))
             {
+                if (this is MyIconBase icon2 && icon2.IconType.V == IconType.From(LightIconType.Archway))
+                {
+                    var a = Ancestors;
+                    var t = 0;
+                }
+
+                if (this is MyNavLinkBase nl && nl.CascadingIconType == IconType.From(LightIconType.Archway)) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
+                {
+                    var a = Ancestors;
+                    var t = 0;
+                }
+
+                if (this is MyImageBase img)
+                {
+                    var a = Ancestors;
+                    var i = img.Path;
+                    var t = 0;
+                }
+
+                (InteractivityState ??= InteractivityState.InitIfNull()).StateValue = Interactivity.V ?? CascadingInteractivity.V.NullifyIf(_ => InheritCascadedInteractivity.V != true) ?? (DisabledByDefault.V == true ? ComponentState.Disabled : ComponentState.Enabled);
+            }
+            
+            if (this is MyIconBase icon && icon.IconType.V == IconType.From(LightIconType.Archway)) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
+            {
+                var a = Ancestors;
                 var t = 0;
             }
 
@@ -484,16 +520,22 @@ namespace CommonLib.Web.Source.Common.Components
 
             OnParametersSet();
             await OnParametersSetAsync();
-
-            if (InteractionState.HasChanged())
+            
+            if (InteractivityState.HasChanged())
             {
-                if (InteractionState.ParameterValue.IsDisabledOrForceDisabled)
+                // can't use children here because they are not initialized yet
+                // cascading param changed won't trigger subcomponents OnParamChangedAsync because I am changing ParameterValue property not reassigning the whole object
+                //foreach (var c in Children) 
+                //    await c.NotifyParametersChangedAsync();
+                InteractivityState.HasChanged();
+                
+                if (InteractivityState.V.IsDisabledOrForceDisabled)
                 {
                     RemoveClasses("my-loading");
                     AddAttribute("disabled", string.Empty);
                     AddClass("disabled");
                 }
-                else if (InteractionState.ParameterValue.IsLoadingOrForceLoading)
+                else if (InteractivityState.V.IsLoadingOrForceLoading)
                 {
                     RemoveClasses("disabled");
                     RemoveAttribute("disabled");
@@ -547,7 +589,7 @@ namespace CommonLib.Web.Source.Common.Components
 
                         var thisAsLayout = (MyLayoutComponentBase)this;
                         var mediaQueryDotNetRef = DotNetObjectReference.Create(thisAsLayout);
-                        thisAsLayout.DeviceSize = (await (await thisAsLayout.MediaQueryModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_MediaQuery_SetupForAllDevicesAndGetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries, _guid, mediaQueryDotNetRef)).ToEnum<DeviceSizeKind>();
+                        thisAsLayout.DeviceSize = (await (await thisAsLayout.MediaQueryModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_MediaQuery_SetupForAllDevicesAndGetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries, Guid, mediaQueryDotNetRef)).ToEnum<DeviceSizeKind>();
 
                         await SessionStorage.SetItemAsStringAsync("BackendBaseUrl", ConfigUtils.BackendBaseUrl);
 
@@ -982,29 +1024,47 @@ namespace CommonLib.Web.Source.Common.Components
         {
             return GetType().GetProperties().Where(prop =>
                 (prop.IsDefined(typeof(ParameterAttribute), false) || prop.IsDefined(typeof(CascadingParameterAttribute), false))
-                && prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(BlazorParameter<>)).ToArray();
+                && prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition().In(typeof(BlazorParameter<>), typeof(CascadingBlazorParameter<>))).ToArray();
         }
 
         private void SetNullParametersToDefaults()
         {
             var blazorParameters = GetAllBlazorParamPropertyInfos();
             foreach (var bp in blazorParameters)
-                if (bp.GetValue(this) == null)
-                    bp.SetValue(this, Activator.CreateInstance(typeof(BlazorParameter<>).MakeGenericType(bp.PropertyType.GetGenericArguments()), new object[] { null }));
+                if (bp.GetValue(this) is null)
+                    bp.SetValue(this, Activator.CreateInstance(bp.PropertyType.GetGenericTypeDefinition().MakeGenericType(bp.PropertyType.GetGenericArguments()), new object[] { null }));
         }
 
         private void SetAllBlazorParametersAsUnchanged()
         {
             var blazorParameters = GetAllBlazorParamPropertyInfos();
             foreach (var bp in blazorParameters)
-                bp.PropertyType.GetMethod("SetAsUnchanged")?.Invoke(bp.GetValue(this), null);
+            {
+                var setAsUnchanged = bp.PropertyType.GetMethod("SetAsUnchanged");
+                if (setAsUnchanged is not null)
+                    setAsUnchanged.Invoke(bp.GetValue(this), null);
+                else
+                {
+                    var setAsUnchangedFor = bp.PropertyType.GetMethod("SetAsUnchangedFor");
+                    (setAsUnchangedFor ?? throw new NullReferenceException()).Invoke(bp.GetValue(this), new object[] { this });
+                }
+            }
         }
 
         private void SetCascadingBlazorParametersAsChanged()
         {
             var blazorCascadingParameters = GetAllBlazorParamPropertyInfos().Where(pi => pi.IsDefined(typeof(CascadingParameterAttribute), false)).ToArray();
             foreach (var cbp in blazorCascadingParameters)
-                cbp.PropertyType.GetMethod("SetAsChanged")?.Invoke(cbp.GetValue(this), null);
+            {
+                var setAsChanged = cbp.PropertyType.GetMethod("SetAsChanged");
+                if (setAsChanged is not null)
+                    setAsChanged.Invoke(cbp.GetValue(this), null);
+                else
+                {
+                    var setAsChangedFor = cbp.PropertyType.GetMethod("SetAsChangedFor");
+                    (setAsChangedFor ?? throw new NullReferenceException()).Invoke(cbp.GetValue(this), new object[] { this });
+                }
+            }
         }
 
         protected void StateHasChanged(bool force)
@@ -1137,7 +1197,7 @@ namespace CommonLib.Web.Source.Common.Components
 
         public async Task<TComponent> ComponentByGuidAsync<TComponent>(Guid guid) where TComponent : MyComponentBase
         {
-            var componentByGuid = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => guid.Equals(c._guid));
+            var componentByGuid = (Layout ?? (MyLayoutComponentBase)this).Components.SafelyGetValues().ToArray().OfType<TComponent>().Single(c => guid.Equals(c.Guid));
             return await Task.FromResult(componentByGuid);
         }
 
@@ -1172,7 +1232,7 @@ namespace CommonLib.Web.Source.Common.Components
                         wereRerenderedAtSomePoint.Add(c);
 
                 var componentsLeftToRerender = arrControls.Except(wereRerenderedAtSomePoint).ToArray();
-                return !componentsLeftToRerender.Any() || arrControls.All(c => c.InteractionState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
+                return !componentsLeftToRerender.Any() || arrControls.All(c => c.InteractivityState.V.IsForced) || arrControls.Any(c => c.IsDisposed);
             }, 1000, TimeSpan.FromSeconds(300));
             ClearControlsRerenderingStatus(arrControls);
         }
@@ -1192,16 +1252,16 @@ namespace CommonLib.Web.Source.Common.Components
                 var arrControlsToChangeState = controlsToChangeState.AppendIfNotNull(componentLoading).Concat(controlsToAlsoChangeRenderingState ?? Enumerable.Empty<MyComponentBase>()).ToArray();
                 if (!arrControlsToChangeState.Any())
                     return;
-                if (componentLoading is not null && !componentLoading.InteractionState.V.IsForced)
-                    componentLoading.InteractionState.ParameterValue = ComponentState.Loading;
+                if (componentLoading is not null && !componentLoading.InteractivityState.V.IsForced)
+                    componentLoading.InteractivityState.StateValue = ComponentState.Loading;
 
                 var notifyParamsChangedTasks = arrControlsToChangeState.SelectMany(c => c.Descendants).Concat(arrControlsToChangeState).Distinct().ToDictionary(c => c, c => new Func<Task<MyComponentBase>>(async () => await c.NotifyParametersChangedAsync()));
                 var changeStateTasks = new Dictionary<MyComponentBase, Func<Task<MyComponentBase>>>();
                 foreach (var control in arrControlsToChangeState)
                 {
                     var c = control;
-                    if (c.InteractionState is not null && !c.InteractionState.V.IsForced && c != componentLoading)
-                        c.InteractionState.ParameterValue = state;
+                    if (c.InteractivityState is not null && !c.InteractivityState.V.IsForced && c != componentLoading)
+                        c.InteractivityState.StateValue = state;
                     if (!changeRenderingState.In(ChangeRenderingStateMode.AllSpecified, ChangeRenderingStateMode.AllSpecifiedThenCurrent))
                         continue;
 
@@ -1273,16 +1333,16 @@ namespace CommonLib.Web.Source.Common.Components
         }
 
         [JSInvokable]
-        public bool IsDisabled() => InteractionState.V.IsDisabledOrForceDisabled;
+        public bool IsDisabled() => InteractivityState.V.IsDisabledOrForceDisabled;
 
         [JSInvokable]
-        public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c._guid == guid).InteractionState.V.IsDisabledOrForceDisabled;
+        public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c.Guid == guid).InteractivityState.V.IsDisabledOrForceDisabled;
 
         public async Task FixInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
-        public async Task FixInputSyncPaddingGroupAsync() => await FixInputSyncPaddingGroupAsync(_guid);
+        public async Task FixInputSyncPaddingGroupAsync() => await FixInputSyncPaddingGroupAsync(Guid);
 
-        public async Task BindOverlayScrollBar(Guid guid) => await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtComponent_BindOverlayScrollBar", _guid); 
-        public async Task BindOverlayScrollBar() => await BindOverlayScrollBar(_guid);
+        public async Task BindOverlayScrollBar(Guid guid) => await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtComponent_BindOverlayScrollBar", Guid); 
+        public async Task BindOverlayScrollBar() => await BindOverlayScrollBar(Guid);
 
         protected virtual async Task DisposeAsync(bool disposing)
         {
@@ -1295,7 +1355,7 @@ namespace CommonLib.Web.Source.Common.Components
                 IsCached = false;
                 if (LayoutParameter.HasValue())
                 {
-                    Layout.Components.TryRemove(_guid, out _);
+                    Layout.Components.TryRemove(Guid, out _);
                     Layout.LayoutSessionIdSet -= Layout_SessionIdSet;
                 }
 
@@ -1328,12 +1388,13 @@ namespace CommonLib.Web.Source.Common.Components
 
         ~MyComponentBase() => _ = DisposeAsync(false);
 
-        public override string ToString() => $"{GetType().Name} [{_guid.ToString().Take(4)}...{_guid.ToString().TakeLast(4)}] {{{InteractionState.V}}} {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
+        public override string ToString() => $"{ToTypeAndShortGuidString()} {{{InteractivityState.V}}} {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
+        public string ToTypeAndShortGuidString() => $"{GetType().Name} [{Guid.ToString().Take(4)}...{Guid.ToString().TakeLast(4)}]";
 
         public bool Equals(MyComponentBase other)
         {
             if (other is null) return false;
-            return ReferenceEquals(this, other) || _guid.Equals(other._guid);
+            return ReferenceEquals(this, other) || Guid.Equals(other.Guid);
         }
 
         public override bool Equals(object obj)
@@ -1343,7 +1404,7 @@ namespace CommonLib.Web.Source.Common.Components
             return obj.GetType() == GetType() && Equals((MyComponentBase)obj);
         }
 
-        public override int GetHashCode() => _guid.GetHashCode();
+        public override int GetHashCode() => Guid.GetHashCode();
         public static bool operator ==(MyComponentBase left, MyComponentBase right) => Equals(left, right);
         public static bool operator !=(MyComponentBase left, MyComponentBase right) => !Equals(left, right);
 

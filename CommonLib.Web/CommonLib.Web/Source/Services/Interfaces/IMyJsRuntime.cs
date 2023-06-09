@@ -8,7 +8,7 @@ namespace CommonLib.Web.Source.Services.Interfaces
 {
     public interface IMyJsRuntime
     {
-        bool IsInitialized { get; }
+        Task<bool> IsInitializedAsync();
 
         //ValueTask JsVoidFromModule(string modulePath, string functionName);
         //ValueTask JsVoidFromModule(string modulePath, string functionName, params object[] parameters);

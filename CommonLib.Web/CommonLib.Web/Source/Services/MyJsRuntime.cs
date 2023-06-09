@@ -38,7 +38,7 @@ namespace CommonLib.Web.Source.Services
         public static string CurrentWwwRootDir => _currentWwwRootDir ??= ((object) WebUtils.ServerHostEnvironment).GetProperty<string>("WebRootPath");
         public static bool IsProduction => _isProduction ??= Directory.Exists(PathUtils.Combine(PathSeparator.BSlash, CurrentWwwRootDir, "_content"));
 
-        public bool IsInitialized => _jsRuntime.IsInitialized();
+        public Task<bool> IsInitializedAsync() => _jsRuntime.IsInitializedAsync();
 
         public MyJsRuntime(IJSRuntime jsRuntime, HttpClient httpClient, NavigationManager navigationManager, ISessionStorageService sessionStorage)
         {
@@ -152,7 +152,7 @@ namespace CommonLib.Web.Source.Services
 
         private async Task<Guid> ParseSessionIdAsync()
         {
-            var isInitialized = _jsRuntime.IsInitialized();
+            var isInitialized = await _jsRuntime.IsInitializedAsync();
             if (!isInitialized)
                 return Guid.Empty;
 

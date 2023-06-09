@@ -105,7 +105,7 @@ namespace CommonLib.Web.Source.Common.Components.MyProgressBarComponent
                 throw new NullReferenceException(nameof(e));
             if (e.ValidationMode != ValidationMode.Model)
                 return;
-            if (InteractionState.ParameterValue?.IsForced == true)
+            if (InteractivityState.V?.IsForced == true)
                 return;
             if (Ancestors.Any(a => a is MyInputBase))
                 return;

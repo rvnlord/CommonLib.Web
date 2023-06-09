@@ -1,4 +1,5 @@
 ﻿@using CommonLib.Web.Source.Common.Components.MyInputComponent
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
 @using CommonLib.Web.Source.Models
 @using SixLabors.ImageSharp
 
@@ -6,54 +7,56 @@
 @inherits MyTextInputBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+<CascadingValue Value="_bpTextInput">
+<CascadingValue Value="InteractivityState" Name="CascadingInteractivity">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
-    <CascadingValue Value="InteractionState">
-    <CascadingValue Value="_bpTextInput">
-        @if (ChildContent is null)
-        {
-            @if (Icon.HasValue())
-            {
-                <MyInputGroup>
-                    <input @ref="@_jsTextInput" type="text"
-                           my-guid="@_guid"
-                           value="@Text"
-                           placeholder="@Placeholder"
-                           class="@_renderClasses"
-                           style="@_renderStyle"
-                           @oninput="@InputText_Input"
-                           @attributes="@_renderAttributes" />
-                    <MyInputGroupPrepend>
-                        <MyIcon Color="Color.White" IconType="Icon.V"></MyIcon>
-                    </MyInputGroupPrepend>
-                </MyInputGroup>
-            }
-            else
-            {
-                <input @ref="@_jsTextInput" type="text"
-                       my-guid="@_guid"
-                       value="@Text"
-                       placeholder="@Placeholder"
-                       class="@_renderClasses"
-                       style="@_renderStyle"
-                       @attributes="@_renderAttributes"
-                       @oninput="@InputText_Input" />
-            }
-        }
-        else
+    @if (ChildContent is null)
+    {
+        @if (Icon.HasValue())
         {
             <MyInputGroup>
                 <input @ref="@_jsTextInput" type="text"
-                       my-guid="@_guid"
+                       my-guid="@Guid"
                        value="@Text"
                        placeholder="@Placeholder"
                        class="@_renderClasses"
                        style="@_renderStyle"
                        @oninput="@InputText_Input"
                        @attributes="@_renderAttributes" />
-                @ChildContent
+                <MyInputGroupPrepend>
+                    <MyIcon Color="Color.White" IconType="Icon.V"></MyIcon>
+                </MyInputGroupPrepend>
             </MyInputGroup>
         }
-    </CascadingValue>
-    </CascadingValue>
+        else
+        {
+            <input @ref="@_jsTextInput" type="text"
+                   my-guid="@Guid"
+                   value="@Text"
+                   placeholder="@Placeholder"
+                   class="@_renderClasses"
+                   style="@_renderStyle"
+                   @attributes="@_renderAttributes"
+                   @oninput="@InputText_Input" />
+        }
+    }
+    else
+    {
+        <MyInputGroup>
+            <input @ref="@_jsTextInput" type="text"
+                   my-guid="@Guid"
+                   value="@Text"
+                   placeholder="@Placeholder"
+                   class="@_renderClasses"
+                   style="@_renderStyle"
+                   @oninput="@InputText_Input"
+                   @attributes="@_renderAttributes" />
+            @ChildContent
+        </MyInputGroup>
+    }
 
+            </CascadingValue>
+</CascadingValue>
+</CascadingValue>
 </CascadingValue>

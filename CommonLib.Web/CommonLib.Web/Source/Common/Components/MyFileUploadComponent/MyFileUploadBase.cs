@@ -98,10 +98,10 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             Placeholder = !Placeholder.IsNullOrWhiteSpace() ? Placeholder : !displayName.IsNullOrWhiteSpace() ? $"{displayName}..." : null;
 
-            if (InteractionState.HasChanged())
+            if (InteractivityState.HasChanged())
             {
-                var thumbnailContainerSelector = $"div.my-fileupload[my-guid='{_guid}'] > .my-fileupload-thumbnail-container";
-                if (InteractionState.V?.IsDisabledOrForceDisabled != false) // true or null (not set), State is currently being set after SetParams in MyComponentBase
+                var thumbnailContainerSelector = $"div.my-fileupload[my-guid='{Guid}'] > .my-fileupload-thumbnail-container";
+                if (InteractivityState.V?.IsDisabledOrForceDisabled != false) // true or null (not set), State is currently being set after SetParams in MyComponentBase
                 {
                     if (PreviewFor.HasValue() || PreviewFor?.V?.Compile()?.Invoke() == _prevDefaultPreviewFile)
                     {
@@ -137,7 +137,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_AfterFirstRender", _guid, DotNetObjectReference.Create(this));
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_AfterFirstRender", Guid, DotNetObjectReference.Create(this));
             foreach (var file in Files)
             {
                 file.IsPreAdded = true;
@@ -193,7 +193,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                     [nameof(f.Extension)] = f.Extension,
                     [nameof(f.TotalSizeInBytes)] = f.TotalSizeInBytes
                 }).ToJToken();
-                await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUploads", _guid, jInvalidFiles.JsonSerialize());
+                await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUploads", Guid, jInvalidFiles.JsonSerialize());
             }
             else
             {
@@ -396,7 +396,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             Value.Remove(fd);
             fd.StateChanged -= FileData_StateChanged;
             await NotifyParametersChangedAsync().StateHasChangedAsync(true);
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUpload", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_RemoveCachedFileUpload", Guid, fd.Name, fd.Extension, fd.TotalSizeInBytes);
             //await SetControlStatesAsync(ComponentStateKind.Enabled, btnClear);  // for some reason blazor is filling the same button with new parameters instead of creating a new one
         }
         
@@ -433,42 +433,42 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
                 var btnsToEnable = new List<MyButtonBase>();
                 var btnsToDisable = new List<MyButtonBase>();
 
-                if (InteractionState.V != ComponentState.Disabled)
+                if (InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnChooseFile);
                 else
                     btnsToDisable.Add(btnChooseFile);
 
-                if (selectedFiles.Any() && InteractionState.V != ComponentState.Disabled)
+                if (selectedFiles.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnSelectAllFiles);
                 else
                     btnsToDisable.Add(btnSelectAllFiles);
 
                 var filesToUpload = selectedFiles.Where(f => f.Status == UploadStatus.NotStarted).ToArray();
-                if (filesToUpload.Any() && InteractionState.V != ComponentState.Disabled)
+                if (filesToUpload.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnUploadManyFiles);
                 else
                     btnsToDisable.Add(btnUploadManyFiles);
 
                 var filesUploading = selectedFiles.Where(f => f.Status == UploadStatus.Uploading).ToArray();
-                if (filesUploading.Any() && InteractionState.V != ComponentState.Disabled)
+                if (filesUploading.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnPauseManyFiles);
                 else
                     btnsToDisable.Add(btnPauseManyFiles);
 
                 var filesPaused = selectedFiles.Where(f => f.Status == UploadStatus.Paused).ToArray();
-                if (filesPaused.Any() && InteractionState.V != ComponentState.Disabled)
+                if (filesPaused.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnResumeManyFiles);
                 else
                     btnsToDisable.Add(btnResumeManyFiles);
 
                 var filesFailed = selectedFiles.Where(f => f.Status == UploadStatus.Failed).ToArray();
-                if (filesFailed.Any() && InteractionState.V != ComponentState.Disabled)
+                if (filesFailed.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnRetryManyFiles);
                 else
                     btnsToDisable.Add(btnRetryManyFiles);
 
                 var filesToClear = selectedFiles.Where(f => f.Status.In(UploadStatus.Failed, UploadStatus.Paused, UploadStatus.NotStarted, UploadStatus.Finished)).ToArray();
-                if (filesToClear.Any() && InteractionState.V != ComponentState.Disabled)
+                if (filesToClear.Any() && InteractivityState.V != ComponentState.Disabled)
                     btnsToEnable.Add(btnClearManyFiles);
                 else
                     btnsToDisable.Add(btnClearManyFiles);
@@ -500,7 +500,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
 
             await SetPreviewControlsAsync();
 
-            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, defaultPreviewImage);
+            await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_FileUpload_SetThumbnail", Guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, defaultPreviewImage);
         }
 
         private async Task SetPreviewControlsAsync()
@@ -543,7 +543,7 @@ namespace CommonLib.Web.Source.Common.Components.MyFileUploadComponent
             var jsChunkPosition = fd.Position;
             while (!fd.Status.In(UploadStatus.Paused, UploadStatus.Finished, UploadStatus.Failed))
             {
-                var chunk = await (await ModuleAsync).InvokeAndCatchCancellationAsync<List<byte>>("blazor_FileUpload_GetFileChunk", _guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, jsChunkPosition, jsChunkSize.SizeInBytes);
+                var chunk = await (await ModuleAsync).InvokeAndCatchCancellationAsync<List<byte>>("blazor_FileUpload_GetFileChunk", Guid, fd.Name, fd.Extension, fd.TotalSizeInBytes, jsChunkPosition, jsChunkSize.SizeInBytes);
                 if (chunk is null || chunk.Count == 0)
                 {
                     await PromptMessageAsync(NotificationType.Error, "File chunk seems to be empty");

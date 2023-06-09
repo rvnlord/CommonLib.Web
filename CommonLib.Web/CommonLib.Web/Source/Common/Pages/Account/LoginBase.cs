@@ -18,6 +18,7 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Services.Interfaces;
 using CommonLib.Web.Source.ViewModels.Account;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -87,7 +88,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
-
+            
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
             await StateHasChangedAsync(true); // to re-render External Login Buttons and get their references using @ref in .razor file
@@ -114,7 +115,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                     queryUser.UserName = (await AccountClient.FindUserByEmailAsync(queryUser.Email)).Result?.UserName ?? queryUser.UserName;
                     Mapper.Map(queryUser, _loginUserVM);
 
-                    _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Loading;
+                    _btnExternalLogins[queryUser.ExternalProvider].InteractivityState.StateValue = ComponentState.Loading;
                     await StateHasChangedAsync(true);
 
                     await ExternalLoginAuthorizeAsync(queryUser);
@@ -136,7 +137,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         // if changed to AuthStateChanged then it might not trigger when it should because sth else already refreshed the logged in panel
         protected override async Task OnAfterRenderAsync(bool isFirstRender, bool authUserChanged)
         {
-            //if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractionState?.V.IsLoadingOrForceLoading == true))
+            //if (isFirstRender || IsDisposed || _allControls.Any(c => c?.InteractivityState?.V.IsLoadingOrForceLoading == true))
             //    return;
 
             //if (await EnsureAuthenticationPerformedAsync(false, false)) // not changed because change may be frontrun by components updating it earlier
@@ -144,6 +145,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             //    SetControls();
             //    await SetControlStatesAsync(ComponentState.Enabled, _allControls, null, ChangeRenderingStateMode.AllSpecified);
             //}
+            await Task.CompletedTask;
         }
 
         private async Task ExternalLoginAuthorizeAsync(LoginUserVM queryUser)
@@ -160,7 +162,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             Mapper.Map(externalLoginResp.Result, _loginUserVM);
             await PromptMessageAsync(NotificationType.Success, externalLoginResp.Message);
             await HideLoginModalAsync();
-            _btnExternalLogins[queryUser.ExternalProvider].InteractionState.ParameterValue = ComponentState.Disabled;
+            _btnExternalLogins[queryUser.ExternalProvider].InteractivityState.StateValue = ComponentState.Disabled;
            
             await EnsureAuthenticationPerformedAsync(false, true, true);
             await SetControlsAsync();
@@ -316,15 +318,17 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             if (IsDisposed)
                 return;
 
-            var externalLogins = _loginUserVM?.ExternalLogins ?? (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
+            //var externalLogins = _loginUserVM?.ExternalLogins ?? (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result ?? new List<AuthenticationScheme>();
 
             _btnCloseModal = Parent.Parent.Children.OfType<MyButtonBase>().Single(d => d.Classes.Contains("my-close"));
             _allControls = GetInputControls().Append_(_btnCloseModal).AppendIfNotNull(_giAvatarContainer).ToArray();
 
             _btnLogin = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign In");
             _btnExternalLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.ExternalLogins.Select(l => l.DisplayName))).ToOrderedDictionary(b => b.Value.V, b => b);
+            // TODO: there is currently no method to get wallets (mm is hardcoded) so the following line will always end up with an empty array, the array itself is currently not used, provided for completion
             _btnWalletLogins = _allControls.OfType<MyButtonBase>().Where(b => b.Value.V.In(_loginUserVM.WalletLogins.Select(l => l))).ToOrderedDictionary(b => b.Value.V, b => b);
             _btnLogout = _allControls.OfType<MyButtonBase>().SingleOrDefault(b => b.Value.V == "Sign Out");
+            await Task.CompletedTask;
         }
 
         protected async Task BtnResetPassword_ClickAsync(MouseEventArgs e) => await OnResetPasswordClick.InvokeAsync(e).ConfigureAwait(false);
@@ -340,11 +344,31 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }.Where(kvp => kvp.Value != null).ToQueryString();
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (IsDisposed)
+                return;
+
+            if (disposing)
+            {
+                _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
+                _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
+                _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
+                Task.Run(async () =>
+                {
+                    await _btnLogin.DisposeAsync();
+                    await _btnLogout.DisposeAsync();
+                    await _btnCloseModal.DisposeAsync();
+                });
+            }
+            
+            IsDisposed = true;
+        }
+
         public void Dispose()
         {
-            _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
-            _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
-            _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

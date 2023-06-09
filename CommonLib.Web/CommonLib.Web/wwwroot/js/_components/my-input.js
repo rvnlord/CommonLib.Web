@@ -63,7 +63,8 @@ class InputUtils {
 
             if ($ti.find(".k-input-inner").length > 0) {
                 const $kInputInner = $ti.find(".k-input-inner").first();
-                if ($kInputInner.parents().is(".my-k-autocomplete-asset") && $inputGroupPrepend.children().length > 0) {
+
+                if ($kInputInner.parents().is(".my-k-autocomplete-asset") && $inputGroupPrepend.length === 1) { // input group children may not be loaded at this point as they belong to outer component: $inputGroupPrepend.children().length > 0
                     if (!$kInputInner.is(".my-ml--5px")) {
                         $kInputInner.addClass("my-ml--5px");
                     }

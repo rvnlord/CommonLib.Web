@@ -22,7 +22,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
     public class MyNavItemBase : MyComponentBase
     {
         //private MyComponentBase[] _navItemAndNavLink => this.ToArrayOfOne().Cast<MyComponentBase>().Concat(Children.OfType<MyNavLinkBase>()).ToArray();
-        private MyComponentBase[] _disabledNavLinkAndIcons => Children.Where(c => c is MyNavLinkBase or MyIconBase && c.InteractionState.V.IsDisabledOrForceDisabled).ToArray(); // i.e.: `x` icon for search swapped on click is defined directly within navitem
+        private MyComponentBase[] _disabledNavLinkAndIcons => Children.Where(c => c is MyNavLinkBase or MyIconBase && c.InteractivityState.V.IsDisabledOrForceDisabled).ToArray(); // i.e.: `x` icon for search swapped on click is defined directly within navitem
         //private List<MyComponentBase> _disabledNavLinkContent => _disabledNavLink.Children;
         
         [Parameter]
@@ -80,7 +80,15 @@ namespace CommonLib.Web.Source.Common.Components.MyNavItemComponent
                 }
             }
             else if (_disabledNavLinkAndIcons.Any())
+            {
+                if (Icon == IconType.From(LightIconType.Archway)) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
+                {
+                    var a = Ancestors;
+                    var t = 0;
+                }
+
                 await SetControlStatesAsync(ComponentState.Enabled, _disabledNavLinkAndIcons); // _disabledNavLinkContent.Prepend( // need to set children directly because the way I am reendering nav-links is that I am swapping icons, buttons etc with their disabled/enabled equivalent each time
+            }
         }
     }
 

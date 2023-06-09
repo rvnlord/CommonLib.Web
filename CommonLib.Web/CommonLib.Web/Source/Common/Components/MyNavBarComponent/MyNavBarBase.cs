@@ -135,7 +135,7 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             if (IsDisposed) // firstRender || WASM navbar loads only once by my design
                 return;
             
-            //var navitems = Descendants.OfType<MyNavItemBase>().Where(c => c.InteractionState.V.State != ComponentStateKind.Enabled).ToArray();
+            //var navitems = Descendants.OfType<MyNavItemBase>().Where(c => c.InteractivityState.V.State != ComponentStateKind.Enabled).ToArray();
             //await SetControlStatesAsync(ComponentState.Enabled, navitems);
             
             await (await ModuleAsync).InvokeVoidAsync("blazor_NavBar_AfterRender");
