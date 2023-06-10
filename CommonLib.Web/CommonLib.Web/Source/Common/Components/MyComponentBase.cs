@@ -394,7 +394,7 @@ namespace CommonLib.Web.Source.Common.Components
                 SetNullParametersToDefaults(); // due to this, init all params with `=` and not `??=` (or use HasValue())
 
                 await InitializeAsync();
-                await SetParametersAsync(false);
+                await SetParametersAsync(true);
                 await StateHasChangedAsync(true);
             }
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException)

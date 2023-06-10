@@ -10,7 +10,7 @@
 @inherits CommonLib.Web.Source.Common.Components.MyFileUploadComponent.MyFileUploadBase
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
-<CascadingValue Value="InteractivityState" Name="CascadingInteractivity">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
     <div id="@_id" my-guid="@Guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">
         <div class="my-fileupload-thumbnail-container" style="@_thumbnailContainerRenderStyle">

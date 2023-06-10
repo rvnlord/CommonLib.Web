@@ -1,10 +1,13 @@
 ﻿using System.Threading.Tasks;
+using CommonLib.Web.Source.Common.Components.Interfaces;
+using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Components.ExtRadialGaugeComponent
 {
-    public class ExtRadialGaugeBase : MyComponentBase
+    public class ExtRadialGaugeBase : MyComponentBase, IValidable
     {
         public TelerikRadialGauge G { get; set; }
         
@@ -14,6 +17,9 @@ namespace CommonLib.Web.Source.Common.Components.ExtRadialGaugeComponent
         [Parameter]
         public RenderFragment RadialGaugePointers { get; set; }
 		
+        [Parameter]
+        public BlazorParameter<bool?> Validate { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             await Task.CompletedTask;
@@ -27,6 +33,11 @@ namespace CommonLib.Web.Source.Common.Components.ExtRadialGaugeComponent
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
+
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true; 
+
+            CascadedEditContext.BindAlwaysValidValidationStateChanged(this);
             
             await Task.CompletedTask;
         }

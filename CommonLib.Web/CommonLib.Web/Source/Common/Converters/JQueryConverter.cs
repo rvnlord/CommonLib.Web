@@ -14,11 +14,15 @@ namespace CommonLib.Web.Source.Common.Converters
     {
         public static Models.JQuery ToJQuery(this JToken jt, IJQueryService jqueryService)
         {
-            if (jt == null)
+            if (jt is null)
                 throw new NullReferenceException(nameof(jt));
 
             if (jt is JArray)
-                jt = jt.ToJArray()[0];
+            {
+                jt = jt.ToJArray().First;
+                if (jt is null)
+                    return null; // to fall though alreeady disposeed components calling jquery inteerops in 2nd and further Param Changed
+            }
 
             //if (jqueryService == null)
             //{

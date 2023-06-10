@@ -1,9 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Components.ExtNumericInputComponent;
+using CommonLib.Web.Source.Common.Components.Interfaces;
+using CommonLib.Web.Source.Common.Components.MyInputComponent;
+using CommonLib.Web.Source.Common.Extensions;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Telerik.Blazor;
 using Telerik.Blazor.Components;
@@ -55,13 +63,16 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
         public RenderFragment GridSettings { get; set; }
     }
     
-    public class ExtGridBase<TItem> : ExtGridBase
+    public class ExtGridBase<TItem> : ExtGridBase, IValidable
     {
         public TelerikGrid<TItem> Tg { get; set; }
 
         [Parameter]
         public BlazorParameter<IEnumerable<TItem>> Data { get; set; }
-        
+
+        [Parameter]
+        public BlazorParameter<bool?> Validate { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             await Task.CompletedTask;
@@ -76,6 +87,11 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
                 SetUserDefinedAttributes();
             }
             
+            if (Validate.HasChanged())
+                Validate.ParameterValue ??= true; 
+
+            CascadedEditContext.BindAlwaysValidValidationStateChanged(this);
+
             await Task.CompletedTask;
         }
         

@@ -145,7 +145,7 @@
                             <MyLabel Value="@externalLogin.Provider.Append(":")" TProperty="string" Align="@HorizontalAlignment.Right" @key=externalLogin />
                         </MyCssGridItem>
                         <MyCssGridItem>
-                            <MyTextInput Icon="IconType.From(externalLogin.Provider.ToEnum<BrandsIconType>())" For="@(() => externalLogin.UserName)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" InteractivityState="ComponentState.ForceDisabled" @key=externalLogin />
+                            <MyTextInput Icon="IconType.From(externalLogin.Provider.ToEnum<BrandsIconType>())" For="@(() => externalLogin.UserName)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" Interactivity="ComponentState.ForceDisabled" @key=externalLogin />
                         </MyCssGridItem>
                         <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                             <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("150px", "auto"))">
@@ -174,7 +174,7 @@
                         <MyLabel Value="@wallet.Provider.Append(":")" TProperty="string" Align="@HorizontalAlignment.Right" @key=wallet />
                     </MyCssGridItem>
                     <MyCssGridItem>
-                        <MyTextInput Icon="IconType.From(wallet.Provider.ToEnum<BrandsIconType>())" For="@(() => wallet.Address)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" InteractivityState="ComponentState.ForceDisabled" @key=wallet />
+                        <MyTextInput Icon="IconType.From(wallet.Provider.ToEnum<BrandsIconType>())" For="@(() => wallet.Address)" Placeholder="< not fetched >" SyncPaddingGroup="edit-panel" Interactivity="ComponentState.ForceDisabled" @key=wallet />
                     </MyCssGridItem>
                     <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                         <MyCssGrid Gap="Gutter.Px()" Template="@(new CssGridLayout("1fr", "auto"))" LGTemplate="@(new CssGridLayout("150px", "auto"))">

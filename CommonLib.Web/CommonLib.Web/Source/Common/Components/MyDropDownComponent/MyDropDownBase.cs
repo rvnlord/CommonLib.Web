@@ -193,7 +193,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
                 return;
             }
             
-            if (CascadedEditContext == null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
+            if (CascadedEditContext is null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
             {
                 await SetControlStateAsync(ComponentState.Disabled, this);
                 return;

@@ -100,5 +100,32 @@ namespace CommonLib.Web.Source.Common.Extensions
 
             await  component.NotifyParametersChangedAsync().StateHasChangedAsync(true);
         }
+
+        public static void BindAlwaysValidValidationStateChanged<TComponent>(this BlazorParameter<MyEditContext> editContextParam, TComponent component) where TComponent : MyComponentBase, IValidable => editContextParam.BindValidationStateChanged((s, e, t) => CurrentEditContext_AlwaysValidValidationStateChangedAsync(s, e, t, component));
+        
+        private static async Task CurrentEditContext_AlwaysValidValidationStateChangedAsync<TComponent>(MyEditContext sender, MyValidationStateChangedEventArgs e, CancellationToken _, TComponent component) where TComponent : MyComponentBase, IValidable
+        {
+            if (e is null)
+                throw new NullReferenceException(nameof(e));
+            if (e.ValidationMode == ValidationMode.Property)
+                return;
+            if (component.Ancestors.Any(a => a is MyInputBase))
+                return;
+            if (component.Validate.V != true)
+                return;
+            if (component.InteractivityState.V?.IsForced == true)
+                return;
+            
+            if (sender is null || e.ValidationMode == ValidationMode.Model && e.ValidationStatus.In(ValidationStatus.Pending, ValidationStatus.Success))
+            {
+                await component.SetControlStateAsync(ComponentState.Disabled, component);
+                return;
+            }
+
+            if (e.ValidationMode == ValidationMode.Model && e.ValidationStatus == ValidationStatus.Failure)
+                await component.SetControlStateAsync(ComponentState.Enabled, component);
+
+            await component.NotifyParametersChangedAsync().StateHasChangedAsync(true);
+        }
     }
 }

@@ -9,7 +9,7 @@
 @typeparam TProperty
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
-<CascadingValue Value="InteractivityState" Name="CascadingInteractivity">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
     <MyInputGroup @ref="_inputGroup" class="my-dropdown-input-group">
         <div id="@_id" my-guid="@Guid" class="@_renderClasses" style="@_renderStyle" @attributes="@_renderAttributes">

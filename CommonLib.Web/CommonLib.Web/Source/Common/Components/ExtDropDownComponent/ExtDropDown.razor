@@ -1,9 +1,12 @@
 ﻿@namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
 @typeparam TProperty
 @using CommonLib.Source.Common.Converters
+@using CommonLib.Web.Source.Common.Utils.UtilClasses
+@using CommonLib.Web.Source.Models
 @inherits ExtDropDownBase<TProperty>
 
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+<CascadingValue Value="new CascadingBlazorParameter<ComponentState>(InteractivityState.V)" Name="CascadingInteractivity">
 
     @if (Icon.HasValue()) 
     {
@@ -34,4 +37,6 @@
              Enabled="@InteractivityState.V.IsEnabledOrForceEnabled">
         </TelerikDropDownList>
     }
+
+</CascadingValue>
 </CascadingValue>

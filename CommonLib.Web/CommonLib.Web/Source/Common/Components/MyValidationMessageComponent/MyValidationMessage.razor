@@ -15,11 +15,11 @@
             {
                 if (Status == ValidationMessageStatus.Validating)
                 {
-                    <MyImage Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
+                    <MyImage DisabledByDefault="false" InheritCascadedInteractivity="false" Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
                 }
                 else if (_iconType != null)
                 {
-                    <MyIcon IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
+                    <MyIcon DisabledByDefault="false" InheritCascadedInteractivity="false" IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
                 }
 
                 if (_validationMessage != null)
@@ -36,11 +36,11 @@
 
                 if (Status == ValidationMessageStatus.Validating)
                 {
-                    <MyImage Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
+                    <MyImage DisabledByDefault="false" InheritCascadedInteractivity="false" Path="@("~/images/inline-loader.gif".ToBp())" style="@_strImageCss"></MyImage>
                 }
                 else if (_iconType != null)
                 {
-                    <MyIcon IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
+                    <MyIcon DisabledByDefault="false" InheritCascadedInteractivity="false" IconType="@_iconType" Color="@_iconColor" SizeMode="@IconSizeMode.Cover" class="@_alignIconClass"></MyIcon>
                 }
             }
         </div>
