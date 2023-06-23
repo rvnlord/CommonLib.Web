@@ -17,7 +17,12 @@ export function suppressConsoleMessages(messages: string[], console: any): void 
     for (const func of consoleFunctions) {
         const originalFunction = (console as any)[func];
         (console as any)[func] = function (...args: string[]) {
-            if (!args.any((a) => a.containsAny(suppressedMessages))) {
+            if (!args.any(a => {
+                    if (typeof a === "object") {
+                        a = Object.entries(a).map(kvp => kvp[0] + ": " + kvp[1]).joinAsString(",")
+                    }
+                    return a.containsAny(suppressedMessages);
+                })) {
                 originalFunction.apply(console, args);
             }
         };
