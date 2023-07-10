@@ -1,0 +1,16 @@
+﻿@using CommonLib.Source.Common.Converters
+@using CommonLib.Source.Common.Utils.UtilClasses
+
+@namespace CommonLib.Web.Source.Common.Components.ExtStepperComponent
+@inherits ExtStepperBase
+
+<CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
+
+    <TelerikStepper @ref="Ts"
+        Class="@_renderClasses">
+        <StepperSteps>
+            @StepperSteps
+        </StepperSteps>
+    </TelerikStepper>
+
+</CascadingValue>
