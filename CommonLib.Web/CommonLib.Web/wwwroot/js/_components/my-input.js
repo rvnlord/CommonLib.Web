@@ -111,6 +111,59 @@ class InputUtils {
             }).overlayScrollbars();
         }
     }
+
+    static fixNonNativeInputGroupZIndices($btn, wasClicked) {
+        const $inputGroup = $btn.closest(".my-input-group");
+        let $otherBtns = $btn.siblings(".k-button");
+
+        if ($inputGroup.length === 1) {
+            const $igBtns = $inputGroup.find(".my-btn, .k-button").not($btn);
+            $.uniqueSort($.merge($otherBtns, $igBtns));
+        }
+
+        const $pagerWrap = $btn.closest(".k-pager-numbers-wrap");
+        if ($pagerWrap.length > 0) {
+            const $navBtns = $pagerWrap.children(".k-pager-nav.k-button");
+            const isBtnNav = $btn.is(".k-pager-nav"); // btn can be nav or page number
+            const $pagerNumbers = $pagerWrap.children(".k-pager-numbers");
+            const $pagerBtns = $pagerNumbers.children(".k-button");
+            let $selectedBtn = $pagerWrap.find(".k-button.k-selected");
+            if (wasClicked) {
+                if (isBtnNav) {
+                    if ($navBtns[0] === $btn[0]) { // first page
+                        $selectedBtn = $.uniqueSort($selectedBtn.prevAll(".k-button")).first()
+                    } else if ($navBtns[1] === $btn[0]) { // next page
+                        $selectedBtn = $selectedBtn.next(".k-button")
+                    } else if ($navBtns[2] === $btn[0]) { // previous page
+                        $selectedBtn = $selectedBtn.prev(".k-button")
+                    } else if ($navBtns[3] === $btn[0]) { // last page
+                        $selectedBtn = $.uniqueSort($selectedBtn.nextAll(".k-button")).last()
+                    }
+                } else {
+                    $selectedBtn = $btn;
+                }
+            }
+         
+            if (isBtnNav) {
+                $otherBtns = $.uniqueSort($.merge($otherBtns, $pagerBtns).not($btn).not($selectedBtn));
+                $pagerNumbers.css("z-index", "0");
+            } else {
+                $otherBtns = $.uniqueSort($.merge($otherBtns, $navBtns).not($btn).not($selectedBtn));
+                $pagerNumbers.css("z-index", "2");
+            }
+
+            if ($selectedBtn) {
+                const isSelectedBtnNav = $selectedBtn.is(".k-pager-nav"); 
+                if (wasClicked && !isSelectedBtnNav) {
+                     $pagerNumbers.css("z-index", "2");
+                }
+                $selectedBtn.css("z-index", "4");
+            }
+        }
+
+        $btn.css("z-index", "3");
+        $otherBtns.css("z-index", "0");
+    }
 }
 
 export function blazor_Input_AfterRender(input) {
@@ -146,17 +199,7 @@ $(document).ready(function () {
     });
 
     $(document).on("mouseenter", ".k-button", function (e) {
-        const $btn = $(e.currentTarget);
-        const $inputGroup = $btn.closest(".my-input-group");
-        let $otherBtns = $btn.siblings(".k-button");
-
-        if ($inputGroup.length === 1) {
-            const $igBtns = $inputGroup.find(".my-btn, .k-button").not($btn);
-            $.uniqueSort($.merge($otherBtns, $igBtns));
-        }
-
-        $btn.css("z-index", "3");
-        $otherBtns.css("z-index", "0");
+        InputUtils.fixNonNativeInputGroupZIndices($(this), false);
     });
 
     //const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -227,8 +270,15 @@ $(document).ready(function () {
         $autoCompleteListContainer.css("height", `${height}px`);
     });
 
-    $(document).on("click", ".k-grid .k-grid-pager .k-link", async function (e) {
-        const guid = $(this).closest(".k-grid").guid();
+    $(document).on("click", ".k-grid .k-grid-pager .k-button", async function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        InputUtils.fixNonNativeInputGroupZIndices($btn, true);
+        //const $pagerWrap = $btn.closest(".k-pager-numbers-wrap");
+        //const $otherBtns = $pagerWrap.find(".k-button").not($btn);
+        //$btn.css("z-index", "4");
+        //$otherBtns.css("z-index", "0");
+        const guid = $btn.closest(".k-grid").guid();
         InputUtils._scrollBoundComponents[guid].scroll({ y: 0 });
     });
 });
