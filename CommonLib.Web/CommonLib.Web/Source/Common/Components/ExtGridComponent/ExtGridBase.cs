@@ -99,6 +99,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtGridComponent
         {
             if (!await MyJsRuntime.IsInitializedAsync())
                 return;
+
             await BindOverlayScrollBar();
         }
     }

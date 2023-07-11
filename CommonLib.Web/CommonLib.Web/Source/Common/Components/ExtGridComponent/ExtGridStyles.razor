@@ -7,6 +7,16 @@
 
 <style class="@_renderClasses" my-guid="@Guid">
 
+/*    .k-grid .k-grid-header .k-table,
+    .k-grid .k-grid-content .k-table, .k-grid
+    .k-grid-footer .k-table {
+        table-layout: auto !important;
+    }
+
+    .k-grid .k-table-row {
+        display: block;
+    }*/
+
     .k-grid {
         border-color: transparent;
         border-width: 0;
@@ -26,10 +36,22 @@
         -webkit-tap-highlight-color: none;
     }
 
-    .k-grid.k-disabled, 
+    .k-grid .k-table, .k-grid .k-data-table {
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        color: white;
+    }
+    
+    .k-grid.k-disabled,
     .k-grid.disabled {
         pointer-events: none;
         filter: grayscale(0.4) opacity(0.4);
+        color: #404040;
+    }
+
+    .k-grid.disabled .k-table, .k-grid.disabled .k-data-table,
+    .k-grid.k-disabled .k-table, .k-grid.k-disabled .k-data-table {
         color: #404040;
     }
 
@@ -71,23 +93,26 @@
             margin-inline-start: 0;
         }
 
-    .k-grid-header {
+    .k-grid-header,
+    .k-table-thead,
+    .k-table-header,
+    .k-table-group-sticky-header {
         border-color: #646464;
         color: white;
         background-color: transparent;
         overflow: visible;
     }
 
-    .k-editor.disabled .k-grid-header, .k-grid.disabled .k-grid-header,
-    .k-editor.k-disabled .k-grid-header, .k-grid.k-disabled .k-grid-header  {
+    .k-grid.disabled .k-grid-header, .k-grid.k-disabled .k-grid-header,
+    .k-grid.disabled .k-table-thead, .k-grid.k-disabled .k-table-thead,
+    .k-grid.disabled .k-table-header, .k-grid.k-disabled .k-table-header,
+    .k-grid.disabled .k-table-group-sticky-header, .k-grid.k-disabled .k-table-group-sticky-header {
         color: #404040;
     }
 
-    .k-grid th {
-        padding: 5px 9px;
-        border-width: 0 0 0 1px;
-        white-space: nowrap;
-        border-color: #646464;
+    .k-editor.disabled .k-grid-header, .k-grid.disabled .k-grid-header,
+    .k-editor.k-disabled .k-grid-header, .k-grid.k-disabled .k-grid-header {
+        color: #404040;
     }
 
     .k-grid thead > tr {
@@ -99,11 +124,24 @@
         background: linear-gradient(to bottom, rgb(32, 32, 32), rgb(0, 0, 0));
     }
 
-    .k-grid td, .k-grid .k-grid-content, .k-grid .k-grid-header-locked, .k-grid .k-grid-content-locked {
+    .k-grid td,
+    .k-grid .k-table-td,
+    .k-grid .k-grid-content,
+    .k-grid .k-grid-header-locked,
+    .k-grid .k-grid-content-locked {
         border-color: #404040;
     }
 
-    .k-grid th, .k-grid td {
+    .k-grid th {
+        border-width: 0 0 0 1px;
+        white-space: nowrap;
+        border-color: #646464;
+    }
+
+    .k-grid th,
+    .k-grid td,
+    .k-grid.k-grid-md th.k-table-th,
+    .k-grid.k-grid-md td.k-table-td {
         padding: 5px 9px;
         border-style: solid;
         outline: 0;
@@ -153,6 +191,14 @@
             height: 12px;
         }
 
+
+            .k-command-cell > span > .k-button-md.k-icon-button > .k-button-icon.k-svg-icon > svg,
+            .k-command-cell > span > .k-button-md.k-icon-button > .k-button-icon.k-icon-md > svg,
+            .k-command-cell > span > .k-button > .k-button-icon > svg {
+                width: 12px;
+                height: 12px;
+            }
+
         .k-command-cell > span > .k-button.my-k-command-button-icon-only,
         .my-k-button-icon-only {
             gap: 0;
@@ -192,9 +238,10 @@
         /* box-shadow: inset 0 -1px 0 0 #404040; */
     }
 
-    .k-pager-nav.k-link,
+    .k-pager-nav.k-button,
     .k-pager-refresh,
-    .k-pager-numbers .k-link {
+    .k-pager-numbers .k-button,
+    .k-pager-md .k-pager-numbers-wrap .k-button {
         border-color: transparent;
         border-width: 0;
         color: white;
@@ -210,81 +257,87 @@
         transition: all 0.5s;
     }
 
-        .k-pager-nav.k-link.k-state-disabled,
-        .k-pager-refresh.k-state-disabled,
-        .k-pager-numbers .k-link.k-state-disabled,
-        .k-editor.disabled .k-pager-nav.k-link, .k-grid.disabled .k-pager-nav.k-link,
+        .k-pager-nav.k-button.k-disabled,
+        .k-pager-refresh.k-disabled,
+        .k-pager-numbers .k-button.k-disabled,
+        .k-editor.disabled .k-pager-nav.k-button, .k-grid.disabled .k-pager-nav.k-button,
         .k-editor.disabled .k-pager-refresh, .k-grid.disabled .k-pager-refresh,
-        .k-editor.disabled .k-pager-numbers .k-link, .k-grid.disabled .k-pager-numbers .k-link,
-        .k-editor.k-disabled .k-pager-nav.k-link, .k-grid.k-disabled .k-pager-nav.k-link,
+        .k-editor.disabled .k-pager-numbers .k-button, .k-grid.disabled .k-pager-numbers .k-button,
+        .k-editor.k-disabled .k-pager-nav.k-button, .k-grid.k-disabled .k-pager-nav.k-button,
         .k-editor.k-disabled .k-pager-refresh, .k-grid.k-disabled .k-pager-refresh,
-        .k-editor.k-disabled .k-pager-numbers .k-link, .k-grid.k-disabled .k-pager-numbers .k-link {
-            border-color: transparent;
+        .k-editor.k-disabled .k-pager-numbers .k-button, .k-grid.k-disabled .k-pager-numbers .k-button {
+            border-color: transparent !important;
             border-width: 0;
-            background-color: transparent;
-            color: rgb(64, 64, 64);
-            background: linear-gradient(to top, rgb(24, 24, 24), rgb(0, 0, 0));
-            box-shadow: 0 0 0 0 rgb(96, 96, 96), inset 0 0 0 1px rgb(48, 48, 48);
+            background-color: transparent !important;
+            color: rgb(64, 64, 64) !important;
+            background: linear-gradient(to top, rgb(24, 24, 24), rgb(0, 0, 0)) !important;
+            box-shadow: 0 0 0 0 rgb(96, 96, 96), inset 0 0 0 1px rgb(48, 48, 48) !important;
             cursor: default;
             border-radius: 0;
             padding: 5px 9px;
         }
 
-        .k-pager-numbers .k-link.k-state-selected:not(.k-state-disabled),
-        .k-pager-numbers .k-link.k-selected:not(.k-state-disabled) {
-            border-color: transparent;
-            color: white;
-            background-color: transparent;
-            background: linear-gradient(to bottom, rgb(0, 0, 128), rgb(0, 0, 0));
-            box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
-            border-width: 0;
+        .k-grid:not(.disabled):not(.k-disabled) .k-pager-numbers .k-button.k-state-selected:not(.k-disabled),
+        .k-grid:not(.disabled):not(.k-disabled) .k-pager-numbers .k-button.k-selected:not(.k-disabled),
+        .k-grid:not(.disabled):not(.k-disabled) .k-pager-numbers .k-button.k-button-flat.k-state-selected:not(.k-disabled),
+        .k-grid:not(.disabled):not(.k-disabled) .k-pager-numbers .k-button.k-button-flat.k-selected:not(.k-disabled) {
+            border-color: transparent !important;
+            color: white !important;
+            background-color: transparent !important;
+            background: linear-gradient(to bottom, rgb(0, 0, 128), rgb(0, 0, 0)) !important;
+            box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255) !important;
+            border-width: 0 !important;
         }
 
-        .k-editor.disabled .k-pager-numbers .k-link.k-state-selected:not(.k-state-disabled), .k-grid.disabled .k-pager-numbers .k-link.k-state-selected:not(.k-state-disabled),
-        .k-editor.disabled .k-pager-numbers .k-link.k-selected:not(.k-state-disabled), .k-grid.disabled .k-pager-numbers .k-link.k-selected:not(.k-state-disabled),
-        .k-editor.k-disabled .k-pager-numbers .k-link.k-state-selected:not(.k-state-disabled), .k-grid.k-disabled .k-pager-numbers .k-link.k-state-selected:not(.k-state-disabled),
-        .k-editor.k-disabled .k-pager-numbers .k-link.k-selected:not(.k-state-disabled), .k-grid.k-disabled .k-pager-numbers .k-link.k-selected:not(.k-state-disabled) {
-            border-color: transparent;
-            color: #404040;
-            background-color: transparent;
-            background: linear-gradient(to bottom, rgb(0, 0, 64), rgb(0, 0, 0));
-            box-shadow: 0 0 6px 2px rgb(0 0 128), inset 0 0 0 1px rgb(0 0 128);
-            border-width: 0;
-        }
+    .k-editor.disabled .k-pager-numbers .k-button.k-state-selected:not(.k-disabled), .k-grid.disabled .k-pager-numbers .k-button.k-state-selected:not(.k-disabled),
+    .k-editor.disabled .k-pager-numbers .k-button.k-selected:not(.k-disabled), .k-grid.disabled .k-pager-numbers .k-button.k-selected:not(.k-disabled),
+    .k-editor.k-disabled .k-pager-numbers .k-button.k-state-selected:not(.k-disabled), .k-grid.k-disabled .k-pager-numbers .k-button.k-state-selected:not(.k-disabled),
+    .k-editor.k-disabled .k-pager-numbers .k-button.k-selected:not(.k-disabled), .k-grid.k-disabled .k-pager-numbers .k-button.k-selected:not(.k-disabled),
+    .k-editor.disabled .k-pager-numbers .k-button-flat.k-state-selected:not(.k-disabled), .k-grid.disabled .k-pager-numbers .k-button-flat.k-state-selected:not(.k-disabled),
+    .k-editor.disabled .k-pager-numbers .k-button-flat.k-selected:not(.k-disabled), .k-grid.disabled .k-pager-numbers .k-button-flat.k-selected:not(.k-disabled),
+    .k-editor.k-disabled .k-pager-numbers .k-button-flat.k-state-selected:not(.k-disabled), .k-grid.k-disabled .k-pager-numbers .k-button-flat.k-state-selected:not(.k-disabled),
+    .k-editor.k-disabled .k-pager-numbers .k-button-flat.k-selected:not(.k-disabled), .k-grid.k-disabled .k-pager-numbers .k-button-flat.k-selected:not(.k-disabled){
+        border-color: transparent !important;
+        color: #404040;
+        background-color: transparent !important;
+        background: linear-gradient(to bottom, rgb(0, 0, 64), rgb(0, 0, 0)) !important;
+        box-shadow: 0 0 6px 2px rgb(0 0 128), inset 0 0 0 1px rgb(0 0 128) !important;
+        border-width: 0;
+    }
 
-        .k-pager-numbers .k-link:focus:not(.k-state-disabled),
-        .k-pager-numbers .k-link.k-state-focus:not(.k-state-disabled),
-        .k-pager-numbers .k-link.k-focus:not(.k-state-disabled),
-        .k-pager-nav.k-link:focus:not(.k-state-disabled),
-        .k-pager-refresh:focus:not(.k-state-disabled),
-        .k-state-focus.k-pager-nav.k-link:not(.k-state-disabled),
-        .k-state-focus.k-pager-refresh:not(.k-state-disabled),
-        .k-focus.k-pager-nav.k-link:not(.k-state-disabled),
-        .k-focus.k-pager-refresh:not(.k-state-disabled) {
-            border-color: transparent;
-            color: white;
-            background-color: transparent;
-            background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
-            box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
-            border-width: 0;
-        }
+    .k-pager-numbers .k-button:focus:not(.k-disabled),
+    .k-pager-numbers .k-button.k-state-focus:not(.k-disabled),
+    .k-pager-numbers .k-button.k-focus:not(.k-disabled),
+    .k-pager-nav.k-button:focus:not(.k-disabled),
+    .k-pager-refresh:focus:not(.k-disabled),
+    .k-state-focus.k-pager-nav.k-button:not(.k-disabled),
+    .k-state-focus.k-pager-refresh:not(.k-disabled),
+    .k-focus.k-pager-nav.k-button:not(.k-disabled),
+    .k-focus.k-pager-refresh:not(.k-disabled) {
+        border-color: transparent;
+        color: white;
+        background-color: transparent;
+        background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
+        border-width: 0;
+    }
 
-        .k-pager-numbers .k-link:hover:not(.k-state-disabled),
-        .k-pager-numbers .k-link.k-state-hover:not(.k-state-disabled),
-        .k-pager-numbers .k-link.k-hover:not(.k-state-disabled),
-        .k-pager-nav.k-link:hover:not(.k-state-disabled),
-        .k-pager-refresh:hover:not(.k-state-disabled),
-        .k-state-hover.k-pager-nav.k-link:not(.k-state-disabled),
-        .k-state-hover.k-pager-refresh:not(.k-state-disabled),
-        .k-hover.k-pager-nav.k-link:not(.k-state-disabled),
-        .k-hover.k-pager-refresh:not(.k-state-disabled) {
-            border-color: transparent;
-            color: white;
-            background-color: transparent;
-            background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
-            box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
-            border-width: 0;
-        }
+    .k-pager-numbers .k-button:hover:not(.k-disabled),
+    .k-pager-numbers .k-button.k-state-hover:not(.k-disabled),
+    .k-pager-numbers .k-button.k-hover:not(.k-disabled),
+    .k-pager-nav.k-button:hover:not(.k-disabled),
+    .k-pager-refresh:hover:not(.k-disabled),
+    .k-state-hover.k-pager-nav.k-button:not(.k-disabled),
+    .k-state-hover.k-pager-refresh:not(.k-disabled),
+    .k-hover.k-pager-nav.k-button:not(.k-disabled),
+    .k-hover.k-pager-refresh:not(.k-disabled) {
+        border-color: transparent;
+        color: white;
+        background-color: transparent;
+        background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0));
+        box-shadow: 0 0 6px 2px rgb(0 0 255), inset 0 0 0 1px rgb(0 0 255);
+        border-width: 0;
+    }
 
     .k-grid-pager {
         border-color: #646464;
@@ -320,12 +373,12 @@
     }
 
     /*    .k-grid-header .k-header:first-child {
-            border-left-width: 1px;
-        }
+                border-left-width: 1px;
+            }
 
-        .k-grid th:first-child, .k-grid td:first-child {
-            border-left-width: 1px;
-        }*/
+            .k-grid th:first-child, .k-grid td:first-child {
+                border-left-width: 1px;
+            }*/
 
     .k-grid-header {
         border-width: 1px;
@@ -374,13 +427,19 @@
     }
 
     .k-editor.disabled .k-pager-info, .k-grid.disabled .k-pager-info,
-    .k-editor.k-disabled .k-pager-info, .k-grid.k-disabled .k-pager-info  {
+    .k-editor.k-disabled .k-pager-info, .k-grid.k-disabled .k-pager-info {
         color: #404040;
     }
 
     .k-grid-edit-cell .k-input {
         background: transparent;
         box-shadow: none;
+    }
+
+    .k-pager-numbers + .k-pager-nav,
+    .k-pager-nav ~ .k-pager-numbers,
+    .k-pager-numbers > .k-button-flat + .k-button-flat {
+        margin-left: -1px;
     }
 
 </style>
