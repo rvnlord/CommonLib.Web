@@ -33,5 +33,7 @@ namespace CommonLib.Web.Source.ViewModels.Account
         public List<WalletVM> Wallets { get; set; } = new();
         public string WalletProviderToConnect { get; set; }
         public WalletVM WalletToDisconnect { get; set; }
+        [DisplayName("On Chain Status")]
+        public bool IsOnChain { get; set; }
     }
 }
