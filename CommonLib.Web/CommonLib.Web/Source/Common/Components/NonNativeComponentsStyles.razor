@@ -172,7 +172,7 @@
         max-height: @InputHeight.Px();
         @Font
         transition: all .15s ease-in-out;
-        width: 100%;
+        width: auto;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -247,9 +247,9 @@
         cursor: default;
     }
 
-    .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):focus,
-    .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):active,
-    .k-button:not(:disabled):not(.disabled):not([readonly]):not(.readonly):hover {
+    .k-button:not(:disabled):not(.disabled):not(.k-disabled):not([readonly]):not(.readonly):focus,
+    .k-button:not(:disabled):not(.disabled):not(.k-disabled):not([readonly]):not(.readonly):active,
+    .k-button:not(:disabled):not(.disabled):not(.k-disabled):not([readonly]):not(.readonly):hover {
         color: rgb(255, 255, 255);
         background: linear-gradient(to top, rgb(0, 0, 128), rgb(0, 0, 0)) !important;
         box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255) !important;
@@ -401,6 +401,11 @@
         height: auto !important;
         max-height: 200px;
         min-height: 34px;
+    }
+
+    .k-svg-icon > svg {
+        fill: currentColor;
+        flex: 1 1 auto;
     }
 
 </style>
