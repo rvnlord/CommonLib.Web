@@ -78,7 +78,7 @@ export class Notification {
             <div class="my-image my-line-sized" style="background-image: url('./_content/CommonLib.Web/images/content-loader.gif'); padding-top: 0"></div>
         ` : `
             <div class="my-icon">
-                ${await utils.getIconAsync(this._iconSet, this._icon)}
+                ${(await utils.getIconAsync(this._iconSet, this._icon)) || ""}
             </div>
         `;
 
@@ -91,7 +91,7 @@ export class Notification {
 
                         <div class="decoration">
                             <div class="my-icon">
-                                ${decorationIcon}
+                                ${decorationIcon || ""}
                             </div>
                         </div>
 
@@ -109,7 +109,7 @@ export class Notification {
 
                         <button class="my-btn my-btn-clear my-quadratic my-close my-font-sized">
                             <div class="my-icon">
-                                ${closeIcon}
+                                ${closeIcon || ""}
                             </div>
                         </button>
 
@@ -127,18 +127,20 @@ export class Notification {
 
         if (this._type !== "loading") {
             const $svgMyIcon = $notificationRow.find(".my-notification > .my-icon").find("svg");
-            const vbDims = $svgMyIcon.attr("viewBox").split(" ");
-            const [,, vbWidth, vbHeight] = vbDims;
-            if (vbWidth < vbHeight) {
-                $svgMyIcon.css("width", "100%");
-                $svgMyIcon.css("height", "auto");
-            } else {
-                $svgMyIcon.css("width", "auto");
-                $svgMyIcon.css("height", "100%");
-            }
+            if ($svgMyIcon.length > 0) {
+                const vbDims = $svgMyIcon.attr("viewBox").split(" ");
+                const [, , vbWidth, vbHeight] = vbDims;
+                if (vbWidth < vbHeight) {
+                    $svgMyIcon.css("width", "100%");
+                    $svgMyIcon.css("height", "auto");
+                } else {
+                    $svgMyIcon.css("width", "auto");
+                    $svgMyIcon.css("height", "100%");
+                }
 
-            const $pathMyIcon = $svgMyIcon.find("path");
-            $pathMyIcon.css("fill", "white");
+                const $pathMyIcon = $svgMyIcon.find("path");
+                $pathMyIcon.css("fill", "white");
+            }
         }
 
         const $svgMyBtnClose = $notificationRow.find(".my-btn.my-close").find("svg");
