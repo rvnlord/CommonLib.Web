@@ -65,24 +65,26 @@ export default class utils {
     };
 
     static getIconAsync = async (iconSet, iconName) => {
-        const iconsCache = localStorage.getItem("IconsCache").jsonDeserialize();
+        const iconsCache = (localStorage.getItem("IconsCache") || "{}").jsonDeserialize();
         Wrapper.object(iconsCache).addIfNotExistsAndGet(iconSet, {}).addIfNotExistsAndGet(iconName, null).unwrap();
 
         if (!iconsCache[iconSet][iconName]) {
             const backendBaseUrl = sessionStorage.getItem("BackendBaseUrl");
-            const iconResp = await $.ajax({
-                url: `${backendBaseUrl}/api/upload/GetRenderedIconAsync`,
-                contentType: "application/json",
-                dataType: 'text',
-                data: {
-                    SetName: iconSet,
-                    IconName: iconName
-                }.jsonSerialize(),
-                type: "POST"
-            });
-            var jIcon = iconResp.jsonDeserialize();
-            iconsCache[iconSet][iconName] = Wrapper.string(jIcon["Result"]).trimMultiline().unwrap();
-            localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
+            if (backendBaseUrl) {
+                const iconResp = await $.ajax({
+                    url: `${backendBaseUrl}/api/upload/GetRenderedIconAsync`,
+                    contentType: "application/json",
+                    dataType: 'text',
+                    data: {
+                        SetName: iconSet,
+                        IconName: iconName
+                    }.jsonSerialize(),
+                    type: "POST"
+                });
+                var jIcon = iconResp.jsonDeserialize();
+                iconsCache[iconSet][iconName] = Wrapper.string(jIcon["Result"]).trimMultiline().unwrap();
+                localStorage.setItem("IconsCache", iconsCache.jsonSerialize());
+            }
         } else {
             const icon = iconsCache[iconSet][iconName];
             const iconHasHTMLComments = Wrapper.string(icon).containsHTMLComments().unwrap();
