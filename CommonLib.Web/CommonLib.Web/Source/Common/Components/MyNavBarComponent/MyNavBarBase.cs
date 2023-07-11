@@ -26,6 +26,7 @@ using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.ViewModels.Account;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
@@ -192,7 +193,9 @@ namespace CommonLib.Web.Source.Common.Components.MyNavBarComponent
             var loginControls = sender.Ancestors.First(a => a is LoginBase).GetInputControls();
             await SetControlStatesAsync(ComponentState.Disabled, loginControls, sender);
             await HideLoginModalAsync();
-            var editurl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, $"~/Account/Edit");
+            var isOnChain = Configuration.GetAuthenticationStorageMode() == AuthenticationStorageMode.OnChain;
+            var relativeEditurl = isOnChain ? "~/Account/EditOnChain" : "~/Account/Edit";
+            var editurl = PathUtils.Combine(PathSeparator.FSlash, NavigationManager.BaseUri, relativeEditurl);
 
             if (editurl.EqualsIgnoreCase(NavigationManager.Uri))
                 await SetControlStatesAsync(ComponentState.Enabled, loginControls);
