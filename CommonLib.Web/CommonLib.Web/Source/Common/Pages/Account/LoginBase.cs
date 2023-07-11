@@ -45,21 +45,21 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         protected MyEditContext _editContext;
         protected LoginUserVM _loginUserVM;
         protected MyCssGridItemBase _giAvatarContainer;
-        
+
         public Task<IJSObjectReference> ModalModuleAsync => _modalModuleAsync ??= MyJsRuntime.ImportComponentOrPageModuleAsync(nameof(MyModal), NavigationManager, HttpClient);
-        
-        [Parameter] 
+
+        [Parameter]
         public EventCallback<MouseEventArgs> OnSignUpClick { get; set; }
 
-        [Parameter] 
+        [Parameter]
         public EventCallback<MouseEventArgs> OnResetPasswordClick { get; set; }
-        
-        [Parameter] 
+
+        [Parameter]
         public MyAsyncEventHandler<MyButtonBase, MouseEventArgs> OnEditClick { get; set; }
-        
+
         [Inject]
         public IJQueryService JQuery { get; set; }
-        
+
         [Inject]
         public SelectedEthereumHostProviderService SelectedEthereumHost { get; set; }
 
@@ -80,7 +80,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _ethereumHostProvider.NetworkChanged += SelectedEthereumHost_NetworkChangedAsync;
             _ethereumHostProvider.EnabledChanged += SelectedEthereumHost_ChangedAsync;
             _web3 = await _ethereumHostProvider.GetWeb3Async();
-            
+
             await Task.CompletedTask;
         }
 
@@ -88,7 +88,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         {
             if (!await EnsureAuthenticationPerformedAsync(true, false))
                 return;
-            
+
             _loginUserVM.ExternalLogins = (await AccountClient.GetExternalAuthenticationSchemesAsync()).Result;
             // changing state will rerender the component but after render will be blocked by semaphore and eexecuted only after this function
             await StateHasChangedAsync(true); // to re-render External Login Buttons and get their references using @ref in .razor file
@@ -163,11 +163,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             await PromptMessageAsync(NotificationType.Success, externalLoginResp.Message);
             await HideLoginModalAsync();
             _btnExternalLogins[queryUser.ExternalProvider].InteractivityState.StateValue = ComponentState.Disabled;
-           
+
             await EnsureAuthenticationPerformedAsync(false, true, true);
             await SetControlsAsync();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-           
+
             if (!_loginUserVM.IsConfirmed && _loginUserVM.Email is not null) // email is null if for instance external login profile was connected to an account that was previously using only wallet login
                 NavigationManager.NavigateTo($"/Account/ConfirmEmail?{GetConfirmEmailNavQueryStrings()}"); // login is in the modal, page should be changed if email confirmation is required
             else if (!externalLoginResp.Result.ReturnUrl.IsNullOrWhiteSpace())
@@ -207,12 +207,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             var url = $"{ConfigUtils.BackendBaseUrl}/api/account/externallogin";
             NavigationManager.NavigateTo($"{url}?user={_loginUserVM.JsonSerialize().UTF8ToBase58()}", true);
         }
-        
+
         protected async Task BtnWalletLogin_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
         {
-            _loginUserVM.WalletProvider = sender.Value.V; 
+            _loginUserVM.WalletProvider = sender.Value.V;
             await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
-            
+
             if (_loginUserVM.WalletProvider.EqualsIgnoreCase("Metamask"))
             {
                 var isHostProviderAvailable = await _ethereumHostProvider.CheckProviderAvailabilityAsync();
@@ -243,11 +243,11 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
             else
             {
-                await PromptMessageAsync(NotificationType.Error, $"{ _loginUserVM.WalletProvider} Wallet Provider is not supported");
+                await PromptMessageAsync(NotificationType.Error, $"{_loginUserVM.WalletProvider} Wallet Provider is not supported");
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
                 return;
             }
-            
+
             var walletLoginResp = await AccountClient.WalletLoginAsync(_loginUserVM);
             if (walletLoginResp.IsError)
             {
@@ -265,7 +265,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 await SetControlStatesAsync(ComponentState.Enabled, _allControls);
             }
         }
-        
+
         private async Task SelectedEthereumHost_ChangedAsync(bool isEnabled)
         {
             if (isEnabled)
@@ -283,7 +283,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.WalletAddress = address;
             _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
         }
-        
+
         protected async Task BtnSignUp_ClickAsync(MouseEventArgs e) => await OnSignUpClick.InvokeAsync(e).ConfigureAwait(false);
 
         protected async Task BtnSignIn_ClickAsync() => await _editForm.SubmitAsync();
@@ -354,18 +354,15 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
                 _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
                 _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
-                Task.Run(async () =>
-                {
-                    await _btnLogin.DisposeAsync();
-                    await _btnLogout.DisposeAsync();
-                    await _btnCloseModal.DisposeAsync();
-                });
+                _btnLogin.Dispose();
+                _btnCloseModal.Dispose();
+                _btnLogout.Dispose();
             }
-            
+
             IsDisposed = true;
         }
 
-        public void Dispose()
+        public sealed override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

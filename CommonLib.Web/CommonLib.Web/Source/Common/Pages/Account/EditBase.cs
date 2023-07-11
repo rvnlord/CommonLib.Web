@@ -307,11 +307,12 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
             _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
             _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
+            base.Dispose();
         }
     }
 }
