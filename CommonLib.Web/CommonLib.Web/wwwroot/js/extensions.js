@@ -1057,6 +1057,9 @@ jQuery.fn.extend({
     firstOrNull: function() {
         return $(this[0]).nullifyIfEmpty();
     },
+    first: function() {
+        return this.length === 0 ? $() : $(this[0]);
+    },
     last: function() {
         return this.length === 0 ? $() : $(this[this.length - 1]);
     },
