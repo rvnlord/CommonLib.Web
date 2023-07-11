@@ -1,29 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Converters;
 using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
-using CommonLib.Web.Source.Services.Upload;
 using CommonLib.Web.Source.Services.Upload.Interfaces;
 using HtmlAgilityPack;
+using Telerik.SvgIcons;
 
 namespace CommonLib.Web.Source.Common.Utils.UtilClasses
 {
-    public class MySvgIcon
+    public class MySvgIcon : SvgIconBase
     {
         private static string _rootDir;
         public static string RootDir => _rootDir ??= FileUtils.GetEntryAssemblyDir();
 
-        public string Name { get; set; }
-        public string Content { get; set; }
-        public string ViewBox { get; set; }
+        //public string Name { get; set; }
+        //public string Content { get; set; }
+        //public string ViewBox { get; set; }
 
         public MySvgIcon(string name, string content, string viewBox)
         {
@@ -45,7 +41,7 @@ namespace CommonLib.Web.Source.Common.Utils.UtilClasses
                 return (await uploadClient.GetRenderedIconAsync(icon)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
 
             var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
-            return (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+            return (await System.IO.File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
         }
 
         public static async Task<MySvgIcon> FromIconTypeAsync(IconType icon, IUploadClient uploadClient = null)
