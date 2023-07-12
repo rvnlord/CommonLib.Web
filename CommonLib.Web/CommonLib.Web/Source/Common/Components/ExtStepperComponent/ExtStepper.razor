@@ -7,7 +7,9 @@
 <CascadingValue Value="_bpParentToCascade" Name="ParentParameter">
 
     <TelerikStepper @ref="Ts"
-        Class="@_renderClasses">
+        Class="@_renderClasses"
+        ValueChanged="StepChangedAsync" 
+        Value="CurrentStep">
         <StepperSteps>
             @StepperSteps
         </StepperSteps>
