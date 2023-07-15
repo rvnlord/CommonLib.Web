@@ -11,6 +11,17 @@
         color: white;
     }
 
+    .k-stepper.k-disabled,
+    .k-stepper.disabled {
+        pointer-events: none;
+        filter: grayscale(0.4) opacity(0.4);
+        color: #404040;
+    }
+
+    .k-stepper.noninteractive {
+        pointer-events: none;
+    }
+
     .k-stepper .k-progressbar .k-state-selected,
     .k-stepper .k-progressbar .k-selected {
         color: white;
@@ -31,6 +42,12 @@
         box-shadow: 0 0 6px 2px rgb(0, 255, 0), inset 0 0 0 1px rgb(0, 255, 0);
     }
 
+    .k-stepper.disabled .k-step-done .k-step-indicator,
+    .k-stepper.disabled .k-step.k-step-disabled.k-step-done .k-step-indicator,
+    .k-stepper.disabled .k-step-disabled.k-step-done .k-step-indicator {
+        color: #404040;
+    }
+
     .k-stepper .my-k-step-failed .k-step-indicator,
     .k-stepper .k-step.k-step-disabled.my-k-step-failed .k-step-indicator,
     .k-stepper .k-step-disabled.my-k-step-failed .k-step-indicator {
@@ -40,11 +57,21 @@
         box-shadow: 0 0 6px 2px rgb(255, 106, 138), inset 0 0 0 1px rgb(255, 106, 138);
     }
 
+    .k-stepper.disabled .my-k-step-failed .k-step-indicator,
+    .k-stepper.disabled .k-step.k-step-disabled.my-k-step-failed .k-step-indicator,
+    .k-stepper.disabled .k-step-disabled.my-k-step-failed .k-step-indicator {
+        color: #404040;
+    }
+
     .k-stepper .k-step-current:not(.k-step-done):not(.my-k-step-failed) .k-step-indicator {
         border: none;
         color: white;
         background: linear-gradient(225deg, rgb(0, 0, 128), rgb(0, 0, 0));
         box-shadow: 0 0 6px 2px rgb(0, 0, 255), inset 0 0 0 1px rgb(0, 0, 255);
+    }
+
+    .k-stepper.disabled .k-step-current:not(.k-step-done):not(.my-k-step-failed) .k-step-indicator {
+        color: #404040;
     }
 
     .k-stepper .k-step.k-step-disabled .k-step-indicator,
@@ -85,9 +112,18 @@
         color: #808080;
         font-style: italic;
     }
+
+    .k-stepper.disabled .k-step-label {
+        color: #303030;
+        font-style: italic;
+    }
     
     .k-stepper .k-step-label-optional {
         color: #646464;
+    }
+
+    .k-stepper.disabled .k-step-label-optional {
+        color: #202020;
     }
 
     .k-stepper .k-step-disabled .k-step-label, 
@@ -108,10 +144,18 @@
         color: white;
     }
 
+    .k-stepper.disabled .k-step-current .k-step-label {
+        color: #404040;
+    }
+
     .k-stepper .k-step-current .k-step-label-optional {
         font-style: normal;
         font-weight: normal;
         color: #8e8e8e;
+    }
+
+    .k-stepper.disabled .k-step-current .k-step-label-optional {
+        color: #303030;
     }
 
     .k-step-list-horizontal ~ .k-progressbar {

@@ -12,19 +12,25 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Common.Extensions.Collections;
 using CommonLib.Web.Source.Services.Interfaces;
 using System.Drawing;
+using CommonLib.Web.Source.Models;
+using Microsoft.JSInterop;
 
 namespace CommonLib.Web.Source.Common.Components.ExtStepperComponent
 {
     public class ExtStepperBase : MyComponentBase
     {
+        private DotNetObjectReference<ExtStepperBase> _extStepperDotNetRef;
+
         protected MySvgIcon _completedIcon { get; set; }
         protected MySvgIcon _failedIcon { get; set; }
         
         public int CurrentStep { get; set; }
         public OrderedDictionary<int, StepStatus> StepStatuses { get; set; }
+        
+        public TelerikStepper Ts { get; set; }
 
         [Parameter]
-        public TelerikStepper Ts { get; set; }
+        public BlazorParameter<bool?> IsInteractive { get; set; }
 
         [Parameter]
         public RenderFragment StepperSteps { get; set; }
@@ -51,11 +57,27 @@ namespace CommonLib.Web.Source.Common.Components.ExtStepperComponent
                 SetUserDefinedStyles();
                 SetUserDefinedAttributes();
             }
+
+            if (IsInteractive.HasChanged())
+            {
+                IsInteractive.ParameterValue ??= true;
+                if (IsInteractive.V == true)
+                    RemoveClass("noninteractive");
+                else
+                    AddClass("noninteractive");
+            }
             
             await Task.CompletedTask;
         }
 
-        protected async Task StepChangedAsync(int stepIndex)
+        protected override async Task OnAfterFirstRenderAsync()
+        {
+            _extStepperDotNetRef = DotNetObjectReference.Create(this);
+            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_ExtStepper_AfterFirstRender", Guid, _extStepperDotNetRef).ConfigureAwait(false);
+        }
+
+        //[JSInvokable] // Instead of:  @*ValueChanged="Stepper_StepChangedAsync" *@ to account for clicks not always triggering
+        public async Task Stepper_StepChangedAsync(int stepIndex)
         {
             await SetStatusAsync(stepIndex, StepStatus.Pending);
         }
@@ -82,7 +104,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtStepperComponent
                 StepStatus.Failed => "my-k-step-failed",
                 _ => throw new ArgumentOutOfRangeException(null, "Invalid status")
             };
-            
+
             await JQuery.QueryOneAsync(Guid).FindAsync($".k-step-list > .k-step:eq({stepIndex})").FirstAsync().AddClassAsync(stepStatusClass);
         }
 
