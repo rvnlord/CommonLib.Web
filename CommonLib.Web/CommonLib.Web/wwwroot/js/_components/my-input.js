@@ -10,6 +10,8 @@ class InputUtils {
         right: {}
     };
 
+    static kSteppers = {};
+
     static _scrollBoundComponents = {};
 
     static fixPaddingForInputGroups($input) {
@@ -166,8 +168,8 @@ class InputUtils {
     }
 }
 
-export function blazor_Input_AfterRender(input) {
-    InputUtils.fixPaddingForInputGroups($(input));
+export function blazor_Input_FixInputSyncPaddingGroup(guid) {
+    InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single());
 }
 
 export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
@@ -186,6 +188,10 @@ export function blazor_ExtEditor_FixPlaceholder(guid) {
 
 export async function blazor_ExtComponent_BindOverlayScrollBar(guid) {
     await InputUtils.bindOverlayScrollBarAsync(guid);
+}
+
+export function blazor_ExtStepper_AfterFirstRender(guid, kStepperDotDetObj) {
+    InputUtils.kSteppers[guid] = kStepperDotDetObj;
 }
 
 $(document).ready(function () {
@@ -281,4 +287,23 @@ $(document).ready(function () {
         const guid = $btn.closest(".k-grid").guid();
         InputUtils._scrollBoundComponents[guid].scroll({ y: 0 });
     });
+
+    // this doesn't fix click not always registering for k-step anyway
+    //$(document).on("click", ".k-stepper > .k-step-list > .k-step", async function (e) {
+    //    if (e.button !== 0 || e.detail > 1) {
+    //        return;
+    //    }
+
+    //    e.preventDefault();
+
+    //    const $currentStep = $(this);
+    //    const $kStepper = $currentStep.parents(".k-stepper").single();
+    //    const $steps = $kStepper.find(".k-step");
+    //    const currenStepIndex = $steps.index($currentStep);
+
+    //    $steps.removeClass("k-step-done my-k-step-failed k-step-focus");
+    //    await InputUtils.kSteppers[$kStepper.guid()].invokeMethodAsync("Stepper_StepChangedAsync", currenStepIndex);
+    //    $currentStep.addClass("k-step-current k-step-focus");
+    //    $currentStep.prevAll(".k-step").addClass("k-step-done");
+    //});
 });
