@@ -7,6 +7,7 @@ namespace CommonLib.Web.Source.DbContext.Models.Account
     public class DbUser : IdentityUser<Guid>
     {
         public string EmailActivationToken { get; set; }
+        public bool IsOnChain { get; set; }
         
         public virtual DbFile Avatar { get; set; } 
 
