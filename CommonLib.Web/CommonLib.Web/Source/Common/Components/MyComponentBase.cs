@@ -30,6 +30,7 @@ using CommonLib.Web.Source.Common.Components.ExtEditorComponent;
 using CommonLib.Web.Source.Common.Components.ExtGridComponent;
 using CommonLib.Web.Source.Common.Components.ExtNumericInputComponent;
 using CommonLib.Web.Source.Common.Components.ExtRadialGaugeComponent;
+using CommonLib.Web.Source.Common.Components.ExtStepperComponent;
 using CommonLib.Web.Source.Common.Components.MyModalComponent;
 using CommonLib.Web.Source.Common.Components.MyNavBarComponent;
 using CommonLib.Web.Source.Common.Pages.Shared;
@@ -591,7 +592,10 @@ namespace CommonLib.Web.Source.Common.Components
                         var mediaQueryDotNetRef = DotNetObjectReference.Create(thisAsLayout);
                         thisAsLayout.DeviceSize = (await (await thisAsLayout.MediaQueryModuleAsync).InvokeAndCatchCancellationAsync<string>("blazor_MediaQuery_SetupForAllDevicesAndGetDeviceSizeAsync", StylesConfig.DeviceSizeKindNamesWithMediaQueries, Guid, mediaQueryDotNetRef)).ToEnum<DeviceSizeKind>();
 
-                        await SessionStorage.SetItemAsStringAsync("BackendBaseUrl", ConfigUtils.BackendBaseUrl);
+                        if (ConfigUtils.BackendBaseUrl is not null)
+                            await SessionStorage.SetItemAsStringAsync("BackendBaseUrl", ConfigUtils.BackendBaseUrl);
+                        else
+                            await SessionStorage.RemoveItemAsync("BackendBaseUrl");
 
                         var navBar = await ComponentByTypeAsync<MyNavBarBase>();
                         await navBar.Setup();
@@ -1303,9 +1307,9 @@ namespace CommonLib.Web.Source.Common.Components
 
         public Task SetControlStateAsync(ComponentState state, IComponent controlToChangeState, MyButtonBase btnLoading = null, ChangeRenderingStateMode changeRenderingState = ChangeRenderingStateMode.AllSpecified, IEnumerable<MyComponentBase> controlsToAlsoChangeRenderingState = null) => SetControlStatesAsync(state, controlToChangeState.ToArrayOfOne(), btnLoading, changeRenderingState, controlsToAlsoChangeRenderingState);
         
-        protected internal MyComponentBase[] GetInputControls()
+        public MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase or ExtStepper).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;
@@ -1337,9 +1341,14 @@ namespace CommonLib.Web.Source.Common.Components
 
         [JSInvokable]
         public bool IsDisabledByGuid(Guid guid) => Layout.Components.Values.OfType<MyButtonBase>().Single(c => c.Guid == guid).InteractivityState.V.IsDisabledOrForceDisabled;
+        
+        public async Task FixNativeInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_FixInputSyncPaddingGroup", guid);
+        public async Task FixNativeInputSyncPaddingGroupAsync() => await FixNativeInputSyncPaddingGroupAsync(Guid);
+        public void FixNativeInputSyncPaddingGroupAndDontAwait() => Task.Run(FixNativeInputSyncPaddingGroupAsync);
 
-        public async Task FixInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
-        public async Task FixInputSyncPaddingGroupAsync() => await FixInputSyncPaddingGroupAsync(Guid);
+        public async Task FixNonNativeInputSyncPaddingGroupAsync(Guid guid) => await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_NonNativeInput_FixInputSyncPaddingGroup", guid);
+        public async Task FixNonNativeInputSyncPaddingGroupAsync() => await FixNonNativeInputSyncPaddingGroupAsync(Guid);
+        public void FixNonNativeInputSyncPaddingGroupAndDontAwait() => Task.Run(FixNonNativeInputSyncPaddingGroupAsync);
 
         public async Task BindOverlayScrollBar(Guid guid) => await (await InputModuleAsync).InvokeVoidAsync("blazor_ExtComponent_BindOverlayScrollBar", Guid); 
         public async Task BindOverlayScrollBar() => await BindOverlayScrollBar(Guid);
@@ -1384,7 +1393,7 @@ namespace CommonLib.Web.Source.Common.Components
             GC.SuppressFinalize(this);
         }
 
-        public void Dispose() => _ = DisposeAsync(false);
+        public virtual void Dispose() => _ = DisposeAsync(true);
 
         ~MyComponentBase() => _ = DisposeAsync(false);
 
