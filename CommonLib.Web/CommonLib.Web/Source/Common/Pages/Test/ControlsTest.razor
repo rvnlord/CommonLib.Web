@@ -19,6 +19,8 @@
 @using Blazored.FluentValidation
 @using Telerik.Blazor.Components
 @using Telerik.Blazor.Components.Editor
+@using Telerik.SvgIcons
+@using IconType = CommonLib.Source.Common.Utils.UtilClasses.IconType
 
 @inherits ControlsTestBase
 
@@ -265,16 +267,16 @@
                                 </GridValidationSettings>
                             </GridSettings>
                             <GridToolbar>
-                                <GridCommandButton Command="Add" Icon="add">Add Employee</GridCommandButton>
+                                <GridCommandButton Command="Add" Icon="@SvgIcon.FileAdd">Add Employee</GridCommandButton>
                             </GridToolbar>
                             <GridColumns>
                                 <GridColumn Field=@nameof(TestDataVM.Id) Title="Id" Editable="false" />
                                 <GridColumn Field=@nameof(TestDataVM.Name) Title="Name" />
                                 <GridCommandColumn>
-                                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
-                                    <GridCommandButton Command="Edit" Icon="edit">Edit</GridCommandButton>
-                                    <GridCommandButton Command="Delete" Icon="delete" Class="my-k-command-button-icon-only" />
-                                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                                    <GridCommandButton Command="Save" Icon="@SvgIcon.Save" ShowInEdit="true">Update</GridCommandButton>
+                                    <GridCommandButton Command="Edit" Icon="@SvgIcon.Pencil">Edit</GridCommandButton>
+                                    <GridCommandButton Command="Delete" Icon="@SvgIcon.Trash" Class="my-k-command-button-icon-only" />
+                                    <GridCommandButton Command="Cancel" Icon="@SvgIcon.Cancel" ShowInEdit="true">Cancel</GridCommandButton>
                                 </GridCommandColumn>
                             </GridColumns>
                         </ExtGrid>
