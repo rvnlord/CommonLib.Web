@@ -29,7 +29,7 @@ using Truncon.Collections;
 
 namespace CommonLib.Web.Source.Common.Pages.Account
 {
-    public class LoginBase : MyComponentBase, IDisposable
+    public class LoginBase : MyComponentBase
     {
         private Task<IJSObjectReference> _modalModuleAsync;
         private MyComponentBase[] _allControls;
@@ -344,7 +344,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }.Where(kvp => kvp.Value != null).ToQueryString();
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (IsDisposed)
                 return;
@@ -360,12 +360,8 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             }
 
             IsDisposed = true;
-        }
 
-        public sealed override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            base.Dispose(disposing);
         }
     }
 }
