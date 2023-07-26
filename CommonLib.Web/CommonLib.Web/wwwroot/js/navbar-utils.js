@@ -1119,7 +1119,12 @@ export class NavBarUtils {
     static handleScrollBarChange(forceReapply = false) {
         if (!NavBarUtils.ScrollBar) {
             NavBarUtils.ScrollBar = $("*").overlayScrollbars().filter(s => s !== undefined).first();
+            if (!NavBarUtils.ScrollBar) {
+                return; // scrollbar not loaded yet
+                console.log("WARNING: scrollbar was not loaded when you resized the window")
+            }
         }
+
         const scrollInfo = NavBarUtils.ScrollBar.scroll();
         const scrollY = scrollInfo.position.y;
         const $stickyNavBars = $(".my-navbar.my-sticky").$toArray();
