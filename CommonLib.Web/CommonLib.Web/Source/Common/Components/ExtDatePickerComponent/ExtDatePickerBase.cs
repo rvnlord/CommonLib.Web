@@ -93,6 +93,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDatePickerComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             FixNonNativeInputSyncPaddingGroupAndDontAwait();
+            await Task.CompletedTask;
         }
 
         protected async Task DatePicker_ValueChanged(TProperty value)
