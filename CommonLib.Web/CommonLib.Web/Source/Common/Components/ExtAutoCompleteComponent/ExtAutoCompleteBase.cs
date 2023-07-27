@@ -112,6 +112,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtAutoCompleteComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             FixNonNativeInputSyncPaddingGroupAndDontAwait();
+            await Task.CompletedTask;
         }
 
         protected async Task AutoComplete_ValueChanged(string valueFieldValue)
