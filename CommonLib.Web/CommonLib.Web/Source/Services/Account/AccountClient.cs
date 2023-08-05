@@ -91,12 +91,16 @@ namespace CommonLib.Web.Source.Services.Account
         
         public async Task<ApiResponse<List<ExternalLoginVM>>> GetExternalLogins(string name)
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<List<ExternalLoginVM>>>($"api/account/{nameof(AccountApiController.GetExternalLoginsAsync)}", name);
+            var externalLoginsResp = await HttpClient.PostJTokenAsync<ApiResponse<List<ExternalLoginVM>>>($"api/account/{nameof(AccountApiController.GetExternalLoginsAsync)}", name);
+            externalLoginsResp.Result ??= new List<ExternalLoginVM>();
+            return externalLoginsResp;
         }
 
         public async Task<ApiResponse<List<WalletVM>>> GetWalletsAsync(string userName)
         {
-            return await HttpClient.PostJTokenAsync<ApiResponse<List<WalletVM>>>($"api/account/{nameof(AccountApiController.GetWalletsAsync)}", userName);
+            var walletsResp = await HttpClient.PostJTokenAsync<ApiResponse<List<WalletVM>>>($"api/account/{nameof(AccountApiController.GetWalletsAsync)}", userName);
+            walletsResp.Result ??= new List<WalletVM>();
+            return walletsResp;
         }
 
         public async Task<ApiResponse<bool>> CheckUserManagerComplianceAsync(string userPropertyName, string userPropertyDisplayName, string userPropertyValue)
@@ -314,14 +318,13 @@ namespace CommonLib.Web.Source.Services.Account
             return editResp;
         }
 
-        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(EditUserVM userToEdit, LoginUserVM userToLogin)
+        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(EditUserVM userToEdit)
         {
             var authUser = (await GetAuthenticatedUserAsync())?.Result;
             var editResp = await HttpClient.PostJTokenAsync<ApiResponse<EditUserVM>>($"api/account/{nameof(AccountApiController.ConnectWalletAsync)}", new
             {
                 AuthenticatedUser = authUser, 
-                UserToEdit = userToEdit,
-                UserToLogin = userToLogin
+                UserToEdit = userToEdit
             });
             
             return editResp;
