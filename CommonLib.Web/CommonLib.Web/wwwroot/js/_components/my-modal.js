@@ -164,7 +164,7 @@ $(document).ready(function() {
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
         const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $(this).guid());
 
-        if (isDisabled || e.which !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
+        if (isDisabled || e.button !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
             return;
         }
 
@@ -195,7 +195,7 @@ $(document).ready(function() {
         const $modalBgsToHide = $(".my-modal.shown").$toArray().map($m => $m.parents(".my-modal-background"));
         const isAnyModalShown = $modalBgsToHide.length > 0;
 
-        if (e.which !== 1 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal-background, .my-modal, .my-modal .my-close, .my-nav-item.my-login, .my-prompt") 
+        if (e.button !== 0 || e.detail > 1 || $(e.target).parents().add($(e.target)).is(".my-modal-background, .my-modal, .my-modal .my-close, .my-nav-item.my-login, .my-prompt, .k-animation-container") 
             || !isAnyModalShown) {
             return;
         }
@@ -220,7 +220,7 @@ $(document).ready(function() {
         const isAdjusted = ($btnToggle.attr("adjusted") || "false").toBool();
         const isDisabled = $btnToggle.is(".disabled") || $btnToggle.attr("disabled") === "disabled";
 
-        if (e.which !== 1 || e.detail > 1 || $searchContainers.is(".shown") || $otherModals.is(".shown")) {
+        if (e.button !== 0 || e.detail > 1 || $searchContainers.is(".shown") || $otherModals.is(".shown")) {
             return;
         }
 
