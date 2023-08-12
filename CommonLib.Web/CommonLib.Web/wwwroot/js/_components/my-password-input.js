@@ -31,7 +31,7 @@ export function blazor_PasswordInput_AfterRender(value, guid) {
     const $btnTogglePassword = $passwordInput.nextAll("div.my-input-group-append").find(".my-btn-toggle-password-visibility");
     const $iconPasswordShown = $btnTogglePassword.find(".my-icon-password-shown");
     const $iconPasswordHidden = $btnTogglePassword.find(".my-icon-password-hidden");
-    console.log(`PasswordInputUtils.IsPasswordVisible[guid] = ${PasswordInputUtils.IsPasswordVisible[guid]}`);
+    //console.log(`PasswordInputUtils.IsPasswordVisible[guid] = ${PasswordInputUtils.IsPasswordVisible[guid]}`);
 
     if (PasswordInputUtils.IsPasswordVisible[guid]) {
         $iconPasswordHidden.removeClass("my-d-flex").addClass("my-d-none");
@@ -70,24 +70,24 @@ $(document).ready(function () {
             const unchangedCharsAtEnd = newValue.skip(caretPosition).length;
             const insertedValue = newValueUntilCaret.skip(unchangedCharsAtStart);
             const oldValue = PasswordInputUtils.PasswordInputsValues[guid] || ""; // first time it will be undefined
-            console.log(`oldValue = ${oldValue}, as kvp: ${PasswordInputUtils.PasswordInputsValues.kvps().filter(kvp => kvp.key === guid).first().value}`);
+            //console.log(`oldValue = ${oldValue}, as kvp: ${PasswordInputUtils.PasswordInputsValues.kvps().filter(kvp => kvp.key === guid).first().value}`);
             value = oldValue.take(unchangedCharsAtStart) + insertedValue + oldValue.takeLast(unchangedCharsAtEnd);
-            console.log(`value = ${value}`);
+            //console.log(`value = ${value}`);
             PasswordInputUtils.PasswordInputsValues[guid] = value;
-            console.log(`setting PasswordInputUtils.PasswordInputsValues[guid] value to: ${value} | PasswordInputUtils.PasswordInputsValues[guid] = ${PasswordInputUtils.PasswordInputsValues[guid]}`);
+            //console.log(`setting PasswordInputUtils.PasswordInputsValues[guid] value to: ${value} | PasswordInputUtils.PasswordInputsValues[guid] = ${PasswordInputUtils.PasswordInputsValues[guid]}`);
             $passwordInput.prop("value", value.split("").map(() => "●").join(""));
-            console.log(`setting prop value to: ${value} | $passwordInput.prop("value") = ${$passwordInput.prop("value")}`);
+            //console.log(`setting prop value to: ${value} | $passwordInput.prop("value") = ${$passwordInput.prop("value")}`);
             $passwordInput[0].setSelectionRange(caretPosition, caretPosition);
         }
 
-        console.log(`released: SyncPasswordInput`);
+        //console.log(`released: SyncPasswordInput`);
         await PasswordInputUtils.SyncPasswordInput[guid].releaseAsync();
 
         await PasswordInputUtils.SyncPasswordServerQuery[guid].waitAsync();
         PasswordInputUtils.IsServerBeingQueriedOnInputChange[guid] = true;
 
         const currentValue = PasswordInputUtils.PasswordInputsValues[guid];
-        console.log(`value (${value}) ${value === currentValue ? "===" : "!=="} (${currentValue}) PasswordInputUtils.PasswordInputsValues[guid]`);
+        //console.log(`value (${value}) ${value === currentValue ? "===" : "!=="} (${currentValue}) PasswordInputUtils.PasswordInputsValues[guid]`);
         if (value === currentValue) {
             await PasswordInputUtils.PasswordInputsDotNetRefs[guid].invokeMethodAsync("PasswordInput_InputAsync", value);
         }
