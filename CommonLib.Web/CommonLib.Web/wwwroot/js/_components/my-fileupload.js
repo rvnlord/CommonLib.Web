@@ -178,14 +178,15 @@ $(document).ready(function () {
     });
 
     $(document).on("drop", ".my-fileupload-drop-container:not([disabled])", async function (e) {
-        const $fileUpload = $(e.currentTarget).closest(".my-fileupload");
+        const $fileUploadDropContainer = $(this);
+        const $fileUpload = $fileUploadDropContainer.closest(".my-fileupload");
         const isDisabled = await FileUploadUtils._fileUploadsCache[$fileUpload.guid()].dotNetRef.invokeMethodAsync("IsDisabled");
         if (isDisabled) {
             return;
         }
 
         const files = Array.from(e.originalEvent.dataTransfer.files).filter(f => f.type); // FileReader appears to be changing 'e' data
-        const $fileUploadDropContainer = $(e.currentTarget);
+        
         $fileUploadDropContainer.removeCss("border");
 
         await FileUploadUtils.addFilesToUploadAsync($fileUploadDropContainer, files);
