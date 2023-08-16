@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using CommonLib.Source.Common.Extensions;
+using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils.TypeUtils;
 using CommonLib.Source.Common.Utils.UtilClasses;
 using CommonLib.Web.Source.Common.Components.Interfaces;
@@ -11,6 +12,8 @@ using CommonLib.Web.Source.Common.Extensions;
 using CommonLib.Web.Source.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
+using Nethereum.Siwe.Core.Recap;
 using Telerik.Blazor.Components;
 
 namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
@@ -43,6 +46,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
     {
         private string _displayName;
         private string _propName;
+        private DotNetObjectReference<ExtDropDownBase<TProperty>> _extDdlDotNetRef;
 
         //protected Type _extDdlType { get; set; }
         //protected object _extDdlVal => typeof(TProperty).EnsureNonNullable().IsEnum ? Value.V.ToInt() : Value.V;
@@ -63,6 +67,7 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
         
         protected override async Task OnInitializedAsync()
         {
+
             await Task.CompletedTask;
         }
         
@@ -86,12 +91,17 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
                 (_, _propName, Value, _displayName) = For.V.GetModelAndProperty();
 
             if (Placeholder.HasChanged())
-                Placeholder.ParameterValue = !Placeholder.V.IsNullOrWhiteSpace() ? Placeholder.V : !_displayName.IsNullOrWhiteSpace() ? $"{_displayName}..." : null;
+                Placeholder.ParameterValue = !Placeholder.V.IsNullOrWhiteSpace() ? Placeholder.V : !_displayName.IsNullOrWhiteSpace() ? $"(Select {_displayName})" : null;
 
             if (Data.HasChanged())
             {
                 Data.ParameterValue ??= typeof(TProperty).EnsureNonNullable().IsEnum ? EnumUtils.EnumToTypedDdlItems<TProperty>().AsEnumerable() : null;
-                //_extDdlType = typeof(int);
+                //if (Data.V is not null && Data.V.Any())
+                //{
+                //    var t = 0;
+                //}
+                //if (Data.V is not null && Data.V.GetType().IsIEnumerableType() && Data.V.GetType().GetGenericTypeDefinition() != typeof(DdlItem<,>))
+                //    Data.ParameterValue = Data.V.Select((item, index) => new DdlItem<int, object>(index, item.GetPropertyOrNull<string>(TextField.V ?? "Text") ?? index.ToString(), item));
             }
 
             if (ValueField.HasChanged())
@@ -110,19 +120,27 @@ namespace CommonLib.Web.Source.Common.Components.ExtDropDownComponent
             if (!await MyJsRuntime.IsInitializedAsync())
                 return;
 
-            await FixInputSyncPaddingGroupAsync();
+            FixNonNativeInputSyncPaddingGroupAndDontAwait();
             // bind scrollbar on popup open because after render popup containing list items will be empty
+
+            _extDdlDotNetRef = DotNetObjectReference.Create(this);
+            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_ExtDropDownList_AfterFirstRender", Guid, _extDdlDotNetRef).ConfigureAwait(false);
         }
 
-        protected async Task DropDown_ValueChanged(TProperty value)
+        [JSInvokable]
+        public async Task DropDown_ValueChangedAsync(string itemText)
         {
             if (InteractivityState.V.IsDisabledOrForceDisabled)
                 return;
 
+            Tddl.Close();
+
             if (Model.HasValue())
             {
+                var item = Data.V.SingleOrNull(i => i.GetPropertyValue<string>(TextField.V).EqualsIgnoreCase_(itemText));
+                var value = item?.GetPropertyOrNull(ValueField.V);
                 Model.V.SetProperty(_propName, value);
-                Value.ParameterValue = value;
+                Value.ParameterValue = (TProperty) value;
                 if (CascadedEditContext?.V is not null)
                     await CascadedEditContext.V.NotifyFieldChangedAsync(new FieldIdentifier(Model.V, _propName), Validate.V == true);
             }
