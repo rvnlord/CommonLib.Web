@@ -121,7 +121,8 @@ namespace CommonLib.Web.Source.Common.Components.ExtNumericInputComponent
         
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await FixInputSyncPaddingGroupAsync();
+            FixNonNativeInputSyncPaddingGroupAndDontAwait();
+            await Task.CompletedTask;
         }
 
         protected async Task NumericInput_ValueChanged(TProperty value)
