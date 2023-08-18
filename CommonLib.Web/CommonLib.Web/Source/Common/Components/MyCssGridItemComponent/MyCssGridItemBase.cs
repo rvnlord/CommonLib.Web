@@ -193,6 +193,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         public static CssGridArea C4 => new(CGACP.C4);
         public static CssGridArea C1SpanAll => new(CGACP.C1, CGARP.Auto, CGAS.All);
         public static CssGridArea C1Span2 => new(CGACP.C1, CGARP.Auto, CGAS.Span2);
+        public static CssGridArea C3Span2 => new(CGACP.C3, CGARP.Auto, CGAS.Span2);
         public static CssGridArea C2SpanAll => new(CGACP.C2, CGARP.Auto, CGAS.All);
         public static CssGridArea C3SpanAll => new(CGACP.C3, CGARP.Auto, CGAS.All);
         public DeviceSizeKind DeviceSize { get; set; } = DeviceSizeKind.XS;
