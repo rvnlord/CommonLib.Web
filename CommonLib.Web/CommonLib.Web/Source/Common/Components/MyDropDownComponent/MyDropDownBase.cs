@@ -135,7 +135,7 @@ namespace CommonLib.Web.Source.Common.Components.MyDropDownComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Dropdown_AfterFirstRender", Guid, DotNetObjectReference.Create(this)); // keep await ModuleAsync; if program don't need top call the module but JQyery events need to be available
-            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsDropdown);
+            FixNativeInputSyncPaddingGroupAndDontAwait();
         }
 
         [JSInvokable]
