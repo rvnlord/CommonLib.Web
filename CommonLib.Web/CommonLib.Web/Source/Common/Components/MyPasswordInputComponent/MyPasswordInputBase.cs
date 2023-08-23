@@ -92,9 +92,9 @@ namespace CommonLib.Web.Source.Common.Components.MyPasswordInputComponent
         protected override async Task OnAfterFirstRenderAsync()
         {
             _passwordInputDotNetRef = DotNetObjectReference.Create(this);
-
-            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsPasswordInput).ConfigureAwait(false);
+            
             await (await ModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_PasswordInput_AfterFirstRender", Text, Guid, _passwordInputDotNetRef).ConfigureAwait(false);
+            FixNativeInputSyncPaddingGroupAndDontAwait();
         }
 
         protected override async Task OnAfterRenderAsync(bool _, bool authUserChanged)
