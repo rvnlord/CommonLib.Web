@@ -34,7 +34,8 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
 
         protected override async Task OnAfterFirstRenderAsync()
         {
-            await (await InputModuleAsync).InvokeVoidAndCatchCancellationAsync("blazor_Input_AfterRender", _jsTextInput);
+            FixNativeInputSyncPaddingGroupAndDontAwait();
+            await Task.CompletedTask;
         }
 
         protected override async Task OnParametersSetAsync() 
@@ -109,14 +110,15 @@ namespace CommonLib.Web.Source.Common.Components.MyTextInputComponent
             Text = Value;
         }
 
-        protected override async Task DisposeAsync(bool disposing)
+        protected override void Dispose(bool disposing)
         {
-            await base.DisposeAsync(disposing);
-
-            if (!disposing)
+            if (IsDisposed)
                 return;
 
-            _syncJsTextInputAfterRender.Dispose();
+            if (disposing)
+                _syncJsTextInputAfterRender?.Dispose();
+
+            base.Dispose(disposing);
         }
     }
 }
