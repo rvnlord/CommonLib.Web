@@ -11,6 +11,7 @@ using CommonLib.Source.Common.Extensions;
 using CommonLib.Source.Common.Extensions.Collections;
 using CommonLib.Source.Common.Utils;
 using CommonLib.Source.Common.Utils.UtilClasses;
+using CommonLib.Web.Source.Common.Utils.UtilClasses;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -294,22 +295,23 @@ namespace CommonLib.Web.Source.Common.Components.MyIconComponent
             return localStorageIconsCache;
         }
 
-        private async Task<HtmlNode> GetIconFromFile(IconTypeT icon)
+        public async Task<HtmlNode> GetIconFromFile(IconTypeT icon)
         {
-            var iconEnums = icon.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
-            var iconEnumVals = iconEnums.Select(p => p.GetValue(icon)).ToArray();
-            var iconEnum = iconEnumVals.Single(v => v is not null);
-            var iconType = iconEnum.GetType();
-            var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
-            var iconSetDirName = iconType.Name.BeforeFirst("IconType");
+            return await MySvgIcon.GetIconNodeFromiconTypeAsync(icon, UploadClient);
+            //var iconEnums = icon.GetType().GetProperties().Where(p => p.Name.EndsWithInvariant("Icon")).ToArray();
+            //var iconEnumVals = iconEnums.Select(p => p.GetValue(icon)).ToArray();
+            //var iconEnum = iconEnumVals.Single(v => v is not null);
+            //var iconType = iconEnum.GetType();
+            //var iconName = StringConverter.PascalCaseToKebabCase(EnumConverter.EnumToString(iconEnum.CastToReflected(iconType)));
+            //var iconSetDirName = iconType.Name.BeforeFirst("IconType");
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
-                return (await UploadClient.GetRenderedIconAsync(icon)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
-            else
-            {
-                var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
-                return (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
-            }
+            //if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"))) // if WebAssembly
+            //    return (await UploadClient.GetRenderedIconAsync(icon)).Result?.TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+            //else
+            //{
+            //    var iconPath = PathUtils.Combine(PathSeparator.BSlash, RootDir, $@"_myContent\CommonLib.Web\Content\Icons\{iconSetDirName}\{iconName}.svg");
+            //    return (await File.ReadAllTextAsync(iconPath).ConfigureAwait(false)).TrimMultiline().ToHtmlAgility().SelectSingleNode("./svg");
+            //}
         }
 
         private bool IsIconColorSet() => Svg?.SelectNodes("./path")?.FirstOrNull()?.GetAttributeValue("style").CssStringToDictionary().VorN("fill").IsNullOrWhiteSpace() != true;
