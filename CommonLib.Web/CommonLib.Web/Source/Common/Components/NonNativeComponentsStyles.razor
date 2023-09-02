@@ -388,7 +388,11 @@
     }
 
     span.k-list-item-text {
-        display: flex;
+        display: inline-block;
+        width: 100%;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .k-list-item-text::before, .k-list-optionlabel::before {
