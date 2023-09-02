@@ -64,6 +64,7 @@ using CommonLib.Web.Source.Services.Admin.Interfaces;
 using Keras;
 using static NBitcoin.Protocol.Behaviors.ChainBehavior;
 using Telerik.Blazor.Components.Common;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace CommonLib.Web.Source.Common.Components
 {
@@ -95,7 +96,7 @@ namespace CommonLib.Web.Source.Common.Components
         //private readonly OrderedSemaphore _syncSettingParameters = new(1, 1);
         private readonly OrderedSemaphore _syncRender = new(1, 1);
         private readonly OrderedSemaphore _syncAfterSessionIdSet = new(1, 1);
-        private readonly OrderedSemaphore _syncAuthUserChange = new(1, 1);
+        //private readonly OrderedSemaphore _syncAuthUserChange = new(1, 1);
         //private readonly OrderedSemaphore _syncComponentCached = new(1, 1);
         //private readonly OrderedSemaphore _syncAllComponentsCached = new(1, 1);
         private readonly OrderedSemaphore _syncSettingComponentState = new(1, 1);
@@ -185,6 +186,7 @@ namespace CommonLib.Web.Source.Common.Components
         public RenderFragment ChildContent { get; set; }
 
         [Parameter]
+        [SuppressMessage("BL0007", "BL0007")]
         public BlazorParameter<ComponentState> Interactivity
         {
             get
@@ -478,40 +480,10 @@ namespace CommonLib.Web.Source.Common.Components
             //    InteractivityState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractivityState.V.NullifyIf(_ => !InteractivityState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
             //}
 
-            if (this is MyIconBase icon3 && icon3.IconType.V == IconType.From(LightIconType.Home) && CascadingInteractivity.V.IsEnabledOrForceEnabled)
-            {
-                var t = 0;
-            }
-
             // TODO: set state using different variable, don't change parameters
             if (Interactivity.HasChanged() || CascadingInteractivity.HasChangedFor(this))
             {
-                if (this is MyIconBase icon2 && icon2.IconType.V == IconType.From(LightIconType.Archway))
-                {
-                    var a = Ancestors;
-                    var t = 0;
-                }
-
-                if (this is MyNavLinkBase nl && nl.CascadingIconType == IconType.From(LightIconType.Archway)) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
-                {
-                    var a = Ancestors;
-                    var t = 0;
-                }
-
-                if (this is MyImageBase img)
-                {
-                    var a = Ancestors;
-                    var i = img.Path;
-                    var t = 0;
-                }
-
                 (InteractivityState ??= InteractivityState.InitIfNull()).StateValue = Interactivity.V ?? CascadingInteractivity.V.NullifyIf(_ => InheritCascadedInteractivity.V != true) ?? (DisabledByDefault.V == true ? ComponentState.Disabled : ComponentState.Enabled);
-            }
-            
-            if (this is MyIconBase icon && icon.IconType.V == IconType.From(LightIconType.Archway)) // IconType.V == IconTypeT.From(LightIconType.Bells) && 
-            {
-                var a = Ancestors;
-                var t = 0;
             }
 
             //if (this is MyIconBase icon && icon.IconType.V == IconType.From(BrandsIconType.Metamask) && Ancestors.FirstOrNull(a => a is MyTextInputBase) is not null)
@@ -565,17 +537,17 @@ namespace CommonLib.Web.Source.Common.Components
             
             try
             {
-                if (this is MyTextInputBase)
-                {
-                    Logger.For<MyTextInputBase>().Info($"{this} Will wait for semaphore");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    Logger.For<MyTextInputBase>().Info($"{this} Will wait for semaphore");
+                //}
 
                 await _syncRender.WaitAsync(); // if `State` is being changed manually by calling `StateHasChangedAsync` also block render | For instance first render may enter this method and subsequent render can enter as well before the first render finished thus leaving some parts like session not initialized properly
 
-                if (this is MyTextInputBase)
-                {
-                    Logger.For<MyTextInputBase>().Info($"{this} Entered semaphore");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    Logger.For<MyTextInputBase>().Info($"{this} Entered semaphore");
+                //}
 
                 if (_firstRenderAfterInit)
                 {
@@ -627,10 +599,10 @@ namespace CommonLib.Web.Source.Common.Components
                 if (_firstRenderAfterInit && Layout?.IsRendered == true)
                     await Layout_SessionIdSet(null, new MyLayoutComponentBase.LayoutSessionIdSetEventArgs(SessionId), CancellationToken.None);
 
-                if (this is MyTextInputBase)
-                {
-                    Logger.For<MyTextInputBase>().Info($"{this} Setting 'IsRerendered' to true");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    Logger.For<MyTextInputBase>().Info($"{this} Setting 'IsRerendered' to true");
+                //}
 
                 IsRerendered = true;
                 _firstRenderAfterInit = false;
@@ -640,20 +612,20 @@ namespace CommonLib.Web.Source.Common.Components
             catch (Exception ex) when (ex is TaskCanceledException or ObjectDisposedException or JSDisconnectedException)
             {
                 //Logger.For<MyComponentBase>().Warn("'OnAfterRenderAsync' was canceled, disposed component?");
-                if (this is MyTextInputBase)
-                {
-                    Logger.For<MyTextInputBase>().Info($"{this} TaskCanceledException or ObjectDisposedException or JSDisconnectedException caught");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    Logger.For<MyTextInputBase>().Info($"{this} TaskCanceledException or ObjectDisposedException or JSDisconnectedException caught");
+                //}
             }
             catch (Exception)
             {
                 if (!IsDisposed)
                     throw;
 
-                if (this is MyTextInputBase)
-                {
-                    Logger.For<MyTextInputBase>().Info($"{this} Other Exception caught, Component was disposed");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    Logger.For<MyTextInputBase>().Info($"{this} Other Exception caught, Component was disposed");
+                //}
             }
             finally
             {
@@ -661,13 +633,13 @@ namespace CommonLib.Web.Source.Common.Components
                 var semaphoreNeedsReleasing = _syncRender.CurrentCount == 0;
                 await _syncRender.ReleaseSafelyAsync();
 
-                if (this is MyTextInputBase)
-                {
-                    if (semaphoreNeedsReleasing)
-                        Logger.For<MyTextInputBase>().Info($"{this} Released semaphore");
-                    else
-                        Logger.For<MyTextInputBase>().Info($"{this} Semaphore was supposed to be released but it was already released by something else");
-                }
+                //if (this is MyTextInputBase)
+                //{
+                //    if (semaphoreNeedsReleasing)
+                //        Logger.For<MyTextInputBase>().Info($"{this} Released semaphore");
+                //    else
+                //        Logger.For<MyTextInputBase>().Info($"{this} Semaphore was supposed to be released but it was already released by something else");
+                //}
             }
         }
 
@@ -1382,6 +1354,7 @@ namespace CommonLib.Web.Source.Common.Components
                 _syncStyles?.Dispose();
                 _syncAttributes?.Dispose();
                 HttpClient?.Dispose();
+                _syncSettingComponentState?.Dispose();
             }
 
             await Task.CompletedTask;
@@ -1393,9 +1366,38 @@ namespace CommonLib.Web.Source.Common.Components
             GC.SuppressFinalize(this);
         }
 
-        public virtual void Dispose() => _ = DisposeAsync(true);
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-        ~MyComponentBase() => _ = DisposeAsync(false);
+        protected virtual void Dispose(bool disposing)
+        {
+            if (IsDisposed)
+                return;
+
+            if (disposing)
+            {
+                IsDisposed = true;
+                IsCached = false;
+                if (LayoutParameter.HasValue())
+                {
+                    Layout.Components.TryRemove(Guid, out _);
+                    Layout.LayoutSessionIdSet -= Layout_SessionIdSet;
+                }
+                
+                _syncRender?.Dispose();
+                _syncAfterSessionIdSet?.Dispose();
+                _syncClasses?.Dispose();
+                _syncStyles?.Dispose();
+                _syncAttributes?.Dispose();
+                _syncSettingComponentState?.Dispose();
+                HttpClient?.Dispose();
+            }
+        }
+
+        ~MyComponentBase() => Dispose(false);
 
         public override string ToString() => $"{ToTypeAndShortGuidString()} {{{InteractivityState.V}}} {(_renderClasses?.Any() == true ? _renderClasses : "< no classes >")}";
         public string ToTypeAndShortGuidString() => $"{GetType().Name} [{Guid.ToString().Take(4)}...{Guid.ToString().TakeLast(4)}]";
