@@ -30,28 +30,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
         private MyComponentBase[] _allControls;
         private MyButtonBase _btnSave;
         private MyPasswordInputBase _pwdOldPassword;
-        private IEthereumHostProvider _ethereumHostProvider;
-        private IWeb3 _web3;
-        private LoginUserVM _loginUserVM;
 
         protected MyFluentValidator _validator { get; set; }
         protected MyEditForm _editForm { get; set; }
         protected MyEditContext _editContext { get; set; }
         protected EditUserVM _editUserVM { get; set; }
-
-        [Inject]
-        public SelectedEthereumHostProviderService SelectedEthereumHost { get; set; }
-
+        
         protected override async Task OnInitializedAsync()
         {
             _editUserVM = new(); 
             _editContext = new MyEditContext(_editUserVM);
-            _ethereumHostProvider = SelectedEthereumHost.SelectedHost;
-            _ethereumHostProvider.SelectedAccountChanged += SelectedEthereumHost_SelectedAccountChangedAsync;
-            _ethereumHostProvider.NetworkChanged += SelectedEthereumHost_NetworkChangedAsync;
-            _ethereumHostProvider.EnabledChanged += SelectedEthereumHost_ChangedAsync;
-            _web3 = await _ethereumHostProvider.GetWeb3Async();
-            _loginUserVM ??= new LoginUserVM();
             await Task.CompletedTask;
         }
         
@@ -196,91 +184,7 @@ namespace CommonLib.Web.Source.Common.Pages.Account
             _allControls = GetInputControls();
             await SetControlStatesAsync(ComponentState.Enabled, _allControls);
         }
-
-        protected async Task BtnConnectWallet_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
-        {
-            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
-
-            if (_editUserVM.WalletProviderToConnect is null)
-            {
-                await PromptMessageAsync(NotificationType.Error, "No Wallet Provider Selected");
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                return;
-            }
-
-            _loginUserVM.WalletProvider = _editUserVM.WalletProviderToConnect;
-            
-            if (_editUserVM.WalletProviderToConnect.EqualsIgnoreCase_("Metamask"))
-            {
-                var isHostProviderAvailable = await _ethereumHostProvider.CheckProviderAvailabilityAsync();
-                if (!isHostProviderAvailable)
-                {
-                    await PromptMessageAsync(NotificationType.Error, "Metamask is not installed");
-                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                    return;
-                }
-
-                var enableWalletResp = await _ethereumHostProvider.TryEnableProviderAsync();
-                if (enableWalletResp.IsError)
-                {
-                    await PromptMessageAsync(NotificationType.Error, "Metamask was not enabled");
-                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                    return;
-                }
-                _loginUserVM.WalletAddress = enableWalletResp.Result;
-
-                var walletSignatureResp = await _web3.Eth.AccountSigning.PersonalSign.TrySendRequestAsync($"Proving ownership of wallet: \"{_loginUserVM.WalletAddress}\"");
-                if (walletSignatureResp.IsError)
-                {
-                    await PromptMessageAsync(NotificationType.Error, walletSignatureResp.Message);
-                    await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                    return;
-                }
-                _loginUserVM.WalletSignature = walletSignatureResp.Result;
-            }
-            else
-            {
-                await PromptMessageAsync(NotificationType.Error, $"{ _loginUserVM.WalletProvider} Wallet Provider is not supported");
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                return;
-            }
-            
-            var connectWalletResp = await AccountClient.ConnectWalletAsync(_editUserVM, _loginUserVM);
-            if (connectWalletResp.IsError)
-            {
-                await PromptMessageAsync(NotificationType.Error, connectWalletResp.Message);
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                return;
-            }
-            
-            Mapper.Map(connectWalletResp.Result, _editUserVM);
-
-            await PromptMessageAsync(NotificationType.Success, connectWalletResp.Message);
-            await StateHasChangedAsync(true);
-            _allControls = GetInputControls();
-            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-        }
-
-        protected async Task BtnDisconnectWallet_ClickAsync(MyButtonBase sender, MouseEventArgs e, CancellationToken token)
-        {
-            await SetControlStatesAsync(ComponentState.Disabled, _allControls, sender);
-            _editUserVM.WalletToDisconnect = (WalletVM) sender.Model.V;
-            var disconnectWalletResp = await AccountClient.DisconnectWalletAsync(_editUserVM);
-            if (disconnectWalletResp.IsError)
-            {
-                await PromptMessageAsync(NotificationType.Error, disconnectWalletResp.Message);
-                await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-                return;
-            }
-
-            Mapper.Map(disconnectWalletResp.Result, _editUserVM);
-
-            await PromptMessageAsync(NotificationType.Success, disconnectWalletResp.Message);
-            await StateHasChangedAsync(true);
-            _allControls = GetInputControls();
-            await SetControlStatesAsync(ComponentState.Enabled, _allControls);
-        }
-
+        
         private string GetNavQueryStrings()
         {
             return new OrderedDictionary<string, string>
@@ -288,31 +192,16 @@ namespace CommonLib.Web.Source.Common.Pages.Account
                 [nameof(_editUserVM.Email).PascalCaseToCamelCase()] = _editUserVM.Email?.UTF8ToBase58(false),
             }.Where(kvp => kvp.Value is not null).ToQueryString();
         }
-
-        private async Task SelectedEthereumHost_ChangedAsync(bool isEnabled)
+        
+        protected override void Dispose(bool disposing)
         {
-            if (isEnabled)
-                _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
-        }
-
-        private async Task SelectedEthereumHost_NetworkChangedAsync(long chainId)
-        {
-            _loginUserVM.WalletChainId = (int)chainId;
-            await Task.CompletedTask;
-        }
-
-        private async Task SelectedEthereumHost_SelectedAccountChangedAsync(string address)
-        {
-            _loginUserVM.WalletAddress = address;
-            _loginUserVM.WalletChainId = (int)(await _web3.Eth.ChainId.SendRequestAsync()).Value;
-        }
-
-        public override void Dispose()
-        {
-            _ethereumHostProvider.SelectedAccountChanged -= SelectedEthereumHost_SelectedAccountChangedAsync;
-            _ethereumHostProvider.NetworkChanged -= SelectedEthereumHost_NetworkChangedAsync;
-            _ethereumHostProvider.EnabledChanged -= SelectedEthereumHost_ChangedAsync;
-            base.Dispose();
+            if (disposing)
+            {
+                _btnSave?.Dispose();
+                _pwdOldPassword?.Dispose();
+            }
+            
+            base.Dispose(disposing);
         }
     }
 }
