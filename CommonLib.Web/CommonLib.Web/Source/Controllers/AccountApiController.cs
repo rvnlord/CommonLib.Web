@@ -127,7 +127,7 @@ namespace CommonLib.Web.Source.Controllers
         public async Task<JToken> DisconnectExternalLoginAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectExternalLoginAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
 
         [HttpPost(nameof(IAccountManager.ConnectWalletAsync))] // POST: api/account/ConnectWalletAsync
-        public async Task<JToken> ConnectWalletAsync(JToken JAuthUserEditUserAndLoginUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectWalletAsync(JAuthUserEditUserAndLoginUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserEditUserAndLoginUser["UserToEdit"].To<EditUserVM>(), JAuthUserEditUserAndLoginUser["UserToLogin"].To<LoginUserVM>()));
+        public async Task<JToken> ConnectWalletAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.ConnectWalletAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
 
         [HttpPost(nameof(IAccountManager.DisconnectWalletAsync))] // POST: api/account/DisconnectWalletAsync
         public async Task<JToken> DisconnectWalletAsync(JToken JAuthUserAndEditUser) => await EnsureResponseAsync(async () => await _accountManager.DisconnectWalletAsync(JAuthUserAndEditUser["AuthenticatedUser"]?.To<AuthenticateUserVM>(), JAuthUserAndEditUser["UserToEdit"].To<EditUserVM>()));
