@@ -887,7 +887,7 @@ namespace CommonLib.Web.Source.Services.Account
             return new ApiResponse<EditUserVM>($"External Login \"{loginToDisconnect.UserName}\" ({loginToDisconnect.Provider}) has been successfully Disconnected", userToEdit);
         }
         
-        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit, LoginUserVM userToLogin)
+        public async Task<ApiResponse<EditUserVM>> ConnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
         {
             authUser = (await GetAuthenticatedUserAsync(authUser))?.Result;
             if (authUser is null || authUser.AuthenticationStatus != AuthStatus.Authenticated)
