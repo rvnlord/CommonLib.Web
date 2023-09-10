@@ -155,7 +155,7 @@ namespace CommonLib.Web.Source.Services.Account
             var user = await _db.Users.Include(u => u.Wallets).SingleOrDefaultAsync(u => u.UserName.ToLower() == name.ToLower());
             if (user is null)
                 return new ApiResponse<List<WalletVM>>(StatusCodeType.Status404NotFound, "There is no User with the given Name");
-            var wallets = _mapper.Map(user.Wallets, new List<WalletVM>()).ToList();
+            var wallets = _mapper.Map(user.Wallets, new List<WalletVM>()).Select(w => { w.ConnectionStatus = WalletVMConnectionStatus.Connected; return w; }).ToList();
             return new ApiResponse<List<WalletVM>>(wallets);
         }
 
@@ -894,38 +894,41 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
             userToEdit.Id = authUser.Id;
 
-            if (userToLogin.WalletAddress.IsNullOrWhiteSpace())
+            var walletToConnect = userToEdit.Wallets.SingleOrDefault(w => w.ConnectionStatus == WalletVMConnectionStatus.Connecting);
+
+            if (walletToConnect is null)
+                return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet to connect was not provided");
+            if (walletToConnect.Address.IsNullOrWhiteSpace())
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty");
-            if (userToLogin.WalletSignature.IsNullOrWhiteSpace())
+            if (walletToConnect.DataSignature is null || walletToConnect.DataSignature.Data.IsNullOrWhiteSpace() || walletToConnect.DataSignature.Signature.IsNullOrWhiteSpace())
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature can't be empty");
-            if (userToLogin.WalletProvider.IsNullOrWhiteSpace())
+            if (walletToConnect.Provider.IsNullOrWhiteSpace())
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet Provider was not specified");
 
-            if (userToLogin.WalletProvider.EqualsIgnoreCase("Metamask"))
+            if (walletToConnect.Provider.EqualsIgnoreCase("Metamask"))
             {
-                if (!AddressUtil.Current.IsValidEthereumAddressHexFormat(userToLogin.WalletAddress))
+                if (!AddressUtil.Current.IsValidEthereumAddressHexFormat(walletToConnect.Address))
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address is invalid");
-
-                var message = $"Proving ownership of wallet: \"{userToLogin.WalletAddress}\"";
-                var address = new EthereumMessageSigner().EcRecover(message.UTF8ToByteArray(), userToLogin.WalletSignature);
-                var isSignatureCorrect = address.EqualsIgnoreCase(userToLogin.WalletAddress); // address returned by Nethereum from ECRecover() is actually upper case for some reason
+                
+                var address = new EthereumMessageSigner().EcRecover(walletToConnect.DataSignature.Data.UTF8ToByteArray(), walletToConnect.DataSignature.Signature);
+                var isSignatureCorrect = address.EqualsIgnoreCase(walletToConnect.Address); // address returned by Nethereum from ECRecover() is actually upper case for some reason
                 if (!isSignatureCorrect)
                     return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Signature is incorrect", new[] { new KeyValuePair<string, string>("WalletSignature", "Wallet Signature is incorrect") }.ToLookup());
             }
             else
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Provider not supported", new[] { new KeyValuePair<string, string>("WalletProvider", "Wallet Provider not supported") }.ToLookup());
             
-            var connectedWallets = userToEdit.Wallets;
-            var sameProviderWallets = connectedWallets.Where(l => l.Provider.EqualsIgnoreCase(userToLogin.WalletProvider)).ToList();
+            var connectedWallets = userToEdit.Wallets.Where(w => w.ConnectionStatus == WalletVMConnectionStatus.Connected).ToList();
+            var sameProviderWallets = connectedWallets.Where(l => l.Provider.EqualsIgnoreCase(walletToConnect.Provider)).ToList();
             if (sameProviderWallets.Any())
             {
                 // 1. same wallet for this provider is already connected to this user
-                if (userToLogin.WalletAddress.InIgnoreCase(sameProviderWallets.Select(w => w.Address)))
-                    return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"\"{userToLogin.WalletAddress} ({userToLogin.WalletProvider})\" is already connected to \"{userToEdit.UserName}\" Account");
+                if (walletToConnect.Address.InIgnoreCase(sameProviderWallets.Select(w => w.Address)))
+                    return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, $"\"{walletToConnect.Address} ({walletToConnect.Provider})\" is already connected to \"{userToEdit.UserName}\" Account");
             }
 
             // 2. this wallet is already connected to another user
-            var dbSameWalletConnectedToAnotherUser = _db.Wallets.SingleOrDefault(l => l.Provider.ToLower() == userToLogin.WalletProvider.ToLower() && l.Address.ToLower() == userToLogin.WalletAddress.ToLower() && l.UserId != authUser.Id);
+            var dbSameWalletConnectedToAnotherUser = _db.Wallets.SingleOrDefault(w => w.Provider.ToLower() == walletToConnect.Provider.ToLower() && w.Address.ToLower() == walletToConnect.Address.ToLower() && w.UserId != authUser.Id);
             if (dbSameWalletConnectedToAnotherUser is not null)
             {
                 // - disconnect from previous owner and connect to the current account
@@ -948,14 +951,14 @@ namespace CommonLib.Web.Source.Services.Account
 
                 userToEdit.Wallets = (await GetWalletsAsync(userToEdit.UserName)).Result;
 
-                return new ApiResponse<EditUserVM>($"Wallet \"{userToLogin.WalletAddress} ({userToLogin.WalletProvider.StartWithUpper()})\" has been successfully reconnected from \"{dbPrevOwner.UserName}\" to \"{userToEdit.UserName}\"", userToEdit);
+                return new ApiResponse<EditUserVM>($"Wallet \"{walletToConnect.Address} ({walletToConnect.Provider.StartWithUpper()})\" has been successfully reconnected from \"{dbPrevOwner.UserName}\" to \"{userToEdit.UserName}\"", userToEdit);
             }
             
             // 3. this wallet has not yet been connected to any user
             _db.Wallets.Add(new DbWallet()
             {
-                Provider = userToLogin.WalletProvider.StartWithUpper(),
-                Address = userToLogin.WalletAddress,
+                Provider = walletToConnect.Provider.StartWithUpper(),
+                Address = walletToConnect.Address,
                 UserId = userToEdit.Id,
              
             });
@@ -963,7 +966,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             userToEdit.Wallets = (await GetWalletsAsync(userToEdit.UserName)).Result;
            
-            return new ApiResponse<EditUserVM>($"Wallet \"{userToLogin.WalletAddress} ({userToLogin.WalletProvider.StartWithUpper()})\" has been successfully Connected", userToEdit);
+            return new ApiResponse<EditUserVM>($"Wallet \"{walletToConnect.Address} ({walletToConnect.Provider.StartWithUpper()})\" has been successfully Connected", userToEdit);
         }
 
         public async Task<ApiResponse<EditUserVM>> DisconnectWalletAsync(AuthenticateUserVM authUser, EditUserVM userToEdit)
@@ -973,11 +976,13 @@ namespace CommonLib.Web.Source.Services.Account
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "You are not Authorized to Disconnect the External Profile");
             userToEdit.Id = authUser.Id;
             
-            if (userToEdit.WalletToDisconnect is null)
+            var walletToDisconnect = userToEdit.Wallets.SingleOrDefault(w => w.ConnectionStatus == WalletVMConnectionStatus.Disconneting);
+
+            if (walletToDisconnect is null)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet was not provided");
-            if (userToEdit.WalletToDisconnect.Address.IsNullOrWhiteSpace())
+            if (walletToDisconnect.Address.IsNullOrWhiteSpace())
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status401Unauthorized, "Wallet Address can't be empty");
-            if (userToEdit.WalletToDisconnect.Provider.IsNullOrWhiteSpace())
+            if (walletToDisconnect.Provider.IsNullOrWhiteSpace())
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Wallet Provider was not specified");
             var connectedWallets = (await GetWalletsAsync(authUser.UserName)).Result; 
             if (!connectedWallets.CollectionEqual(userToEdit.Wallets))
@@ -985,8 +990,7 @@ namespace CommonLib.Web.Source.Services.Account
             var logins = (await GetExternalLoginsAsync(authUser.UserName)).Result;
             if (!logins.CollectionEqual(userToEdit.ExternalLogins))
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status403Forbidden, "Provided External Logins are invalid");
-
-            var walletToDisconnect = userToEdit.WalletToDisconnect;
+            
             var isWalletToDisconnectConnected = connectedWallets.Any(w => w == walletToDisconnect);
             if (!isWalletToDisconnectConnected)
                 return new ApiResponse<EditUserVM>(StatusCodeType.Status404NotFound, "Wallet you are trying to disconnect is not connected");
@@ -999,7 +1003,7 @@ namespace CommonLib.Web.Source.Services.Account
 
             _db.Wallets.RemoveBy(w => w.UserId == authUser.Id && w.Provider.ToLower() == walletToDisconnect.Provider.ToLower() && w.Address.ToLower() == walletToDisconnect.Address.ToLower());
             await _db.SaveChangesAsync();
-            userToEdit.WalletToDisconnect = null;
+
             userToEdit.Wallets = (await GetWalletsAsync(authUser.UserName)).Result;
 
             return new ApiResponse<EditUserVM>($"Wallet \"{walletToDisconnect.Address} ({walletToDisconnect.Provider})\" has been successfully Disconnected", userToEdit);
