@@ -38,7 +38,7 @@ namespace CommonLib.Web.Source.Services.Account.Interfaces
         Task<ApiResponse<FileDataList>> FindAvatarsInUseAsync(bool includeFileData);
         Task<ApiResponse<EditUserVM>> ConnectExternalLoginAsync(EditUserVM userToEdit, LoginUserVM userToLogin);
         Task<ApiResponse<EditUserVM>> DisconnectExternalLoginAsync(EditUserVM userToEdit);
-        Task<ApiResponse<EditUserVM>> ConnectWalletAsync(EditUserVM userToEdit, LoginUserVM userToLogin);
+        Task<ApiResponse<EditUserVM>> ConnectWalletAsync(EditUserVM userToEdit);
         Task<ApiResponse<EditUserVM>> DisconnectWalletAsync(EditUserVM editUserVm);
     }
 }
