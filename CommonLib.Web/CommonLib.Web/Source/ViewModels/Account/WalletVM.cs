@@ -1,4 +1,6 @@
 ﻿using System;
+using CommonLib.Source.Common.Converters;
+using CommonLib.Source.Common.Extensions;
 
 namespace CommonLib.Web.Source.ViewModels.Account
 {
@@ -6,6 +8,12 @@ namespace CommonLib.Web.Source.ViewModels.Account
     {
         public string Provider { get; set; }
         public string Address { get; set; }
+        public WalletSignatureVM DataSignature { get; set; }
+        public int CurreentChainId { get; set; }
+        public WalletVMConnectionStatus ConnectionStatus { get; set; }
+        public string AddressWithProvider => $"{Address} ({Provider})";
+        public string ShortenedAddressWithProvider => $"{(Address.IsHex() ? $"{Address.Take(6)}...{Address.TakeLast(4)}" : Address.IsBech32() ? $"{Address.BeforeLast("1")}1{Address.Take(4)}...{Address.TakeLast(4)}" : Address)} ({Provider})";
+        public WalletVM Self => this;
 
         public bool Equals(WalletVM other)
         {
@@ -32,5 +40,13 @@ namespace CommonLib.Web.Source.ViewModels.Account
 
         public static bool operator ==(WalletVM left, WalletVM right) => Equals(left, right);
         public static bool operator !=(WalletVM left, WalletVM right) => !Equals(left, right);
+    }
+
+    public enum WalletVMConnectionStatus
+    {
+        None,
+        Connected,
+        Connecting,
+        Disconneting
     }
 }
