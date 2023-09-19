@@ -11,6 +11,7 @@ class InputUtils {
     };
 
     static kSteppers = {};
+    static kDdls = {};
 
     static _scrollBoundComponents = {};
 
@@ -169,7 +170,10 @@ class InputUtils {
 }
 
 export function blazor_Input_FixInputSyncPaddingGroup(guid) {
-    InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single());
+    let isElementInDOM = $(guid.guidToSelector()).$toArray().any();
+    if (isElementInDOM) {
+        InputUtils.fixPaddingForInputGroups($(guid.guidToSelector()).single());
+    }
 }
 
 export function blazor_NonNativeInput_FixInputSyncPaddingGroup(guid) {
@@ -194,7 +198,11 @@ export function blazor_ExtStepper_AfterFirstRender(guid, kStepperDotDetObj) {
     InputUtils.kSteppers[guid] = kStepperDotDetObj;
 }
 
-$(document).ready(function () {
+export function blazor_ExtDropDownList_AfterFirstRender(guid, kDdlDotDetObj) {
+    InputUtils.kDdls[guid] = kDdlDotDetObj;
+}
+
+$(function () {
     $(document).on("mouseenter", ".my-input-group .my-btn", function () {
         const $btn = $(this);
         const $inputGroup = $btn.parents(".my-input-group").first();
@@ -286,6 +294,14 @@ $(document).ready(function () {
         //$otherBtns.css("z-index", "0");
         const guid = $btn.closest(".k-grid").guid();
         InputUtils._scrollBoundComponents[guid].scroll({ y: 0 });
+    });
+
+    $(document).on("click", ".k-popup.k-list-container.k-dropdownlist-popup .k-list-ul > .k-list-item, .k-popup.k-list-container.k-dropdownlist-popup .k-list-optionlabel", async function (e) {
+        e.preventDefault();
+        const $ddlItem = $(this);
+        const $ddl = $(`.ext-dropdown[aria-controls='${$ddlItem.parents(".k-animation-container").id()}']`);
+        const clickedItemText = $ddlItem.find("span").text().trimMultiline();
+        await InputUtils.kDdls[$ddl.guid()].invokeMethodAsync("DropDown_ValueChangedAsync", clickedItemText);
     });
 
     // this doesn't fix click not always registering for k-step anyway
