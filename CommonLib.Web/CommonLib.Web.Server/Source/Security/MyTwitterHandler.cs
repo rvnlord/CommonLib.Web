@@ -218,7 +218,7 @@ namespace CommonLib.Web.Server.Source.Security
             {
                 var codeVerifier = RandomUtils.RandomBytes(32).ToBase64SafeUrlString();
                 properties.Items.Add(OAuthConstants.CodeVerifierKey, codeVerifier);
-                var codeChallenge = codeVerifier.UTF8ToByteArray().Sha256_().ToBase64SafeUrlString();
+                var codeChallenge = codeVerifier.UTF8ToByteArray().Sha256().ToBase64SafeUrlString();
 
                 parameters[OAuthConstants.CodeChallengeKey] = codeChallenge;
                 parameters[OAuthConstants.CodeChallengeMethodKey] = OAuthConstants.CodeChallengeMethodS256;
