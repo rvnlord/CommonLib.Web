@@ -186,6 +186,9 @@ namespace CommonLib.Web.Source.Common.Components
         public RenderFragment ChildContent { get; set; }
 
         [Parameter]
+        public string DebugNote { get; set; }
+
+        [Parameter]
         [SuppressMessage("BL0007", "BL0007")]
         public BlazorParameter<ComponentState> Interactivity
         {
@@ -470,7 +473,7 @@ namespace CommonLib.Web.Source.Common.Components
             //if (parentState is not null && !InteractivityState.HasChanged())
             //    InteractivityState.SetAsChanged();
             //var anyParentIsEnabledByDefault = InheritState.V == true && Ancestors.Any(a => a.DisabledByDefault.V == false);
-            
+
             //if (InteractivityState.HasChanged())
             //{
             //    ComponentState thisAsIconOrImageState = null;
@@ -479,6 +482,12 @@ namespace CommonLib.Web.Source.Common.Components
 
             //    InteractivityState.ParameterValue = thisAsIconOrImageState ?? parentState ?? InteractivityState.V.NullifyIf(_ => !InteractivityState.HasChanged()) ?? (DisabledByDefault.V == true && !anyParentIsEnabledByDefault ? ComponentState.Disabled : ComponentState.Enabled);
             //}
+
+
+            if (this is MyTextInputBase input && DebugNote == "test-force-disabled")
+            {
+                var t = 0;
+            }
 
             // TODO: set state using different variable, don't change parameters
             if (Interactivity.HasChanged() || CascadingInteractivity.HasChangedFor(this))
@@ -1281,7 +1290,7 @@ namespace CommonLib.Web.Source.Common.Components
         
         public MyComponentBase[] GetInputControls()
         {
-            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase or ExtStepper).ToArray();
+            var inputControls = Descendants.Where(c => c is MyInputGroup or MyTextInput or MyPasswordInput or MyDropDownBase or MyButton or MyNavLink or MyCheckBox or MyRadioButtonBase or MyProgressBar or MyFileUpload or MyTextInput or MyImage or ExtNumericInputBase or ExtEditorBase or ExtGridBase or ExtDatePickerBase or ExtDateTimePickerBase or ExtAutoCompleteBase or ExtRadialGaugeBase or ExtDropDownBase or ExtStepper).ToArray();
             var inputControlsDescendants = inputControls.SelectMany(cc => cc.Descendants).Distinct().ToArray();
             var topMostInputControls = inputControls.Where(c => !c.In(inputControlsDescendants)).ToArray();
             return topMostInputControls;

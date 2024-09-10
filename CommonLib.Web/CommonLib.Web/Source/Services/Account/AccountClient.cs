@@ -121,7 +121,7 @@ namespace CommonLib.Web.Source.Services.Account
             //var sessionId = isInitialized ? await _myJsRuntime.GetSessionIdOrEmptyAsync() : Guid.Empty;
             var userToAuthenticate = new AuthenticateUserVM
             {
-                Ticket = cookieTIcket ?? localStorageTicket, 
+                Ticket = (cookieTIcket ?? localStorageTicket)?.Remove("\""), 
                 AuthenticationStatus = AuthStatus.NotChecked,
                 //SessionId = sessionId
             };

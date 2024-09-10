@@ -50,7 +50,7 @@
                     <MyLabel For="@(() => _adminEditUserVM.Id)" Align="@HorizontalAlignment.Right" />
                 </MyCssGridItem>
                 <MyCssGridItem>
-                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" InteractivityState="ComponentState.ForceDisabled" For="@(() => _adminEditUserVM.IdString)" SyncPaddingGroup="edit-panel" />
+                    <MyTextInput Icon="IconType.From(LightIconType.IdBadge)" Interactivity="ComponentState.ForceDisabled" For="@(() => _adminEditUserVM.IdString)" SyncPaddingGroup="edit-panel" DebugNote="test-force-disabled" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _adminEditUserVM.Id)" />
@@ -71,8 +71,8 @@
                 </MyCssGridItem>
                 <MyCssGridItem>
                     <MyFileUpload For="@(() => _adminEditUserVM.PotentialAvatars)"
-                              PreviewFor="@BP(() => _adminEditUserVM.Avatar)"
-                              PredefinedSaveUrl="PredefinedSaveUrlKind.SaveTemporaryAvatar" />
+                        PreviewFor="@BP(() => _adminEditUserVM.Avatar)"
+                        PredefinedSaveUrl="PredefinedSaveUrlKind.SaveTemporaryAvatar" />
                 </MyCssGridItem>
                 <MyCssGridItem SMArea="CssGridArea.C1SpanAll" LGArea="CssGridArea.Auto">
                     <MyValidationMessage For="@(() => _adminEditUserVM.PotentialAvatars)" />

@@ -164,7 +164,7 @@ $(document).ready(function() {
         const $modalToHide = $modalBgToHide.children(".my-modal").first();
         const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $(this).guid());
 
-        if (isDisabled || e.button !== 1 || e.detail > 1 || !$modalToHide.is(".shown")) {
+        if (isDisabled || e.button !== 0 || e.detail > 1 || !$modalToHide.is(".shown")) {
             return;
         }
 
@@ -178,7 +178,7 @@ $(document).ready(function() {
         const $btnClose = $modalToHide.find(".my-close").first(); // it will find all (`dismiss` and `x`)
         const isDisabled = await ModalUtils.ModalDotNetRefs[$modalToHide.guid()].invokeMethodAsync("IsDisabledByGuid", $btnClose.guid());
 
-        if (isDisabled || e.which !== 1 || e.detail > 1 || !$(this).equals($(e.target)) || $btnClose.is(":disabled")) { // $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") 
+        if (isDisabled || e.button !== 0 || e.detail > 1 || !$(this).equals($(e.target)) || $btnClose.is(":disabled") || $(e.target).closest($btnClose).length > 0) { // $(e.target).parents().add($(e.target)).is(".my-modal, .my-modal .my-close, .my-nav-item.my-login") 
             return;
         }
 

@@ -26,7 +26,7 @@ public class MyCardBase : MyComponentBase
 
     protected override async Task OnAfterFirstRenderAsync()
     {
-        _allControls = GetInputControls();
+        _allControls = GetInputControls(); // Make sure to get images if they are ever not part of input controls | Consider removing Interactivity State management from heeree (a component) and handle it in an actual page, i.e.: List of Users
 
         await SetControlStatesAsync(ComponentState.Enabled, _allControls);
     }
