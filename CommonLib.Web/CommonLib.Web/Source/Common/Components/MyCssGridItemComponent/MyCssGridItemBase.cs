@@ -26,7 +26,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
 
         [Parameter]
         public BlazorParameter<CssGridArea> SMArea { get; set; }
-        
+
         [Parameter]
         public BlazorParameter<CssGridArea> MDArea { get; set; }
 
@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
 
         [Parameter]
         public BlazorParameter<CssGridAreaGap> SMGap { get; set; }
-        
+
         [Parameter]
         public BlazorParameter<CssGridAreaGap> MDGap { get; set; }
 
@@ -201,7 +201,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         public int? Row { get; set; }
         public int ColumnSpan { get; set; }
         public int RowSpan { get; set; }
-  
+
         public CssGridArea()
         {
             Column = null;
@@ -209,7 +209,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
             ColumnSpan = 1;
             RowSpan = 1;
         }
-        
+
         public CssGridArea(int? column, int? row = null, int columnSpan = 1, int rowSpan = 1)
         {
             Column = column;
@@ -222,15 +222,62 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         {
             Column = column == CGACP.Auto ? null : column.EnumToString().After("C").ToInt();
             Row = row == CGARP.Auto ? null : row.EnumToString().After("R").ToInt();
-            ColumnSpan = columnSpan == CGAS.All ? -1 : columnSpan.EnumToString().After("Span").ToInt();;
-            RowSpan = rowSpan == CGAS.All ? -1 : rowSpan.EnumToString().After("Span").ToInt();;
+            ColumnSpan = columnSpan == CGAS.All ? -1 : columnSpan.EnumToString().After("Span").ToInt();
+            RowSpan = rowSpan == CGAS.All ? -1 : rowSpan.EnumToString().After("Span").ToInt();
         }
     }
 
-    public enum CGACP { Auto, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12 } // CssGridAreaColumnPlacement
-    public enum CGARP { Auto, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12 } // CssGridAreaRowPlacement
-    public enum CGAS { All, Span1, Span2, Span3, Span4, Span5, Span6, Span7, Span8, Span9, Span10, Span11, Span12 } // CssGridAreaSpan
-   
+    public enum CGACP
+    {
+        Auto,
+        C1,
+        C2,
+        C3,
+        C4,
+        C5,
+        C6,
+        C7,
+        C8,
+        C9,
+        C10,
+        C11,
+        C12
+    } // CssGridAreaColumnPlacement
+
+    public enum CGARP
+    {
+        Auto,
+        R1,
+        R2,
+        R3,
+        R4,
+        R5,
+        R6,
+        R7,
+        R8,
+        R9,
+        R10,
+        R11,
+        R12
+    } // CssGridAreaRowPlacement
+
+    public enum CGAS
+    {
+        All,
+        Span1,
+        Span2,
+        Span3,
+        Span4,
+        Span5,
+        Span6,
+        Span7,
+        Span8,
+        Span9,
+        Span10,
+        Span11,
+        Span12
+    } // CssGridAreaSpan
+
     public class CssGridAreaHide
     {
         public DeviceSizeKind? From { get; set; }
@@ -253,7 +300,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
     public class CssGridAreaGap
     {
         public static CssGridAreaGap Auto => new();
-        
+
         public string Top { get; set; }
         public string Right { get; set; }
         public string Bottom { get; set; }
@@ -272,8 +319,11 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridItemComponent
         }
 
         public static CssGridAreaGap OnlyTop(string top) => new(top);
+
         public static CssGridAreaGap OnlyRight(string right) => new(null, right);
+
         public static CssGridAreaGap OnlyBottom(string bottom) => new(null, null, bottom);
+
         public static CssGridAreaGap OnlyLeft(string left) => new(null, null, null, left);
     }
 }

@@ -1,4 +1,5 @@
 import "../extensions/collections/array-extensions";
+import "../extensions/string-extensions";
 
 let suppressedMessages: string[] = [];
 

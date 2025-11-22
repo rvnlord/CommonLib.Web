@@ -23,7 +23,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
 
         [Parameter]
         public BlazorParameter<CssGridLayout> SMTemplate { get; set; }
-        
+
         [Parameter]
         public BlazorParameter<CssGridLayout> MDTemplate { get; set; }
 
@@ -32,7 +32,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
 
         [Parameter]
         public BlazorParameter<CssGridLayout> XLTemplate { get; set; }
-        
+
         [Parameter]
         public BlazorParameter<string> Padding { get; set; }
 
@@ -44,7 +44,7 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
 
         [Parameter]
         public BlazorParameter<string> RowsGap { get; set; }
-        
+
         protected override async Task OnInitializedAsync()
         {
             GridLayouts = new OrderedDictionary<DeviceSizeKind, CssGridLayout>();
@@ -144,12 +144,12 @@ namespace CommonLib.Web.Source.Common.Components.MyCssGridComponent
                 AddStyle("grid-template-columns", "auto");
                 AddStyle("grid-template-rows", $"repeat({Children.OfType<MyCssGridItemBase>().Count()}, minmax({StylesConfig.InputHeight.Px()}, max-content))");
             }
-            
+
             //RemoveStyle("opacity");
             if (refresh)
                 await StateHasChangedAsync(true);
         }
-        
+
         //public event MyAsyncEventHandler<MyCssGridBase, MyMediaQueryChangedEventArgs> DeviceSizeChanged;
         //private async Task OnDeviceSizeChangingAsync(MyMediaQueryChangedEventArgs e) => await DeviceSizeChanged.InvokeAsync(this, e);
         //private async Task OnDeviceSizeChangingAsync(DeviceSizeKind deviceSize) => await OnDeviceSizeChangingAsync(new MyMediaQueryChangedEventArgs(deviceSize));

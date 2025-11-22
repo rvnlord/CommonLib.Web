@@ -46,17 +46,17 @@
                        class="my-test" @ref="_cssgridTest">
                 <MyCssGridItem class="item1">1</MyCssGridItem>
                 <MyCssGridItem class="item2">2: Device Size: @(_cssgridTest?.CurrentDeviceSize.EnumToString() ?? "not defined"), Layout For: @(_cssgridTest?.HighestDeviceSizeWithLayout?.EnumToString() ?? "not defined")</MyCssGridItem>
-                    <MyCssGridItem class="item3">3</MyCssGridItem>
-                    <MyCssGridItem class="item4">4</MyCssGridItem>
-                    <MyCssGridItem class="item5">5</MyCssGridItem>
-                    <MyCssGridItem class="item6" MDArea="@(new CssGridArea(2, 2, 2, 1))">6</MyCssGridItem>
-                    <MyCssGridItem class="item7" Hide="@(new CssGridAreaHide(DeviceSizeKind.MD))">7</MyCssGridItem>
-                    <MyCssGridItem class="item8">8</MyCssGridItem>
-                    <MyCssGridItem class="item9">9</MyCssGridItem>
-                    <MyCssGridItem class="item10">10</MyCssGridItem>
-                    <MyCssGridItem class="item11">11</MyCssGridItem>
-                    <MyCssGridItem class="item12">12</MyCssGridItem>
-                </MyCssGrid>
+                <MyCssGridItem class="item3">3</MyCssGridItem>
+                <MyCssGridItem class="item4">4</MyCssGridItem>
+                <MyCssGridItem class="item5">5</MyCssGridItem>
+                <MyCssGridItem class="item6" MDArea="@(new CssGridArea(2, 2, 2, 1))">6</MyCssGridItem>
+                <MyCssGridItem class="item7" Hide="@(new CssGridAreaHide(DeviceSizeKind.MD))">7</MyCssGridItem>
+                <MyCssGridItem class="item8">8</MyCssGridItem>
+                <MyCssGridItem class="item9">9</MyCssGridItem>
+                <MyCssGridItem class="item10">10</MyCssGridItem>
+                <MyCssGridItem class="item11">11</MyCssGridItem>
+                <MyCssGridItem class="item12">12</MyCssGridItem>
+            </MyCssGrid>
 
                 <MyCssGrid Padding="HalfGutter.Px()" Gap="Gutter.Px()"
                        XLTemplate="@(new CssGridLayout("2fr 3fr 7fr", "repeat(auto-fit, minmax(0, max-content))"))"
